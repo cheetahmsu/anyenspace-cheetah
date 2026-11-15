@@ -643,7 +643,9 @@ document.querySelector('#openRooms').onclick=()=>go('community');{const wl=docum
  window.dispatchEvent(new CustomEvent('anyen-gift-send',{detail:gift}));document.getElementById('zenBagMessage').textContent='Đang gửi '+item[1]+' đến '+gift.toName+'…';};
  row.append(select,send);host.append(row);}
  }
- window.addEventListener('anyen-peers',e=>{onlinePeople=e.detail||{};if(document.body.classList.contains('zen-sheet-bag'))renderBag();});
+ // Peers' positions arrive several times a second; only rebuild the bag when the list of people changes,
+  // otherwise the recipient picker resets (and closes on iPhone) before the gift can be sent.
+  let peopleKey='';window.addEventListener('anyen-peers',e=>{onlinePeople=e.detail||{};const key=Object.entries(onlinePeople).map(([id,p])=>id+':'+(p.name||'')).sort().join('|');if(key===peopleKey)return;peopleKey=key;if(document.body.classList.contains('zen-sheet-bag'))renderBag();});
  window.addEventListener('anyen-gift-received',e=>{const d=e.detail||{};if(addBagItem(d.id,'gift',d.fromName,d.giftId)){document.getElementById('zenBagMessage').textContent='🎁 Bạn vừa nhận quà từ '+(d.fromName||'một người bạn')+'!';}});
  window.addEventListener('anyen-gift-ack',e=>{const d=e.detail||{};const index=bag.findIndex(x=>x.uuid===d.giftId);if(index>=0){bag.splice(index,1);saveBag();renderBag();document.getElementById('zenBagMessage').textContent='💝 Đã tặng vật phẩm thành công.';}});
  itemSheet.addEventListener('click',e=>{if(e.target.closest('[data-close]')){setSheet(null);return;}const id=e.target.closest('[data-item]')?.dataset.item;if(!id)return;const item=itemData.find(v=>v[0]===id);if(!item)return;try{const received=addBagItem(id,'self');if(!received)throw Error('Không thêm được vật phẩm');document.getElementById('zenItemInfo').textContent='✨ Đã thỉnh '+item[1]+'.';setSheet('bag');renderBag();const msg=document.getElementById('zenBagMessage');if(msg)msg.textContent='✨ Đã nhận '+item[3]+' '+item[1]+' và cất vào túi.';}catch(err){console.error('Thỉnh vật phẩm:',err);document.getElementById('zenItemInfo').textContent='Không thể nhận vật phẩm: '+err.message;}});
@@ -662,7 +664,7 @@ document.querySelector('#openRooms').onclick=()=>go('community');{const wl=docum
  close.addEventListener('click',()=>setSheet(null));
  document.querySelectorAll('.zone-nav button').forEach(b=>b.addEventListener('click',()=>setSheet(null)));
  document.getElementById('exit3D')?.addEventListener('click',()=>{setSheet(null);document.body.classList.remove('zen-clean');});
- document.addEventListener('keydown',e=>{if(e.key==='Escape')setSheet(null);});document.addEventListener('pointerdown',e=>{if(!document.body.classList.contains('immersive'))return;if(!e.target.closest('#zenToolbar,#zenUnifiedMenu,.zone-nav,#zenGestures,#zenRitualPanel,#realtimeBox,#profileModal'))setSheet(null);});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')setSheet(null);});document.addEventListener('pointerdown',e=>{if(!document.body.classList.contains('immersive'))return;if(!e.target.closest('#zenToolbar,#zenUnifiedMenu,.zone-nav,#zenGestures,#zenRitualPanel,#realtimeBox,#profileModal,#zenItemSheet,#zenBagSheet,#zenWishSheet,#zenJournalSheet,#zenJournalOpen,#zenPanelClose,#anyenWishPanel'))setSheet(null);});
 })();
 </script>
 <script>
