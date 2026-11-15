@@ -1,5 +1,6 @@
 // LÀNG YÊN 3.1: Presence + Broadcast, authenticated private channels.
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+// Supabase is bundled locally (vendor/supabase.js) so the page does not depend on esm.sh; the CDN stays as a fallback.
+const createClient=window.supabase?.createClient||(await import('https://esm.sh/@supabase/supabase-js@2.119.0')).createClient;
 const $=s=>document.querySelector(s), status=$('#realtimeStatus'), count=$('#onlineCount'), people=$('#onlinePeople');
 const cfg=window.ANYEN_CONFIG||{};
 const valid=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(cfg.supabaseUrl||'')&&/^(sb_publishable_|eyJ)/.test(cfg.publishableKey||'');
