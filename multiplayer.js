@@ -117,7 +117,8 @@ window.addEventListener('anyen-offering',async e=>{
 window.addEventListener('anyen-lobby-refresh',()=>syncLobbyOfferings().catch(()=>{}));
 window.addEventListener('anyen-seat-intent',e=>{const d=e.detail||{};seatIntent=d.clear?null:(Number.isFinite(d.x)&&Number.isFinite(d.z)?{seatX:d.x,seatZ:d.z}:null);if(joined&&channel)channel.track({...profile(),...position,activity,...(seatIntent||{})}).catch(()=>{});});
 window.addEventListener('anyen-3d-enter',()=>{if(!joined&&!channel){const select=$('#rtRoomSelect');if(select)select.value='Sảnh chung';join();}});
-window.addEventListener('anyen-coin',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
+// Broadcast only coins the 3D scene actually threw (it refuses throws far from any lake).
+window.addEventListener('anyen-coin-thrown',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
 const pendingGifts=new Map();
 window.addEventListener('anyen-gift-send',e=>{
  const d=e.detail||{},giftId=String(d.uuid||''),to=String(d.to||''),itemId=String(d.id||'');
