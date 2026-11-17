@@ -392,10 +392,10 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
     if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
     scene.add(clump);flowers.push(clump)}
-  // One shared rowing boat for the whole village (no oars drawn). It moors at the west or east pier. Tap it to board. Aboard, tap the
-  // water to row there or tap a pier to land; with no tap it rows on to the opposite bank. Everyone sees boats.
+  // One shared boat for the whole village (no oars). It moors at the west or east pier. Tap it to board; it crosses
+  // under the arched bridge to the opposite bank and you step ashore. Everyone sees it.
   const BOAT_LANE_Z=-4,BOAT_DOCK_X=9.9,BOAT_LAND_X=13.1,BOAT_SPEED=1.25,BOAT_STEP_MS=900,BOAT_WAIT_MS=8000,BOAT_WATER_R=9.2;
-  function makeBoat(){const g=new THREE.Group(),oars=[],hullMat=mat('#7a5634'),trim=mat('#a07448');
+  function makeBoat(){const g=new THREE.Group(),hullMat=mat('#7a5634'),trim=mat('#a07448');
     // Hull from a pointed boat outline: a hollow rim (outline with an inset hole) on a solid floor.
    const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
    const wall=outline(1);wall.holes.push(outline(.88));
@@ -403,7 +403,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
    const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#5e4128'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
    const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
    const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
-   return {group:g,oars};}
+   return {group:g};}
   const boat={...makeBoat(),side:-1};boat.group.position.set(boat.side*BOAT_DOCK_X,.02,BOAT_LANE_Z);scene.add(boat.group);
   const piers=[];
   {   // Wooden piers on both banks.
@@ -415,7 +415,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   // The arch is only high enough for a seated rower between z -9.5 and 1.5; reroute crossings of the bridge line there.
   function boatPath(x0,z0,x1,z1){if(Math.sign(x0)!==Math.sign(x1)&&Math.abs(x0-x1)>.01){const t=x0/(x0-x1),zc=z0+(z1-z0)*t;if(zc<-9.5||zc>1.5)return [[0,Math.max(-9.5,Math.min(1.5,zc))],[x1,z1]];}return [[x1,z1]];}
   function setBoatGoal(x,z,dockSide){const r=boatRide;r.path=boatPath(boat.group.position.x,boat.group.position.z,x,z);r.dock=dockSide||0;r.phase='row';
-    document.getElementById('zenHint').textContent=dockSide?'🚣 Đang chèo vào bến…':'🚣 Chạm mặt hồ để chèo tới · Chạm bến để lên bờ';}
+    document.getElementById('zenHint').textContent='🚣 Đang chèo sang bờ bên kia…';}
   function boardBoat(){if(boatBusy){pendingBoat=false;document.getElementById('zenHint').textContent='🚣 Thuyền vừa có người lên, chờ họ cập bến nhé';return;}const from=boat.side;walkRoute.length=0;pendingSeat=null;pendingBoat=false;boatRide={from,phase:'board',start:performance.now(),x0:mePosition.x,z0:mePosition.z,heading:-from*Math.PI/2};}
   function tapBoat(){
     if(boatRide)return;
@@ -426,24 +426,19 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(Math.hypot(mePosition.x-lx,mePosition.z-lz)<1.3){boardBoat();return;}
     if(navigateTo(lx,lz)){pendingBoat=true;document.getElementById('zenHint').textContent='🚣 Đang ra bến thuyền…';}
   }
-  // Taps while aboard: a pier docks there, open water rows there.
-  function boatTap(){
-    if(!onBoat())return false;
-    const ph=raycaster.intersectObjects(piers,false);if(ph.length){const sd=ph[0].object.userData.side;setBoatGoal(sd*BOAT_DOCK_X,BOAT_LANE_Z,sd);return true;}
-    const wh=raycaster.intersectObject(water,false);if(wh.length){const q=wh[0].point;let dx=q.x,dz=q.z-BOAT_LANE_Z;const d=Math.hypot(dx,dz);if(d>BOAT_WATER_R){dx*=BOAT_WATER_R/d;dz*=BOAT_WATER_R/d;}setBoatGoal(dx,BOAT_LANE_Z+dz,0);return true;}
-    document.getElementById('zenHint').textContent='🚣 Chạm mặt hồ để chèo tới · Chạm bến để lên bờ';return true;
-  }
+  // Aboard, the boat simply rows on to the opposite bank; taps only show where it is going.
+  function boatTap(){if(!boatRide)return false;document.getElementById('zenHint').textContent='🚣 Đang chèo sang bờ bên kia…';return true;}
   let lastBoatFrame=0;
   function updateBoatRide(now){
-    const r=boatRide,dt=Math.min(.1,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=boat.group;
+    const r=boatRide,dt=Math.min(.25,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=boat.group;
     if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1)setBoatGoal(-r.from*BOAT_DOCK_X,BOAT_LANE_Z,-r.from);}
     else if(r.phase==='row'){const [tx,tz]=r.path[0],dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
       if(d<.05){r.path.shift();if(!r.path.length){if(r.dock){r.phase='ashore';r.start=now;}else{r.phase='wait';r.start=now;document.getElementById('zenHint').textContent='🚣 Chạm mặt hồ để chèo tiếp · Chạm bến để lên bờ';}}}
-      else{const step=Math.min(d,BOAT_SPEED*dt);g.position.x+=dx/d*step;g.position.z+=dz/d*step;const want=Math.atan2(dx,dz);let dh=want-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*3);boat.oars.forEach(o=>o.rotation.z=Math.sin(now/520)*.55);}
+      else{const step=Math.min(d,BOAT_SPEED*dt);g.position.x+=dx/d*step;g.position.z+=dz/d*step;const want=Math.atan2(dx,dz);let dh=want-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*3);}
       mePosition.set(g.position.x,0,g.position.z);}
-    else if(r.phase==='wait'){mePosition.set(g.position.x,0,g.position.z);boat.oars.forEach(o=>o.rotation.z*=.9);if(now-r.start>BOAT_WAIT_MS)setBoatGoal(-r.from*BOAT_DOCK_X,BOAT_LANE_Z,-r.from);}
+    else if(r.phase==='wait'){mePosition.set(g.position.x,0,g.position.z);if(now-r.start>BOAT_WAIT_MS)setBoatGoal(-r.from*BOAT_DOCK_X,BOAT_LANE_Z,-r.from);}
     else if(r.phase==='ashore'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u),[lx,lz]=boatLand(r.dock);mePosition.set(g.position.x+(lx-g.position.x)*e,0,g.position.z+(lz-g.position.z)*e);r.heading=r.dock>0?Math.PI/2:-Math.PI/2;
-      if(u>=1){boat.side=r.dock;boatStamp=Date.now();boatRide=null;boat.oars.forEach(o=>o.rotation.z=0);mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz,bs:boat.side,bt:boatStamp}}));document.getElementById('zenHint').textContent='Đã lên bờ · Chạm thuyền để chèo tiếp';}}
+      if(u>=1){boat.side=r.dock;boatStamp=Date.now();boatRide=null;mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz,bs:boat.side,bt:boatStamp}}));document.getElementById('zenHint').textContent='Đã lên bờ · Chạm thuyền để chèo tiếp';}}
     g.rotation.y=(r.heading||0)-Math.PI/2;g.position.y=.02+Math.sin(now/700)*.025;g.rotation.z=Math.sin(now/900)*.02;
   }  // Pine trunks are obstacles: nobody walks or stands inside them.
   const treeSpots=[],TREE_CLEAR=1.0;
