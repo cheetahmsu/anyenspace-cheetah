@@ -415,23 +415,25 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     const sash=new THREE.Mesh(new THREE.TorusGeometry(.36,.045,6,18),mat('#e8d5ad'));sash.rotation.x=Math.PI/2;sash.position.y=.83;group.add(sash);
     const robe=new THREE.Mesh(new THREE.CylinderGeometry(.34,.51,.82,12),mat('#687b48'));robe.position.y=.57;group.add(robe);
     const vest=new THREE.Mesh(new THREE.BoxGeometry(.72,.7,.44),mat('#d4c8ad'));vest.position.y=1.12;group.add(vest);
-    // Crossed legs (lotus posture), only shown while sitting. Two shins cross in front of the cushion, knees out wide.
+    // Seated meditation: legs folded in a round ring, with the robe draping out over them into a round base. Only shown while sitting.
     const lap=new THREE.Group();lap.visible=false;const legMat=mat('#687b48');
-    [[.26,-.08,.26],[-.26,-.04,.34]].forEach(([yaw,y,z])=>{const pivot=new THREE.Group();pivot.position.set(0,y,z);pivot.rotation.y=yaw;const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.8,4,10),legMat);leg.rotation.z=Math.PI/2;pivot.add(leg);lap.add(pivot)});
-    const feet=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat('#e7c9a8'));feet.scale.set(1.3,.6,.8);feet.position.set(0,.02,.42);lap.add(feet);
+    const drape=new THREE.Mesh(new THREE.SphereGeometry(.5,28,12,0,Math.PI*2,0,Math.PI/2),legMat);drape.scale.set(1.24,.86,1.24);drape.position.set(0,-.205,.06);lap.add(drape);
+    const legs=new THREE.Mesh(new THREE.TorusGeometry(.4,.12,10,28),legMat);legs.rotation.x=Math.PI/2;legs.scale.set(1,1,.75);legs.position.set(0,-.13,.1);lap.add(legs);
+    const feet=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat('#e7c9a8'));feet.scale.set(1.5,.5,.8);feet.position.set(0,.13,.3);lap.add(feet);
     group.add(lap);
     return {sash,robe,vest,lap,legMat};
   }
   function dressAvatar(parts,torso,color,style,sitting){
     const safe=/^#[0-9a-f]{6}$/i.test(color||'')?color:'#687b48';torso.material.color.set(safe);
     const mode=['robe','linen','casual'].includes(style)?style:'robe';
-    parts.robe.visible=true;parts.sash.visible=mode!=='casual';parts.vest.visible=mode==='linen';
-    parts.robe.material.color.set(mode==='casual'?'#526e63':mode==='linen'?'#d8ccb2':safe);parts.vest.material.color.set(safe);parts.sash.material.color.set(mode==='robe'?'#e4c37b':'#eee0c8');
+    parts.robe.visible=!sitting;parts.sash.visible=true;parts.vest.visible=mode==='linen';
+    // Top and bottom share the chosen colour; every style keeps the light tan sash.
+    parts.robe.material.color.set(safe);parts.vest.material.color.set(safe);parts.sash.material.color.set('#e4c37b');
     
     torso.scale.x=mode==='linen'?.91:1;
-    const slim=mode==='linen'?.8:1;parts.robe.scale.set((sitting?.86:1)*slim,sitting?.5:1,(sitting?.86:1)*slim);parts.robe.position.y=sitting?.12:.57;
+    const slim=mode==='robe'?1:mode==='linen'?.86:.76;parts.robe.scale.set((sitting?.86:1)*slim,sitting?.5:1,(sitting?.86:1)*slim);parts.robe.position.y=sitting?.12:.57;
     parts.sash.position.y=sitting?.27:.83;parts.vest.position.y=sitting?.5:1.12;parts.vest.scale.y=sitting?.62:1;
-    if(parts.lap){parts.lap.visible=!!sitting;parts.legMat.color.set(mode==='robe'?safe:mode==='casual'?'#526e63':'#d8ccb2');}
+    if(parts.lap){parts.lap.visible=!!sitting;parts.legMat.color.set(safe);}
     
   }
   const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
