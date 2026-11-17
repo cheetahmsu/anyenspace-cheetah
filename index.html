@@ -386,11 +386,50 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
   const flowers=[];
   for(let i=0;i<26;i++){const a=i*2.399,r=2.4+(i%6)*1.25;let x=Math.cos(a)*r;const z=-4+Math.sin(a)*r;if(Math.abs(x)<2.8)x=Math.sign(x||1)*(2.8+Math.abs(x)*.4);
+    if(Math.abs(z+4)<1.8)continue;/* boat lane across the pond */
     const clump=new THREE.Group();clump.position.set(x,.04,z);clump.rotation.y=a;clump.userData.y0=.04;
     for(let k=0;k<3;k++){const pad=lotusPad(.7+Math.random()*.6);pad.position.set((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4);clump.add(pad)}
     if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
     if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
     scene.add(clump);flowers.push(clump)}
+  // Rowing boat on Hồ Niệm: a small wooden boat moored at the west or east pier. Tap it to board and row across,
+  // under the arched bridge, to the other bank.
+  const BOAT_LANE_Z=-4,BOAT_DOCK_X=9.9,BOAT_LAND_X=13.1,BOAT_ROW_MS=11000,BOAT_STEP_MS=900;
+  const boat={group:new THREE.Group(),side:-1,oars:[]};
+  {const g=boat.group,hullMat=mat('#7a5634'),trim=mat('#a07448');
+   // Hull from a pointed boat outline: a hollow rim (outline with an inset hole) on a solid floor.
+   const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
+   const wall=outline(1);wall.holes.push(outline(.88));
+   const hullWall=new THREE.Mesh(new THREE.ExtrudeGeometry(wall,{depth:.36,bevelEnabled:false,curveSegments:10}),hullMat);hullWall.rotation.x=-Math.PI/2;g.add(hullWall);
+   const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#5e4128'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
+   const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
+   const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
+   for(const z of [-1,1]){const pivot=new THREE.Group();pivot.position.set(.15,.4,z*.64);const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.7,6),trim);shaft.rotation.x=z*1.15;shaft.position.set(0,-.3,z*.62);pivot.add(shaft);const blade=new THREE.Mesh(new THREE.BoxGeometry(.16,.03,.42),trim);blade.position.set(0,-.62,z*1.32);blade.rotation.x=z*1.15;pivot.add(blade);g.add(pivot);boat.oars.push(pivot)}
+   g.position.set(boat.side*BOAT_DOCK_X,.02,BOAT_LANE_Z);scene.add(g);
+   // Wooden piers on both banks.
+   for(const sx of [-1,1]){const pier=new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,1.5),mat('#8a6a48'));pier.position.set(sx*12,.16,BOAT_LANE_Z);scene.add(pier);for(const dz of [-.65,.65])for(const dx of [-1.4,0,1.4]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,6),wood);post.position.set(sx*12+dx,0,BOAT_LANE_Z+dz);scene.add(post)}}}
+  let boatRide=null,pendingBoat=false;
+  const boatLand=side=>[side*BOAT_LAND_X,BOAT_LANE_Z];
+  function boardBoat(){const from=boat.side;walkRoute.length=0;pendingSeat=null;pendingBoat=false;boatRide={from,start:performance.now(),x0:mePosition.x,z0:mePosition.z};document.getElementById('zenHint').textContent='🚣 Đang chèo thuyền qua hồ sen…';}
+  function tapBoat(){
+    const hint=document.getElementById('zenHint');if(boatRide)return;
+    if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(tapBoat,60);return;}
+    if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
+    const [lx,lz]=boatLand(boat.side);
+    if(Math.hypot(mePosition.x-lx,mePosition.z-lz)<1.3){boardBoat();return;}
+    if(navigateTo(lx,lz)){pendingBoat=true;hint.textContent='🚣 Đang ra bến thuyền…';}
+  }
+  // Called every frame while riding: step aboard, row across, step ashore on the far bank.
+  function updateBoatRide(now){
+    const r=boatRide,from=r.from,dockA=from*BOAT_DOCK_X,dockB=-from*BOAT_DOCK_X,el=now-r.start;walkRoute.length=0;
+    let phase,u;if(el<BOAT_STEP_MS){phase='board';u=el/BOAT_STEP_MS;}else if(el<BOAT_STEP_MS+BOAT_ROW_MS){phase='row';u=(el-BOAT_STEP_MS)/BOAT_ROW_MS;}else if(el<BOAT_STEP_MS*2+BOAT_ROW_MS){phase='ashore';u=(el-BOAT_STEP_MS-BOAT_ROW_MS)/BOAT_STEP_MS;}else{phase='done';u=1;}
+    const e=u*u*(3-2*u);r.phase=phase;
+    if(phase==='board'){mePosition.set(r.x0+(dockA-r.x0)*e,0,r.z0+(BOAT_LANE_Z-r.z0)*e);}
+    else if(phase==='row'){const x=dockA+(dockB-dockA)*e;boat.group.position.x=x;mePosition.set(x,0,BOAT_LANE_Z);boat.oars.forEach((o,i)=>o.rotation.z=Math.sin(el/420)*.55);}
+    else if(phase==='ashore'){boat.group.position.x=dockB;const [lx]=boatLand(-from);mePosition.set(dockB+(lx-dockB)*e,0,BOAT_LANE_Z);}
+    else{boat.side=-from;boatRide=null;boat.oars.forEach(o=>o.rotation.z=0);const [lx,lz]=boatLand(-from);mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã sang bờ bên kia · Chạm thuyền để chèo về';}
+    boat.group.position.y=.02+Math.sin(now/700)*.025;boat.group.rotation.z=Math.sin(now/900)*.02;
+  }
   // Pine trunks are obstacles: nobody walks or stands inside them.
   const treeSpots=[],TREE_CLEAR=1.0;
   function pushOutOfTrees(x,z){for(const [tx,tz] of treeSpots){const d=Math.hypot(x-tx,z-tz);if(d<TREE_CLEAR){const k=d>1e-3?TREE_CLEAR/d:0;return k?[tx+(x-tx)*k,tz+(z-tz)*k]:[tx+TREE_CLEAR,tz];}}return [x,z];}
@@ -427,6 +466,8 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(hits.length){let obj=hits[0].object;while(obj.parent&&!obj.userData.zone)obj=obj.parent;if(obj.userData.zone){selectZone(obj.userData.zone);return;}}
     const guestHits=raycaster.intersectObjects([...onlineAvatars.values()].map(v=>v.group),true);
     if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
+    if(boatRide){document.getElementById('zenHint').textContent='🚣 Thuyền đang qua hồ, chờ một chút nhé';return;}
+    const boatHits=raycaster.intersectObject(boat.group,true);if(boatHits.length){tapBoat();return;}
     // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
     const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
     if(cushionHits.length){let obj=cushionHits[0].object;while(obj.parent&&!cushions.some(c=>c.group===obj))obj=obj.parent;const seat=cushions.find(c=>c.group===obj);if(seat){tapSeat(seat);}return;}
@@ -501,7 +542,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       closed[u]=1;const ux=u%nx,uz=Math.floor(u/nx),p=pos(u);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const xx=ux+dx,zz=uz+dz;if(xx<0||zz<0||xx>=nx||zz>=nz)continue;const v=xx+zz*nx;if(closed[v])continue;const q=pos(v);if(!walkable(...q)||!clearWalk(p,q))continue;const score=g[u]+Math.hypot(dx,dz);if(score>=g[v])continue;g[v]=score;prev[v]=u;push(v,score+Math.hypot(q[0]-goal[0],q[1]-goal[1])/step)}}
     return null;
   }
-  function navigateTo(x,z){pendingSeat=null;
+  function navigateTo(x,z){pendingSeat=null;pendingBoat=false;
     // Destination selection overrides meditation states, including async realtime updates.
     meActivity='idle';walkGoal=null;tapTarget=null;
     window.dispatchEvent(new CustomEvent('anyen-activity',{detail:{activity:'idle'}}));
@@ -643,18 +684,19 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
       if(walkingKeys.has('turnleft')){walkYaw+=dt*1.5;viewYaw+=dt*1.5;}if(walkingKeys.has('turnright')){walkYaw-=dt*1.5;viewYaw-=dt*1.5;}
       let step=(walkingKeys.has('forward')?1:0)-(walkingKeys.has('back')?1:0);
-      if(step&&meActivity!=='sit'&&meActivity!=='walk'){walkYaw=viewYaw;let nx=mePosition.x+Math.sin(walkYaw)*dt*4*step,nz=mePosition.z+Math.cos(walkYaw)*dt*4*step;if(walkable(nx,nz)){mePosition.x=nx;mePosition.z=nz}}
+      if(boatRide)updateBoatRide(performance.now());
+      if(step&&!boatRide&&meActivity!=='sit'&&meActivity!=='walk'){walkYaw=viewYaw;let nx=mePosition.x+Math.sin(walkYaw)*dt*4*step,nz=mePosition.z+Math.cos(walkYaw)*dt*4*step;if(walkable(nx,nz)){mePosition.x=nx;mePosition.z=nz}}
       if(meActivity==='walk'){if(!walkGoal){const a=walkSeed+(walkCount++*.87),r=5+(walkCount%4)*1.3;walkGoal=[Math.sin(a)*r,21+Math.cos(a)*r];}const dx=walkGoal[0]-mePosition.x,dz=walkGoal[1]-mePosition.z,dist=Math.hypot(dx,dz);if(dist<.35)walkGoal=null;else{const d=Math.min(dist,dt*1.35),nx=mePosition.x+dx/dist*d,nz=mePosition.z+dz/dist*d;if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else walkGoal=null;}}
       if(walkRoute.length){
         if(meActivity!=='idle')meActivity='idle';
         const goal=walkRoute[0],dx=goal[0]-mePosition.x,dz=goal[1]-mePosition.z,dist=Math.hypot(dx,dz);
-        if(dist<.16){walkRoute.shift();if(!walkRoute.length){if(wishDestination){document.getElementById('zenHint').textContent='Đã đến Hồ '+wishDestination+' · Ném đồng xu để nguyện ước';wishDestination=null;}if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}document.getElementById('zenHint').textContent='Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';}}
+        if(dist<.16){walkRoute.shift();if(!walkRoute.length){if(wishDestination){document.getElementById('zenHint').textContent='Đã đến Hồ '+wishDestination+' · Ném đồng xu để nguyện ước';wishDestination=null;}if(pendingBoat){boardBoat();}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}if(!boatRide)document.getElementById('zenHint').textContent='Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';}}
         else{const step=Math.min(dist,dt*3.2),nx=mePosition.x+dx/dist*step,nz=mePosition.z+dz/dist*step;
           if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
       }
-      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
+      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;if(boatRide&&boatRide.phase==='row'){const dir=-boatRide.from;camera.position.lerp(new THREE.Vector3(mePosition.x-dir*6,2.4,mePosition.z+6),.08);camera.lookAt(mePosition.x,.9,mePosition.z);}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);}fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
-    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit');dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');
+    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;const inBoat=boatRide&&boatRide.phase==='row';if(inBoat){me.position.y=boat.group.position.y+.33;me.rotation.y=boatRide.from<0?Math.PI/2:-Math.PI/2;}if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit'||inBoat);
     for(const peer of onlineAvatars.values()){
       peer.group.rotation.set(0,peer.group.userData.yaw||0,0);
       if(!peer.gesture)continue;
