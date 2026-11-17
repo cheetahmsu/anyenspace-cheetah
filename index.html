@@ -427,8 +427,9 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(hits.length){let obj=hits[0].object;while(obj.parent&&!obj.userData.zone)obj=obj.parent;if(obj.userData.zone){selectZone(obj.userData.zone);return;}}
     const guestHits=raycaster.intersectObjects([...onlineAvatars.values()].map(v=>v.group),true);
     if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
-    const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.mesh),false);
-    if(cushionHits.length){const seat=cushions.find(c=>c.mesh===cushionHits[0].object);if(seat){requestSeat(seat);}return;}
+    // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
+    const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
+    if(cushionHits.length){let obj=cushionHits[0].object;while(obj.parent&&!cushions.some(c=>c.group===obj))obj=obj.parent;const seat=cushions.find(c=>c.group===obj);if(seat){tapSeat(seat);}return;}
     const groundHits=raycaster.intersectObject(ground,false);
     if(groundHits.length){const q=groundHits[0].point;if(Math.abs(q.x)<35&&q.z>-40&&q.z<36){navigateTo(q.x,q.z);}}
 
@@ -547,13 +548,21 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   const statueDistance=s=>Math.round(Math.hypot(s.x-STATUE.x,s.z-STATUE.z)*10)/10;/* rounded so mats on the same ring tie */
   // Nearest free mat to the Buddha; ties go to the mat closer to the guest.
   function chooseSeat(){return cushions.filter(seatAvailable).sort((a,b)=>statueDistance(a)-statueDistance(b)||seatDistance(a)-seatDistance(b))[0]||null;}
-  function requestSeat(seat){
+  // A tapped mat: only free mats can be chosen. If already sitting elsewhere, stand up and move to it.
+  function tapSeat(seat){
+    const hint=document.getElementById('zenHint');
+    if(meActivity==='sit'&&Math.hypot(seat.x-mePosition.x,seat.z-mePosition.z)<.8){hint.textContent='🧘 Bạn đang ngồi trên tọa cụ này';return;}
+    if(!seatAvailable(seat)){hint.textContent='Tọa cụ này đã có người ngồi, hãy chọn tọa cụ trống khác.';return;}
+    if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>requestSeat(seat,true),60);return;}
+    requestSeat(seat,true);
+  }
+  function requestSeat(seat,picked){
     if(!seat||!seatAvailable(seat))seat=chooseSeat();
     if(!seat){document.getElementById('zenHint').textContent='Các tọa cụ đã kín, vui lòng chờ một chút.';return;}
     if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
     if(meActivity==='sit')return;
     if(seatDistance(seat)<.35){mePosition.set(seat.x,0,seat.z);document.getElementById('realtimeSit')?.click();return;}
-    if(navigateTo(seat.x,seat.z)){pendingSeat=seat;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{x:seat.x,z:seat.z}}));document.getElementById('zenHint').textContent=seat.inner?'Đang đến tọa cụ trước tượng Phật…':'Chánh điện đã kín, đang đến tọa cụ ngoài sân…';}
+    if(navigateTo(seat.x,seat.z)){pendingSeat=seat;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{x:seat.x,z:seat.z}}));document.getElementById('zenHint').textContent=picked?'Đang đến tọa cụ bạn chọn…':seat.inner?'Đang đến tọa cụ trước tượng Phật…':'Chánh điện đã kín, đang đến tọa cụ ngoài sân…';}
   }
   function sitNaturally(){
     // Không dịch chuyển tức thời: chỉ ngồi sau khi đến đúng tọa cụ.
