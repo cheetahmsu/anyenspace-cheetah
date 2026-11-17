@@ -289,7 +289,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   // facing the bridge, with three arcs of meditation cushions in front.
   const STATUE={x:0,z:-24.8},TERRACE_TOP=.3;
   const terraceMat=mat('#9a9580'),terraceEdge=mat('#7f7b68'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
-  const TERRACE_R=8.1;const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);scene.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);scene.add(kerb);
+  const TERRACE_R=8.2;const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);scene.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);scene.add(kerb);
   // Round three-step dais for the statue.
   [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);scene.add(d)});
   const DAIS_TOP=TERRACE_TOP+.54;
@@ -479,26 +479,25 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   function paintMe(){let p={};try{p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}')}catch{};myStyle=p.style||'robe';myColor=p.color||'#687b48';dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');meCtx.clearRect(0,0,512,112);meCtx.fillStyle='#f4e2b9';meCtx.font='bold 36px sans-serif';meCtx.textAlign='center';meCtx.textBaseline='middle';meCtx.fillText(String(p.name||'Khách Yên').slice(0,24),256,57,470);meTexture.needsUpdate=true;}
   // Tọa cụ ưu tiên Chánh điện; mở rộng theo vòng ngoài khi đầy.
   const cushions=[];
+  const cushionMats={base:mat('#5f7f55'),yellow:mat('#e9c25c'),pink:mat('#e8a7a0')};
+  function buildCushion(color){const group=new THREE.Group();const base=new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.1,28),cushionMats.base);base.position.y=.05;group.add(base);
+    const petal=cushionMats[color]||cushionMats.pink;for(let p=0;p<8;p++){const a=p*Math.PI/4;const m=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),petal);m.scale.set(.85,.42,1.35);m.position.set(Math.cos(a)*.24,.14,Math.sin(a)*.24);m.rotation.y=-a;group.add(m);}
+    const heart=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),petal);heart.scale.set(1,.38,1);heart.position.y=.15;group.add(heart);group.userData.base=base;return group;}
   const seatLocations=[];
-  // Six visible lotus cushions INSIDE the sanctuary, not around the pond.
-  // Concentric rings of mats around the statue (about 1.55 m apart along each ring), each mat turned toward the statue.
-  // A corridor straight in front, from the bridge to the altar, is left open.
-  for(const r of [3.6,5.1,6.6]){const n=Math.floor(Math.PI*2*r/1.55);for(let k=0;k<n;k++){const a=k*Math.PI*2/n+(r===5.1?Math.PI/n:0);const x=STATUE.x+Math.sin(a)*r,z=STATUE.z+Math.cos(a)*r;if(z>STATUE.z&&Math.abs(x-STATUE.x)<1.0)continue;seatLocations.push([x,z,true,a])}}
+  // Five concentric rings of lotus cushions around the statue: 6/8/10/12/14 mats, each turned toward the statue.
+  // Every ring is offset by half a step, so the corridor straight in front (bridge to altar) stays open.
+  const SEAT_RINGS=[3.2,4.2,5.2,6.2,7.25],SEAT_COUNTS=[6,8,10,12,14];
+  SEAT_RINGS.forEach((r,ring)=>{const n=SEAT_COUNTS[ring];for(let k=0;k<n;k++){const a=(k+.5)*Math.PI*2/n;seatLocations.push([STATUE.x+Math.sin(a)*r,STATUE.z+Math.cos(a)*r,true,a,ring])}});
   // Overflow seats outside only when the sanctuary is full.
-    const matCloth=mat('#6e4a33'),matEdge=mat('#8a6243'),zafuMat=mat('#c38a3e'),zafuTop=mat('#d9a456');
-  seatLocations.forEach(([x,z,inner,a=0],i)=>{
+  seatLocations.forEach(([x,z,inner,a=0,ring=0],i)=>{
     if(!walkable(x,z))return;
-    // Zabuton (square mat) with a round zafu cushion, turned toward the statue.
-    const group=new THREE.Group();group.position.set(x,TERRACE_TOP,z);group.rotation.y=a;
-    const mat2=new THREE.Mesh(new THREE.BoxGeometry(1.05,.06,1.05),matCloth);mat2.position.y=.03;group.add(mat2);
-    const trim=new THREE.Mesh(new THREE.BoxGeometry(1.12,.03,1.12),matEdge);trim.position.y=.015;group.add(trim);
-    const base=new THREE.Mesh(new THREE.CylinderGeometry(.36,.4,.18,20),zafuMat);base.position.set(0,.15,.12);group.add(base);
-    const top=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.03,20),zafuTop);top.position.set(0,.255,.12);group.add(top);
+    // Lotus cushion: round green base with soft petals; the two inner rings are yellow, the three outer rings pink.
+    const group=buildCushion(ring<2?'yellow':'pink');group.position.set(x,TERRACE_TOP,z);group.rotation.y=a;const base=group.userData.base;
     scene.add(group);cushions.push({x,z,mesh:base,inner,group});
   });
   let previousActivity='idle',pendingSeat=null,occupiedPositions=[];
   function seatDistance(s){return Math.hypot(s.x-mePosition.x,s.z-mePosition.z)}
-  function seatAvailable(s){return !occupiedPositions.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<1.1 || (Number.isFinite(p.seatX)&&Math.hypot(p.seatX-s.x,p.seatZ-s.z)<.7));}
+  function seatAvailable(s){return !occupiedPositions.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<.8 || (Number.isFinite(p.seatX)&&Math.hypot(p.seatX-s.x,p.seatZ-s.z)<.7));}
   const statueDistance=s=>Math.round(Math.hypot(s.x-STATUE.x,s.z-STATUE.z)*10)/10;/* rounded so mats on the same ring tie */
   // Nearest free mat to the Buddha; ties go to the mat closer to the guest.
   function chooseSeat(){return cushions.filter(seatAvailable).sort((a,b)=>statueDistance(a)-statueDistance(b)||seatDistance(a)-seatDistance(b))[0]||null;}
@@ -519,8 +518,8 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   function updateSitButton(){const b=document.querySelector('#zenToolbar [data-zen="sit"]');if(!b)return;const sitting=meActivity==='sit';const label=sitting?'Ra ngoài':'Toạ thiền';b.innerHTML=(sitting?'🚶':'🧘')+'<small>'+label+'</small>';b.setAttribute('aria-label',sitting?'Đứng lên và ra khỏi khu thiền':'Toạ thiền');b.title=label;}
   window.addEventListener('anyen-activity',()=>setTimeout(updateSitButton,0));
   window.addEventListener('anyen-request-sit',()=>{if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>{if(meActivity==='sit')return;if(navigateTo(...MEDITATION_EXIT))document.getElementById('zenHint').textContent='🚶 Đang rời khu thiền…';},60);return;}requestSeat(chooseSeat());});
-  // Sitting avatars rest on the zafu (top at y .27, on the mat's outer half) and face the statue, legs crossed on the mat.
-  const ZAFU_TOP=.27,ZAFU_BACK=.12;
+  // Sitting avatars rest on the centre of the lotus cushion and face the statue.
+  const ZAFU_TOP=.21,ZAFU_BACK=0;
   function seatOnCushion(group,seat){const a=seat.group.rotation.y;group.position.set(seat.x+Math.sin(a)*ZAFU_BACK,seat.group.position.y+ZAFU_TOP,seat.z+Math.cos(a)*ZAFU_BACK);group.rotation.y=a+Math.PI;group.userData.yaw=a+Math.PI;}
   function poseAvatar(torso,head,tag,sitting){
     torso.scale.set(sitting?1.22:1,sitting?.54:1,sitting?1.18:1);
@@ -540,7 +539,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       const figure=(sitting,x)=>{const g=new THREE.Group();const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.25,16,12),mat('#e7c9a8'));g.add(head);poseAvatar(torso,head,new THREE.Object3D(),sitting);const outfit=outfitParts(g,torso);const holder=new THREE.Group();holder.position.x=x;holder.add(g);sc.add(holder);return {holder,g,torso,outfit,sitting}};
       const stand=figure(false,-.95),sit=figure(true,.95);
       const pad=new THREE.Mesh(new THREE.CylinderGeometry(.62,.66,.08,32),mat('#3e6a5b'));pad.position.set(-.95,-.04,0);sc.add(pad);
-      const seat=new THREE.Group();seat.position.x=.95;const zab=new THREE.Mesh(new THREE.BoxGeometry(1.05,.06,1.05),mat('#6e4a33'));zab.position.y=.03;seat.add(zab);const zafu=new THREE.Mesh(new THREE.CylinderGeometry(.36,.4,.18,20),mat('#c38a3e'));zafu.position.set(0,.15,-.12);seat.add(zafu);const zt=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.03,20),mat('#d9a456'));zt.position.set(0,.255,-.12);seat.add(zt);sc.add(seat);
+      const seat=buildCushion('yellow');
       sit.g.position.set(0,ZAFU_TOP,-ZAFU_BACK);sit.holder.add(seat);seat.position.x=0;
       preview={r,sc,cam,figures:[stand,sit],running:false}}catch(err){console.warn('Avatar preview unavailable',err);return}}
     const p=d.profile||{};for(const f of preview.figures)dressAvatar(f.outfit,f.torso,p.color,p.style,f.sitting);
