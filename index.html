@@ -261,7 +261,7 @@ for(const l of wishLakes){
    const pool=new THREE.Mesh(new THREE.CircleGeometry(3.25,56),new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:.88,metalness:.3,roughness:.23,side:THREE.DoubleSide}));pool.rotation.x=-Math.PI/2;group.add(pool);
  }
  const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#f1d69f';ctx.font='bold 48px serif';ctx.textAlign='center';ctx.fillText('HỒ '+l.name.toUpperCase(),256,62);ctx.font='28px sans-serif';ctx.fillText(l.theme,256,103);
- const tex=new THREE.CanvasTexture(labelCanvas);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,1.5,0);label.scale.set(5,1.25,1);group.add(label);
+ const tex=new THREE.CanvasTexture(labelCanvas);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,l.name==='Niệm'?5.4:1.5,0);label.scale.set(5,1.25,1);group.add(label);/* Hồ Niệm's sign floats above the arched bridge */
  if(l.name!=='Niệm'){const colors={'Sắc':'#f2c96b','Thanh':'#a9c5ed','Hương':'#f4e8d2','Vị':'#e89baa','Chạm':'#bca4dd'};for(let j=0;j<8;j++){const a=j*2.39996,r=.7+(j%3)*.65;const plant=new THREE.Group();plant.position.set(Math.cos(a)*r,.09,Math.sin(a)*r);group.add(plant);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),mat('#56845e'));leaf.scale.set(1,.13,.6);plant.add(leaf);for(let p=0;p<5;p++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.19,8,6),mat(colors[l.name]));petal.position.set(Math.cos(p*1.256)*.2,.15,Math.sin(p*1.256)*.2);plant.add(petal)}}}lakeVisuals.set(l.name,group);
 }
 function animateCoin(lake,remote){const l=wishLakes.find(v=>v.name===lake);if(!l)return;const coin=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,24),new THREE.MeshStandardMaterial({color:'#e5c178',metalness:.8,roughness:.2}));const from=remote?new THREE.Vector3(l.x+5,1.7,l.z+5):mePosition.clone().add(new THREE.Vector3(0,1.7,0));scene.add(coin);const start=performance.now();function frame(now){const t=Math.min(1,(now-start)/1400);coin.position.set(from.x+(l.x-from.x)*t,from.y+(.12-from.y)*t+Math.sin(Math.PI*t)*2.8,from.z+(l.z-from.z)*t);coin.rotation.z=t*15;if(t<1)requestAnimationFrame(frame);else{scene.remove(coin);coin.geometry.dispose();coin.material.dispose()}}requestAnimationFrame(frame)}
@@ -289,7 +289,11 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   // facing the bridge, with three arcs of meditation cushions in front.
   const STATUE={x:0,z:-24.8},TERRACE_TOP=.3;
   const terraceMat=mat('#9a9580'),terraceEdge=mat('#7f7b68'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
-  const TERRACE_R=8.2;const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);scene.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);scene.add(kerb);
+  const TERRACE_R=8.2;
+  // Arched footbridge over Hồ Niệm: walkers follow this height while on the bridge.
+  const BRIDGE_ARCH=[-15.6,7.6],BRIDGE_RISE=2.6;
+  function bridgeHeight(z){if(z<=BRIDGE_ARCH[0]||z>=BRIDGE_ARCH[1])return 0;const u=(z-BRIDGE_ARCH[0])/(BRIDGE_ARCH[1]-BRIDGE_ARCH[0]);return .18+BRIDGE_RISE*Math.sin(Math.PI*u);}
+  const groundHeight=(x,z)=>Math.abs(x)<=1.8?bridgeHeight(z):0;const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);scene.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);scene.add(kerb);
   // Round three-step dais for the statue.
   [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);scene.add(d)});
   const DAIS_TOP=TERRACE_TOP+.54;
@@ -319,8 +323,18 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   // Bodhi tree behind the shrine.
   {const bodhi=new THREE.Group();bodhi.position.set(0,0,-36.5);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});scene.add(bodhi)}
   // Footbridge across Hồ Niệm, landing on the terrace steps.
-  const bridgeDeck=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,31.4),stone);bridgeDeck.position.set(0,.18,-0.85);scene.add(bridgeDeck);
-  for(const x of [-1.85,1.85]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,20.6),wood);rail.position.set(x,.75,-4.3);scene.add(rail);for(let z=-14.3;z<=5.8;z+=2.5){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,.6,.14),wood);p.position.set(x,.48,z);scene.add(p)}}
+  // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
+  {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(-16.55,BRIDGE_ARCH[0]);flat(BRIDGE_ARCH[1],14.85);
+   const N=36,span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0];let prev=null;
+   for(let k=0;k<=N;k++){const z=BRIDGE_ARCH[0]+span*k/N,y=bridgeHeight(z);const pt={z,y};
+     if(prev){const len=Math.hypot(pt.z-prev.z,pt.y-prev.y),mz=(pt.z+prev.z)/2,my=(pt.y+prev.y)/2,tilt=-Math.atan2(pt.y-prev.y,pt.z-prev.z);
+       const deck=new THREE.Mesh(new THREE.BoxGeometry(3.6,.18,len+.04),stone);deck.position.set(0,my+.09,mz);deck.rotation.x=tilt;scene.add(deck);
+       const beam=new THREE.Mesh(new THREE.BoxGeometry(3.3,.34,len+.04),wood);beam.position.set(0,my-.16,mz);beam.rotation.x=tilt;scene.add(beam);
+       for(const x of [-1.85,1.85]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,len+.04),wood);rail.position.set(x,my+.78,mz);rail.rotation.x=tilt;scene.add(rail);
+         if(k%3===0){const post=new THREE.Mesh(new THREE.BoxGeometry(.14,.62,.14),wood);post.position.set(x,pt.y+.48,pt.z);scene.add(post)}}}
+     prev=pt;}
+   // Stone abutments where the arch meets the shore.
+   for(const z of BRIDGE_ARCH){const a=new THREE.Mesh(new THREE.BoxGeometry(4,.5,1.2),stone);a.position.set(0,.05,z);scene.add(a)}}
   // Simple ritual altar within sanctuary; all offerings are local visual feedback for now.
   const altar=new THREE.Group();altar.position.set(0,TERRACE_TOP+.08,-22.1);scene.add(altar);
   const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(.62,.7,.22,24),mat('#6b4a32'));altar.add(altarBase);
@@ -355,7 +369,24 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   // Trees between the camera and the avatar fade out so they never block the view.
   const fadeTrees=[];
   function fadeBlockingTrees(cam,target,dt){const ax=cam.x,az=cam.z,bx=target.x,bz=target.z,vx=bx-ax,vz=bz-az,len2=vx*vx+vz*vz||1;for(const t of fadeTrees){const u=Math.max(0,Math.min(1,((t.x-ax)*vx+(t.z-az)*vz)/len2));const d=Math.hypot(ax+vx*u-t.x,az+vz*u-t.z);const blocking=u>0&&u<1&&d<2.3;const goal=blocking?.18:1;if(Math.abs(t.opacity-goal)<.01&&t.opacity===goal)continue;t.opacity+= (goal-t.opacity)*Math.min(1,dt*8);if(Math.abs(t.opacity-goal)<.01)t.opacity=goal;for(const m of t.meshes){m.material.transparent=t.opacity<1;m.material.opacity=t.opacity;m.material.depthWrite=t.opacity>=1;}}}
-  const flowers=[];for(let i=0;i<23;i++){let a=i*2.399,r=2.5+(i%5)*1.4,x=Math.cos(a)*r,z=-4+Math.sin(a)*r;if(Math.abs(x)<2.7)x=Math.sign(x||1)*(2.7+Math.abs(x)*.4);let lotus=new THREE.Group();let pad=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.035,14),leaf);lotus.add(pad);for(let j=0;j<7;j++){let p=new THREE.Mesh(new THREE.SphereGeometry(.22,9,8),j%2?pink:petal);let t=j*Math.PI*2/7;p.position.set(Math.cos(t)*.22,.17,Math.sin(t)*.22);p.scale.set(.7,.5,1.4);p.rotation.y=t;lotus.add(p)}lotus.position.set(x,.13,z);scene.add(lotus);flowers.push(lotus)}
+  // Hồ Niệm lotus: floating notched pads, raised bowl-shaped leaves on stems, open flowers with layered pointed petals
+  // around a yellow seed pod, and a few closed buds. Kept clear of the bridge.
+  const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalInner=mat('#f6b6c8'),seedPod=mat('#e2cf62'),budMat=mat('#e98aaa');
+  const padGeo=new THREE.CircleGeometry(.5,20,.18,Math.PI*2-.36),bowlGeo=new THREE.LatheGeometry([new THREE.Vector2(0,0),new THREE.Vector2(.25,.05),new THREE.Vector2(.5,.15),new THREE.Vector2(.62,.24)],18),petalGeo=new THREE.SphereGeometry(.5,10,8);
+  function lotusPetal(group,angle,tilt,len,wid,material,y){const pivot=new THREE.Group();pivot.position.y=y;pivot.rotation.y=angle;const tip=new THREE.Group();tip.rotation.x=tilt;const p=new THREE.Mesh(petalGeo,material);p.scale.set(wid,len,wid*.38);p.position.y=len*.5;tip.add(p);pivot.add(tip);group.add(pivot);}
+  function lotusFlower(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const head=new THREE.Group();head.position.y=h;g.add(head);
+    for(let k=0;k<9;k++)lotusPetal(head,k*Math.PI*2/9,1.0,.42,.2,petalOuter,0);for(let k=0;k<7;k++)lotusPetal(head,k*Math.PI*2/7+.3,.55,.38,.17,petalInner,.02);
+    const pod=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.09,12),seedPod);pod.position.y=.08;head.add(pod);return g;}
+  function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.026,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),budMat);bud.scale.set(1,1.8,1);bud.position.y=h+.14;g.add(bud);const cap=new THREE.Mesh(new THREE.ConeGeometry(.09,.16,10),budMat);cap.position.y=h+.42;g.add(cap);return g;}
+  function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
+  function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
+  const flowers=[];
+  for(let i=0;i<26;i++){const a=i*2.399,r=2.4+(i%6)*1.25;let x=Math.cos(a)*r;const z=-4+Math.sin(a)*r;if(Math.abs(x)<2.8)x=Math.sign(x||1)*(2.8+Math.abs(x)*.4);
+    const clump=new THREE.Group();clump.position.set(x,.04,z);clump.rotation.y=a;clump.userData.y0=.04;
+    for(let k=0;k<3;k++){const pad=lotusPad(.7+Math.random()*.6);pad.position.set((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4);clump.add(pad)}
+    if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
+    if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
+    scene.add(clump);flowers.push(clump)}
   for(let i=0;i<32;i++){let x=(i%8-3.5)*4.4,z=-29+Math.floor(i/8)*18;if(z===25)z=32.5;/* keep the arrival area clear */if(Math.abs(x)<11&&z>-15&&z<7)continue;if(z<-25&&Math.abs(x)<9)continue;let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),wood.clone());trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),leaf.clone());canopy.position.set(x,4.6,z);scene.add(canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
   // Waypoint navigation: smooth guided movement between five destinations.
   const destinations={
@@ -481,14 +512,14 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   const cushions=[];
   // Two kinds of seat: the inner rings use the brown zabuton (square mat) with a round zafu on its outer half;
   // the outer rings use lotus cushions (round green base with soft pink petals). userData says where a guest sits.
-  const cushionMats={base:mat('#5f7f55'),pink:mat('#e8a7a0'),cloth:mat('#6e4a33'),edge:mat('#8a6243'),zafu:mat('#c38a3e'),zafuTop:mat('#d9a456')};
+  const cushionMats={base:mat('#4f7a52'),pink:mat('#e59a86'),peach:mat('#f2b884'),cloth:mat('#6e4a33'),edge:mat('#8a6243'),zafu:mat('#c38a3e'),zafuTop:mat('#d9a456')};
   function buildCushion(kind){const group=new THREE.Group();let base;
     if(kind==='zabuton'){const cloth=new THREE.Mesh(new THREE.BoxGeometry(1.05,.06,1.05),cushionMats.cloth);cloth.position.y=.03;group.add(cloth);const trim=new THREE.Mesh(new THREE.BoxGeometry(1.12,.03,1.12),cushionMats.edge);trim.position.y=.015;group.add(trim);
       base=new THREE.Mesh(new THREE.CylinderGeometry(.36,.4,.18,20),cushionMats.zafu);base.position.set(0,.15,.12);group.add(base);const top=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.03,20),cushionMats.zafuTop);top.position.set(0,.255,.12);group.add(top);
       group.userData.sitTop=.27;group.userData.sitBack=.12;}
-    else{base=new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.1,28),cushionMats.base);base.position.y=.05;group.add(base);
-      for(let p=0;p<8;p++){const a=p*Math.PI/4;const m=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),cushionMats.pink);m.scale.set(.85,.42,1.35);m.position.set(Math.cos(a)*.24,.14,Math.sin(a)*.24);m.rotation.y=-a;group.add(m);}
-      const heart=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),cushionMats.pink);heart.scale.set(1,.38,1);heart.position.y=.15;group.add(heart);
+    else{// Thảm sen: flat octagonal green base with four big puffy petals, peach over pink, like a four-petal lotus.
+      base=new THREE.Mesh(new THREE.CylinderGeometry(.56,.58,.06,8),cushionMats.base);base.position.y=.03;group.add(base);
+      for(let p=0;p<8;p++){const big=p%2===0,a=p*Math.PI/4+Math.PI/8;const m=new THREE.Mesh(new THREE.SphereGeometry(.2,9,6),big?cushionMats.peach:cushionMats.pink);m.scale.set(big?.95:.8,big?.6:.5,big?1.6:1.3);m.position.set(Math.cos(a)*(big?.24:.2),big?.13:.1,Math.sin(a)*(big?.24:.2));m.rotation.y=-a+Math.PI/2;group.add(m);}
       group.userData.sitTop=.21;group.userData.sitBack=0;}
     group.userData.base=base;return group;}
   const seatLocations=[];
@@ -563,7 +594,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,entry.activity==='sit');
       const label=String(entry.name||'Khách Yên').slice(0,24);if(mesh.lastName!==label){const c=mesh.tagCtx;c.clearRect(0,0,512,112);c.font='bold 36px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#f4e2b9';c.fillText(label,256,57,470);mesh.tagTex.needsUpdate=true;mesh.lastName=label;}
       const sitting=entry.activity==='sit';poseAvatar(mesh.torso,mesh.head,mesh.tag,sitting);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,sitting);
-      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;mesh.group.position.set(Math.max(-34,Math.min(34,entry.x)),0,Math.max(-34,Math.min(28,entry.z)));mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);
+      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;mesh.group.position.set(Math.max(-34,Math.min(34,entry.x)),groundHeight(entry.x,entry.z),Math.max(-34,Math.min(28,entry.z)));mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);
     }
     for(const [id,obj] of onlineAvatars){if(!incoming[id]){scene.remove(obj.group);onlineAvatars.delete(id)}}
   });
@@ -609,7 +640,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       }
       const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
-    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.rotation.y=0;if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit');dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');
+    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit');dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');
     for(const peer of onlineAvatars.values()){
       peer.group.rotation.set(0,peer.group.userData.yaw||0,0);
       if(!peer.gesture)continue;
@@ -623,7 +654,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     }
     if(document.body.classList.contains('immersive')){const d=Math.min(...guests.map(g=>g.position.distanceTo(camera.position)));document.querySelector('#nearGuest').textContent=d<7?'Có một khách tham quan gần bạn':'Dạo gần một người để chào'};
     markers.forEach((m,i)=>{m.rotation.y=t*.3;m.children[0].rotation.z=t*.35;m.position.y=(i===0?2.5:i===1?2.2:i===2?2.8:4)+Math.sin(t*1.2+i)*.13});
-    flowers.forEach((f,i)=>f.position.y=.13+Math.sin(t*.8+i)*.035);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
+    flowers.forEach((f,i)=>f.position.y=f.userData.y0+Math.sin(t*.8+i)*.02);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
     water.material.color.setHSL(.48,.31,.27+Math.sin(t*.5)*.01);renderer.render(scene,camera)
   }animate();
 
