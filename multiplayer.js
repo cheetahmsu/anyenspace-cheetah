@@ -1,5 +1,6 @@
 // LÀNG YÊN 3.1: Presence + Broadcast, authenticated private channels.
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+// Supabase is bundled locally (vendor/supabase.js) so the page does not depend on esm.sh; the CDN stays as a fallback.
+const createClient=window.supabase?.createClient||(await import('https://esm.sh/@supabase/supabase-js@2.119.0')).createClient;
 const $=s=>document.querySelector(s), status=$('#realtimeStatus'), count=$('#onlineCount'), people=$('#onlinePeople');
 const cfg=window.ANYEN_CONFIG||{};
 const valid=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(cfg.supabaseUrl||'')&&/^(sb_publishable_|eyJ)/.test(cfg.publishableKey||'');
@@ -116,7 +117,8 @@ window.addEventListener('anyen-offering',async e=>{
 window.addEventListener('anyen-lobby-refresh',()=>syncLobbyOfferings().catch(()=>{}));
 window.addEventListener('anyen-seat-intent',e=>{const d=e.detail||{};seatIntent=d.clear?null:(Number.isFinite(d.x)&&Number.isFinite(d.z)?{seatX:d.x,seatZ:d.z}:null);if(joined&&channel)channel.track({...profile(),...position,activity,...(seatIntent||{})}).catch(()=>{});});
 window.addEventListener('anyen-3d-enter',()=>{if(!joined&&!channel){const select=$('#rtRoomSelect');if(select)select.value='Sảnh chung';join();}});
-window.addEventListener('anyen-coin',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
+// Broadcast only coins the 3D scene actually threw (it refuses throws far from any lake).
+window.addEventListener('anyen-coin-thrown',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
 const pendingGifts=new Map();
 // A gift is only removed from the sender's bag after the recipient acknowledges it.
 // Without an acknowledgement it is re-sent (the recipient de-duplicates by giftId and acknowledges again),
