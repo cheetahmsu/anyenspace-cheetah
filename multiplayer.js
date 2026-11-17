@@ -118,14 +118,21 @@ window.addEventListener('anyen-seat-intent',e=>{const d=e.detail||{};seatIntent=
 window.addEventListener('anyen-3d-enter',()=>{if(!joined&&!channel){const select=$('#rtRoomSelect');if(select)select.value='Sảnh chung';join();}});
 window.addEventListener('anyen-coin',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
 const pendingGifts=new Map();
+// A gift is only removed from the sender's bag after the recipient acknowledges it.
+// Without an acknowledgement it is re-sent (the recipient de-duplicates by giftId and acknowledges again),
+// and after the last attempt the item stays with the sender and the UI is told so.
+const giftTimers=new Map(),GIFT_ACK_WAIT=6000,GIFT_ATTEMPTS=3;
+function giftFailed(giftId,reason){clearTimeout(giftTimers.get(giftId));giftTimers.delete(giftId);pendingGifts.delete(giftId);window.dispatchEvent(new CustomEvent('anyen-gift-failed',{detail:{giftId,reason}}));}
+window.addEventListener('anyen-gift-ack',e=>{const id=e.detail?.giftId;clearTimeout(giftTimers.get(id));giftTimers.delete(id);});
 window.addEventListener('anyen-gift-send',e=>{
  const d=e.detail||{},giftId=String(d.uuid||''),to=String(d.to||''),itemId=String(d.id||'');
- if(!joined||!channel||!peers[to])return state('Người nhận chưa có mặt trong phòng.');
- if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId)||!['chuong','sen','nen','nhang','hat','tra','da','so','cay'].includes(itemId))return;
+ if(!joined||!channel||!peers[to])return giftFailed(giftId,'Người nhận chưa có mặt trong phòng. Vật phẩm vẫn ở trong túi của bạn.');
+ if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId)||!['chuong','sen','nen','nhang','hat','tra','da','so','cay'].includes(itemId))return giftFailed(giftId,'Vật phẩm không hợp lệ.');
  pendingGifts.set(giftId,to);
- channel.send({type:'broadcast',event:'gift',payload:{id:uid,to,itemId,giftId}})
- .then(r=>{if(r!=='ok'&&r!=='OK')state('Đã gửi yêu cầu tặng. Đang chờ người nhận xác nhận.');})
- .catch(err=>{pendingGifts.delete(giftId);state('Không gửi được quà: '+err.message);});
+ const attempt=n=>{if(!pendingGifts.has(giftId))return;if(!joined||!channel||!peers[to])return giftFailed(giftId,'Người nhận đã rời phòng. Vật phẩm vẫn ở trong túi của bạn.');
+  channel.send({type:'broadcast',event:'gift',payload:{id:uid,to,itemId,giftId}}).catch(err=>console.warn('An Yên gift send',err));
+  giftTimers.set(giftId,setTimeout(()=>{if(!pendingGifts.has(giftId))return;if(n+1<GIFT_ATTEMPTS)attempt(n+1);else giftFailed(giftId,'Người nhận chưa xác nhận. Vật phẩm vẫn ở trong túi của bạn, bạn có thể thử tặng lại.');},GIFT_ACK_WAIT));};
+ attempt(0);
 });
 window.addEventListener('anyen-connection-request',join);
 window.addEventListener('anyen-room-request',e=>{const target=[...document.querySelectorAll('[data-room]')].find(b=>b.dataset.room===e.detail?.room);if(target){target.click();join()}});
