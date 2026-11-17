@@ -513,9 +513,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const vest=new THREE.Mesh(new THREE.BoxGeometry(.72,.7,.44),mat('#d4c8ad'));vest.position.y=1.12;group.add(vest);
     // Seated meditation: legs folded in a round ring, with the robe draping out over them into a round base. Only shown while sitting.
     const lap=new THREE.Group();lap.visible=false;const legMat=mat('#687b48');
-    const drape=new THREE.Mesh(new THREE.SphereGeometry(.5,28,12,0,Math.PI*2,0,Math.PI/2),legMat);drape.scale.set(1.24,.86,1.24);drape.position.set(0,-.205,.06);lap.add(drape);
-    const legs=new THREE.Mesh(new THREE.TorusGeometry(.4,.12,10,28),legMat);legs.rotation.x=Math.PI/2;legs.scale.set(1,1,.75);legs.position.set(0,-.13,.1);lap.add(legs);
-    const feet=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat('#e7c9a8'));feet.scale.set(1.5,.5,.8);feet.position.set(0,.13,.3);lap.add(feet);
+    const drape=new THREE.Mesh(new THREE.SphereGeometry(.5,28,12,0,Math.PI*2,0,Math.PI/2),legMat);drape.scale.set(1.04,.8,1.04);drape.position.set(0,-.205,.06);lap.add(drape);
+    const legs=new THREE.Mesh(new THREE.TorusGeometry(.34,.11,10,28),legMat);legs.rotation.x=Math.PI/2;legs.scale.set(1,1,.75);legs.position.set(0,-.13,.1);lap.add(legs);
+    const feet=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat('#e7c9a8'));feet.scale.set(1.5,.5,.8);feet.position.set(0,.12,.27);lap.add(feet);
     group.add(lap);
     return {sash,robe,vest,lap,legMat};
   }
@@ -528,7 +528,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     
     torso.scale.x=mode==='linen'?.91:1;
     const slim=mode==='robe'?1:mode==='linen'?.86:.76;parts.robe.scale.set((sitting?.86:1)*slim,sitting?.5:1,(sitting?.86:1)*slim);parts.robe.position.y=sitting?.12:.57;
-    parts.sash.position.y=sitting?.27:.83;parts.vest.position.y=sitting?.5:1.12;parts.vest.scale.y=sitting?.62:1;
+    parts.sash.position.y=sitting?.27:.83;parts.vest.position.y=sitting?.56:1.12;parts.vest.scale.y=sitting?.62:1;
     if(parts.lap){parts.lap.visible=!!sitting;parts.legMat.color.set(safe);}
     
   }
@@ -633,10 +633,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Sitting avatars rest on the seat (zafu top or lotus centre, from the cushion's userData) and face the statue.
   function seatOnCushion(group,seat){const a=seat.group.rotation.y,{sitTop,sitBack}=seat.group.userData;group.position.set(seat.x+Math.sin(a)*sitBack,seat.group.position.y+sitTop,seat.z+Math.cos(a)*sitBack);group.rotation.y=a+Math.PI;group.userData.yaw=a+Math.PI;}
   function poseAvatar(torso,head,tag,sitting){
-    torso.scale.set(sitting?1.22:1,sitting?.54:1,sitting?1.18:1);
-    torso.position.y=sitting?.38:1.05;
-    head.position.y=sitting?.86:1.85;
-    tag.position.y=sitting?1.24:2.17;
+    // Seated keeps the standing body width; only the height folds, so the figure doesn't look heavier.
+    torso.scale.set(1,sitting?.6:1,1);
+    torso.position.y=sitting?.42:1.05;
+    head.position.y=sitting?1.06:1.85;
+    tag.position.y=sitting?1.44:2.17;
   }
   const roomPalettes={'Sảnh chung':'#092d27','Phòng Sen · 10 người':'#263d36','Phòng Trúc · 20 người':'#183e30','Phòng Riêng':'#342e3e'};
   window.addEventListener('anyen-room-scene',e=>{const r=e.detail?.room||'Sảnh chung';scene.background=new THREE.Color(roomPalettes[r]||roomPalettes['Sảnh chung']);document.body.dataset.yenRoom=r==='Phòng Riêng'?'private':r.includes('Sen')?'lotus':r.includes('Trúc')?'bamboo':'lobby';});
