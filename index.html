@@ -285,15 +285,45 @@ function updateWishLake(){const name=nearestWishLake();if(name===selectedWishLak
 window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.lake:nearestWishLake();if(!wishLakes.some(v=>v.name===lake))return;animateCoin(lake,!!e.detail?.remote);if(!e.detail?.remote)wishQuote(lake)});
   const box=(w,h,d,m,x,y,z)=>{let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o};
   const wood=mat('#654c33'),roof=mat('#23332f'),gold=mat('#c8a96a'),stone=mat('#8a8d78');
-  box(11,.6,7,stone,0,.35,-15);for(let x of [-4.6,4.6])for(let z of [-17.5,-12.5])box(.55,6,.55,wood,x,3.5,z);
-  box(12.5,.6,8.6,roof,0,6.8,-15);let ridge=box(13,.55,1.2,roof,0,8,-15);ridge.rotation.z=.03;
-  for(let i=0;i<6;i++){box(1.8,.14,2.2,stone,-5.2+i*2.1,.12+i*.03,-9.5+i*.6)}
-  // Visible footbridge linking the garden to the sanctuary across the lotus pond.
-  const bridgeDeck=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,27),stone);bridgeDeck.position.set(0,.18,1.2);scene.add(bridgeDeck);
-  const buddha=new THREE.Group();let base=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.7,.6,24),gold);buddha.add(base);let torso=new THREE.Mesh(new THREE.SphereGeometry(.78,20,16),gold);torso.scale.set(1,1.2,.8);torso.position.y=1.1;buddha.add(torso);let head=new THREE.Mesh(new THREE.SphereGeometry(.47,20,16),gold);head.position.y=2.18;buddha.add(head);buddha.position.set(0,.9,-15);scene.add(buddha);
+  // 3.6: Outdoor meditation terrace north of Hồ Niệm. A seated Buddha under a wide roof,
+  // facing the bridge, with three arcs of meditation cushions in front.
+  const STATUE={x:0,z:-24.8},TERRACE_TOP=.3;
+  const terraceMat=mat('#9a9580'),terraceEdge=mat('#7f7b68'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
+  const terrace=box(16,.3,10.8,terraceMat,0,.15,-22.2);const kerb=box(16.3,.12,11.1,terraceEdge,0,.04,-22.2);
+  // Round three-step dais for the statue.
+  [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);scene.add(d)});
+  const DAIS_TOP=TERRACE_TOP+.54;
+  // Wide pyramid roof that only shelters the statue.
+  for(const x of [-2.9,2.9])for(const z of [STATUE.z-2.5,STATUE.z+1.3]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.17,.2,5.2,10),wood);post.position.set(x,TERRACE_TOP+2.6,z);scene.add(post);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.3,.34,.22,10),terraceEdge);foot.position.set(x,TERRACE_TOP+.11,z);scene.add(foot)}
+  const beamY=TERRACE_TOP+5.2;box(6.4,.28,.32,eave,0,beamY,STATUE.z-2.5);box(6.4,.28,.32,eave,0,beamY,STATUE.z+1.3);box(.32,.28,4.1,eave,-2.9,beamY,STATUE.z-.6);box(.32,.28,4.1,eave,2.9,beamY,STATUE.z-.6);
+  const eaveSlab=box(8.6,.14,6.6,eave,0,beamY+.22,STATUE.z-.6);
+  const roofCone=new THREE.Mesh(new THREE.ConeGeometry(6.3,2.3,4,1),tile);roofCone.rotation.y=Math.PI/4;roofCone.scale.set(1,1,.8);roofCone.position.set(0,beamY+1.45,STATUE.z-.6);scene.add(roofCone);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),gold);finial.position.set(0,beamY+2.7,STATUE.z-.6);scene.add(finial);
+  // Seated Buddha in meditation, built from simple shapes.
+  const buddha=new THREE.Group();const skin=mat('#c9a35f',.55),robeGold=mat('#b88d45',.6);
+  const lotusBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.2,.28,24),gold);lotusBase.position.y=.14;buddha.add(lotusBase);
+  for(let ring=0;ring<2;ring++)for(let k=0;k<12;k++){const a=k*Math.PI/6+ring*Math.PI/12,r=ring?.95:1.12;const pet=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),ring?robeGold:gold);pet.scale.set(.55,.42,1.1);pet.position.set(Math.cos(a)*r,.34+ring*.1,Math.sin(a)*r);pet.rotation.y=-a+Math.PI/2;pet.rotation.x=ring?-.5:-.25;buddha.add(pet)}
+  const legs=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),robeGold);legs.scale.set(.98,.3,.62);legs.position.set(0,.66,.12);buddha.add(legs);
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.42,.6,1.15,18),robeGold);torso.position.y=1.38;buddha.add(torso);
+  const shoulders=new THREE.Mesh(new THREE.SphereGeometry(.6,18,12),robeGold);shoulders.scale.set(1,.42,.72);shoulders.position.y=1.9;buddha.add(shoulders);
+  for(const side of [-1,1]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.14,.75,4,10),robeGold);arm.position.set(side*.55,1.42,.16);arm.rotation.z=side*.28;arm.rotation.x=-.38;buddha.add(arm)}
+  const hands=new THREE.Mesh(new THREE.SphereGeometry(.24,14,10),skin);hands.scale.set(1.25,.45,.8);hands.position.set(0,.92,.5);buddha.add(hands);
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.15,.18,.2,12),skin);neck.position.y=2.1;buddha.add(neck);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.36,20,16),skin);head.scale.set(1,1.1,1);head.position.y=2.45;buddha.add(head);
+  const ushnisha=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10),robeGold);ushnisha.position.y=2.86;buddha.add(ushnisha);
+  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.24,3,8),skin);ear.position.set(side*.35,2.38,0);buddha.add(ear)}
+  const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.95,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false}));halo.position.set(0,2.5,-.32);buddha.add(halo);
+  buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);scene.add(buddha);
+  // Stone lanterns where the bridge meets the terrace.
+  for(const x of [-2.4,2.4]){const l=new THREE.Group();l.position.set(x,TERRACE_TOP,-17.15);const post=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.1,8),terraceEdge);post.position.y=.55;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.42,.5),terraceMat);lamp.position.y=1.3;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.3,.24,.52),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=1.3;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.45,.35,4),terraceEdge);cap.rotation.y=Math.PI/4;cap.position.y=1.7;l.add(cap);scene.add(l)}
+  // Bodhi tree behind the shrine.
+  {const bodhi=new THREE.Group();bodhi.position.set(0,0,-31);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});scene.add(bodhi)}
+  // Footbridge across Hồ Niệm, landing on the terrace steps.
+  const bridgeDeck=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,31.4),stone);bridgeDeck.position.set(0,.18,-0.85);scene.add(bridgeDeck);
+  for(const x of [-1.85,1.85]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,20.6),wood);rail.position.set(x,.75,-4.3);scene.add(rail);for(let z=-14.3;z<=5.8;z+=2.5){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,.6,.14),wood);p.position.set(x,.48,z);scene.add(p)}}
   // Simple ritual altar within sanctuary; all offerings are local visual feedback for now.
-  const altar=new THREE.Group();altar.position.set(0,.72,-12.0);scene.add(altar);
-  const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(.75,.9,.25,24),gold);altar.add(altarBase);
+  const altar=new THREE.Group();altar.position.set(0,TERRACE_TOP+.08,-22.2);scene.add(altar);
+  const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(.62,.7,.22,24),mat('#6b4a32'));altar.add(altarBase);
   const offerings=[];const seenOfferings=new Set();
   window.addEventListener('anyen-offering',e=>{const kind=e.detail?.kind;if(!['incense','flower','candle'].includes(kind))return;
     const offeringId=String(e.detail?.offeringId||'');if(offeringId){if(seenOfferings.has(offeringId))return;seenOfferings.add(offeringId);if(seenOfferings.size>200)seenOfferings.delete(seenOfferings.values().next().value)}
@@ -322,15 +352,18 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     document.getElementById('zenHint').textContent=kind==='flower'?'🪷 Đã dâng hoa sen':kind==='incense'?'🪔 Đã dâng hương':'🕯️ Đã dâng nến';
   });
   const leaf=mat('#47745c'),pink=mat('#e5a9aa'),petal=mat('#edc6b4');
-  const flowers=[];for(let i=0;i<23;i++){let a=i*2.399,r=2.5+(i%5)*1.4,x=Math.cos(a)*r,z=-4+Math.sin(a)*r;let lotus=new THREE.Group();let pad=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.035,14),leaf);lotus.add(pad);for(let j=0;j<7;j++){let p=new THREE.Mesh(new THREE.SphereGeometry(.22,9,8),j%2?pink:petal);let t=j*Math.PI*2/7;p.position.set(Math.cos(t)*.22,.17,Math.sin(t)*.22);p.scale.set(.7,.5,1.4);p.rotation.y=t;lotus.add(p)}lotus.position.set(x,.13,z);scene.add(lotus);flowers.push(lotus)}
-  for(let i=0;i<32;i++){let x=(i%8-3.5)*4.4,z=-29+Math.floor(i/8)*18;if(Math.abs(x)<11&&z>-15&&z<7)continue;let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),wood);trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),leaf);canopy.position.set(x,4.6,z);scene.add(canopy)}
+  // Trees between the camera and the avatar fade out so they never block the view.
+  const fadeTrees=[];
+  function fadeBlockingTrees(cam,target,dt){const ax=cam.x,az=cam.z,bx=target.x,bz=target.z,vx=bx-ax,vz=bz-az,len2=vx*vx+vz*vz||1;for(const t of fadeTrees){const u=Math.max(0,Math.min(1,((t.x-ax)*vx+(t.z-az)*vz)/len2));const d=Math.hypot(ax+vx*u-t.x,az+vz*u-t.z);const blocking=u>0&&u<1&&d<2.3;const goal=blocking?.18:1;if(Math.abs(t.opacity-goal)<.01&&t.opacity===goal)continue;t.opacity+= (goal-t.opacity)*Math.min(1,dt*8);if(Math.abs(t.opacity-goal)<.01)t.opacity=goal;for(const m of t.meshes){m.material.transparent=t.opacity<1;m.material.opacity=t.opacity;m.material.depthWrite=t.opacity>=1;}}}
+  const flowers=[];for(let i=0;i<23;i++){let a=i*2.399,r=2.5+(i%5)*1.4,x=Math.cos(a)*r,z=-4+Math.sin(a)*r;if(Math.abs(x)<2.7)x=Math.sign(x||1)*(2.7+Math.abs(x)*.4);let lotus=new THREE.Group();let pad=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.035,14),leaf);lotus.add(pad);for(let j=0;j<7;j++){let p=new THREE.Mesh(new THREE.SphereGeometry(.22,9,8),j%2?pink:petal);let t=j*Math.PI*2/7;p.position.set(Math.cos(t)*.22,.17,Math.sin(t)*.22);p.scale.set(.7,.5,1.4);p.rotation.y=t;lotus.add(p)}lotus.position.set(x,.13,z);scene.add(lotus);flowers.push(lotus)}
+  for(let i=0;i<32;i++){let x=(i%8-3.5)*4.4,z=-29+Math.floor(i/8)*18;if(z===25)z=32.5;/* keep the arrival area clear */if(Math.abs(x)<11&&z>-15&&z<7)continue;if(z<-25&&Math.abs(x)<9)continue;let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),wood.clone());trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),leaf.clone());canopy.position.set(x,4.6,z);scene.add(canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
   // Waypoint navigation: smooth guided movement between five destinations.
   const destinations={
     gate:{pos:[0,3.5,25],look:[0,3,-13]},
     garden:{pos:[-15,3.4,8],look:[-7,1.5,-7]},
     lotus:{pos:[9,3.5,7],look:[0,.2,-4]},
-    meditation:{pos:[-4,3.3,-8],look:[0,2,-15]},
-    sanctuary:{pos:[0,3.3,-12],look:[0,2.5,-17]}
+    meditation:{pos:[-6,4.2,-11],look:[0,1.6,-22]},
+    sanctuary:{pos:[0,4,-13.5],look:[0,2.6,-24.8]}
   };
   // Portal markers are part of the 3D scene and can be selected by click/tap.
   const markers=[];
@@ -339,9 +372,9 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     const halo=new THREE.Mesh(new THREE.TorusGeometry(.65,.055,9,48),new THREE.MeshBasicMaterial({color:'#e6c27e'}));group.add(halo);
     const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,18,14),new THREE.MeshBasicMaterial({color:'#f3d59a'}));group.add(orb);
     const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.8,8),gold);stem.position.y=-.72;group.add(stem);
-    scene.add(group);group.userData.zone=zone;markers.push(group);
+    group.scale.setScalar(.7);scene.add(group);group.userData.zone=zone;markers.push(group);
   };
-  addMarker('garden',-12,2.5,-3);addMarker('lotus',7,2.2,-2);addMarker('meditation',-4,2.8,-11);addMarker('sanctuary',0,4,-16);
+  addMarker('garden',-12,2.5,-3);addMarker('lotus',7,2.2,-2);addMarker('meditation',-7.2,1.8,-17.4);addMarker('sanctuary',7.2,1.8,-17.4);
   let currentLook=new THREE.Vector3(0,3,-13),targetLook=currentLook.clone();
   const targetPosition=new THREE.Vector3(...destinations.gate.pos);
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -398,11 +431,11 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
   let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,24],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
   // Navigation around the lotus pond and temple: visibility graph, shortest valid route.
-  const zoneWalkPoints={gate:[0,24],garden:[-17,8],lotus:[13,7],meditation:[0,-13],sanctuary:[0,-16]};
-  const routeGuides=[[-17,-19],[-17,-10],[-17,4],[-17,13],[17,-19],[17,-10],[17,4],[17,13],[-11,-22],[11,-22],[-23,0],[23,0],[0,24],[0,14],[0,9],[0,3],[0,-3],[0,-9],[0,-12],[0,-15],[0,-18],[-3,-12],[3,-12]];
+  const zoneWalkPoints={gate:[0,24],garden:[-17,8],lotus:[13,7],meditation:[0,-17.6],sanctuary:[0,-20.6]};
+  const routeGuides=[[-17,-19],[-17,-10],[-17,4],[-17,13],[17,-19],[17,-10],[17,4],[17,13],[-11,-22],[11,-22],[-23,0],[23,0],[0,24],[0,14],[0,9],[0,3],[0,-3],[0,-9],[0,-12],[0,-15],[0,-18],[0,-20.5],[-6,-19],[6,-19]];
  for(const l of wishLakes){if(l.name==='Niệm')continue;for(let k=0;k<12;k++){const a=k*Math.PI/6;routeGuides.push([l.x+Math.cos(a)*4.65,l.z+Math.sin(a)*4.65]);}}
  for(let k=0;k<24;k++){const a=k*Math.PI/12;routeGuides.push([Math.cos(a)*12.8,-4+Math.sin(a)*12.8]);}
-  function walkable(x,z){if(Math.abs(x)>=34||z<=-28||z>=35)return false;if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.85))return false;const temple=(Math.abs(x)<=5.2&&z>=-19.5&&z<=-11.2);const bridge=(Math.abs(x)<=2.3&&z>=-12.5&&z<=15);return temple||bridge||Math.hypot(x,z+4)>12.3;}
+  function walkable(x,z){if(Math.abs(x)>=34||z<=-28||z>=35)return false;if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.85))return false;if(Math.hypot(x-STATUE.x,z-STATUE.z)<2.5||Math.hypot(x,z+22.2)<.7)return false;const temple=(Math.abs(x)<=7.9&&z>=-27.5&&z<=-16.9);const bridge=(Math.abs(x)<=1.7&&z>=-17.3&&z<=15);return temple||bridge||Math.hypot(x,z+4)>12.3;}
   function clearWalk(a,b){for(let i=0;i<=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35);i++){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35)),t=i/n;if(!walkable(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false;}return true;}
   // A* grid pathfinding. Unlike the old sparse visibility graph, this can route
   // around the central lotus pond and reach all five peripheral ponds.
@@ -440,20 +473,22 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   const cushions=[];
   const seatLocations=[];
   // Six visible lotus cushions INSIDE the sanctuary, not around the pond.
-  for(const z of [-16.7,-13.2])for(const x of [-3.15,3.15])seatLocations.push([x,z,true]);for(const x of [-1.8,1.8])seatLocations.push([x,-11.9,true]);
+  for(const [r,n] of [[3.9,6],[5.4,10],[6.9,12]]){const span=Math.min(2.3,(n-1)*1.3/r);for(let k=0;k<n;k++){const a=-span/2+span*k/(n-1);seatLocations.push([STATUE.x+Math.sin(a)*r,STATUE.z+Math.cos(a)*r,true,a])}}
   // Overflow seats outside only when the sanctuary is full.
-  for(const z of [-22,-20,18,21])for(const x of [-8,-4,0,4,8])seatLocations.push([x,z,false]);
-  seatLocations.forEach(([x,z,inner],i)=>{
+    const matCloth=mat('#6e4a33'),matEdge=mat('#8a6243'),zafuMat=mat('#c38a3e'),zafuTop=mat('#d9a456');
+  seatLocations.forEach(([x,z,inner,a=0],i)=>{
     if(!walkable(x,z))return;
-    const group=new THREE.Group();group.position.set(x,inner?.72:.12,z);
-    const base=new THREE.Mesh(new THREE.CylinderGeometry(.73,.79,.14,24),mat(inner?'#b9986d':'#8c9c78'));group.add(base);
-    const pinkPetal=mat(inner?'#e6b3bd':'#c7b49c');
-    for(let p=0;p<8;p++){const a=p*Math.PI/4;const petal=new THREE.Mesh(new THREE.SphereGeometry(.24,9,7),pinkPetal);petal.scale.set(.8,.27,1.35);petal.position.set(Math.cos(a)*.38,.13,Math.sin(a)*.38);petal.rotation.y=-a;group.add(petal);}
+    // Zabuton (square mat) with a round zafu cushion, turned toward the statue.
+    const group=new THREE.Group();group.position.set(x,TERRACE_TOP,z);group.rotation.y=a;
+    const mat2=new THREE.Mesh(new THREE.BoxGeometry(1.05,.06,1.05),matCloth);mat2.position.y=.03;group.add(mat2);
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(1.12,.03,1.12),matEdge);trim.position.y=.015;group.add(trim);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.36,.4,.18,20),zafuMat);base.position.set(0,.15,-.12);group.add(base);
+    const top=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.03,20),zafuTop);top.position.set(0,.255,-.12);group.add(top);
     scene.add(group);cushions.push({x,z,mesh:base,inner,group});
   });
   let previousActivity='idle',pendingSeat=null,occupiedPositions=[];
   function seatDistance(s){return Math.hypot(s.x-mePosition.x,s.z-mePosition.z)}
-  function seatAvailable(s){return !occupiedPositions.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<1.65 || (Number.isFinite(p.seatX)&&Math.hypot(p.seatX-s.x,p.seatZ-s.z)<.7));}
+  function seatAvailable(s){return !occupiedPositions.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<1.1 || (Number.isFinite(p.seatX)&&Math.hypot(p.seatX-s.x,p.seatZ-s.z)<.7));}
   function chooseSeat(){return cushions.filter(seatAvailable).sort((a,b)=>Number(b.inner)-Number(a.inner)||seatDistance(a)-seatDistance(b))[0]||null;}
   function requestSeat(seat){
     if(!seat||!seatAvailable(seat))seat=chooseSeat();
@@ -461,7 +496,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
     if(meActivity==='sit')return;
     if(seatDistance(seat)<.35){mePosition.set(seat.x,0,seat.z);document.getElementById('realtimeSit')?.click();return;}
-    if(navigateTo(seat.x,seat.z)){pendingSeat=seat;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{x:seat.x,z:seat.z}}));document.getElementById('zenHint').textContent=seat.inner?'Đang đến tọa cụ hoa sen trong Chánh điện…':'Chánh điện đã kín, đang đến tọa cụ ngoài sân…';}
+    if(navigateTo(seat.x,seat.z)){pendingSeat=seat;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{x:seat.x,z:seat.z}}));document.getElementById('zenHint').textContent=seat.inner?'Đang đến tọa cụ trước tượng Phật…':'Chánh điện đã kín, đang đến tọa cụ ngoài sân…';}
   }
   function sitNaturally(){
     // Không dịch chuyển tức thời: chỉ ngồi sau khi đến đúng tọa cụ.
@@ -511,7 +546,12 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
   document.addEventListener('keyup',e=>{const k=e.key.toLowerCase();const map={w:'forward',s:'back',a:'turnleft',d:'turnright',arrowup:'forward',arrowdown:'back',arrowleft:'turnleft',arrowright:'turnright'};if(map[k])walkingKeys.delete(map[k])});
   document.querySelector('#walkReset').onclick=()=>{walking=false;walkingKeys.clear();selectZone('gate')};
   document.querySelector('#sendGreeting').onclick=()=>{window.dispatchEvent(new Event('anyen-greet'));document.querySelector('#greetingStatus').textContent='🙏 Đã gửi lời chào tới khách trong cùng phòng (nếu đang kết nối).'};
-  renderer.domElement.addEventListener('pointermove',e=>{if(!dragging3d||!document.body.classList.contains('immersive'))return;walking=true;viewYaw-=e.movementX*.003;walkYaw=viewYaw;walkPitch=Math.max(-.5,Math.min(.5,walkPitch-e.movementY*.002))});
+  let swipeId=null,swipeX=0,swipeY=0;
+  renderer.domElement.addEventListener('pointerdown',e=>{if(swipeId===null){swipeId=e.pointerId;swipeX=e.clientX;swipeY=e.clientY}});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{if(e.pointerId===swipeId)swipeId=null});
+  renderer.domElement.addEventListener('pointermove',e=>{if(!dragging3d||e.pointerId!==swipeId||!document.body.classList.contains('immersive'))return;const dx=e.clientX-swipeX,dy=e.clientY-swipeY;swipeX=e.clientX;swipeY=e.clientY;
+    // A full-width swipe turns the view about 200°; turning only moves the camera, not the avatar.
+    viewYaw-=dx/Math.max(320,innerWidth)*3.5;walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002))});
   window.addEventListener('yen-zone',()=>{walking=false;walkingKeys.clear()});
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden)return;let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
@@ -519,7 +559,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
       if(walkingKeys.has('turnleft')){walkYaw+=dt*1.5;viewYaw+=dt*1.5;}if(walkingKeys.has('turnright')){walkYaw-=dt*1.5;viewYaw-=dt*1.5;}
       let step=(walkingKeys.has('forward')?1:0)-(walkingKeys.has('back')?1:0);
-      if(step&&meActivity!=='sit'&&meActivity!=='walk'){let nx=mePosition.x+Math.sin(walkYaw)*dt*4*step,nz=mePosition.z+Math.cos(walkYaw)*dt*4*step;if(walkable(nx,nz)){mePosition.x=nx;mePosition.z=nz}}
+      if(step&&meActivity!=='sit'&&meActivity!=='walk'){walkYaw=viewYaw;let nx=mePosition.x+Math.sin(walkYaw)*dt*4*step,nz=mePosition.z+Math.cos(walkYaw)*dt*4*step;if(walkable(nx,nz)){mePosition.x=nx;mePosition.z=nz}}
       if(meActivity==='walk'){if(!walkGoal){const a=walkSeed+(walkCount++*.87),r=5+(walkCount%4)*1.3;walkGoal=[Math.sin(a)*r,21+Math.cos(a)*r];}const dx=walkGoal[0]-mePosition.x,dz=walkGoal[1]-mePosition.z,dist=Math.hypot(dx,dz);if(dist<.35)walkGoal=null;else{const d=Math.min(dist,dt*1.35),nx=mePosition.x+dx/dist*d,nz=mePosition.z+dz/dist*d;if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else walkGoal=null;}}
       if(walkRoute.length){
         if(meActivity!=='idle')meActivity='idle';
@@ -528,7 +568,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
         else{const step=Math.min(dist,dt*3.2),nx=mePosition.x+dx/dist*step,nz=mePosition.z+dz/dist*step;
           if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
       }
-      const sittingNow=meActivity==='sit';const behind=sittingNow?4.8:6.7,up=sittingNow?3.2:4.2;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.45+Math.sin(walkPitch)*2,mePosition.z);
+      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
     me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)me.position.y=seat.group.position.y+.14;}me.rotation.y=0;if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit');dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');
     for(const peer of onlineAvatars.values()){
