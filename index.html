@@ -392,45 +392,59 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
     if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
     scene.add(clump);flowers.push(clump)}
-  // Rowing boat on Hồ Niệm: a small wooden boat moored at the west or east pier. Tap it to board and row across,
-  // under the arched bridge, to the other bank.
-  const BOAT_LANE_Z=-4,BOAT_DOCK_X=9.9,BOAT_LAND_X=13.1,BOAT_ROW_MS=11000,BOAT_STEP_MS=900;
-  const boat={group:new THREE.Group(),side:-1,oars:[]};
-  {const g=boat.group,hullMat=mat('#7a5634'),trim=mat('#a07448');
-   // Hull from a pointed boat outline: a hollow rim (outline with an inset hole) on a solid floor.
+  // Rowing boat on Hồ Niệm: a small wooden boat moors at the west or east pier. Tap it to board. Aboard, tap the
+  // water to row there or tap a pier to land; with no tap it rows on to the opposite bank. Everyone sees boats.
+  const BOAT_LANE_Z=-4,BOAT_DOCK_X=9.9,BOAT_LAND_X=13.1,BOAT_SPEED=1.25,BOAT_STEP_MS=900,BOAT_WAIT_MS=8000,BOAT_WATER_R=9.2;
+  function makeBoat(){const g=new THREE.Group(),oars=[],hullMat=mat('#7a5634'),trim=mat('#a07448');
+    // Hull from a pointed boat outline: a hollow rim (outline with an inset hole) on a solid floor.
    const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
    const wall=outline(1);wall.holes.push(outline(.88));
    const hullWall=new THREE.Mesh(new THREE.ExtrudeGeometry(wall,{depth:.36,bevelEnabled:false,curveSegments:10}),hullMat);hullWall.rotation.x=-Math.PI/2;g.add(hullWall);
    const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#5e4128'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
    const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
    const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
-   for(const z of [-1,1]){const pivot=new THREE.Group();pivot.position.set(.15,.4,z*.64);const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.7,6),trim);shaft.rotation.x=z*1.15;shaft.position.set(0,-.3,z*.62);pivot.add(shaft);const blade=new THREE.Mesh(new THREE.BoxGeometry(.16,.03,.42),trim);blade.position.set(0,-.62,z*1.32);blade.rotation.x=z*1.15;pivot.add(blade);g.add(pivot);boat.oars.push(pivot)}
-   g.position.set(boat.side*BOAT_DOCK_X,.02,BOAT_LANE_Z);scene.add(g);
-   // Wooden piers on both banks.
-   for(const sx of [-1,1]){const pier=new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,1.5),mat('#8a6a48'));pier.position.set(sx*12,.16,BOAT_LANE_Z);scene.add(pier);for(const dz of [-.65,.65])for(const dx of [-1.4,0,1.4]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,6),wood);post.position.set(sx*12+dx,0,BOAT_LANE_Z+dz);scene.add(post)}}}
+   for(const z of [-1,1]){const pivot=new THREE.Group();pivot.position.set(.15,.4,z*.64);const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.7,6),trim);shaft.rotation.x=z*1.15;shaft.position.set(0,-.3,z*.62);pivot.add(shaft);const blade=new THREE.Mesh(new THREE.BoxGeometry(.16,.03,.42),trim);blade.position.set(0,-.62,z*1.32);blade.rotation.x=z*1.15;pivot.add(blade);g.add(pivot);oars.push(pivot)}
+   return {group:g,oars};}
+  const boat={...makeBoat(),side:-1};boat.group.position.set(boat.side*BOAT_DOCK_X,.02,BOAT_LANE_Z);scene.add(boat.group);
+  const piers=[];
+  {   // Wooden piers on both banks.
+   for(const sx of [-1,1]){const pier=new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,1.5),mat('#8a6a48'));pier.position.set(sx*12,.16,BOAT_LANE_Z);scene.add(pier);pier.userData.side=sx;piers.push(pier);for(const dz of [-.65,.65])for(const dx of [-1.4,0,1.4]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,6),wood);post.position.set(sx*12+dx,0,BOAT_LANE_Z+dz);scene.add(post)}}}
   let boatRide=null,pendingBoat=false;
   const boatLand=side=>[side*BOAT_LAND_X,BOAT_LANE_Z];
-  function boardBoat(){const from=boat.side;walkRoute.length=0;pendingSeat=null;pendingBoat=false;boatRide={from,start:performance.now(),x0:mePosition.x,z0:mePosition.z};document.getElementById('zenHint').textContent='🚣 Đang chèo thuyền qua hồ sen…';}
+  const onBoat=()=>!!boatRide&&(boatRide.phase==='row'||boatRide.phase==='wait');
+  // The arch is only high enough for a seated rower between z -9.5 and 1.5; reroute crossings of the bridge line there.
+  function boatPath(x0,z0,x1,z1){if(Math.sign(x0)!==Math.sign(x1)&&Math.abs(x0-x1)>.01){const t=x0/(x0-x1),zc=z0+(z1-z0)*t;if(zc<-9.5||zc>1.5)return [[0,Math.max(-9.5,Math.min(1.5,zc))],[x1,z1]];}return [[x1,z1]];}
+  function setBoatGoal(x,z,dockSide){const r=boatRide;r.path=boatPath(boat.group.position.x,boat.group.position.z,x,z);r.dock=dockSide||0;r.phase='row';
+    document.getElementById('zenHint').textContent=dockSide?'🚣 Đang chèo vào bến…':'🚣 Chạm mặt hồ để chèo tới · Chạm bến để lên bờ';}
+  function boardBoat(){const from=boat.side;walkRoute.length=0;pendingSeat=null;pendingBoat=false;boatRide={from,phase:'board',start:performance.now(),x0:mePosition.x,z0:mePosition.z,heading:-from*Math.PI/2};}
   function tapBoat(){
-    const hint=document.getElementById('zenHint');if(boatRide)return;
+    if(boatRide)return;
     if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(tapBoat,60);return;}
     if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
     const [lx,lz]=boatLand(boat.side);
     if(Math.hypot(mePosition.x-lx,mePosition.z-lz)<1.3){boardBoat();return;}
-    if(navigateTo(lx,lz)){pendingBoat=true;hint.textContent='🚣 Đang ra bến thuyền…';}
+    if(navigateTo(lx,lz)){pendingBoat=true;document.getElementById('zenHint').textContent='🚣 Đang ra bến thuyền…';}
   }
-  // Called every frame while riding: step aboard, row across, step ashore on the far bank.
+  // Taps while aboard: a pier docks there, open water rows there.
+  function boatTap(){
+    if(!onBoat())return false;
+    const ph=raycaster.intersectObjects(piers,false);if(ph.length){const sd=ph[0].object.userData.side;setBoatGoal(sd*BOAT_DOCK_X,BOAT_LANE_Z,sd);return true;}
+    const wh=raycaster.intersectObject(water,false);if(wh.length){const q=wh[0].point;let dx=q.x,dz=q.z-BOAT_LANE_Z;const d=Math.hypot(dx,dz);if(d>BOAT_WATER_R){dx*=BOAT_WATER_R/d;dz*=BOAT_WATER_R/d;}setBoatGoal(dx,BOAT_LANE_Z+dz,0);return true;}
+    document.getElementById('zenHint').textContent='🚣 Chạm mặt hồ để chèo tới · Chạm bến để lên bờ';return true;
+  }
+  let lastBoatFrame=0;
   function updateBoatRide(now){
-    const r=boatRide,from=r.from,dockA=from*BOAT_DOCK_X,dockB=-from*BOAT_DOCK_X,el=now-r.start;walkRoute.length=0;
-    let phase,u;if(el<BOAT_STEP_MS){phase='board';u=el/BOAT_STEP_MS;}else if(el<BOAT_STEP_MS+BOAT_ROW_MS){phase='row';u=(el-BOAT_STEP_MS)/BOAT_ROW_MS;}else if(el<BOAT_STEP_MS*2+BOAT_ROW_MS){phase='ashore';u=(el-BOAT_STEP_MS-BOAT_ROW_MS)/BOAT_STEP_MS;}else{phase='done';u=1;}
-    const e=u*u*(3-2*u);r.phase=phase;
-    if(phase==='board'){mePosition.set(r.x0+(dockA-r.x0)*e,0,r.z0+(BOAT_LANE_Z-r.z0)*e);}
-    else if(phase==='row'){const x=dockA+(dockB-dockA)*e;boat.group.position.x=x;mePosition.set(x,0,BOAT_LANE_Z);boat.oars.forEach((o,i)=>o.rotation.z=Math.sin(el/420)*.55);}
-    else if(phase==='ashore'){boat.group.position.x=dockB;const [lx]=boatLand(-from);mePosition.set(dockB+(lx-dockB)*e,0,BOAT_LANE_Z);}
-    else{boat.side=-from;boatRide=null;boat.oars.forEach(o=>o.rotation.z=0);const [lx,lz]=boatLand(-from);mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã sang bờ bên kia · Chạm thuyền để chèo về';}
-    boat.group.position.y=.02+Math.sin(now/700)*.025;boat.group.rotation.z=Math.sin(now/900)*.02;
-  }
-  // Pine trunks are obstacles: nobody walks or stands inside them.
+    const r=boatRide,dt=Math.min(.1,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=boat.group;
+    if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1)setBoatGoal(-r.from*BOAT_DOCK_X,BOAT_LANE_Z,-r.from);}
+    else if(r.phase==='row'){const [tx,tz]=r.path[0],dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
+      if(d<.05){r.path.shift();if(!r.path.length){if(r.dock){r.phase='ashore';r.start=now;}else{r.phase='wait';r.start=now;document.getElementById('zenHint').textContent='🚣 Chạm mặt hồ để chèo tiếp · Chạm bến để lên bờ';}}}
+      else{const step=Math.min(d,BOAT_SPEED*dt);g.position.x+=dx/d*step;g.position.z+=dz/d*step;const want=Math.atan2(dx,dz);let dh=want-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*3);boat.oars.forEach(o=>o.rotation.z=Math.sin(now/520)*.55);}
+      mePosition.set(g.position.x,0,g.position.z);}
+    else if(r.phase==='wait'){mePosition.set(g.position.x,0,g.position.z);boat.oars.forEach(o=>o.rotation.z*=.9);if(now-r.start>BOAT_WAIT_MS)setBoatGoal(-r.from*BOAT_DOCK_X,BOAT_LANE_Z,-r.from);}
+    else if(r.phase==='ashore'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u),[lx,lz]=boatLand(r.dock);mePosition.set(g.position.x+(lx-g.position.x)*e,0,g.position.z+(lz-g.position.z)*e);r.heading=r.dock>0?Math.PI/2:-Math.PI/2;
+      if(u>=1){boat.side=r.dock;boatRide=null;boat.oars.forEach(o=>o.rotation.z=0);mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã lên bờ · Chạm thuyền để chèo tiếp';}}
+    g.rotation.y=(r.heading||0)-Math.PI/2;g.position.y=.02+Math.sin(now/700)*.025;g.rotation.z=Math.sin(now/900)*.02;
+  }  // Pine trunks are obstacles: nobody walks or stands inside them.
   const treeSpots=[],TREE_CLEAR=1.0;
   function pushOutOfTrees(x,z){for(const [tx,tz] of treeSpots){const d=Math.hypot(x-tx,z-tz);if(d<TREE_CLEAR){const k=d>1e-3?TREE_CLEAR/d:0;return k?[tx+(x-tx)*k,tz+(z-tz)*k]:[tx+TREE_CLEAR,tz];}}return [x,z];}
   for(let i=0;i<32;i++){let x=(i%8-3.5)*4.4,z=-29+Math.floor(i/8)*18;if(z===25)z=32.5;/* keep the arrival area clear */if(Math.abs(x)<11&&z>-15&&z<7)continue;if(z<-25&&Math.abs(x)<9)continue;treeSpots.push([x,z]);let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),wood.clone());trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),leaf.clone());canopy.position.set(x,4.6,z);scene.add(canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
@@ -466,7 +480,7 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
     if(hits.length){let obj=hits[0].object;while(obj.parent&&!obj.userData.zone)obj=obj.parent;if(obj.userData.zone){selectZone(obj.userData.zone);return;}}
     const guestHits=raycaster.intersectObjects([...onlineAvatars.values()].map(v=>v.group),true);
     if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
-    if(boatRide){document.getElementById('zenHint').textContent='🚣 Thuyền đang qua hồ, chờ một chút nhé';return;}
+    if(boatRide){if(!boatTap())document.getElementById('zenHint').textContent='🚣 Chờ một chút nhé';return;}
     const boatHits=raycaster.intersectObject(boat.group,true);if(boatHits.length){tapBoat();return;}
     // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
     const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
@@ -651,11 +665,15 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
       dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,entry.activity==='sit');
       const label=String(entry.name||'Khách Yên').slice(0,24);if(mesh.lastName!==label){const c=mesh.tagCtx;c.clearRect(0,0,512,112);c.font='bold 36px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#f4e2b9';c.fillText(label,256,57,470);mesh.tagTex.needsUpdate=true;mesh.lastName=label;}
       const sitting=entry.activity==='sit';poseAvatar(mesh.torso,mesh.head,mesh.tag,sitting);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,sitting);
-      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const [px,pz]=pushOutOfTrees(Math.max(-34,Math.min(34,entry.x)),Math.max(-40,Math.min(28,entry.z)));mesh.group.position.set(px,groundHeight(px,pz),pz);mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);
+      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const peerBoat=!!entry.boat;const [px,pz]=peerBoat?[entry.x,entry.z]:pushOutOfTrees(Math.max(-34,Math.min(34,entry.x)),Math.max(-40,Math.min(28,entry.z)));mesh.group.position.set(px,peerBoat?.35:groundHeight(px,pz),pz);
+      // Guests rowing on Hồ Niệm get a boat under them, pointed the way they are moving.
+      if(peerBoat){if(!mesh.boat){mesh.boat=makeBoat();scene.add(mesh.boat.group);}const mx=px-(mesh.lastX??px),mz=pz-(mesh.lastZ??pz);if(Math.hypot(mx,mz)>.02)mesh.heading=Math.atan2(mx,mz);const h=mesh.heading??0;mesh.boat.group.visible=true;mesh.boat.group.position.set(px,.02,pz);mesh.boat.group.rotation.y=h-Math.PI/2;mesh.group.userData.yaw=h;poseAvatar(mesh.torso,mesh.head,mesh.tag,true);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,true);}
+      else if(mesh.boat)mesh.boat.group.visible=false;
+      mesh.lastX=px;mesh.lastZ=pz;if(!peerBoat)mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);
     }
-    for(const [id,obj] of onlineAvatars){if(!incoming[id]){scene.remove(obj.group);onlineAvatars.delete(id)}}
+    for(const [id,obj] of onlineAvatars){if(!incoming[id]){scene.remove(obj.group);if(obj.boat)scene.remove(obj.boat.group);onlineAvatars.delete(id)}}
   });
-  window.setInterval(()=>{if(document.body.classList.contains('immersive'))window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}))},180);
+  window.setInterval(()=>{if(document.body.classList.contains('immersive'))window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z,boat:onBoat()}}))},180);
   // (The two placeholder guests shown while offline were removed: they stood inside pine trees and looked like stray people.)
   const gestureNames={hello:'Xin chào',handshake:'Bắt tay',namaste:'Chắp tay chào',jump:'Nhảy lên',spin:'Xoay một vòng'};
   let gesture=null;
@@ -694,9 +712,9 @@ window.addEventListener('anyen-coin',e=>{const lake=e.detail?.remote?e.detail?.l
         else{const step=Math.min(dist,dt*3.2),nx=mePosition.x+dx/dist*step,nz=mePosition.z+dz/dist*step;
           if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
       }
-      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;if(boatRide&&boatRide.phase==='row'){const dir=-boatRide.from;camera.position.lerp(new THREE.Vector3(mePosition.x-dir*6,2.4,mePosition.z+6),.08);camera.lookAt(mePosition.x,.9,mePosition.z);}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);}fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
+      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;if(onBoat()){const h=boatRide.heading;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(h)*6.5+2,2.6,mePosition.z-Math.cos(h)*6.5+2),.06);camera.lookAt(mePosition.x,.9,mePosition.z);}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);}fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
-    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;const inBoat=boatRide&&boatRide.phase==='row';if(inBoat){me.position.y=boat.group.position.y+.33;me.rotation.y=boatRide.from<0?Math.PI/2:-Math.PI/2;}if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit'||inBoat);
+    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;const inBoat=onBoat();if(inBoat){me.position.y=boat.group.position.y+.33;me.rotation.y=boatRide.heading;}if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit'||inBoat);
     for(const peer of onlineAvatars.values()){
       peer.group.rotation.set(0,peer.group.userData.yaw||0,0);
       if(!peer.gesture)continue;
