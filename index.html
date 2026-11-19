@@ -6,7 +6,7 @@
 /* Immersive 3D gateway */
 .portal-entry{display:inline-flex;align-items:center;gap:14px;border:1px solid #e9c98d;background:linear-gradient(135deg,#1d5145,#0a2b27);color:#f8e7c4;padding:12px 21px 12px 12px;border-radius:999px;box-shadow:0 12px 35px #0007;cursor:pointer;margin:0 12px 12px 0;font-weight:650}
 .portal-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;border:1px solid #dfbe7e;background:#c8a96a20;font-size:26px;box-shadow:0 0 18px #c8a96a33}
-.yen-bay #anyenCurrentLake{display:none!important}#bayHUD{display:none;position:fixed;z-index:39;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 94px);flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:max-content;max-width:calc(100vw - 16px)}body.immersive.yen-bay #bayHUD{display:flex}body.immersive.yen-bay[class*="zen-sheet-"] #bayHUD,body.immersive.yen-bay.zen-clean #bayHUD{display:none}#bayHUD .bay-bar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}#bayHUD .bay-row{display:flex;gap:4px;pointer-events:auto;background:#092b26cc;border:1px solid #c8a96a55;border-radius:22px;padding:4px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);flex-wrap:wrap;justify-content:center}#bayHUD button{border:0;border-radius:18px;background:transparent;color:#f5ead2;font:inherit;font-size:12.5px;line-height:1;padding:8px 11px;min-height:34px;cursor:pointer;white-space:nowrap}#bayHUD button:hover,#bayHUD button:focus-visible{background:#1b4332}#bayHUD button[aria-pressed=true]{background:#80663b;color:#fff}.bay-caption{opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s;background:#092b26d9;color:#f1dcae;border:1px solid #c8a96a66;border-radius:20px;padding:7px 14px;font-size:13px;max-width:90vw;text-align:center}.bay-caption.show{opacity:1;transform:none}body.yen-bay #zenToolbar [data-zen=coin],body.yen-bay #zenToolbar [data-zen=medwalk]{display:none!important}@media(max-width:760px){#bayHUD{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}#bayHUD button{font-size:17px;padding:6px 7px;min-width:40px;min-height:38px}#bayHUD button span{display:none}#bayHUD .bay-bar{flex-wrap:nowrap;gap:4px}.bay-caption{font-size:12px}}.portal-entry.bay{background:linear-gradient(135deg,#1d5a63,#0a2b33)}.portal-entry.bay:hover,.portal-entry.bay:focus-visible{background:#2b6a73}
+.yen-bay #anyenCurrentLake{display:none!important}#bayHUD{display:none;position:fixed;z-index:39;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 94px);flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:max-content;max-width:calc(100vw - 16px)}body.immersive.yen-bay #bayHUD{display:flex}body.immersive.yen-bay[class*="zen-sheet-"] #bayHUD,body.immersive.yen-bay.zen-clean #bayHUD{display:none}#bayHUD .bay-bar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}#bayHUD .bay-row{display:flex;gap:4px;pointer-events:auto;background:#1d3b38a6;border:1px solid #e9dcc033;border-radius:22px;padding:4px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);flex-wrap:wrap;justify-content:center}#bayHUD button{border:0;border-radius:18px;background:transparent;color:#f3ecdf;font:inherit;font-size:12.5px;line-height:1;padding:8px 11px;min-height:34px;cursor:pointer;white-space:nowrap}#bayHUD button:hover,#bayHUD button:focus-visible{background:#ffffff1f}#bayHUD button[aria-pressed=true]{background:#c9b48a59;color:#fffaf0;box-shadow:inset 0 0 0 1px #ecdcb866}.bay-caption{opacity:0;transform:translateY(6px);transition:opacity 1.2s,transform 1.2s;background:#1d3b38b3;color:#f6ecd8;border:1px solid #e9dcc040;letter-spacing:.02em;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:20px;padding:7px 14px;font-size:13px;max-width:90vw;text-align:center}.bay-caption.show{opacity:1;transform:none}body.yen-bay #zenToolbar [data-zen=coin],body.yen-bay #zenToolbar [data-zen=medwalk]{display:none!important}@media(max-width:760px){#bayHUD{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}#bayHUD button{font-size:17px;padding:6px 7px;min-width:40px;min-height:38px}#bayHUD button span{display:none}#bayHUD .bay-bar{flex-wrap:nowrap;gap:4px}.bay-caption{font-size:12px}}.portal-entry.bay{background:linear-gradient(135deg,#1d5a63,#0a2b33)}.portal-entry.bay:hover,.portal-entry.bay:focus-visible{background:#2b6a73}
 .portal-entry:hover,.portal-entry:focus-visible{background:#2b6455;outline:2px solid #d8b575;outline-offset:3px}
 #immersiveHUD{display:none;position:fixed;inset:0;z-index:7;pointer-events:none}
 #immersiveHUD button{pointer-events:auto;background:#082b25df;border:1px solid #d5b47788;color:#f7e9cc;border-radius:24px;padding:12px 18px;cursor:pointer}
@@ -171,6 +171,9 @@ body.immersive.zen-sheet-people #realtimeBox{display:flex!important;z-index:80!i
 body.immersive #zenToolbar{background:#0b3029f5!important;border:1px solid #c8a96a99!important}
 body.immersive #zenToolbar button{background:#1c4b3f!important;color:#f5e8cf!important;border:1px solid #c8a96a77!important;border-radius:12px!important}
 body.immersive #zenToolbar button[aria-pressed=true]{background:#8a7147!important}
+ body.immersive.yen-bay #zenToolbar{background:#1d3b38a6!important;border:1px solid #e9dcc033!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 10px 26px #0003}
+ body.immersive.yen-bay #zenToolbar button{background:#ffffff14!important;border:1px solid #e9dcc02e!important;color:#f3ecdf!important}
+ body.immersive.yen-bay #zenToolbar button[aria-pressed=true]{background:#c9b48a59!important}
 @media(min-width:801px){body.immersive #zenToolbar{bottom:18px!important}body.immersive #zenToolbar button{min-height:58px!important}}
 /* 3.5.10: Six unified actions on all screen sizes */
 @media(max-width:700px){body.immersive #zenToolbar{gap:3px!important;padding:5px!important}body.immersive #zenToolbar button{font-size:18px!important;padding:5px 0!important;min-height:52px!important}body.immersive #zenToolbar button small{font-size:9px!important;letter-spacing:-.25px!important}}
@@ -720,9 +723,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const bayGroup=new THREE.Group();bayGroup.position.set(BAY.x,0,BAY.z);bayGroup.visible=false;scene.add(bayGroup);
   const hemiLight=scene.children.find(o=>o.isHemisphereLight);
   const BAY_MOODS={
-    dawn:{label:'Bình minh',top:'#8ea5c8',hor:'#f3d6bf',glow:'#ffd29a',sunCol:'#fff3dc',el:.11,az:.75,deep:'#1d5c5f',shallow:'#3f8f87',fog:.0072,hemi:['#ffe7cf','#2b5450',1.55],sun:['#ffd9ad',2.1],stars:0,lamp:.6,rock:1},
-    sunset:{label:'Hoàng hôn',top:'#56659a',hor:'#f0a679',glow:'#ff9450',sunCol:'#ffe0a8',el:.07,az:-2.35,deep:'#1a4552',shallow:'#3b6c70',fog:.0082,hemi:['#ffc996','#3b3448',1.35],sun:['#ff9e5e',2.2],stars:0,lamp:1.2,rock:.92},
-    night:{label:'Đêm trăng',top:'#0a1330',hor:'#2a3962',glow:'#9fb6e6',sunCol:'#f3f6ff',el:.36,az:2.7,deep:'#071b28',shallow:'#143448',fog:.0105,hemi:['#9fb2e2','#1a2a40',1.05],sun:['#c6d3f6',1.1],stars:1,lamp:2.6,rock:.85}
+    // Bảng màu dịu, ít bão hoà, nhiều sương: các lớp đảo xa nhạt dần vào chân trời như tranh thủy mặc.
+    dawn:{label:'Bình minh',top:'#b7c6cd',hor:'#ebe4d6',glow:'#f2d9b6',sunCol:'#fff7ea',el:.12,az:.75,deep:'#557f79',shallow:'#88ab9f',fog:.0118,hemi:['#f5eee2','#62806f',1.75],sun:['#f7e4c8',1.45],stars:0,lamp:.45,rock:1},
+    sunset:{label:'Hoàng hôn',top:'#a29cb8',hor:'#f0c4a6',glow:'#f2b88e',sunCol:'#fde6c6',el:.07,az:-2.35,deep:'#56677a',shallow:'#9a9fa3',fog:.0108,hemi:['#f6d3bb','#665a6c',1.5],sun:['#f3bd94',1.6],stars:0,lamp:.85,rock:.96},
+    night:{label:'Đêm trăng',top:'#1b2744',hor:'#41567a',glow:'#b6c6e6',sunCol:'#f5f7ff',el:.32,az:2.7,deep:'#1c3646',shallow:'#325567',fog:.0122,hemi:['#b6c4e4','#33465c',1.5],sun:['#d8e1f7',1.15],stars:1,lamp:1.5,rock:.86}
   };
   let bayMoodName='dawn';try{const m=localStorage.getItem('yen_bay_mood');if(BAY_MOODS[m])bayMoodName=m}catch(e){}
   const bayU={time:{value:0},top:{value:new THREE.Color()},hor:{value:new THREE.Color()},glow:{value:new THREE.Color()},sunCol:{value:new THREE.Color()},sunDir:{value:new THREE.Vector3(0,.1,1)},stars:{value:0},deep:{value:new THREE.Color()},shallow:{value:new THREE.Color()},fogD:{value:.008},camL:{value:new THREE.Vector3()}};
@@ -742,37 +746,37 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       }`}));
   baySky.renderOrder=-10;baySky.frustumCulled=false;bayGroup.add(baySky);
   // Sóng: tổng vài sóng sin. JS dùng cùng công thức để thuyền, bè và đèn hoa đăng nhấp nhô theo đúng mặt nước.
-  const BAY_WAVES=[[.12,.05,.9,.16],[-.07,.15,1.15,.13],[.21,-.17,1.6,.05]];
+  const BAY_WAVES=[[.12,.05,.66,.11],[-.07,.15,.84,.09],[.21,-.17,1.15,.035]];
   const bayWaveY=(x,z,t)=>{let y=0;for(const [kx,kz,w,a] of BAY_WAVES)y+=Math.sin(x*kx+z*kz+t*w)*a;return y};
   const baySea=new THREE.Mesh(new THREE.PlaneGeometry(520,520,150,150),new THREE.ShaderMaterial({uniforms:bayU,fog:false,toneMapped:false,
     vertexShader:`uniform float time;varying vec3 vL;
       void main(){vec3 p=vec3(position.x,0.,-position.y);
-        p.y=sin(p.x*.12+p.z*.05+time*.9)*.16+sin(-p.x*.07+p.z*.15+time*1.15)*.13+sin(p.x*.21-p.z*.17+time*1.6)*.05;
+        p.y=sin(p.x*.12+p.z*.05+time*.66)*.11+sin(-p.x*.07+p.z*.15+time*.84)*.09+sin(p.x*.21-p.z*.17+time*1.15)*.035;
         vL=p;gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(p,1.);}`,
     fragmentShader:`uniform float time,fogD;uniform vec3 top,hor,glow,sunCol,sunDir,deep,shallow,camL;varying vec3 vL;
       void W(inout vec2 g,vec2 p,vec2 k,float w,float a){g+=k*a*cos(dot(p,k)+time*w);}
       void main(){vec2 p=vL.xz,g=vec2(0.);
-        W(g,p,vec2(.12,.05),.9,.16);W(g,p,vec2(-.07,.15),1.15,.13);W(g,p,vec2(.21,-.17),1.6,.05);
-        W(g,p,vec2(1.3,.45),2.1,.035);W(g,p,vec2(-.62,1.15),2.4,.03);W(g,p,vec2(2.3,-1.7),3.3,.012);W(g,p,vec2(-3.1,-2.4),3.9,.008);W(g,p,vec2(.4,-4.6),4.4,.006);
+        W(g,p,vec2(.12,.05),.66,.11);W(g,p,vec2(-.07,.15),.84,.09);W(g,p,vec2(.21,-.17),1.15,.035);
+        W(g,p,vec2(1.3,.45),1.5,.026);W(g,p,vec2(-.62,1.15),1.75,.022);W(g,p,vec2(2.3,-1.7),2.4,.009);W(g,p,vec2(-3.1,-2.4),2.8,.006);W(g,p,vec2(.4,-4.6),3.2,.0045);
         vec3 n=normalize(vec3(-g.x,1.,-g.y)),v=camL-vL;float dist=length(v);v/=dist;
         float fr=.04+.96*pow(1.-max(dot(n,v),0.),5.);
         vec3 r=reflect(-v,n);r.y=abs(r.y);
         vec3 sky=mix(hor,top,pow(clamp(r.y,0.,1.),.5));float s=max(dot(r,sunDir),0.);sky+=glow*pow(s,6.)*.35;
         vec3 body=mix(deep,shallow,clamp(.45+n.y*.3-(1.-n.y)*4.,0.,1.));
-        vec3 c=mix(body,sky,clamp(fr*1.1,0.,.85));
-        c+=sunCol*(pow(s,260.)*3.+pow(s,30.)*.18);
+        vec3 c=mix(body,sky,clamp(fr,0.,.7));
+        c+=sunCol*(pow(s,220.)*1.3+pow(s,24.)*.12);
         c=mix(c,hor,1.-exp(-fogD*fogD*dist*dist));
         gl_FragColor=vec4(c,1.);
         #include <colorspace_fragment>
       }`}));
   baySea.frustumCulled=false;bayGroup.add(baySea);
   // Đá vôi: ngấn sóng tối màu ở chân (hàm ếch), vách xám có vệt, cây xanh phủ đỉnh và các gờ đá.
-  const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,flatShading:true,vertexColors:true});
+  const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,vertexColors:true});
   const bayPick=[];// các đối tượng có tên để chạm vào
   {
     const hash=(a,b,c)=>{const v=Math.sin(a*12.9898+b*78.233+c*37.719)*43758.5453;return v-Math.floor(v)};
     const sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
-    const stone=[new THREE.Color('#aeb0a6'),new THREE.Color('#9da39b'),new THREE.Color('#b7b4a7')],wet=new THREE.Color('#3f4842'),streak=new THREE.Color('#6f7469'),leaf=[new THREE.Color('#4d7a4a'),new THREE.Color('#3b6440'),new THREE.Color('#5e8a52')];
+    const stone=[new THREE.Color('#bdbdb2'),new THREE.Color('#b1b4aa'),new THREE.Color('#c4c1b4')],wet=new THREE.Color('#77827a'),streak=new THREE.Color('#9fa398'),leaf=[new THREE.Color('#819d79'),new THREE.Color('#71906c'),new THREE.Color('#90a983')];
     const parts=[];
     // opt: base = độ thắt chân (Đỉnh Hương), lean = độ nghiêng (Trống Mái), dome = độ tròn đỉnh
     function karst(x,z,r,h,k,opt={}){
@@ -793,10 +797,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       for(let i=0;i<pos.count;i++){
         const wy=pos.getY(i),t=(wy+2)/total,ny=nrm.getY(i),hh=hash(pos.getX(i),wy,pos.getZ(i));
         c.copy(stone[(k+Math.floor(hh*3))%3]);
-        if(hh>.55&&t>.15)c.lerp(streak,.35);
+        if(hh>.55&&t>.15)c.lerp(streak,.25);
         const green=Math.max(sm(.3,.7,ny),sm(1-dome-.12,1-dome+.08,t)*.95,(hh>.72&&t>.28)?.8:0);
-        c.lerp(leaf[(k+i)%3],green);
-        c.lerp(wet,1-sm(.1,1.3,wy));
+        c.lerp(leaf[(k+i)%3],green*.85);
+        c.lerp(wet,(1-sm(.1,1.3,wy))*.8);
         col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
       }
       g.setAttribute('color',new THREE.BufferAttribute(col,3));
@@ -833,15 +837,15 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Làng chài nổi: nhà gỗ sơn màu trên bè, thúng chai buộc cạnh, đèn lồng đỏ.
   const bayRafts=[];
   {
-    const wood=new THREE.MeshStandardMaterial({color:'#7b5a3b',roughness:1}),dark=new THREE.MeshStandardMaterial({color:'#4a3524',roughness:1});
-    const walls=['#5f8fae','#d8b65e','#71a58c','#c97d5c','#e8e1cf','#8aa0c2'],roofs=['#7a4a35','#4f6f86','#8c5a3c','#5b6b4a'];
-    const red=lampMat('#e0533a'),warm=lampMat('#ffc66b');
+    const wood=new THREE.MeshStandardMaterial({color:'#977a5c',roughness:1}),dark=new THREE.MeshStandardMaterial({color:'#6a5442',roughness:1});
+    const walls=['#93b2bf','#e3d2a2','#a2c0ab','#d9ae96','#ece6d6','#adb9cd'],roofs=['#8e6e5c','#71899a','#9c7a64','#7f8c6f'];
+    const red=lampMat('#e39a74'),warm=lampMat('#f6d6a0');
     const roofGeo=new THREE.CylinderGeometry(1.75,1.75,3.5,3,1).applyMatrix4(new THREE.Matrix4().set(0,1,0,0, 0,0,1,0, 1,0,0,0, 0,0,0,1));
     const spots=[[-55,4,.3],[-58,13,-.2],[-52,19,.5],[-61,22,.1],[-63,6,-.4],[-50,10,.2],[-56,28,.6]];
     spots.forEach(([x,z,yaw],i)=>{
       const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=yaw;
       const raft=new THREE.Mesh(new THREE.BoxGeometry(5.2,.35,4.2),wood);raft.position.y=.05;g.add(raft);
-      for(const sx of [-2.4,2.4])for(const sz of [-1.9,1.9]){const f=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.5,8),new THREE.MeshStandardMaterial({color:i%2?'#3d6d8c':'#2f4f6a'}));f.rotation.z=Math.PI/2;f.position.set(sx*.9,-.12,sz);g.add(f)}
+      for(const sx of [-2.4,2.4])for(const sz of [-1.9,1.9]){const f=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.5,8),new THREE.MeshStandardMaterial({color:i%2?'#6d8c9c':'#5a7686'}));f.rotation.z=Math.PI/2;f.position.set(sx*.9,-.12,sz);g.add(f)}
       const w=new THREE.Mesh(new THREE.BoxGeometry(3,1.8,2.6),new THREE.MeshStandardMaterial({color:walls[i%walls.length],roughness:.9}));w.position.set(-.6,1.1,0);g.add(w);
       const roof=new THREE.Mesh(roofGeo,new THREE.MeshStandardMaterial({color:roofs[i%roofs.length],roughness:.9,flatShading:true}));roof.scale.y=.55;roof.position.set(-.6,2.48,0);g.add(roof);
       const door=new THREE.Mesh(new THREE.BoxGeometry(.05,1.1,.7),dark);door.position.set(.92,.85,0);g.add(door);
@@ -854,32 +858,32 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Thuyền buồm nâu: thân gỗ cong, cabin, hai cột buồm với buồm cánh dơi có nẹp tre, đèn lồng đỏ.
   const bayBoat=new THREE.Group();const baySailMats=[];
   {
-    const hullMat=new THREE.MeshStandardMaterial({color:'#6b4529',roughness:.9}),deckMat=new THREE.MeshStandardMaterial({color:'#a77a4c',roughness:.95}),trim=new THREE.MeshStandardMaterial({color:'#3e2a1a',roughness:.9});
+    const hullMat=new THREE.MeshStandardMaterial({color:'#86644a',roughness:.9}),deckMat=new THREE.MeshStandardMaterial({color:'#bc9b78',roughness:.95}),trim=new THREE.MeshStandardMaterial({color:'#5e4836',roughness:.9});
     const sh=new THREE.Shape();sh.moveTo(-3.5,1.55);sh.quadraticCurveTo(-3.3,.25,-2.5,.05);sh.lineTo(2.3,0);sh.quadraticCurveTo(3.4,.15,3.75,1.35);sh.lineTo(3.4,1.32);sh.quadraticCurveTo(0,1.12,-3.1,1.5);sh.closePath();
     const hg=new THREE.ExtrudeGeometry(sh,{depth:2.2,bevelEnabled:true,bevelThickness:.12,bevelSize:.1,bevelSegments:2,curveSegments:10});hg.translate(0,0,-1.1);hg.rotateY(-Math.PI/2);
     const hull=new THREE.Mesh(hg,hullMat);hull.position.y=-.55;bayBoat.add(hull);
     const stripe=new THREE.Mesh(new THREE.BoxGeometry(2.46,.12,6.6),trim);stripe.position.set(0,.45,0);bayBoat.add(stripe);
     const deck=new THREE.Mesh(new THREE.BoxGeometry(2.05,.08,6.2),deckMat);deck.position.set(0,.66,.05);bayBoat.add(deck);
     for(let z=-2.8;z<=3;z+=.45){const plank=new THREE.Mesh(new THREE.BoxGeometry(2.06,.085,.02),trim);plank.position.set(0,.665,z);bayBoat.add(plank)}
-    const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.75,.95,1.9),new THREE.MeshStandardMaterial({color:'#8a5a34',roughness:.9}));cabin.position.set(0,1.15,-2.15);bayBoat.add(cabin);
+    const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.75,.95,1.9),new THREE.MeshStandardMaterial({color:'#a07e5e',roughness:.9}));cabin.position.set(0,1.15,-2.15);bayBoat.add(cabin);
     const roof=new THREE.Mesh(new THREE.BoxGeometry(2.1,.12,2.3),trim);roof.position.set(0,1.68,-2.15);bayBoat.add(roof);
-    for(const sx of [-.88,.88]){const w=new THREE.Mesh(new THREE.BoxGeometry(.03,.32,1.3),new THREE.MeshStandardMaterial({color:'#2b1c12'}));w.position.set(sx,1.25,-2.15);bayBoat.add(w)}
-    const red=lampMat('#e4553b');for(const sx of [-.95,.95]){const l=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),red);l.scale.y=1.35;l.position.set(sx,1.42,-1.08);bayBoat.add(l)}
+    for(const sx of [-.88,.88]){const w=new THREE.Mesh(new THREE.BoxGeometry(.03,.32,1.3),new THREE.MeshStandardMaterial({color:'#4b3b2e'}));w.position.set(sx,1.25,-2.15);bayBoat.add(w)}
+    const red=lampMat('#e39a74');for(const sx of [-.95,.95]){const l=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),red);l.scale.y=1.35;l.position.set(sx,1.42,-1.08);bayBoat.add(l)}
     // tọa cụ ở mũi thuyền
-    const zab=new THREE.Mesh(new THREE.BoxGeometry(1,.08,1),new THREE.MeshStandardMaterial({color:'#6b4a33'}));zab.position.set(0,.74,2.25);bayBoat.add(zab);
-    const zafu=new THREE.Mesh(new THREE.CylinderGeometry(.34,.36,.16,16),new THREE.MeshStandardMaterial({color:'#c99a4f'}));zafu.position.set(0,.85,2.1);bayBoat.add(zafu);
+    const zab=new THREE.Mesh(new THREE.BoxGeometry(1,.08,1),new THREE.MeshStandardMaterial({color:'#7d6150'}));zab.position.set(0,.74,2.25);bayBoat.add(zab);
+    const zafu=new THREE.Mesh(new THREE.CylinderGeometry(.34,.36,.16,16),new THREE.MeshStandardMaterial({color:'#d4b07a'}));zafu.position.set(0,.85,2.1);bayBoat.add(zafu);
     const sail=new THREE.Shape();sail.moveTo(-1.5,0);sail.lineTo(1.25,0);sail.quadraticCurveTo(1.7,2.2,1.15,4.2);sail.quadraticCurveTo(.2,5,-1.05,4.55);sail.quadraticCurveTo(-1.9,2.2,-1.5,0);
     const sailGeo=new THREE.ShapeGeometry(sail,12);sailGeo.rotateY(-Math.PI/2);
     const mast=(z,h,s)=>{
-      const mm=new THREE.MeshStandardMaterial({color:'#3e2a1a',roughness:.9,transparent:true});baySailMats.push(mm);const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,h,8),mm);m.position.set(0,.7+h/2,z);bayBoat.add(m);
-      const sm=new THREE.MeshStandardMaterial({color:'#b0532d',roughness:.85,side:THREE.DoubleSide,transparent:true,opacity:1});baySailMats.push(sm);
+      const mm=new THREE.MeshStandardMaterial({color:'#5e4836',roughness:.9,transparent:true});baySailMats.push(mm);const m=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,h,8),mm);m.position.set(0,.7+h/2,z);bayBoat.add(m);
+      const sm=new THREE.MeshStandardMaterial({color:'#ad7f62',roughness:.9,side:THREE.DoubleSide,transparent:true,opacity:1});baySailMats.push(sm);
       const sg=new THREE.Group();sg.position.set(.08,1.15,z+.15);sg.scale.setScalar(s);
       const sl=new THREE.Mesh(sailGeo,sm);sg.add(sl);
-      for(let y=.2;y<4.6;y+=.62){const w=y<2.2?2.75+y*.12:3.1-(y-2.2)*.72;const b=new THREE.Mesh(new THREE.BoxGeometry(.04,.045,w),new THREE.MeshStandardMaterial({color:'#4a2c18',transparent:true}));baySailMats.push(b.material);b.position.set(.02,y,-.05+(y>2.2?.0:0));sg.add(b)}
+      for(let y=.2;y<4.6;y+=.62){const w=y<2.2?2.75+y*.12:3.1-(y-2.2)*.72;const b=new THREE.Mesh(new THREE.BoxGeometry(.04,.045,w),new THREE.MeshStandardMaterial({color:'#6e5443',transparent:true}));baySailMats.push(b.material);b.position.set(.02,y,-.05+(y>2.2?.0:0));sg.add(b)}
       bayBoat.add(sg);return m;
     };
     mast(-1.2,5.6,.92);mast(-3.1,3.6,.6);
-    const flagMat=new THREE.MeshStandardMaterial({color:'#c8392b',side:THREE.DoubleSide,transparent:true});baySailMats.push(flagMat);const flag=new THREE.Mesh(new THREE.PlaneGeometry(.7,.32),flagMat);flag.position.set(0,6.35,-1.55);flag.rotation.y=Math.PI/2;bayBoat.add(flag);bayBoat.userData.flag=flag;
+    const flagMat=new THREE.MeshStandardMaterial({color:'#c98a74',side:THREE.DoubleSide,transparent:true});baySailMats.push(flagMat);const flag=new THREE.Mesh(new THREE.PlaneGeometry(.7,.32),flagMat);flag.position.set(0,6.35,-1.55);flag.rotation.y=Math.PI/2;bayBoat.add(flag);bayBoat.userData.flag=flag;
   }
   bayGroup.add(bayBoat);
   // Hải âu lượn vòng.
@@ -891,11 +895,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // Đèn hoa đăng: thả từ mạn thuyền, trôi chậm trên sóng rồi mờ dần.
   const bayLanterns=[];
-  const lanternPetal=new THREE.MeshStandardMaterial({color:'#f2a7bd',emissive:'#f08aa8',emissiveIntensity:.35,roughness:.7,side:THREE.DoubleSide,transparent:true});
-  const lanternFlame=lampMat('#ffd27a');
+  const lanternPetal=new THREE.MeshStandardMaterial({color:'#f3cdd3',emissive:'#f0b4c0',emissiveIntensity:.3,roughness:.7,side:THREE.DoubleSide,transparent:true});
+  const lanternFlame=lampMat('#ffe0a6');
   function releaseLantern(){
     const g=new THREE.Group();const petals=new THREE.Mesh(new THREE.ConeGeometry(.42,.38,8,1,true),lanternPetal);petals.rotation.x=Math.PI;petals.position.y=.18;g.add(petals);
-    const pad=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.05,10),new THREE.MeshStandardMaterial({color:'#5f8f5a'}));g.add(pad);
+    const pad=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.05,10),new THREE.MeshStandardMaterial({color:'#86a87c'}));g.add(pad);
     const flame=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),lanternFlame);flame.scale.y=1.6;flame.position.y=.32;g.add(flame);
     const h=bayState.heading,side=bayLanterns.length%2?1:-1;
     g.position.set(bayState.x-Math.sin(h)*1.5+Math.cos(h)*1.6*side,0,bayState.z-Math.cos(h)*1.5-Math.sin(h)*1.6*side);
@@ -960,14 +964,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function updateBay(dt){
     const t=performance.now()/1000;bayU.time.value=t;
     const hold=bayState.anchored||meActivity==='sit';
-    bayState.speed+=((hold?0:1.15)-bayState.speed)*Math.min(1,dt*.6);
+    bayState.speed+=((hold?0:.85)-bayState.speed)*Math.min(1,dt*.5);
     bayState.u=(bayState.u+bayState.speed*dt/BAY_ROUTE_LEN)%1;
     const p=window.anyenBayRoute.getPointAt(bayState.u),tan=window.anyenBayRoute.getTangentAt(bayState.u);
     const want=Math.atan2(tan.x,tan.z);let dh=want-bayState.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));bayState.heading+=dh*Math.min(1,dt*.8);
     bayState.x=p.x;bayState.z=p.z;const h=bayState.heading,fx=Math.sin(h),fz=Math.cos(h);
     const y=bayWaveY(p.x,p.z,t)*.8,yF=bayWaveY(p.x+fx*3,p.z+fz*3,t),yB=bayWaveY(p.x-fx*3,p.z-fz*3,t),yR=bayWaveY(p.x+fz*1.2,p.z-fx*1.2,t),yL=bayWaveY(p.x-fz*1.2,p.z+fx*1.2,t);
     bayBoat.position.set(p.x,y,p.z);bayBoat.rotation.set(0,0,0);bayBoat.rotateY(h);bayBoat.rotateX(-Math.atan2(yF-yB,6)*.8);bayBoat.rotateZ(Math.atan2(yR-yL,2.4)*.7);
-    bayBoat.userData.flag.rotation.x=Math.sin(t*3.1)*.25;
+    bayBoat.userData.flag.rotation.x=Math.sin(t*2)*.18;
     // người ngồi trên tọa cụ ở mũi thuyền
     bayTmp.set(0,.93,2.1);bayBoat.localToWorld(bayTmp);bayAvatar.pos.copy(bayTmp);bayAvatar.yaw=h;mePosition.set(bayTmp.x,0,bayTmp.z);
     // camera: vuốt ngang để xoay quanh thuyền, vuốt dọc để ngẩng/cúi
@@ -978,9 +982,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     baySky.position.set(camera.position.x-BAY.x,0,camera.position.z-BAY.z);
     bayU.camL.value.set(camera.position.x-BAY.x,camera.position.y,camera.position.z-BAY.z);
     // buồm mờ đi khi nằm giữa camera và người ngồi
-    const off=Math.atan2(Math.sin(viewYaw),Math.cos(viewYaw));const goal=Math.abs(off)<1.15?.2:1;bayState.fade+=(goal-bayState.fade)*Math.min(1,dt*4);for(const m of baySailMats){m.opacity=bayState.fade;m.depthWrite=bayState.fade>.9}
+    const off=Math.atan2(Math.sin(viewYaw),Math.cos(viewYaw));const goal=Math.abs(off)<1.15?.12:1;bayState.fade+=(goal-bayState.fade)*Math.min(1,dt*4);for(const m of baySailMats){m.opacity=bayState.fade;m.depthWrite=bayState.fade>.9}
     for(const r of bayRafts){r.g.position.y=bayWaveY(r.x,r.z,t)*.7;r.g.rotation.x=Math.sin(t*.8+r.ph)*.025}
-    for(const b of bayBirds){const a=t*b.sp+b.ph;b.g.position.set(b.cx+Math.cos(a)*b.rad,b.h+Math.sin(t*.4+b.ph)*.8,b.cz+Math.sin(a)*b.rad);b.g.rotation.set(0,-a,Math.sin(a)*.1);const f=Math.sin(t*5+b.ph)*.5;b.l.rotation.z=f;b.r.rotation.z=-f}
+    for(const b of bayBirds){const a=t*b.sp+b.ph;b.g.position.set(b.cx+Math.cos(a)*b.rad,b.h+Math.sin(t*.4+b.ph)*.8,b.cz+Math.sin(a)*b.rad);b.g.rotation.set(0,-a,Math.sin(a)*.1);const f=Math.sin(t*3.2+b.ph)*.42;b.l.rotation.z=f;b.r.rotation.z=-f}
     const now=performance.now();for(let i=bayLanterns.length-1;i>=0;i--){const o=bayLanterns[i],age=(now-o.born)/1000;o.g.position.x+=o.vx*dt;o.g.position.z+=o.vz*dt;o.vx*=.999;o.vz*=.999;o.g.position.y=bayWaveY(o.g.position.x,o.g.position.z,t)*.9+.04;o.g.rotation.y+=dt*.15;o.g.rotation.z=Math.sin(t+o.ph)*.06;if(age>240){bayGroup.remove(o.g);bayLanterns.splice(i,1)}}
     // gần danh thắng thì hiện tên
     let near=null;for(const l of window.anyenBayLandmarks){if(Math.hypot(l.x-p.x,l.z-p.z)<(l.name==='Hang Sửng Sốt'?24:18)){near=l;break}}
