@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AnSense · Cửa Thân của Làng Yên</title>
+<meta name="description" content="Làm test 3 phút, nhận gợi ý theo 6 giác quan: một sản phẩm, một việc làm ngay và một trải nghiệm.">
+<meta name="theme-color" content="#04201b">
+<style>
+:root{--bg:#04201b;--bg2:#062a23;--surf:#0a302a;--line:rgba(200,169,106,.28);--ivory:#f4e7c6;--ivory2:#f8ebc9;--mut:#b9c7bd;--mut2:#9fb0a6;--gold:#d8b575;--cta:linear-gradient(135deg,#e0c183,#b8935a);--ink:#1a2a22;--serif:Georgia,"Times New Roman",serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(ellipse at 70% -10%,#124236 0%,#062a23 40%,#04201b 100%);background-color:#04201b;color:var(--ivory);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.narrow{max-width:560px;margin:0 auto;padding:0 20px}
+.eyebrow{font-size:12px;letter-spacing:3.5px;color:var(--gold);text-transform:uppercase}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--ivory2);margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 30px;border-radius:999px;border:0;background:var(--cta);color:var(--ink);font-weight:700;font-size:16px;text-decoration:none;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:transparent;color:var(--ivory);border:1px solid rgba(216,181,117,.6);box-shadow:none;font-weight:500}
+.btn.sm{min-height:44px;padding:0 20px;font-size:14px}
+.card{border:1px solid var(--line);background:rgba(10,48,42,.75);border-radius:22px}
+header.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 24px;padding:14px 0}
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--mut);text-decoration:none;font-size:14px;background:none;border:0;padding:0}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:24px}
+nav.links{display:flex;flex-wrap:wrap;align-items:center;gap:0 18px;font-size:14px}
+nav.links a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;color:#d7e0d9}
+.view{display:none}.view.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* hero */
+.hero{display:flex;flex-wrap:wrap;align-items:center;gap:44px;padding:44px 0 80px}
+.hero .l{flex:1 1 440px;min-width:0}.hero .r{flex:1 1 320px;min-width:0;max-width:400px;margin:0 auto}
+.hero h1{font-size:clamp(40px,7vw,68px);line-height:1.06;margin-top:16px}
+.hero p.sub{margin:22px 0 0;max-width:520px;font-size:19px;color:#c9d5cc}
+.row{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+section.blk{padding:20px 0 72px}
+section.blk h2{font-size:clamp(28px,4.5vw,40px);line-height:1.15;margin-top:12px}
+.grid{display:flex;flex-wrap:wrap;gap:16px;margin-top:30px}
+.grid>*{flex:1 1 260px;min-width:0}
+.step{padding:26px}.step b{display:block;font:34px var(--serif);color:var(--gold)}.step h3{font:600 19px system-ui;margin:8px 0 0;color:var(--ivory)}.step p{margin:8px 0 0;color:var(--mut);font-size:15px}
+.sense{display:flex;gap:14px;padding:20px;align-items:flex-start}.sense i{flex:none;width:14px;height:14px;margin-top:6px;border-radius:50%}.sense b{letter-spacing:2.5px;font-size:13px}.sense p{margin:4px 0 0;font-size:15px;color:#c9d5cc}
+.stages{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.stages>div{flex:1 1 140px;padding:16px 18px;border-radius:18px;background:rgba(10,48,42,.75)}.stages small{color:var(--mut2)}.stages b{display:block;font-weight:500;font-size:18px;margin-top:4px}
+.prod{display:flex;flex-direction:column;overflow:hidden}
+.prod .ph{height:130px;display:flex;align-items:center;justify-content:center}
+.prod .bd{padding:20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tag{align-self:flex-start;font-size:11px;letter-spacing:1.5px;padding:3px 10px;border-radius:999px;background:rgba(156,199,169,.18);color:#bfe0c9}
+.tag.pre{background:rgba(216,181,117,.18);color:#e6c88e}
+.prod h3{font:600 18px system-ui;margin-top:6px;color:var(--ivory)}.prod .d{font-size:14px;color:var(--mut)}.prod .pr{margin-top:auto;padding-top:10px;font:22px var(--serif);color:var(--ivory2)}
+.note{margin-top:22px;font-size:13px;color:var(--mut2);max-width:720px}
+.warn{padding:22px 26px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;font-size:14.5px;color:#c9d5cc}
+footer{padding:26px 0 44px;border-top:1px solid rgba(200,169,106,.2);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;font-size:13px;color:var(--mut2)}
+/* consent / quiz */
+.panel{padding-block:8px 40px}
+.panel h1{font-size:clamp(28px,6vw,34px);line-height:1.15;margin-top:10px}
+.info{display:flex;gap:14px;padding:16px;margin-top:12px;font-size:14.5px;color:#d7e0d9}
+.info svg{flex:none;margin-top:2px}
+.chk{display:flex;gap:14px;align-items:flex-start;margin-top:20px;min-height:44px;cursor:pointer;font-size:14.5px}
+.chk input{position:absolute;opacity:0}
+.chk .bx{flex:none;width:26px;height:26px;margin-top:1px;border-radius:8px;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center}
+.chk .bx svg{opacity:0}.chk input:checked+.bx{background:var(--gold)}.chk input:checked+.bx svg{opacity:1}
+.chk input:focus-visible+.bx{outline:2px solid var(--ivory);outline-offset:2px}
+.bar{height:6px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--cta);border-radius:999px;transition:width .3s}
+.q{font-size:clamp(24px,6vw,30px);line-height:1.25;margin-top:12px}
+.opts{display:flex;flex-direction:column;gap:12px;margin-top:26px}
+.opt{min-height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;text-align:left;border-radius:18px;border:1px solid var(--line);background:rgba(10,48,42,.75);font-size:16px;width:100%}
+.opt:hover,.opt:focus-visible{border-color:rgba(216,181,117,.8)}
+.opt.sel{border-color:rgba(216,181,117,.9);background:linear-gradient(160deg,#17493d,#0a2d25);font-weight:600}
+/* result */
+.rcard{padding:26px;border-radius:26px;border:1px solid rgba(216,181,117,.5);background:linear-gradient(160deg,#17493d,#0a2d25);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.rcard .two{display:flex;gap:16px;margin-top:20px}.rcard .two>div{flex:1 1 0;min-width:0}
+.rcard small{font-size:12px;color:var(--mut)}.rcard .big{font:clamp(32px,9vw,40px)/1.15 var(--serif);color:var(--ivory2)}
+.dots{display:flex;gap:8px;margin-top:16px}.dots i{width:18px;height:18px;border-radius:50%}
+.srow{padding:14px 16px;border-radius:16px;border:1px solid var(--line);border-left-width:4px;background:rgba(10,48,42,.75)}
+.srow b{font-size:12px;letter-spacing:2.5px}.srow div{margin-top:2px;font-size:14.5px;color:#c9d5cc}
+.three{padding:20px}.three .k{font-size:11px;letter-spacing:2.5px;color:var(--gold)}.three h3{font:600 17px system-ui;margin:6px 0 0;color:var(--ivory)}.three p{margin:2px 0 12px;font-size:14px;color:var(--mut)}.three .btn{width:100%;min-height:46px;font-size:15px}
+.stack{display:flex;flex-direction:column;gap:10px}
+/* khoang lang */
+.kl{text-align:center;padding-block:10px 40px}
+.orb{position:relative;width:min(62vw,240px);aspect-ratio:1;margin:26px auto;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.orb:before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--c,#86cfc2) 0%,transparent 70%);opacity:.55;animation:br 8s ease-in-out infinite}
+.orb span{position:relative;font:56px var(--serif);color:var(--ivory2);font-variant-numeric:tabular-nums}
+@keyframes br{0%,100%{transform:scale(.8)}50%{transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.orb:before{animation:none}.view.on{animation:none}}
+.kl h1{font-size:34px}.kl .hint{max-width:420px;margin:14px auto 0;font-size:17px;color:#d7e0d9;min-height:78px}
+.pips{display:flex;justify-content:center;gap:8px;margin-top:14px}.pips i{width:30px;height:5px;border-radius:99px;background:rgba(255,255,255,.14)}.pips i.on{background:var(--gold)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0a302a;border:1px solid var(--line);padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="lotus" viewBox="0 0 48 48"><g stroke="#f4e7c6" stroke-opacity=".55" stroke-width="1" fill-opacity=".85"><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#7fb3b8"/><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#86a8c4" transform="rotate(60 24 24)"/><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#9cc7a9" transform="rotate(120 24 24)"/><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#d0a98c" transform="rotate(180 24 24)"/><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#c3a0bd" transform="rotate(240 24 24)"/><path d="M24 25C17.5 19 17.5 9 24 3C30.5 9 30.5 19 24 25Z" fill="#86cfc2" transform="rotate(300 24 24)"/></g><circle cx="24" cy="24" r="3.2" fill="#f2d7a0"/></symbol>
+</defs></svg>
+
+<!-- TRANG CHỦ -->
+<div class="view on" id="v-home">
+<div class="wrap">
+<header class="top">
+<a class="back" href="index.html">← LÀNG YÊN</a>
+<div class="brand"><svg width="30" height="30"><use href="#lotus"/></svg>AnSense</div>
+<nav class="links"><a href="#how">Cách hoạt động</a><a href="#senses">6 giác quan</a><a href="#products">Sản phẩm</a><button class="btn sm" data-go="consent">Làm test</button></nav>
+</header>
+<section class="hero">
+<div class="l">
+<div class="eyebrow">Cửa Thân · Làng Yên</div>
+<h1>Biết mình,<br>chọn đúng.</h1>
+<p class="sub">Làm bài test 3 phút. AnSense gợi ý theo 6 giác quan: một sản phẩm, một việc làm ngay tại nhà và một trải nghiệm đặt được.</p>
+<div class="row"><button class="btn" data-go="consent" id="startBtn">Làm test 3 phút →</button><button class="btn ghost" data-go="silence">Khoảng Lặng 18 phút</button></div>
+<div id="again" class="note" hidden></div>
+</div>
+<div class="r"><div class="rcard"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="font-size:11px;letter-spacing:3px">Thẻ kết quả mẫu</span><svg width="36" height="36"><use href="#lotus"/></svg></div>
+<div class="two"><div><small>Thể trạng nền</small><div class="big">Nhiệt</div></div><div><small>Hôm nay</small><div class="big">Tịnh</div></div></div>
+<div class="dots"><i style="background:#7fb3b8"></i><i style="background:#86a8c4"></i><i style="background:#9cc7a9"></i><i style="background:#d0a98c"></i><i style="background:#c3a0bd"></i><i style="background:#86cfc2"></i></div></div></div>
+</section>
+
+<section class="blk" id="how"><div class="eyebrow">Cách hoạt động</div><h2>Ba bước, ba phút.</h2>
+<div class="grid">
+<div class="card step"><b>1</b><h3>Làm test 18 câu</h3><p>Khoảng 3 phút. Nhận thẻ kết quả gồm thể trạng nền và trạng thái hôm nay.</p></div>
+<div class="card step"><b>2</b><h3>Nhận gợi ý 6 giác quan</h3><p>Mỗi gợi ý gồm một sản phẩm, một việc làm ngay tại nhà và một lớp hoặc trải nghiệm đặt được.</p></div>
+<div class="card step"><b>3</b><h3>Dừng lại 18 phút</h3><p>Nghi thức Khoảng Lặng dẫn bạn qua sáu chặng, mỗi chặng 3 phút, ngay tại nhà.</p></div>
+</div></section>
+
+<section class="blk" id="senses"><div class="eyebrow">Sáu giác quan</div><h2>Sáu cánh sen, sáu hồ trong làng.</h2>
+<div class="grid" id="senseGrid"></div></section>
+
+<section class="blk"><div class="eyebrow">Khoảng Lặng</div><h2>18 phút, sáu chặng.</h2>
+<div class="stages" id="stageStrip"></div></section>
+
+<section class="blk" id="products"><div class="eyebrow">Sản phẩm NỞ HOA</div><h2>Gợi ý luôn đi cùng một việc làm tại nhà.</h2>
+<div class="grid">
+<div class="card prod"><div class="ph" style="background:linear-gradient(160deg,#1d5a50,#0d3a31)"><svg width="54" height="84" viewBox="0 0 64 96" fill="none" stroke="#f4e7c6" stroke-opacity=".7" stroke-width="1.5" stroke-linejoin="round"><rect x="24" y="4" width="16" height="12" rx="2"/><path d="M26 16v8M38 16v8"/><path d="M20 24h24a6 6 0 0 1 6 6v54a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6Z" fill="#9cc7a9" fill-opacity=".25"/></svg></div><div class="bd"><span class="tag">CÓ HÀNG</span><h3>Tinh dầu Giọt</h3><div class="d">Chai 10 ml, bản lăn 159.000đ</div><div class="pr">189.000đ</div><button class="btn ghost sm" data-soon>Xem tại nhà bán ↗</button></div></div>
+<div class="card prod"><div class="ph" style="background:linear-gradient(160deg,#4c3f4f,#2a2430)"><svg width="110" height="60" viewBox="0 0 130 64" fill="none" stroke="#f4e7c6" stroke-opacity=".7" stroke-width="1.5"><g id="mini"><rect x="8" y="2" width="10" height="8" rx="2"/><rect x="3" y="12" width="20" height="50" rx="5" fill="#c3a0bd" fill-opacity=".3"/></g><use href="#mini" x="26"/><use href="#mini" x="52"/><use href="#mini" x="78"/><use href="#mini" x="104"/></svg></div><div class="bd"><span class="tag">CÓ HÀNG</span><h3>Bộ khám phá tinh dầu</h3><div class="d">5 chai mini, mỗi chai một trạng thái</div><div class="pr">396.000đ</div><button class="btn ghost sm" data-soon>Xem tại nhà bán ↗</button></div></div>
+<div class="card prod"><div class="ph" style="background:linear-gradient(160deg,#5a4a38,#2f261c)"><svg width="64" height="82" viewBox="0 0 70 90" fill="none" stroke="#f4e7c6" stroke-opacity=".7" stroke-width="1.5" stroke-linejoin="round"><path d="M35 6c5 7 5 12 0 16c-5-4-5-9 0-16Z" fill="#f2d7a0" fill-opacity=".6"/><path d="M35 22v8"/><path d="M12 32h46v46a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8V32Z" fill="#d0a98c" fill-opacity=".28"/></svg></div><div class="bd"><span class="tag">CÓ HÀNG</span><h3>Nến NỞ HOA</h3><div class="d">Thắp cùng nghi thức Khoảng Lặng</div><div class="pr" style="font-size:16px;color:var(--mut)">Giá sẽ cập nhật</div><button class="btn ghost sm" data-soon>Xem tại nhà bán ↗</button></div></div>
+<div class="card prod" style="border-color:rgba(216,181,117,.5)"><div class="ph" style="background:linear-gradient(160deg,#2c5a4a,#10392f)"><svg width="90" height="70" viewBox="0 0 96 76" fill="none" stroke="#f4e7c6" stroke-opacity=".7" stroke-width="1.5" stroke-linejoin="round"><rect x="10" y="22" width="76" height="46" rx="6" fill="#9cc7a9" fill-opacity=".22"/><path d="M10 34h76"/><path d="M40 6l8 10 8-10"/><circle cx="48" cy="50" r="7"/></svg></div><div class="bd"><span class="tag pre">ĐẶT TRƯỚC</span><h3>Ngũ Thiên Trà</h3><div class="d">Hộp 18 túi lọc, một vị. Dự kiến kịp Tết Đinh Mùi 2027.</div><div class="pr">189.000đ</div><button class="btn sm" data-soon>Đặt trước</button></div></div>
+</div>
+<p class="note">Đây là link liên kết: nhà bán tự thu tiền, giao hàng và xuất hoá đơn, AnSense nhận hoa hồng. Dữ liệu bài test và sức khoẻ của bạn không chia sẻ cho nhà bán.</p></section>
+
+<section class="blk" style="padding-bottom:48px"><div class="card warn"><span class="eyebrow">Lưu ý</span><span style="flex:1 1 420px">AnSense là ứng dụng wellness, không phải y khoa. Các gợi ý về thể trạng và nghi thức chỉ để tham khảo, không thay thế tư vấn của bác sĩ. Tinh dầu chỉ dùng ngoài, không uống.</span></div></section>
+<section style="text-align:center;padding:0 0 80px"><h2 style="font-size:clamp(30px,5vw,44px)">Hôm nay bạn cần gì?</h2><p style="color:var(--mut);margin:14px 0 0">Ba phút để biết, mười tám phút để dừng lại.</p><div class="row" style="justify-content:center"><button class="btn" data-go="consent">Làm test 3 phút →</button></div></section>
+<footer><span>AnSense · cửa Thân của LÀNG YÊN</span><span>anyen.space</span></footer>
+</div>
+</div>
+
+<!-- ĐỒNG Ý -->
+<div class="view" id="v-consent"><div class="narrow panel">
+<header class="top"><button class="back" data-go="home">← AnSense</button><span class="eyebrow" style="font-size:11px">Trước khi bắt đầu</span></header>
+<h1>Vài lời trước khi làm test</h1>
+<p style="color:#c9d5cc;margin:12px 0 0;font-size:15px">18 câu, khoảng 3 phút. Bạn có thể dừng bất cứ lúc nào.</p>
+<div class="card info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d8b575" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"/><path d="M9 12l2 2 4-4"/></svg><p style="margin:0">Đây là công cụ wellness, không phải y khoa. Kết quả là gợi ý về thể trạng và nghi thức, không phải chẩn đoán hay điều trị.</p></div>
+<div class="card info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d8b575" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><p style="margin:0">Câu trả lời chỉ lưu trên thiết bị của bạn để tạo thẻ kết quả. Chúng tôi không chia sẻ cho nhà bán.</p></div>
+<div class="card info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d8b575" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5M12 16h.01"/></svg><p style="margin:0">Đang mang thai, có bệnh nền hoặc đang điều trị? Hãy hỏi bác sĩ trước khi dùng tinh dầu, trà hay tập luyện được gợi ý.</p></div>
+<label class="chk"><input type="checkbox" id="agree"><span class="bx"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#1a2a22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span>Tôi hiểu và đồng ý cho AnSense dùng câu trả lời để tạo gợi ý cho riêng tôi.</span></label>
+<div style="margin-top:26px"><button class="btn" id="goQuiz" disabled style="width:100%">Bắt đầu làm test →</button></div>
+</div></div>
+
+<!-- CÂU HỎI -->
+<div class="view" id="v-quiz"><div class="narrow panel">
+<header class="top"><button class="back" id="qBack">← Câu trước</button><span id="qNum" style="font-size:13px;color:var(--gold);letter-spacing:1px"></span></header>
+<div class="bar"><i id="qBar"></i></div>
+<div class="eyebrow" id="qCat" style="margin-top:30px;font-size:11px"></div>
+<h1 class="q" id="qText"></h1>
+<p id="qSub" style="margin:12px 0 0;font-size:14px;color:var(--mut2)"></p>
+<div class="opts" id="qOpts"></div>
+<p style="margin:26px 0 0;font-size:12.5px;color:var(--mut2);text-align:center">Dừng lại lúc nào cũng được, câu trả lời của bạn được giữ lại.</p>
+</div></div>
+
+<!-- KẾT QUẢ -->
+<div class="view" id="v-result"><div class="narrow panel">
+<header class="top"><button class="back" data-go="home">← AnSense</button><span class="eyebrow" style="font-size:11px">Kết quả của bạn</span></header>
+<div class="rcard" id="rCard">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:20px var(--serif)">AnSense</span><svg width="34" height="34"><use href="#lotus"/></svg></div>
+<div class="two"><div><small>Thể trạng nền</small><div class="big" id="rBody"></div></div><div><small>Hôm nay</small><div class="big" id="rState"></div></div></div>
+<p id="rLine" style="margin:14px 0 0;font-size:14px;color:#c9d5cc"></p>
+<div class="dots"><i style="background:#7fb3b8"></i><i style="background:#86a8c4"></i><i style="background:#9cc7a9"></i><i style="background:#d0a98c"></i><i style="background:#c3a0bd"></i><i style="background:#86cfc2"></i></div>
+</div>
+<div class="row" style="margin-top:14px;gap:10px"><button class="btn sm" id="shareBtn" style="flex:1">Chia sẻ thẻ</button><button class="btn ghost sm" id="retake" style="flex:1">Làm lại</button></div>
+<div class="eyebrow" style="margin-top:32px;font-size:11px" id="rKicker"></div>
+<h2 style="font-size:26px;line-height:1.2;margin-top:8px">Sáu giác quan, sáu cách cân lại</h2>
+<div class="stack" id="rSenses" style="margin-top:16px"></div>
+<div class="eyebrow" style="margin-top:32px;font-size:11px">Ba điều cho hôm nay</div>
+<div class="stack" id="rThree" style="margin-top:14px"></div>
+<p class="note" style="margin-top:24px">AnSense là công cụ wellness, không thay thế tư vấn y khoa. Tinh dầu chỉ dùng ngoài. Nếu có bệnh nền hoặc đang mang thai, hãy hỏi bác sĩ trước.</p>
+</div></div>
+
+<!-- KHOẢNG LẶNG -->
+<div class="view" id="v-silence"><div class="narrow kl">
+<header class="top"><button class="back" id="klBack">← AnSense</button><span class="eyebrow" style="font-size:11px">Khoảng Lặng</span></header>
+<div id="klIntro">
+<h1>18 phút để dừng lại</h1>
+<p class="hint" style="min-height:0">Sáu chặng, mỗi chặng 3 phút: nhìn, nghe, ngửi, nhâm nhi, chạm, thiền dẫn. Hãy ngồi yên, tắt thông báo. Chuẩn bị một chén trà ấm nếu có.</p>
+<div class="row" style="justify-content:center"><button class="btn" id="klStart">Bắt đầu</button><button class="btn ghost" id="klFast" title="Mỗi chặng 6 giây, để xem thử">Xem thử nhanh</button></div>
+<p class="note" style="margin:18px auto 0" id="klNote"></p>
+</div>
+<div id="klRun" hidden>
+<div class="eyebrow" id="klSense"></div>
+<h1 id="klTitle" style="margin-top:8px"></h1>
+<div class="orb" id="klOrb"><span id="klTime">3:00</span></div>
+<p class="hint" id="klHint"></p>
+<div class="pips" id="klPips"></div>
+<div class="row" style="justify-content:center;margin-top:24px"><button class="btn ghost sm" id="klPause">Tạm dừng</button><button class="btn ghost sm" id="klSkip">Sang chặng sau</button></div>
+</div>
+<div id="klDone" hidden>
+<h1>Bạn đã dừng lại đủ rồi.</h1>
+<p class="hint" style="min-height:0">Hít một hơi dài. Khi sẵn sàng, mở mắt và quay lại với ngày của mình.</p>
+<div class="row" style="justify-content:center"><button class="btn" data-go="home">Về AnSense</button><a class="btn ghost" href="index.html">Về Làng Yên</a></div>
+</div>
+</div></div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var KEY='anyen-ansense-v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
+function save(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+var store=load();
+function toast(t){var el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('on')},2600)}
+
+/* ---------- DỮ LIỆU ---------- */
+var SENSES=[
+ {k:'SẮC',c:'#7fb3b8',d:'Màu sắc và ánh sáng quanh bạn.',lake:'Hồ Sắc'},
+ {k:'THANH',c:'#86a8c4',d:'Âm thanh, nhạc và nhịp điệu.',lake:'Hồ Thanh'},
+ {k:'HƯƠNG',c:'#9cc7a9',d:'Mùi hương của căn phòng bạn ở.',lake:'Hồ Hương'},
+ {k:'VỊ',c:'#d0a98c',d:'Vị của chén trà và bữa ăn.',lake:'Hồ Vị'},
+ {k:'CHẠM',c:'#c3a0bd',d:'Cảm giác trên da và đôi tay.',lake:'Hồ Chạm'},
+ {k:'NIỆM',c:'#86cfc2',d:'Hơi thở và ý niệm của bạn.',lake:'Hồ Niệm'}];
+var STAGES=[['Nhìn','SẮC'],['Nghe','THANH'],['Ngửi','HƯƠNG'],['Nhâm nhi','VỊ'],['Chạm','CHẠM'],['Thiền dẫn','NIỆM']];
+var Q=[
+ ['Cơ thể · nóng hay lạnh','Bạn thấy người nóng, hay bực bội, khó chịu khi trời oi?','nhiet'],
+ ['Cơ thể · nóng trong','Miệng hay đắng, nổi mụn nhọt hoặc nhiệt miệng?','nhiet'],
+ ['Cơ thể · nóng hay lạnh','Tay chân hay lạnh, kể cả khi trời không lạnh?','han'],
+ ['Cơ thể · ăn uống','Bạn thích đồ ăn uống ấm nóng, ăn đồ lạnh dễ đau bụng hoặc đi lỏng?','han'],
+ ['Cơ thể · khô hay ẩm','Người nặng nề, hay phù nhẹ, mặt hoặc da dễ bóng dầu?','thap'],
+ ['Cơ thể · khô hay ẩm','Trời nồm ẩm là bạn thấy uể oải, đầy bụng hoặc khó chịu hơn?','thap'],
+ ['Cơ thể · khô hay ẩm','Họng, miệng hay khô, môi hoặc da dễ nẻ?','tao'],
+ ['Cơ thể · khô hay ẩm','Bạn hay khát nước, đi vệ sinh phân khô hoặc táo bón?','tao'],
+ ['Cơ thể · năng lượng','Làm một việc nhẹ cũng thấy mệt, nói nhiều là hụt hơi?','hu'],
+ ['Cơ thể · năng lượng','Bạn dễ ra mồ hôi, dễ cảm lạnh, ốm vặt?','hu'],
+ ['Cơ thể · giấc ngủ','Bạn khó ngủ, ngủ chập chờn hoặc dậy vẫn thấy mệt?','chung'],
+ ['Cơ thể · ăn uống','Bạn ăn uống thất thường, hay bỏ bữa hoặc ăn quá no?','chung'],
+ ['Tâm trạng tuần này','Sáng dậy, bạn thấy khó bắt đầu ngày mới, thiếu động lực?','khoi'],
+ ['Tâm trạng tuần này','Bạn thấy ngại trò chuyện, muốn thu mình hoặc thấy cô đơn?','giao'],
+ ['Tâm trạng tuần này','Đầu óc cứ nghĩ lo, khó thả lỏng?','an'],
+ ['Tâm trạng tuần này','Đêm nằm xuống vẫn thấy căng, khó vào giấc?','an'],
+ ['Tâm trạng tuần này','Bạn thấy tràn năng lượng, muốn sáng tạo hoặc chia sẻ điều gì đó?','hoa'],
+ ['Tâm trạng tuần này','Việc dồn dập khiến bạn quá tải, dễ nóng nảy?','tinh']];
+var OPTS=['Hiếm khi hoặc không bao giờ','Thỉnh thoảng','Khá thường xuyên','Gần như lúc nào cũng vậy'];
+var BODY={
+ nhiet:{n:'Nhiệt',line:'Người dễ nóng, nên ưu tiên cái mát và dịu.'},
+ han:{n:'Hàn',line:'Người dễ lạnh, nên ưu tiên cái ấm và đều.'},
+ thap:{n:'Thấp',line:'Người dễ nặng và ẩm, nên ưu tiên cái nhẹ và khô thoáng.'},
+ tao:{n:'Táo',line:'Người dễ khô, nên ưu tiên cái dịu, nhuận và đủ nước.'},
+ hu:{n:'Hư',line:'Người dễ hụt sức, nên ưu tiên nghỉ đủ, ấm và nhẹ nhàng.'},
+ binh:{n:'Bình hoà',line:'Cơ thể khá cân bằng. Giữ nhịp sống đều là đủ.'}};
+var STATE={
+ khoi:{n:'Khởi',line:'Hôm nay cần một cú đẩy nhẹ để bắt đầu.',tint:'#e0c183',
+  s:['Vàng cam, ánh sáng sớm','Nhịp vừa, tiếng chim sáng','Giọt Khởi Động','Thiên Khởi','Vươn vai, xoa ấm tay','Đặt 1 ý định'],
+  prod:'Tinh dầu Giọt Khởi Động',act:'Mở rèm, vươn vai, xoa ấm hai tay rồi đặt một ý định cho ngày.',cls:['Đi bộ nhanh buổi sáng, yoga năng lượng','Chọn lớp buổi sáng gần bạn']},
+ giao:{n:'Giao',line:'Hôm nay cần sự ấm áp và kết nối.',tint:'#d0a0a0',
+  s:['Hồng đào, tông ấm','Giọng hát ấm, đàn dây','Giọt Kết Nối','Thiên Giao','Tự ôm mình, bắt tay','Biết ơn 1 người'],
+  prod:'Tinh dầu Giọt Kết Nối',act:'Tự ôm mình 30 giây, rồi nhắn một lời biết ơn cho một người.',cls:['Lớp nhóm nhỏ: gốm, hát, nấu ăn','Chọn lớp nhóm nhỏ gần bạn']},
+ an:{n:'An',line:'Hôm nay cần buông căng thẳng và ngủ yên.',tint:'#9cc7a9',
+  s:['Xanh rêu, be','Nhịp chậm, tiếng mưa','Giọt An Nhiên','Thiên An','Xoa thái dương, chăn mềm','Thở chậm 3–6–9'],
+  prod:'Tinh dầu Giọt An Nhiên',act:'Xoa nhẹ thái dương, thở chậm: hít 3, giữ 6, thở ra 9, lặp ba lần.',cls:['Yoga nhẹ, thiền, giãn cơ buổi tối','Chọn lớp yoga nhẹ gần bạn']},
+ hoa:{n:'Hoa',line:'Hôm nay đang ổn, hãy sáng tạo và lan toả.',tint:'#c3a0bd',
+  s:['Hồng, tím hoa','Giai điệu bay bổng','Giọt Nở Hoa','Thiên Hoa','Nặn đất, vẽ phác','Hình dung điều muốn tạo'],
+  prod:'Tinh dầu Giọt Nở Hoa',act:'Lấy giấy, vẽ phác 3 phút điều bạn muốn tạo ra tuần này.',cls:['Lớp vẽ, gốm, viết','Chọn lớp sáng tạo gần bạn']},
+ tinh:{n:'Tịnh',line:'Hôm nay cần lắng xuống và hạ nhiệt.',tint:'#86cfc2',
+  s:['Trắng ngà, xanh nước','Chuông, nước chảy','Giọt TỊNH','Thiên Tịnh','Rửa tay nước mát','Buông 1 điều'],
+  prod:'Tinh dầu Giọt TỊNH',act:'Rửa tay bằng nước mát, thở ra dài hơn hít vào, rồi buông một điều đang nắm giữ.',cls:['Bơi, pilates, giãn cơ','Chọn lớp vận động nhẹ gần bạn']}};
+var KLNOTE='Bài này có hướng dẫn riêng theo trạng thái hôm nay của bạn nếu bạn đã làm test.';
+
+/* ---------- ĐIỀU HƯỚNG ---------- */
+function show(id){
+ $$('.view').forEach(function(v){v.classList.remove('on')});
+ $('#v-'+id).classList.add('on');window.scrollTo(0,0);
+ klReset();
+ if(id==='home')refreshHome();
+ location.hash=id==='home'?'':id;
+}
+document.addEventListener('click',function(e){
+ var g=e.target.closest('[data-go]');
+ if(g){e.preventDefault();var t=g.getAttribute('data-go');
+  if(t==='consent'&&store.result&&!g.dataset.force){show('result');renderResult();return}
+  if(t==='result')renderResult();show(t);return}
+ if(e.target.closest('[data-soon]'))toast('Link nhà bán sẽ có khi mở bán chính thức.');
+});
+function refreshHome(){
+ var a=$('#again');
+ if(store.result){a.hidden=false;a.innerHTML='Bạn đã có kết quả: <b>'+BODY[store.result.body].n+' · '+STATE[store.result.state].n+'</b>. <a href="#" id="seeRes" style="color:var(--gold)">Xem lại</a> · <a href="#" id="redo" style="color:var(--gold)">Làm lại</a>';
+  $('#seeRes').onclick=function(e){e.preventDefault();renderResult();show('result')};
+  $('#redo').onclick=function(e){e.preventDefault();startConsent()};
+  $('#startBtn').textContent='Xem kết quả của tôi →';
+ }else{a.hidden=true;$('#startBtn').textContent='Làm test 3 phút →'}
+}
+function startConsent(){store.answers=[];store.result=null;store.step=0;save(store);$('#agree').checked=false;$('#goQuiz').disabled=true;show('consent')}
+
+/* ---------- TRANG CHỦ: lưới ---------- */
+$('#senseGrid').innerHTML=SENSES.map(function(s){return '<div class="card sense"><i style="background:'+s.c+'"></i><div><b>'+s.k+'</b><p>'+s.d+'</p><div style="margin-top:8px;font-size:12px;color:var(--gold)">'+s.lake+'</div></div></div>'}).join('');
+$('#stageStrip').innerHTML=STAGES.map(function(s,i){return '<div style="border-top:4px solid '+SENSES[i].c+'"><small>3 phút</small><b>'+s[0]+'</b></div>'}).join('');
+
+/* ---------- ĐỒNG Ý ---------- */
+$('#agree').onchange=function(){$('#goQuiz').disabled=!this.checked};
+$('#goQuiz').onclick=function(){store.answers=[];store.step=0;save(store);renderQ();show('quiz')};
+
+/* ---------- CÂU HỎI ---------- */
+function renderQ(){
+ var i=store.step||0,a=store.answers||[];
+ $('#qNum').textContent=(i+1)+' / '+Q.length;
+ $('#qBar').style.width=(i/Q.length*100)+'%';
+ $('#qCat').textContent=Q[i][0];
+ $('#qText').textContent=Q[i][1];
+ $('#qSub').textContent=i<12?'Chọn điều đúng nhất với bạn trong vài tuần gần đây.':'Chọn điều đúng nhất với bạn trong tuần này.';
+ $('#qOpts').innerHTML=OPTS.map(function(t,n){return '<button class="opt'+(a[i]===n?' sel':'')+'" data-n="'+n+'"><span>'+t+'</span></button>'}).join('');
+ $('#qBack').style.visibility='visible';
+}
+$('#qOpts').addEventListener('click',function(e){
+ var b=e.target.closest('.opt');if(!b)return;
+ var i=store.step,n=+b.dataset.n;store.answers[i]=n;
+ $$('.opt').forEach(function(x){x.classList.toggle('sel',x===b)});
+ setTimeout(function(){
+  if(i<Q.length-1){store.step=i+1;save(store);renderQ()}
+  else{store.result=compute(store.answers);save(store);renderResult();show('result')}
+ },160);
+});
+$('#qBack').onclick=function(){if(store.step>0){store.step--;renderQ()}else show('consent')};
+
+/* ---------- TÍNH KẾT QUẢ ---------- */
+function compute(a){
+ var keys=['nhiet','han','thap','tao','hu'],sc={},mx={};
+ keys.forEach(function(k){sc[k]=0;mx[k]=0});
+ Q.forEach(function(q,i){if(sc[q[2]]!==undefined){sc[q[2]]+=a[i]||0;mx[q[2]]=Math.max(mx[q[2]],a[i]||0)}});
+ var body='binh',best=2;
+ keys.forEach(function(k){
+  if(sc[k]>best||(sc[k]===best&&body!=='binh'&&mx[k]>mx[body])){best=sc[k];body=k}
+ });
+ if(best<3)body='binh';
+ var m={khoi:a[12]||0,giao:a[13]||0,an:((a[14]||0)+(a[15]||0))/2,hoa:a[16]||0,tinh:a[17]||0};
+ var order=['tinh','an','khoi','giao','hoa'],state='hoa',top=-1;
+ order.forEach(function(k){if(m[k]>top){top=m[k];state=k}});
+ if(top<=1)state='hoa';
+ return {body:body,state:state,at:Date.now()};
+}
+
+/* ---------- KẾT QUẢ ---------- */
+function renderResult(){
+ var r=store.result;if(!r)return;
+ var b=BODY[r.body],s=STATE[r.state];
+ $('#rBody').textContent=b.n;$('#rState').textContent=s.n;
+ $('#rLine').textContent=b.line+' '+s.line;
+ $('#rKicker').textContent='Gợi ý cho trạng thái '+s.n.toUpperCase();
+ $('#rSenses').innerHTML=SENSES.map(function(x,i){return '<div class="srow" style="border-left-color:'+x.c+'"><b>'+x.k+'</b><div>'+s.s[i]+'</div></div>'}).join('');
+ $('#rThree').innerHTML=
+  '<div class="card three" style="border-color:rgba(216,181,117,.5)"><div class="k">1 SẢN PHẨM</div><h3>'+s.prod+'</h3><p>10 ml · 189.000đ</p><button class="btn" data-soon>Xem tại nhà bán ↗</button><div style="margin-top:8px;font-size:12px;color:var(--mut2)">Link liên kết. Nhà bán thu tiền và giao hàng.</div></div>'+
+  '<div class="card three"><div class="k">1 VIỆC LÀM NGAY</div><h3>Ba phút, ngay tại nhà</h3><p>'+s.act+'</p><button class="btn ghost" data-go="silence">Bắt đầu Khoảng Lặng 18 phút</button></div>'+
+  '<div class="card three"><div class="k">1 LỚP · TRẢI NGHIỆM</div><h3>'+s.cls[0]+'</h3><p>Vận động và trải nghiệm hợp trạng thái hôm nay.</p><button class="btn ghost" data-soon>'+s.cls[1]+' ↗</button></div>';
+}
+$('#retake').onclick=startConsent;
+
+/* ---------- CHIA SẺ THẺ ---------- */
+function cardCanvas(){
+ var r=store.result,b=BODY[r.body],s=STATE[r.state],W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+ var g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#17493d');g.addColorStop(1,'#04201b');x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.strokeStyle='rgba(216,181,117,.6)';x.lineWidth=3;x.strokeRect(48,48,W-96,H-96);
+ x.fillStyle='#d8b575';x.font='600 34px system-ui,sans-serif';x.textAlign='center';x.fillText('A N S E N S E',W/2,170);
+ // lotus
+ for(var i=0;i<6;i++){x.save();x.translate(W/2,400);x.rotate(i*Math.PI/3);x.fillStyle=SENSES[i].c;x.globalAlpha=.85;x.beginPath();x.moveTo(0,0);x.bezierCurveTo(-90,-70,-90,-190,0,-260);x.bezierCurveTo(90,-190,90,-70,0,0);x.fill();x.restore()}
+ x.globalAlpha=1;x.fillStyle='#f2d7a0';x.beginPath();x.arc(W/2,400,26,0,7);x.fill();
+ x.fillStyle='#b9c7bd';x.font='34px system-ui,sans-serif';x.fillText('Thể trạng nền',W/2,760);
+ x.fillStyle='#f8ebc9';x.font='110px Georgia,serif';x.fillText(b.n,W/2,880);
+ x.fillStyle='#b9c7bd';x.font='34px system-ui,sans-serif';x.fillText('Trạng thái hôm nay',W/2,990);
+ x.fillStyle='#f8ebc9';x.font='110px Georgia,serif';x.fillText(s.n,W/2,1110);
+ x.fillStyle='#9fb0a6';x.font='30px system-ui,sans-serif';x.fillText('anyen.space · Làng Yên',W/2,1250);
+ return c;
+}
+$('#shareBtn').onclick=function(){
+ if(!store.result)return;
+ var c=cardCanvas();
+ c.toBlob(function(bl){
+  var f=new File([bl],'ansense-the-ket-qua.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'AnSense'}).catch(function(){})}
+  else{var a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='ansense-the-ket-qua.png';document.body.appendChild(a);a.click();a.remove();toast('Đã tải thẻ kết quả về máy.')}
+ });
+};
+
+/* ---------- KHOẢNG LẶNG ---------- */
+var kl={i:0,left:0,len:180,t:null,paused:false};
+var GENERIC=['Tìm một màu dịu trong tầm mắt và nhìn thật chậm.','Lắng nghe ba âm thanh: xa, gần và trong chính bạn.','Hít một hơi hương bạn có sẵn: nến, tinh dầu hay vỏ cam.','Nhấp một ngụm trà ấm nhỏ, giữ vị trong miệng.','Đặt một tay lên ngực, một tay lên bụng, cảm nhận hơi ấm.','Thở theo nhịp: hít 4, thở ra 6. Không cần làm gì khác.'];
+function klText(i){var r=store.result;return r?STATE[r.state].s[i]+'. '+GENERIC[i]:GENERIC[i]}
+function fmt(s){var m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r}
+function klReset(){clearInterval(kl.t);kl.t=null;kl.paused=false;$('#klIntro').hidden=false;$('#klRun').hidden=true;$('#klDone').hidden=true;$('#klPause').textContent='Tạm dừng';$('#klNote').textContent=store.result?'Hướng dẫn theo trạng thái '+STATE[store.result.state].n+' của bạn.':KLNOTE}
+function klStage(){
+ var i=kl.i,s=STAGES[i];
+ $('#klSense').textContent=SENSES[i].k+' · CHẶNG '+(i+1)+'/6';
+ $('#klTitle').textContent=s[0];
+ $('#klHint').textContent=klText(i);
+ $('#klOrb').style.setProperty('--c',SENSES[i].c);
+ $('#klPips').innerHTML=STAGES.map(function(_,n){return '<i class="'+(n<=i?'on':'')+'"></i>'}).join('');
+ kl.left=kl.len;$('#klTime').textContent=fmt(kl.left);
+}
+function klTick(){
+ if(kl.paused)return;
+ kl.left--;$('#klTime').textContent=fmt(Math.max(kl.left,0));
+ if(kl.left<=0)klNext();
+}
+function klNext(){
+ if(kl.i>=5){clearInterval(kl.t);$('#klRun').hidden=true;$('#klDone').hidden=false;return}
+ kl.i++;klStage();
+}
+function klBegin(len){kl.i=0;kl.len=len;kl.paused=false;$('#klIntro').hidden=true;$('#klRun').hidden=false;$('#klDone').hidden=true;klStage();clearInterval(kl.t);kl.t=setInterval(klTick,1000)}
+$('#klStart').onclick=function(){klBegin(180)};
+$('#klFast').onclick=function(){klBegin(6)};
+$('#klPause').onclick=function(){kl.paused=!kl.paused;this.textContent=kl.paused?'Tiếp tục':'Tạm dừng'};
+$('#klSkip').onclick=klNext;
+$('#klBack').onclick=function(){show('home')};
+
+/* ---------- KHỞI ĐỘNG ---------- */
+refreshHome();klReset();
+var h=location.hash.replace('#','');
+window.addEventListener('hashchange',function(){var n=location.hash.replace('#','')||'home';if(!$('#v-'+n).classList.contains('on')){if(n==='result'&&!store.result)n='home';if(n==='quiz')n='home';if(n==='result')renderResult();show(n)}});
+if(h==='result'&&store.result){renderResult();show('result')}
+else if(h==='silence')show('silence');
+else if(h==='consent')startConsent();
+window.__ansense={compute:compute,Q:Q};
+})();
+</script>
+</body>
+</html>
