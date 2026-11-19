@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "map": {
+    "id": "pine_forest", "kind": "forest", "name": "Rừng thông · Làng Yên", "status": "live",
+    "sky_color": "#173c35", "fog_color": "#264b42", "fog_density": 0.022, "ground_color": "#234c3e",
+    "hemi_sky": "#f6dfaf", "hemi_ground": "#1b4234", "hemi_intensity": 2.1,
+    "sun_color": "#f5c78c", "sun_intensity": 2.4, "sun_position": [-8, 19, -8],
+    "ambience": "pine_forest", "spawn": {"x": 0, "z": 25}, "bounds": {"x": 34, "z_min": -40, "z_max": 35}
+  },
+  "nature": [
+    {"id": "pine_forest.pines", "kind": "tree_grid", "sort_order": 1,
+     "params": {"count": 32, "cols": 8, "dx": 4.4, "dz": 18, "z0": -29, "z_remap": {"25": 32.5},
+                "clear_rects": [[-11, -15, 11, 7], [-9, -99, 9, -25]], "trunk_color": "#654c33", "leaf_color": "#47745c"}}
+  ],
+  "rooms": [
+    {"id": "sanh_chung", "name": "Sảnh chung", "topic": "anyen:room:lobby", "capacity": null, "kind": "public", "palette_color": "#092d27"},
+    {"id": "phong_sen", "name": "Phòng Sen · 10 người", "topic": "anyen:room:sen", "capacity": 10, "kind": "public", "palette_color": "#263d36"},
+    {"id": "phong_truc", "name": "Phòng Trúc · 20 người", "topic": "anyen:room:truc", "capacity": 20, "kind": "public", "palette_color": "#183e30"},
+    {"id": "phong_rieng", "name": "Phòng Riêng", "topic": null, "capacity": null, "kind": "private", "palette_color": "#342e3e"}
+  ],
+  "buildings": [
+    {"id": "tuong_dai", "name": "Thiền viện tượng đài", "kind": "sanctuary", "x": 0, "z": -31, "exterior": {"terrace_radius": 8.2, "terrace_top": 0.3}, "room_id": null},
+    {"id": "cau_ho_niem", "name": "Cầu vòm Hồ Niệm", "kind": "bridge", "x": 0, "z": -4, "exterior": {"arch_z": [-15.6, 7.6], "rise": 2.6}, "room_id": null}
+  ],
+  "props": [
+    {"id": "ho_sac", "kind": "wish_lake", "name": "Sắc", "x": -23, "z": 18, "params": {"color": "#547d81", "theme": "thịnh vượng", "sense": "SẮC"}, "activity": "ném xu nhận lời nhắn"},
+    {"id": "ho_thanh", "kind": "wish_lake", "name": "Thanh", "x": 23, "z": 18, "params": {"color": "#57758b", "theme": "công việc", "sense": "THANH"}, "activity": "ném xu nhận lời nhắn"},
+    {"id": "ho_huong", "kind": "wish_lake", "name": "Hương", "x": -25, "z": 2, "params": {"color": "#688b78", "theme": "sức khỏe", "sense": "HƯƠNG"}, "activity": "ném xu nhận lời nhắn"},
+    {"id": "ho_vi", "kind": "wish_lake", "name": "Vị", "x": 25, "z": 2, "params": {"color": "#947a67", "theme": "tình duyên", "sense": "VỊ"}, "activity": "ném xu nhận lời nhắn"},
+    {"id": "ho_cham", "kind": "wish_lake", "name": "Chạm", "x": -23, "z": -19, "params": {"color": "#8c7188", "theme": "kết nối", "sense": "CHẠM"}, "activity": "ném xu nhận lời nhắn"},
+    {"id": "ho_niem", "kind": "wish_lake", "name": "Niệm", "x": 0, "z": -4, "params": {"color": "#5a9b91", "theme": "an yên", "sense": "NIỆM"}, "activity": "ném xu nhận lời nhắn"}
+  ],
+  "npcs": []
+}
