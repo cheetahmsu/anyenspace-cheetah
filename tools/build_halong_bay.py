@@ -76,6 +76,31 @@ CORRIDORS = [
 ]
 CORRIDOR_HALF_WIDTH = 105
 
+
+# ---- Lịch trình tham quan (dựa theo các tuyến tham quan vịnh; dwell = số giây tàu dừng ngắm) ----
+TOURS = [
+    {"id": "tuyen_1", "name": "Tuyến 1 · Hang động và Hòn Trống Mái", "summary": "Chuyến ngắn quanh vùng vịnh gần bờ: hang Thiên Cung, Đầu Gỗ và các hòn đá biểu tượng.",
+     "stops": [("dong_thien_cung", 18, "Hai hang đá nằm trên đảo Đầu Gỗ, gắn với truyền thuyết cọc gỗ trên sông Bạch Đằng."),
+               ("hon_cho_da", 12, "Hòn đá như chú chó ngồi canh giữ vịnh."),
+               ("hon_dinh_huong", 14, "Khối đá thắt chân, nở đỉnh như một lư hương dâng lên trời."),
+               ("hon_trong_mai", 22, "Đôi gà đá tựa vào nhau, biểu tượng của du lịch Hạ Long."),
+               ("cang_tuan_chau", 0, "Tàu về lại bến Tuần Châu.")]},
+    {"id": "tuyen_2", "name": "Tuyến 2 · Ti Tốp, Sửng Sốt, Hang Luồn", "summary": "Đi sâu vào lõi di sản: bãi tắm Ti Tốp, hang Sửng Sốt và vòm Hang Luồn.",
+     "stops": [("hon_trong_mai", 12, "Chào đôi gà đá trước khi vào sâu trong vịnh."),
+               ("dao_ti_top", 22, "Bãi cát trăng lưỡi liềm; trên đỉnh đảo nhìn được toàn cảnh vịnh."),
+               ("hang_sung_sot", 18, "Hang rộng và đẹp bậc nhất vịnh, trên đảo Bồ Hòn."),
+               ("hang_luon", 18, "Vòm đá dẫn vào một hồ nước lặng giữa vòng núi."),
+               ("cang_tuan_chau", 0, "Tàu về lại bến Tuần Châu.")]},
+    {"id": "tron_vinh", "name": "Hành trình trọn vịnh · tới làng chài Cửa Vạn", "summary": "Đi một mạch từ bến qua các danh thắng tới làng chài nổi lớn nhất vịnh.",
+     "stops": [("dong_thien_cung", 12, "Đảo Đầu Gỗ với hai hang đá nổi tiếng."),
+               ("hon_trong_mai", 16, "Đôi gà đá giữa sóng nước."),
+               ("lang_chai_ba_hang", 14, "Những nhà bè nổi bình yên giữa vòng đá."),
+               ("dao_ti_top", 16, "Bãi cát trắng hình trăng lưỡi liềm."),
+               ("hang_sung_sot", 12, "Đảo Bồ Hòn, nơi có hang Sửng Sốt."),
+               ("hang_luon", 12, "Vòm đá Hang Luồn."),
+               ("lang_chai_cua_van", 24, "Làng chài nổi lớn nhất vịnh Hạ Long, nép giữa núi đá Vạn Giã.")]},
+]
+
 def lm(i):
     return next(l for l in LANDMARKS if l[0] == i)
 
@@ -242,7 +267,10 @@ def main():
         "props": [{"id": l["id"], "kind": "landmark", "name": l["name"], "x": l["x"], "z": l["z"],
                    "params": {k: l[k] for k in ("lat", "lon", "shape", "radius", "height", "precision", "source", "description", "approach")},
                    "activity": {"dao_ti_top": "swim", "hang_luon": "kayak", "lang_chai_cua_van": "kayak"}.get(l["id"])}
-                  for l in landmark_rows] + junks + buoys,
+                  for l in landmark_rows] + junks + buoys + [
+                  {"id": t["id"], "kind": "tour", "name": t["name"], "x": port["approach"][0], "z": port["approach"][1],
+                   "params": {"summary": t["summary"], "stops": [{"landmark": i, "dwell": d, "note": n} for i, d, n in t["stops"]]},
+                   "activity": "cruise_stand"} for t in TOURS],
         "npcs": [
             {"id": "thuyen_truong", "name": "Thuyền trưởng Hải", "role": "captain", "x": 0, "z": 6, "facing": 0, "greet_radius": 5,
              "greeting": "Chào bạn, hôm nay biển lặng, mình đưa bạn đi ngắm vịnh nhé.", "dialogue": [], "ai_enabled": False, "ai_config": None, "active": False},

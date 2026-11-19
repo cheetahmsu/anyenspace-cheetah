@@ -19,10 +19,12 @@
 - Bấm **Khám phá Vịnh Yên**: bạn đứng ở mũi một du thuyền 5 sao, xuất phát từ cảng Tuần Châu.
 - **Chạm mặt nước** (hoặc một hòn đảo, danh thắng) để tàu tự tìm đường vòng qua các đảo và đi tới. **🗺 Bản đồ** cho phép chọn điểm đến hoặc danh thắng trên bản đồ vịnh.
 - **Vuốt trái/phải** chỉ xoay góc nhìn quanh người đứng mũi tàu, không đổi hướng tàu. Vuốt lên/xuống để ngẩng/cúi.
-- Nút: Dừng tàu · Thong thả/Nhanh · Tiếng sóng · Về Rừng Yên.
+- **🧭 Dạo vịnh**: chọn một lịch trình (Tuyến 1 · Hang động và Hòn Trống Mái; Tuyến 2 · Ti Tốp, Sửng Sốt, Hang Luồn; Hành trình trọn vịnh tới Cửa Vạn). Tàu tự đi lần lượt từng điểm, dừng ngắm vài giây và giới thiệu từng nơi.
+- **🏝 Chọn đảo**: danh sách danh thắng xếp theo khoảng cách, chạm một nơi để tàu tự đến.
+- Nút khác: Dừng tàu (kết thúc cả lịch trình) · Thong thả/Nhanh · Tiếng sóng · Về Rừng Yên. Tự chạm mặt nước hoặc chọn đảo khác sẽ thoát khỏi lịch trình.
 
 ### Dữ liệu dùng chung của vịnh
-- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hoàng hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 630 đảo đá, luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao), `npcs` (Lớp 4: chưa bật).
+- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hoàng hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 630 đảo đá, luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
 - Toạ độ chiếu từ vĩ độ/kinh độ thật quanh cảng Tuần Châu, 1 đơn vị = 4 m; kích thước đảo được phóng đại. Mỗi danh thắng ghi rõ `precision` (`source` có nguồn công bố, `approx` ước lượng) và `source`.
 - Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
 
