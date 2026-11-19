@@ -244,7 +244,7 @@ window.anyenRetry3D=async function initialize3D(){
   renderer.domElement.addEventListener('webglcontextrestored',()=>{console.info('LÀNG YÊN 3D: WebGL context restored');document.getElementById('zenHint').textContent='Đã khôi phục không gian 3D.'},false);
   const scene=new THREE.Scene();scene.background=new THREE.Color('#173c35');scene.fog=new THREE.FogExp2('#264b42',.022);
   const camera=new THREE.PerspectiveCamera(57,innerWidth/innerHeight,.1,250);camera.position.set(0,7,21);
-  scene.add(new THREE.HemisphereLight('#f6dfaf','#1b4234',2.1));const sun=new THREE.DirectionalLight('#f5c78c',2.4);sun.position.set(-8,19,-8);scene.add(sun);
+  const hemiLight=new THREE.HemisphereLight('#f6dfaf','#1b4234',2.1);scene.add(hemiLight);const sun=new THREE.DirectionalLight('#f5c78c',2.4);sun.position.set(-8,19,-8);scene.add(sun);
   const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness,side:THREE.DoubleSide});
   let bayMode=false;const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#234c3e'));ground.rotation.x=-Math.PI/2;ground.position.y=-.1;scene.add(ground);
   const water=new THREE.Mesh(new THREE.CircleGeometry(10.5,80),new THREE.MeshStandardMaterial({color:'#306c68',metalness:.35,roughness:.24,transparent:true,opacity:.91}));water.rotation.x=-Math.PI/2;water.position.set(0,.02,-4);scene.add(water);
@@ -263,10 +263,10 @@ for(const l of wishLakes){
  const group=new THREE.Group();group.position.set(l.x,.035,l.z);scene.add(group);
  if(l.name!=='Niệm'){
    const rim=new THREE.Mesh(new THREE.TorusGeometry(3.35,.13,8,56),mat('#c1a676'));rim.rotation.x=-Math.PI/2;group.add(rim);
-   const pool=new THREE.Mesh(new THREE.CircleGeometry(3.25,56),new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:.88,metalness:.3,roughness:.23,side:THREE.DoubleSide}));pool.rotation.x=-Math.PI/2;group.add(pool);
+   const pool=new THREE.Mesh(new THREE.CircleGeometry(3.25,56),new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:.88,metalness:.3,roughness:.23,side:THREE.DoubleSide}));pool.rotation.x=-Math.PI/2;group.add(pool);l.pool=pool;
  }
- const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#f1d69f';ctx.font='bold 48px serif';ctx.textAlign='center';ctx.fillText('HỒ '+l.name.toUpperCase(),256,62);ctx.font='28px sans-serif';ctx.fillText(l.theme,256,103);
- const tex=new THREE.CanvasTexture(labelCanvas);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,l.name==='Niệm'?5.4:1.5,0);label.scale.set(5,1.25,1);group.add(label);/* Hồ Niệm's sign floats above the arched bridge */
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');const drawLakeLabel=()=>{ctx.clearRect(0,0,512,128);ctx.fillStyle='#f1d69f';ctx.font='bold 48px serif';ctx.textAlign='center';ctx.fillText('HỒ '+l.name.toUpperCase(),256,62);ctx.font='28px sans-serif';ctx.fillText(l.theme,256,103)};drawLakeLabel();
+ const tex=new THREE.CanvasTexture(labelCanvas);l.redrawLabel=()=>{drawLakeLabel();tex.needsUpdate=true};const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,l.name==='Niệm'?5.4:1.5,0);label.scale.set(5,1.25,1);group.add(label);/* Hồ Niệm's sign floats above the arched bridge */
  if(l.name!=='Niệm'){const colors={'Sắc':'#f2c96b','Thanh':'#a9c5ed','Hương':'#f4e8d2','Vị':'#e89baa','Chạm':'#bca4dd'};for(let j=0;j<8;j++){const a=j*2.39996,r=.7+(j%3)*.65;const plant=new THREE.Group();plant.position.set(Math.cos(a)*r,.09,Math.sin(a)*r);group.add(plant);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),mat('#56845e'));leaf.scale.set(1,.13,.6);plant.add(leaf);for(let p=0;p<5;p++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.19,8,6),mat(colors[l.name]));petal.position.set(Math.cos(p*1.256)*.2,.15,Math.sin(p*1.256)*.2);plant.add(petal)}}}lakeVisuals.set(l.name,group);
 }
 function animateCoin(lake,remote){const l=wishLakes.find(v=>v.name===lake);if(!l)return;const coin=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,24),new THREE.MeshStandardMaterial({color:'#e5c178',metalness:.8,roughness:.2}));const from=remote?new THREE.Vector3(l.x+5,1.7,l.z+5):mePosition.clone().add(new THREE.Vector3(0,1.7,0));scene.add(coin);const start=performance.now();function frame(now){const t=Math.min(1,(now-start)/1400);coin.position.set(from.x+(l.x-from.x)*t,from.y+(.12-from.y)*t+Math.sin(Math.PI*t)*2.8,from.z+(l.z-from.z)*t);coin.rotation.z=t*15;if(t<1)requestAnimationFrame(frame);else{scene.remove(coin);coin.geometry.dispose();coin.material.dispose()}}requestAnimationFrame(frame)}
@@ -452,7 +452,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }  // Pine trunks are obstacles: nobody walks or stands inside them.
   const treeSpots=[],TREE_CLEAR=1.0;
   function pushOutOfTrees(x,z){for(const [tx,tz] of treeSpots){const d=Math.hypot(x-tx,z-tz);if(d<TREE_CLEAR){const k=d>1e-3?TREE_CLEAR/d:0;return k?[tx+(x-tx)*k,tz+(z-tz)*k]:[tx+TREE_CLEAR,tz];}}return [x,z];}
-  for(let i=0;i<32;i++){let x=(i%8-3.5)*4.4,z=-29+Math.floor(i/8)*18;if(z===25)z=32.5;/* keep the arrival area clear */if(Math.abs(x)<11&&z>-15&&z<7)continue;if(z<-25&&Math.abs(x)<9)continue;treeSpots.push([x,z]);let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),wood.clone());trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),leaf.clone());canopy.position.set(x,4.6,z);scene.add(canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
+  const PINE_DEFAULT={count:32,cols:8,dx:4.4,dz:18,z0:-29,z_remap:{'25':32.5},clear_rects:[[-11,-15,11,7],[-9,-99,9,-25]],trunk_color:'#654c33',leaf_color:'#47745c'};
+  let pineMeshes=[],pineKey=JSON.stringify(PINE_DEFAULT);
+  function buildPines(p){
+    for(const m of pineMeshes){scene.remove(m);m.geometry.dispose();m.material.dispose()}
+    pineMeshes=[];treeSpots.length=0;fadeTrees.length=0;
+    for(let i=0;i<p.count;i++){let x=(i%p.cols-(p.cols-1)/2)*p.dx,z=p.z0+Math.floor(i/p.cols)*p.dz;if(p.z_remap&&p.z_remap[z]!==undefined)z=p.z_remap[z];/* keep the arrival area clear */if((p.clear_rects||[]).some(([x0,z0,x1,z1])=>x>x0&&x<x1&&z>z0&&z<z1))continue;treeSpots.push([x,z]);const tm=wood.clone(),lm=leaf.clone();if(p.trunk_color)tm.color.set(p.trunk_color);if(p.leaf_color)lm.color.set(p.leaf_color);let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),tm);trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),lm);canopy.position.set(x,4.6,z);scene.add(canopy);pineMeshes.push(trunk,canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
+  }
+  buildPines(PINE_DEFAULT);
   // Waypoint navigation: smooth guided movement between five destinations.
   const destinations={
     gate:{pos:[0,3.5,25],look:[0,3,-13]},
@@ -644,6 +651,37 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     tag.position.y=sitting?1.44:2.17;
   }
   const roomPalettes={'Sảnh chung':'#092d27','Phòng Sen · 10 người':'#263d36','Phòng Trúc · 20 người':'#183e30','Phòng Riêng':'#342e3e'};
+
+  /* ---- Cơ sở dữ liệu thế giới (Supabase) · Rừng thông ----
+     Cảnh luôn dựng sẵn từ giá trị gốc ở trên; dữ liệu chỉ ghi đè khi tải được (bản nhớ trên máy rồi bản mới từ Supabase). */
+  const WORLD_ID='pine_forest',WORLD_CACHE='anyen-world-'+WORLD_ID+'-v1';
+  let appliedSky='173c35';
+  function applyWorld(w,source){
+    if(!w||!w.map)return false;
+    const m=w.map;
+    if(!bayMode){
+      if(scene.background&&scene.background.getHexString&&scene.background.getHexString()===appliedSky){scene.background=new THREE.Color(m.sky_color);appliedSky=scene.background.getHexString()}
+      if(scene.fog&&scene.fog.density!==undefined){scene.fog.color.set(m.fog_color);scene.fog.density=Number(m.fog_density)}
+    }
+    ground.material.color.set(m.ground_color);
+    hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);
+    sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);if(Array.isArray(m.sun_position))sun.position.set(...m.sun_position);
+    for(const n of w.nature||[]){if(n.kind==='tree_grid'){const key=JSON.stringify(n.params);if(key!==pineKey){pineKey=key;buildPines(n.params)}}}
+    for(const r of w.rooms||[])if(r.name&&r.palette_color)roomPalettes[r.name]=r.palette_color;
+    for(const pr of w.props||[]){if(pr.kind!=='wish_lake')continue;const l=wishLakes.find(v=>v.name===pr.name);if(!l)continue;
+      l.x=Number(pr.x);l.z=Number(pr.z);if(pr.params?.color)l.color=pr.params.color;if(pr.params?.theme)l.theme=pr.params.theme;
+      const g=lakeVisuals.get(l.name);if(g)g.position.set(l.x,.035,l.z);if(l.pool)l.pool.material.color.set(l.color);if(l.redrawLabel)l.redrawLabel()}
+    window.anyenWorld={id:WORLD_ID,source,map:m,rooms:w.rooms||[],buildings:w.buildings||[],props:w.props||[],npcs:w.npcs||[]};
+    window.dispatchEvent(new CustomEvent('anyen-world-loaded',{detail:{id:WORLD_ID,source}}));
+    return true;
+  }
+  try{const c=JSON.parse(localStorage.getItem(WORLD_CACHE)||'null');if(c&&c.data)applyWorld(c.data,'cache')}catch(e){}
+  const loadWorld=async()=>{try{const cfg=window.ANYEN_CONFIG||{};if(!cfg.supabaseUrl||!cfg.publishableKey)return;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+    const r=await fetch(cfg.supabaseUrl+'/rest/v1/rpc/anyen_get_world_map',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',apikey:cfg.publishableKey,Authorization:'Bearer '+cfg.publishableKey},body:JSON.stringify({p_map_id:WORLD_ID})});clearTimeout(t);
+    if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');
+    applyWorld(data,'network');try{localStorage.setItem(WORLD_CACHE,JSON.stringify({at:Date.now(),data}))}catch(e){}
+  }catch(e){window.anyenWorldError=String(e&&e.message||e)}};
+  if(window.ANYEN_CONFIG)loadWorld();else window.addEventListener('load',loadWorld);
   window.addEventListener('anyen-room-scene',e=>{const r=e.detail?.room||'Sảnh chung';scene.background=new THREE.Color(roomPalettes[r]||roomPalettes['Sảnh chung']);document.body.dataset.yenRoom=r==='Phòng Riêng'?'private':r.includes('Sen')?'lotus':r.includes('Trúc')?'bamboo':'lobby';});
   paintMe();window.addEventListener('yen-profile',paintMe);
   // Small turning preview of the guest's avatar on the profile/welcome screen.
