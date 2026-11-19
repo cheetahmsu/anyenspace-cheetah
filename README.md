@@ -15,6 +15,12 @@
 - 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khoác ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
 - Giữ ngồi thiền/thiền hành khi gõ chuông.
 
+## Vịnh Yên (beta)
+- Bấm **Khám phá Vịnh Yên** ở trang chính: bạn ngồi ở mũi một chiếc thuyền buồm nâu, thuyền tự trôi một vòng qua Hòn Trống Mái, Hòn Đỉnh Hương, Hang Sửng Sốt và làng chài nổi. Vuốt để nhìn quanh thuyền.
+- Ba thời khắc: **Bình minh · Hoàng hôn · Đêm trăng** (nhớ lựa chọn trên thiết bị).
+- **Thả neo / Thả trôi**, **Thả đèn hoa đăng**, **Âm sóng** (tổng hợp tại chỗ, có thể tắt), **Về Rừng Yên**.
+- **Toạ thiền** trên vịnh sẽ thả neo thuyền. Vịnh là không gian riêng, người trong làng không thấy bạn khi bạn ở vịnh.
+
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
 - Thiền đường cộng hưởng vẫn sử dụng SQL của phiên bản 3.4. Không chạy lại SQL nếu đã cấu hình.
