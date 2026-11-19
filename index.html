@@ -652,9 +652,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   const roomPalettes={'Sảnh chung':'#092d27','Phòng Sen · 10 người':'#263d36','Phòng Trúc · 20 người':'#183e30','Phòng Riêng':'#342e3e'};
 
-  /* ---- Cơ sở dữ liệu thế giới (Supabase) · Rừng thông ----
-     Cảnh luôn dựng sẵn từ giá trị gốc ở trên; dữ liệu chỉ ghi đè khi tải được (bản nhớ trên máy rồi bản mới từ Supabase). */
-  const WORLD_ID='pine_forest',WORLD_CACHE='anyen-world-'+WORLD_ID+'-v1';
+  /* ---- Dữ liệu thế giới dùng chung · Rừng thông ----
+     Nằm trong tệp tĩnh data/world-pine_forest.json cùng trang web. Cảnh luôn dựng sẵn từ giá trị gốc ở trên;
+     tệp chỉ ghi đè khi tải được, nên thiếu tệp hoặc mất mạng thì cảnh vẫn như cũ. */
+  const WORLD_ID='pine_forest';
   let appliedSky='173c35';
   function applyWorld(w,source){
     if(!w||!w.map)return false;
@@ -675,13 +676,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-world-loaded',{detail:{id:WORLD_ID,source}}));
     return true;
   }
-  try{const c=JSON.parse(localStorage.getItem(WORLD_CACHE)||'null');if(c&&c.data)applyWorld(c.data,'cache')}catch(e){}
-  const loadWorld=async()=>{try{const cfg=window.ANYEN_CONFIG||{};if(!cfg.supabaseUrl||!cfg.publishableKey)return;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
-    const r=await fetch(cfg.supabaseUrl+'/rest/v1/rpc/anyen_get_world_map',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',apikey:cfg.publishableKey,Authorization:'Bearer '+cfg.publishableKey},body:JSON.stringify({p_map_id:WORLD_ID})});clearTimeout(t);
-    if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');
-    applyWorld(data,'network');try{localStorage.setItem(WORLD_CACHE,JSON.stringify({at:Date.now(),data}))}catch(e){}
-  }catch(e){window.anyenWorldError=String(e&&e.message||e)}};
-  if(window.ANYEN_CONFIG)loadWorld();else window.addEventListener('load',loadWorld);
+  (async()=>{try{const r=await fetch('data/world-'+WORLD_ID+'.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');applyWorld(data,'file')}catch(e){window.anyenWorldError=String(e&&e.message||e)}})();
   window.addEventListener('anyen-room-scene',e=>{const r=e.detail?.room||'Sảnh chung';scene.background=new THREE.Color(roomPalettes[r]||roomPalettes['Sảnh chung']);document.body.dataset.yenRoom=r==='Phòng Riêng'?'private':r.includes('Sen')?'lotus':r.includes('Trúc')?'bamboo':'lobby';});
   paintMe();window.addEventListener('yen-profile',paintMe);
   // Small turning preview of the guest's avatar on the profile/welcome screen.
