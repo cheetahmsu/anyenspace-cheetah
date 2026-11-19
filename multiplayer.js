@@ -6,6 +6,7 @@ const cfg=window.ANYEN_CONFIG||{};
 const valid=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(cfg.supabaseUrl||'')&&/^(sb_publishable_|eyJ)/.test(cfg.publishableKey||'');
 const topics={'Sảnh chung':'lobby','Phòng Sen · 10 người':'sen','Phòng Trúc · 20 người':'truc'};
 const colors=new Set(['#d9b67d','#90b7a5','#f0e5d4','#b5a1c7','#687b48','#e8a1b4']);
+const pendingGifts=new Map(),giftTimers=new Map(),receivedGiftIds=new Set();
 let client,channel,uid,peers={},joined=false,position={x:0,z:8},seatIntent=null,activity='idle',generation=0,lastMove=0,retryTimer=null,manualLeave=false,roomName='',lastRoomTopic='',sessionData=null,sessionTimer=null,sessionSeen=new Set(),bellEnabled=false,sessionFinished=false,sessionPoll=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const cleanName=s=>String(s||'Khách Làng Yên').replace(/[<>]/g,'').slice(0,24);
@@ -64,7 +65,8 @@ function startSessionPolling(){clearInterval(sessionPoll);sessionPoll=setInterva
 function sendSession(payload){if(!joined||!channel){state('Hãy kết nối phòng trước.');return false}channel.send({type:'broadcast',event:'resonance',payload});return true}
 $('#resonanceBellEnable')?.addEventListener('click',()=>{bellEnabled=!bellEnabled;const b=$('#resonanceBellEnable');b.textContent=bellEnabled?'🔔 Tắt chuông chung':'🔕 Bật chuông chung';b.setAttribute('aria-pressed',String(bellEnabled))});
 $('#resonanceLotus')?.addEventListener('click',()=>{if(!sessionData||sessionData.endsAt<Date.now())return state('Chưa có phiên thiền đang diễn ra.');const p={kind:'lotus',sessionId:sessionData.id,name:profile().name,offeringId:crypto.randomUUID()};applySession(p);sendSession(p)});
-function reset(){clearSession();joined=false;live(false);peers={};publish();count.textContent='0 người trực tuyến';people.replaceChildren()}
+function cancelPendingGifts(){for(const giftId of [...pendingGifts.keys()])giftFailed(giftId,'Đã rời phòng nên chưa tặng được. Vật phẩm vẫn ở trong túi của bạn.');for(const t of giftTimers.values())clearTimeout(t);giftTimers.clear();pendingGifts.clear();}
+function reset(){cancelPendingGifts();clearSession();joined=false;live(false);peers={};publish();count.textContent='0 người trực tuyến';people.replaceChildren()}
 async function leave(manual=true){clearInterval(sessionPoll);sessionPoll=null;manualLeave=manual;generation++;clearTimeout(retryTimer);const old=channel;channel=null;reset();if(old){try{await old.untrack()}catch{}try{await client.removeChannel(old)}catch{}}if(manual)state('Đã rời phòng')}
 function selectedRoom(){return $('[data-room].selected')?.dataset.room||'Sảnh chung'}
 async function auth(){if(!client){client=createClient(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true}});client.auth.onAuthStateChange((_event,session)=>{if(session?.access_token)client.realtime.setAuth(session.access_token)})}const r=await client.auth.getSession();if(r.error)throw r.error;let session=r.data.session;if(!session){const sign=await client.auth.signInAnonymously();if(sign.error)throw sign.error;session=sign.data.session}if(!session?.access_token||!session.user)throw Error('Chưa tạo được phiên đăng nhập ẩn danh.');uid=session.user.id;client.realtime.setAuth(session.access_token);return session}
@@ -73,8 +75,9 @@ async function join(){if(!valid){state('Chưa cấu hình Supabase trong config.
  if(c!==channel||!joined||!p||p.to!==uid||p.id===uid)return;
  if(!['chuong','sen','nen','nhang','hat','tra','da','so','cay'].includes(p.itemId))return;
  const giftId=String(p.giftId||'');if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId))return;
- window.dispatchEvent(new CustomEvent('anyen-gift-received',{detail:{id:p.itemId,giftId,fromName:cleanName(peers[p.id]?.name||'Người bạn An Yên')}}));
- c.send({type:'broadcast',event:'gift-ack',payload:{id:uid,to:p.id,giftId}}).catch(()=>{});
+ // A gift re-sent after a lost ack is acknowledged again but never added to the bag twice.
+ if(!receivedGiftIds.has(giftId)){receivedGiftIds.add(giftId);if(receivedGiftIds.size>500)receivedGiftIds.delete(receivedGiftIds.values().next().value);window.dispatchEvent(new CustomEvent('anyen-gift-received',{detail:{id:p.itemId,giftId,fromName:cleanName(peers[p.id]?.name||'Người bạn An Yên')}}));}
+ c.send({type:'broadcast',event:'gift-ack',payload:{id:uid,to:p.id,giftId}}).then(r=>{if(r!=='ok')console.warn('An Yên gift-ack',r)}).catch(()=>{});
  }).on('broadcast',{event:'gift-ack'},({payload:p})=>{
  if(c!==channel||!joined||!p||p.to!==uid)return;
  const giftId=String(p.giftId||'');if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId))return;
@@ -87,7 +90,7 @@ $('#connectRealtime')?.addEventListener('click',join);$('#disconnectRealtime')?.
 window.addEventListener('anyen-position',e=>{const x=Number(e.detail?.x),z=Number(e.detail?.z);if(!Number.isFinite(x)||!Number.isFinite(z))return;position={x:clamp(x,-35,35),z:clamp(z,-40,30),...(e.detail?.boat?{b:1}:{}),...(e.detail?.bs===1||e.detail?.bs===-1?{bs:e.detail.bs,bt:Number(e.detail.bt)||0}:{})};if(!joined||!channel||Date.now()-lastMove<250)return;lastMove=Date.now();channel.send({type:'broadcast',event:'move',payload:{id:uid,...position}})});
 window.addEventListener('yen-profile',()=>{if(joined&&channel)channel.track({...profile(),...position,activity,...(seatIntent||{})}).catch(()=>{})});
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>{if(joined||channel)leave().then(()=>state('Đã chọn phòng mới. Bấm Kết nối để tham gia.'))}));
-window.addEventListener('anyen-greet',e=>{if(joined&&channel){const kind=['hello','handshake','namaste','jump','spin'].includes(e.detail?.gesture)?e.detail.gesture:'hello';channel.send({type:'broadcast',event:'gesture',payload:{id:uid,name:profile().name,kind}}).catch(err=>state('Không gửi được cử chỉ: '+err.message));state('🙏 Đã gửi '+({hello:'lời chào',handshake:'cử chỉ bắt tay',namaste:'lời chắp tay chào',jump:'động tác nhảy',spin:'động tác xoay'}[kind]))}else state('Hãy kết nối vào phòng trước')});
+window.addEventListener('anyen-greet',e=>{if(joined&&channel){const kind=['hello','handshake','namaste','jump','spin'].includes(e.detail?.gesture)?e.detail.gesture:'hello';channel.send({type:'broadcast',event:'gesture',payload:{id:uid,name:profile().name,kind}}).then(r=>{if(r!=='ok')state('Chưa gửi được cử chỉ (mạng chậm), hãy thử lại.')}).catch(err=>state('Không gửi được cử chỉ: '+err.message));state('🙏 Đã gửi '+({hello:'lời chào',handshake:'cử chỉ bắt tay',namaste:'lời chắp tay chào',jump:'động tác nhảy',spin:'động tác xoay'}[kind]))}else state('Hãy kết nối vào phòng trước')});
 window.addEventListener('anyen-activity',e=>{const a=e.detail?.activity;if(!['idle','sit','walk','bell'].includes(a))return;activity=a;if(joined&&channel){channel.track({...profile(),...position,activity}).catch(()=>{});channel.send({type:'broadcast',event:'activity',payload:{id:uid,activity}})}});
 // Shared offerings are persisted for late arrivals; realtime broadcasts are a fast notification.
 const offeringSeen=new Set();
@@ -119,11 +122,10 @@ window.addEventListener('anyen-seat-intent',e=>{const d=e.detail||{};seatIntent=
 window.addEventListener('anyen-3d-enter',()=>{if(!joined&&!channel){const select=$('#rtRoomSelect');if(select)select.value='Sảnh chung';join();}});
 // Broadcast only coins the 3D scene actually threw (it refuses throws far from any lake).
 window.addEventListener('anyen-coin-thrown',e=>{if(e.detail?.remote||!joined||!channel||lastRoomTopic!=='anyen:room:lobby')return;const lake=String(e.detail?.lake||'');if(!['Sắc','Thanh','Hương','Vị','Chạm','Niệm'].includes(lake))return;channel.send({type:'broadcast',event:'coin',payload:{id:uid,lake,nonce:crypto.randomUUID()}}).catch(()=>{});});
-const pendingGifts=new Map();
 // A gift is only removed from the sender's bag after the recipient acknowledges it.
 // Without an acknowledgement it is re-sent (the recipient de-duplicates by giftId and acknowledges again),
 // and after the last attempt the item stays with the sender and the UI is told so.
-const giftTimers=new Map(),GIFT_ACK_WAIT=6000,GIFT_ATTEMPTS=3;
+const GIFT_ACK_WAIT=6000,GIFT_ATTEMPTS=3,GIFT_RETRY_FAST=1500;
 function giftFailed(giftId,reason){clearTimeout(giftTimers.get(giftId));giftTimers.delete(giftId);pendingGifts.delete(giftId);window.dispatchEvent(new CustomEvent('anyen-gift-failed',{detail:{giftId,reason}}));}
 window.addEventListener('anyen-gift-ack',e=>{const id=e.detail?.giftId;clearTimeout(giftTimers.get(id));giftTimers.delete(id);});
 window.addEventListener('anyen-gift-send',e=>{
@@ -132,8 +134,10 @@ window.addEventListener('anyen-gift-send',e=>{
  if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId)||!['chuong','sen','nen','nhang','hat','tra','da','so','cay'].includes(itemId))return giftFailed(giftId,'Vật phẩm không hợp lệ.');
  pendingGifts.set(giftId,to);
  const attempt=n=>{if(!pendingGifts.has(giftId))return;if(!joined||!channel||!peers[to])return giftFailed(giftId,'Người nhận đã rời phòng. Vật phẩm vẫn ở trong túi của bạn.');
-  channel.send({type:'broadcast',event:'gift',payload:{id:uid,to,itemId,giftId}}).catch(err=>console.warn('An Yên gift send',err));
-  giftTimers.set(giftId,setTimeout(()=>{if(!pendingGifts.has(giftId))return;if(n+1<GIFT_ATTEMPTS)attempt(n+1);else giftFailed(giftId,'Người nhận chưa xác nhận. Vật phẩm vẫn ở trong túi của bạn, bạn có thể thử tặng lại.');},GIFT_ACK_WAIT));};
+  const next=wait=>{clearTimeout(giftTimers.get(giftId));giftTimers.set(giftId,setTimeout(()=>{if(!pendingGifts.has(giftId))return;if(n+1<GIFT_ATTEMPTS)attempt(n+1);else giftFailed(giftId,'Người nhận chưa xác nhận. Vật phẩm vẫn ở trong túi của bạn, bạn có thể thử tặng lại.');},wait));};
+  next(GIFT_ACK_WAIT);
+  // If the message did not even leave (timed out / error), retry sooner instead of waiting for an ack that cannot come.
+  channel.send({type:'broadcast',event:'gift',payload:{id:uid,to,itemId,giftId}}).then(r=>{if(r!=='ok'&&pendingGifts.has(giftId)){console.warn('An Yên gift send',r);next(GIFT_RETRY_FAST);}}).catch(err=>{console.warn('An Yên gift send',err);if(pendingGifts.has(giftId))next(GIFT_RETRY_FAST);});};
  attempt(0);
 });
 window.addEventListener('anyen-connection-request',join);
