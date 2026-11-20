@@ -1206,7 +1206,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const SEE={cam:{value:new THREE.Vector3()},tgt:{value:new THREE.Vector3()},rad:{value:0},on:{value:0},onShip:{value:0}};
   function addSeeThrough(m,ship){const prev=m.onBeforeCompile;m.onBeforeCompile=(sh,r)=>{if(prev)prev(sh,r);sh.uniforms.seeCam=SEE.cam;sh.uniforms.seeTgt=SEE.tgt;sh.uniforms.seeRad=SEE.rad;sh.uniforms.seeOn=ship?SEE.onShip:SEE.on;
       sh.vertexShader='varying vec3 vSeeW;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvSeeW=(modelMatrix*vec4(transformed,1.)).xyz;');
-      sh.fragmentShader='uniform vec3 seeCam,seeTgt;uniform float seeRad,seeOn;varying vec3 vSeeW;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(seeOn>.5){vec3 ab=seeTgt-seeCam;float t=dot(vSeeW-seeCam,ab)/max(dot(ab,ab),1e-4);if(t>.0&&t<.94){float d=length(vSeeW-(seeCam+ab*t)),R=seeRad*(.55+.45*t);if(d<R){float k=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(k<.8*(1.-smoothstep(R*.65,R,d)))discard;}}}');};
+      sh.fragmentShader='uniform vec3 seeCam,seeTgt;uniform float seeRad,seeOn;varying vec3 vSeeW;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(seeOn>.5){vec3 ab=seeTgt-seeCam;float t=dot(vSeeW-seeCam,ab)/max(dot(ab,ab),1e-4);if(t>.0&&t<.88){float d=length(vSeeW-(seeCam+ab*t)),R=seeRad*(1.-.55*t);if(d<R){float k=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(k<.9*(1.-smoothstep(R*.6,R,d)))discard;}}}');};
     m.customProgramCacheKey=()=>'see'+(m.uuid);m.needsUpdate=true;return m}
   const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.95,vertexColors:true,map:bayTex.rock,normalMap:bayTex.normal,normalScale:new THREE.Vector2(1.3,1.3)});
   bayRockMat.onBeforeCompile=sh=>{sh.uniforms.leafMap={value:bayTex.leaf};
@@ -1341,6 +1341,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   let bayBackdrop=null;
   // ---- Du thuyền 5 sao: thân xanh ngọc, ba tầng trắng có dải kính, boong mũi gỗ, lan can kính ----
+  const bayMult=()=>bayShip.mult||1;
+  function setBayMult(N){const M=bayMult();if(N===M)return;
+    // đang dừng ngắm trong tour: phần thời gian còn lại co/giãn theo tốc độ mới
+    if(typeof bayTour!=='undefined'&&bayTour&&bayTour.dwellUntil){const now=performance.now();bayTour.dwellUntil=now+Math.max(0,bayTour.dwellUntil-now)*M/N}
+    bayShip.mult=N;bayShip.fast=N>1;bayStatusKey='';refreshOpts();refreshBayHud()}
   let bayPause=null,bayAt=null;// bayAt: danh thắng tàu vừa tới / đang tới {p,x,z}
   const bayShip={group:new THREE.Group(),x:0,z:0,heading:0,speed:0,path:[],dest:null,fast:false,stopped:true,trail:[],trailT:0};
   // Ván sàn: dải ván 0,25 đơn vị chạy dọc thân tàu, mạch ghép so le, vân màu nâu óc chó ấm
@@ -1354,7 +1359,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const g=bayShip.group,L=ex.length/2,B=ex.beam/2,mat=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.6,...o});
     const outline=(inset,front=L,back=-L)=>{const s=new THREE.Shape(),b=B-inset,f=front-inset,k=back+inset;s.moveTo(-b,-(k+2));s.quadraticCurveTo(-b,-k,0,-k);s.quadraticCurveTo(b,-k,b,-(k+2));s.lineTo(b,-(f-12));s.quadraticCurveTo(b*.95,-(f-3),0,-f);s.quadraticCurveTo(-b*.95,-(f-3),-b,-(f-12));s.closePath();return s};
     const slab=(shape,y,h,m)=>{const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:14});geo.rotateX(-Math.PI/2);const mesh=new THREE.Mesh(geo,m);mesh.position.y=y;g.add(mesh);return mesh};
-    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#a07e60')}),dark=mat('#25363c');addSeeThrough(white,1);addSeeThrough(glass,1);addSeeThrough(dark,1);
+    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#a07e60')}),dark=mat('#25363c');addSeeThrough(white,1);addSeeThrough(glass,1);addSeeThrough(dark,1);addSeeThrough(wood,1);addSeeThrough(hull,1);
     slab(outline(0),-2.6,3.8,hull);slab(outline(-.05),1.15,1.4,white);slab(outline(.25),2.5,.12,wood);
     const stripe=slab(outline(-.07),1.05,.14,dark);stripe.scale.set(1,1,1);
     // dải cửa sổ tròn ở thân
@@ -1378,7 +1383,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const railPts=[],rw=B-.35,fz=L-.6,bz=L-14;const bez=t=>{const p0=[rw,fz-12],p1=[rw*.95,fz-3],p2=[0,fz];return[(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],(1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]]};
     const half=[[rw,bz],[rw,(bz+fz-12)/2]];for(let k=0;k<=10;k++)half.push(bez(k/10*.94));
     for(const [x,z] of half)railPts.push(new THREE.Vector3(-x,3.55,z));for(let k=half.length-1;k>=0;k--)railPts.push(new THREE.Vector3(half[k][0],3.55,half[k][1]));
-    const steel=mat('#e3e6e8',{metalness:.8,roughness:.22}),cap=mat(ex.rail_wood||'#9a6448',{roughness:.45}),curve=new THREE.CatmullRomCurve3(railPts);
+    const steel=mat('#e3e6e8',{metalness:.8,roughness:.22}),cap=mat(ex.rail_wood||'#9a6448',{roughness:.45}),// lan can luôn giữ nguyên, không làm mờ
+    curve=new THREE.CatmullRomCurve3(railPts);
     const handrail=new THREE.Mesh(new THREE.TubeGeometry(curve,80,.085,8,false),cap);handrail.scale.set(1,1,1);g.add(handrail);
     {const low=railPts.map(p=>new THREE.Vector3(p.x,2.66,p.z));g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(low),80,.035,6,false),steel))}
     {const pos=[],idx=[],cp=curve.getSpacedPoints(80);cp.forEach((p,i)=>{pos.push(p.x,2.62,p.z,p.x,3.47,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
@@ -1617,7 +1623,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const pin=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,9,8),new THREE.MeshBasicMaterial({color:'#f6e3b0'}));pin.position.y=4.8;bayMarker.add(pin);const top=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshBasicMaterial({color:'#e9b866'}));top.position.y=9.6;bayMarker.add(top);bayMarker.userData.ring=ring}
   bayMarker.visible=false;bayGroup.add(bayMarker);
   const fmtKm=u=>{const m=u*(bayData?.map?.geo?.meters_per_unit||4);return m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'};
-  function setDestination(x,z,label,fromTour){if(bayPause&&!fromTour)dropPause();
+  function setDestination(x,z,label,fromTour){if(bayPause&&!fromTour)dropPause();bayShip.faceLm=null;
     if(!bayBuilt)return;if(!fromTour&&typeof bayTour!=='undefined'&&bayTour)endTour(false);const path=findPath(bayShip.x,bayShip.z,x,z);
     if(!path){bayCaption('Không tìm được đường tới đó, hãy chọn chỗ nước thoáng hơn');return}
     const end=path[path.length-1];bayShip.path=path;bayShip.dest={x:end[0],z:end[1],label:label||null};bayShip.stopped=false;
@@ -1659,11 +1665,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function setBayAudio(mode){bayAudioMode=mode;try{localStorage.setItem('yen_bay_audio',mode)}catch(e){}if(bayMode)startBaySound();refreshBayHud();if(typeof refreshOpts==='function')refreshOpts();bayCaption(BAY_AUDIO[mode][0]+' Âm thanh: '+BAY_AUDIO[mode][1],2500)}
   // ---- Bảng điều khiển và bản đồ ----
   const bayHUD=document.createElement('div');bayHUD.id='bayHUD';bayHUD.setAttribute('role','region');bayHUD.setAttribute('aria-label','Vịnh Hạ Long');
-  bayHUD.innerHTML='<div class="bay-row" style="position:relative"><button type="button" data-bay="status" class="bay-status" title="Mở tùy chọn du thuyền"><span class="bay-st-ico">⚓</span><span class="bay-st-text">Đang neo</span></button><button type="button" data-bay="pause" class="bay-stop" title="Dừng thuyền ngắm cảnh" aria-label="Dừng thuyền ngắm cảnh" aria-pressed="false">⏸️<span> Ngắm cảnh</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bay="tab-tour" title="Tour trải nghiệm" aria-label="Tour trải nghiệm">🧭<span> Tour</span></button><button type="button" data-bay="tab-cruise" title="Dạo ngắm vịnh" aria-label="Dạo ngắm vịnh">⛵<span> Dạo vịnh</span></button><button type="button" data-bay="tab-dest" title="Điểm đến · đến ngay" aria-label="Điểm đến">📍<span> Điểm đến</span></button><button type="button" data-bay="tab-view" title="Góc nhìn" aria-label="Góc nhìn">🎥<span> Góc nhìn</span></button><button type="button" data-bay="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bay="audio" title="Âm thanh" aria-label="Chọn âm thanh">🌊<span> Âm thanh</span></button></div><div class="bay-row bay-pause-row" id="bayPauseRow" hidden><button type="button" data-bp2="left" title="Xoay trái (giữ để xoay)" aria-label="Xoay trái">⟲<span> Xoay trái</span></button><button type="button" data-bp2="auto" title="Tự xoay 360°" aria-label="Tự xoay 360 độ" aria-pressed="false">🔄<span> 360°</span></button><button type="button" data-bp2="right" title="Xoay phải (giữ để xoay)" aria-label="Xoay phải">⟳<span> Xoay phải</span></button><button type="button" data-bp2="front" title="Nhìn về mũi tàu" aria-label="Nhìn về mũi tàu">⬆<span> Mũi tàu</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bp2="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bp2="go" class="bay-go" title="Đi tiếp" aria-label="Đi tiếp">▶<span> Đi tiếp</span></button><button type="button" data-bp2="end" title="Kết thúc hành trình, neo tại đây" aria-label="Kết thúc hành trình">⏹<span> Neo lại</span></button></div><div class="bay-pop" id="bayAudioPop" role="menu" hidden><button type="button" role="menuitemradio" data-aud="waves">🌊 Sóng biển</button><button type="button" role="menuitemradio" data-aud="music">🎵 Nhạc thư giãn</button><button type="button" role="menuitemradio" data-aud="silent">🔇 Im lặng</button></div>';
+  bayHUD.innerHTML='<div class="bay-row" style="position:relative"><button type="button" data-bay="status" class="bay-status" title="Mở tùy chọn du thuyền"><span class="bay-st-ico">⚓</span><span class="bay-st-text">Đang neo</span></button><button type="button" data-bay="pause" class="bay-stop" title="Dừng thuyền ngắm cảnh" aria-label="Dừng thuyền ngắm cảnh" aria-pressed="false">⏸️<span> Ngắm cảnh</span></button><button type="button" data-bay="fast" class="bay-fast" title="Đi nhanh: tốc độ ×5" aria-label="Đi nhanh, tốc độ nhân 5" aria-pressed="false">⏩<span> Nhanh</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bay="tab-tour" title="Tour trải nghiệm" aria-label="Tour trải nghiệm">🧭<span> Tour</span></button><button type="button" data-bay="tab-cruise" title="Dạo ngắm vịnh" aria-label="Dạo ngắm vịnh">⛵<span> Dạo vịnh</span></button><button type="button" data-bay="tab-dest" title="Điểm đến · đến ngay" aria-label="Điểm đến">📍<span> Điểm đến</span></button><button type="button" data-bay="tab-view" title="Góc nhìn" aria-label="Góc nhìn">🎥<span> Góc nhìn</span></button><button type="button" data-bay="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bay="audio" title="Âm thanh" aria-label="Chọn âm thanh">🌊<span> Âm thanh</span></button></div><div class="bay-row bay-pause-row" id="bayPauseRow" hidden><button type="button" data-bp2="left" title="Xoay trái (giữ để xoay)" aria-label="Xoay trái">⟲<span> Xoay trái</span></button><button type="button" data-bp2="auto" title="Tự xoay 360°" aria-label="Tự xoay 360 độ" aria-pressed="false">🔄<span> 360°</span></button><button type="button" data-bp2="right" title="Xoay phải (giữ để xoay)" aria-label="Xoay phải">⟳<span> Xoay phải</span></button><button type="button" data-bp2="front" title="Nhìn về mũi tàu" aria-label="Nhìn về mũi tàu">⬆<span> Mũi tàu</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bp2="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bp2="go" class="bay-go" title="Đi tiếp" aria-label="Đi tiếp">▶<span> Đi tiếp</span></button><button type="button" data-bp2="end" title="Kết thúc hành trình, neo tại đây" aria-label="Kết thúc hành trình">⏹<span> Neo lại</span></button></div><div class="bay-pop" id="bayAudioPop" role="menu" hidden><button type="button" role="menuitemradio" data-aud="waves">🌊 Sóng biển</button><button type="button" role="menuitemradio" data-aud="music">🎵 Nhạc thư giãn</button><button type="button" role="menuitemradio" data-aud="silent">🔇 Im lặng</button></div>';
   const bayCapBox=document.createElement('div');bayCapBox.id='bayCapBox';bayCapBox.innerHTML='<div class="bay-caption" id="bayCaption" aria-live="polite"></div>';document.body.appendChild(bayCapBox);
   document.body.appendChild(bayHUD);
   const BAY_TABS='<div class="bay-tabs" role="tablist"><button type="button" role="tab" data-tab="tour" aria-label="Tour trải nghiệm">🧭<span> Tour trải nghiệm</span></button><button type="button" role="tab" data-tab="cruise" aria-label="Dạo ngắm vịnh">⛵<span> Dạo ngắm vịnh</span></button><button type="button" role="tab" data-tab="dest" aria-label="Điểm đến">📍<span> Điểm đến</span></button><button type="button" role="tab" data-tab="view" aria-label="Góc nhìn">🎥<span> Góc nhìn</span></button></div>';
-  const BAY_FOOT='<div class="bay-sheet-foot"><span>Tốc độ</span><button type="button" data-opt="slow">▶ Thong thả</button><button type="button" data-opt="fast">⏩ Nhanh</button><span>Âm thanh</span><button type="button" data-opt="aud" data-mode="waves">🌊 Sóng</button><button type="button" data-opt="aud" data-mode="music">🎵 Nhạc</button><button type="button" data-opt="aud" data-mode="silent">🔇 Im lặng</button></div>';
+  const BAY_FOOT='<div class="bay-sheet-foot"><span>Tốc độ</span><button type="button" data-opt="slow">▶ Thong thả</button><button type="button" data-opt="fast">⏩ Nhanh ×5</button><span>Âm thanh</span><button type="button" data-opt="aud" data-mode="waves">🌊 Sóng</button><button type="button" data-opt="aud" data-mode="music">🎵 Nhạc</button><button type="button" data-opt="aud" data-mode="silent">🔇 Im lặng</button></div>';
   const bayMapBox=document.createElement('div');bayMapBox.id='bayMap';bayMapBox.setAttribute('role','dialog');bayMapBox.setAttribute('aria-label','Bản đồ vịnh Hạ Long');
   bayMapBox.innerHTML='<div class="bay-map-head"><b>⛵ Du thuyền Yên</b><button type="button" data-bay="map-close">✕ Đóng</button></div>'+BAY_TABS+'<div class="bay-regions" id="bayRegions" role="tablist"></div><canvas id="bayMapCanvas" width="720" height="620"></canvas><p class="bay-map-note">Chạm một điểm trên bản đồ hoặc tên danh thắng để đến ngay. Bấm 📸 để đến điểm check-in và mở máy ảnh, danh thắng ở phía sau lưng bạn. Vị trí theo bản đồ thật (gần đúng), kích thước đảo được phóng đại.</p><div class="bay-map-places" id="bayMapPlaces"></div>'+BAY_FOOT;
   document.body.appendChild(bayMapBox);
@@ -1695,6 +1701,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(bayPause){const a=document.querySelector('[data-bp2="auto"]');if(a)a.setAttribute('aria-pressed',String(!!bayPause.auto))}
     {const ab=bayHUD.querySelector('[data-bay="audio"]');if(ab){const [ic,lb]=BAY_AUDIO[bayAudioMode];ab.innerHTML=ic+'<span> '+lb+'</span>';ab.title='Âm thanh: '+lb}for(const b of bayHUD.querySelectorAll('[data-aud]'))b.setAttribute('aria-checked',String(b.dataset.aud===bayAudioMode))}
     bayHUD.querySelector('[data-bay="tab-tour"]').setAttribute('aria-pressed',String(!!(typeof bayTour!=='undefined'&&bayTour)));
+    {const fb=bayHUD.querySelector('[data-bay="fast"]'),M=bayMult();if(fb&&fb.dataset.m!==String(M)){fb.dataset.m=String(M);fb.setAttribute('aria-pressed',String(M>1));fb.innerHTML='⏩<span> '+(M>1?'×'+M:'Nhanh')+'</span>';
+      fb.title=M===1?'Đi nhanh: tốc độ ×5':'Đang đi ×5 · bấm để về tốc độ thường';fb.setAttribute('aria-label',fb.title)}}
   }
 
   // ---- Bảng tùy chọn của du thuyền: Tour trải nghiệm · Dạo ngắm vịnh · Điểm đến · Góc nhìn ----
@@ -1710,18 +1718,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     setTab(tab);refreshOpts()}
   document.addEventListener('click',e=>{const b=e.target.closest('.bay-tabs [data-tab]');if(b)openTrip(b.dataset.tab);
     const o=e.target.closest('[data-opt]');if(!o)return;
-    if(o.dataset.opt==='slow'||o.dataset.opt==='fast'){bayShip.fast=o.dataset.opt==='fast';refreshBayHud();refreshOpts();if(baySheet.classList.contains('open')&&lastTrip!=='view')openTrip(lastTrip)}
+    if(o.dataset.opt==='slow'||o.dataset.opt==='fast'||o.dataset.opt==='fast9'){setBayMult(o.dataset.opt==='slow'?1:5);bayStatusKey='';refreshBayHud();refreshOpts();if(baySheet.classList.contains('open')&&lastTrip!=='view')openTrip(lastTrip)}
     if(o.dataset.opt==='aud')setBayAudio(o.dataset.mode)});
-  function refreshOpts(){for(const b of document.querySelectorAll('[data-opt="slow"]'))b.setAttribute('aria-pressed',String(!bayShip.fast));for(const b of document.querySelectorAll('[data-opt="fast"]'))b.setAttribute('aria-pressed',String(bayShip.fast));
+  function refreshOpts(){const M=bayMult();for(const [k,v] of [['slow',1],['fast',5],['fast9',-1]])for(const b of document.querySelectorAll('[data-opt="'+k+'"]'))b.setAttribute('aria-pressed',String(M===v));
     for(const b of document.querySelectorAll('[data-opt="aud"]'))b.setAttribute('aria-pressed',String(b.dataset.mode===bayAudioMode))}
   const lmById=id=>bayData?.props.find(p=>p.kind==='landmark'&&p.id===id);
   function legLength(fx,fz,tx,tz){const p=findPath(fx,fz,tx,tz);if(!p)return Math.hypot(tx-fx,tz-fz)*1.3;let len=0,x=fx,z=fz;for(const [a,b] of p){len+=Math.hypot(a-x,b-z);x=a;z=b}return len}
   // Thời gian: trên web theo tốc độ tàu trong cảnh; ngoài đời theo tốc độ tàu du lịch thật (ước tính, ghi trong dữ liệu).
   const fmtDur=s=>{s=Math.max(1,Math.round(s));if(s<60)return s+' giây';const m=Math.round(s/60);if(m<60)return m+' phút';const hh=Math.floor(m/60),mm=m%60;return hh+' giờ'+(mm?' '+mm+' phút':'')};
-  const webSecs=len=>len/(bayShip.max*(bayShip.fast?3:1))+(len>1?5:0);
+  const webSecs=len=>len/(bayShip.max*bayMult())+(len>1?5/bayMult():0);
   const realSecs=len=>len*(bayData?.map?.geo?.meters_per_unit||4)/1000/(bayShip.ex?.real_speed_kmh||15)*3600;
-  const legInfo=(len,dwell=0)=>fmtKm(len)+' · web '+fmtDur(webSecs(len)+dwell)+' · ngoài đời ≈ '+fmtDur(realSecs(len));
-  const approachOf=p=>p.params?.approach||[p.x,p.z];
+  const legInfo=(len,dwell=0)=>fmtKm(len)+' · web '+fmtDur(webSecs(len)+dwell/bayMult())+' · ngoài đời ≈ '+fmtDur(realSecs(len));
+  const approachOf=p=>viewPoint(p);
   const sheetBody=(note)=>{document.getElementById('baySheetTitle').textContent=note;const body=document.getElementById('baySheetBody');body.innerHTML='';return body};
   function renderTours(){
     const body=sheetBody('Chọn tour và đoạn muốn đi: từ điểm nào đến điểm nào. Thời gian ngoài đời là ước tính theo tàu du lịch thật ('+(bayShip.ex?.real_speed_kmh||15)+' km/giờ).');
@@ -1738,7 +1746,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         const ol=card.querySelector('.bay-legs');ol.innerHTML='';let x=bayShip.x,z=bayShip.z,total=0,dwell=0,prev='Vị trí tàu';
         for(let i=a;i<=b;i++){const p=lmById(stops[i].landmark),[px,pz]=approachOf(p),len=leg(x,z,px,pz);total+=len;if(i<b)dwell+=stops[i].dwell||0;
           const li=document.createElement('li');li.innerHTML='<span></span><small></small>';li.querySelector('span').textContent=prev+' → '+shortName(p.name);li.querySelector('small').textContent=len<30?'đang ở đây':legInfo(len);ol.appendChild(li);x=px;z=pz;prev=shortName(p.name)}
-        card.querySelector('em').textContent='Tổng '+fmtKm(total)+' · web '+fmtDur(webSecs(total)+dwell)+' (gồm dừng ngắm) · ngoài đời ≈ '+fmtDur(realSecs(total));};
+        card.querySelector('em').textContent='Tổng '+fmtKm(total)+' · web '+fmtDur(webSecs(total)+dwell/bayMult())+' (gồm dừng ngắm) · ngoài đời ≈ '+fmtDur(realSecs(total));};
       selFrom.onchange=draw;selTo.onchange=draw;draw();
       card.querySelector('.bay-tour-foot button').onclick=()=>{startTour(t,+selFrom.value,+selTo.value);closeSheet()};body.appendChild(card)}
   }
@@ -1764,12 +1772,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Lịch trình: đi lần lượt tới điểm ghé của từng danh thắng, dừng ngắm vài giây rồi đi tiếp.
   let bayTour=null;
   function startTour(t,from=0,to){dropPause();let stops=(t.params?.stops||[]).filter(s=>lmById(s.landmark));if(to==null)to=stops.length-1;stops=stops.slice(Math.max(0,from),Math.max(from,to)+1);if(!stops.length)return;bayTour={tour:t,stops,idx:0,dwellUntil:0};bayCaption('🧭 Bắt đầu: '+shortName(t.name)+' · '+shortName(lmById(stops[0].landmark).name)+' → '+shortName(lmById(stops[stops.length-1].landmark).name),5000);sailToStop()}
-  function sailToStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);const a=p.params?.approach||[p.x,p.z];
-    if(Math.hypot(a[0]-bayShip.x,a[1]-bayShip.z)<8){arriveStop();return}
-    setDestination(a[0],a[1],p.name,true);if(!bayShip.path.length){bayCaption('Không tìm được đường tới '+p.name+', bỏ qua điểm này');nextStop()}}
-  function arriveStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);bayCaption('📍 '+(bayTour.idx+1)+'/'+bayTour.stops.length+' · '+p.name+(s.note?' · '+s.note:''),Math.max(6000,(s.dwell||0)*1000));
-    if(bayTour.idx>=bayTour.stops.length-1){const name=shortName(bayTour.tour.name);setTimeout(()=>{if(!bayTour)return;bayTour=null;refreshBayHud();bayCaption('✨ Hoàn thành tour · '+name,6000)},Math.max(2500,(s.dwell||0)*1000));return}
-    bayTour.dwellUntil=performance.now()+(s.dwell||0)*1000;}
+  function sailToStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);let a=viewPoint(p);bayAt={p,x:a[0],z:a[1]};
+    if(Math.hypot(a[0]-bayShip.x,a[1]-bayShip.z)<8){bayShip.faceLm=p;arriveStop();return}
+    setDestination(a[0],a[1],p.name,true);if(!bayShip.path.length){a=p.params?.approach||[p.x,p.z];bayAt={p,x:a[0],z:a[1]};setDestination(a[0],a[1],p.name,true)}bayShip.faceLm=p;if(!bayShip.path.length){bayCaption('Không tìm được đường tới '+p.name+', bỏ qua điểm này');nextStop()}}
+  function arriveStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);bayCaption('📍 '+(bayTour.idx+1)+'/'+bayTour.stops.length+' · '+p.name+(s.note?' · '+s.note:''),Math.max(4000,(s.dwell||0)*1000/bayMult()));
+    if(bayTour.idx>=bayTour.stops.length-1){const name=shortName(bayTour.tour.name);setTimeout(()=>{if(!bayTour)return;bayTour=null;refreshBayHud();bayCaption('✨ Hoàn thành tour · '+name,6000)},Math.max(2500,(s.dwell||0)*1000/bayMult()));return}
+    bayTour.dwellUntil=performance.now()+(s.dwell||0)*1000/bayMult();}
   function nextStop(){if(!bayTour)return;bayTour.idx++;bayTour.dwellUntil=0;if(bayTour.idx>=bayTour.stops.length){bayTour=null;refreshBayHud();return}sailToStop();refreshBayHud()}
   function endTour(say){if(!bayTour)return;bayTour=null;if(say)bayCaption('Đã kết thúc lịch trình dạo vịnh');refreshBayHud()}
   refreshBayHud();
@@ -1814,13 +1822,24 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   function openBayMap(){bayMapBox.classList.add('open');document.body.classList.add('bay-map-open');if(bayBuilt){renderRegions();renderPlaces()}drawBayMap()}
   // Dịch chuyển tức thì: tàu hiện ngay ở điểm ghé, mũi tàu quay về phía danh thắng.
+  // Điểm ngắm: lùi đủ xa để danh thắng nằm trọn trong khung (cao và ngang), nhìn vào mặt đẹp nhất, không bị đảo khác che
+  const LM_SIZE={big_island:[2.2,1.15],titop:[2.4,1.5],pair:[2.6,1],incense:[2.2,1],dog:[2.4,1],arch:[2.6,1.35],trio:[2,1],beach:[2.4,1],island_beach:[2.3,1],cove:[2.6,1.25]};
+  const VP_CACHE=new Map();
+  function viewPoint(p){const key=p.id+'|'+(camera.aspect<1?'n':'w');if(VP_CACHE.has(key))return VP_CACHE.get(key).slice();const v=viewPointCalc(p);VP_CACHE.set(key,v);return v.slice()}
+  function viewPointCalc(p){const q=p.params||{},sh=q.shape,r=q.radius||20,h=q.height||20,f=lmFacing(p);
+    let vx=Math.cos(f),vz=Math.sin(f);
+    if(sh==='pair'){const A=.78+Math.PI/2;let px=Math.cos(A),pz=Math.sin(A);if(px*vx+pz*vz<0){px=-px;pz=-pz}vx=px;vz=pz}// Trống Mái: nhìn ngang trục hai hòn
+    const [kw,kh]=LM_SIZE[sh]||[0,0];let W=Math.max(30,r*kw),H=h*kh;if(sh==='village'){W=120;H=36}if(sh==='pier'){W=60;H=12}if(sh==='bridge'){W=300;H=40}
+    const vf=57*Math.PI/180,asp=Math.max(.45,Math.min(2.2,camera.aspect||1.6)),hf=2*Math.atan(Math.tan(vf/2)*asp);
+    const want=Math.max(h<30&&r<20?38:70,H/Math.tan(vf*.42),(W/2)/Math.tan(hf*.4))+r*(sh==='arch'?1.3:.6)+18;// +18: mũi tàu ở trước tâm tàu
+    const base=Math.atan2(vx,vz),front=[p.x+vx*(r*1.45+34),p.z+vz*(r*1.45+34)];
+    for(const s of [1,.9,.8,.7,.6,.5])for(let k=0;k<15;k++){const ang=base+(k%2?1:-1)*Math.ceil(k/2)*.15,d=want*s,qx=p.x+Math.sin(ang)*d,qz=p.z+Math.cos(ang)*d;
+      const fx=p.x+Math.sin(ang)*(r*1.45+34),fz=p.z+Math.cos(ang)*(r*1.45+34);
+      if(navFree(qx,qz)&&lineFree(qx,qz,fx,fz))return[qx,qz]}
+    return p.params?.approach||[p.x+60,p.z]}
   function warpToLandmark(p,photo){
     if(!bayBuilt)return;dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;
-    let [ax,az]=p.params?.approach||[p.x+60,p.z];const d0=Math.hypot(ax-p.x,az-p.z)||1,ux=(ax-p.x)/d0,uz=(az-p.z)/d0;
-    // lùi ra đủ xa để thấy trọn đảo, nếu chỗ đó là nước thoáng
-    const sh=p.params?.shape,rr=p.params?.radius||20,want=photo?Math.max(60,(p.params?.height||0)*2.4,rr*(sh==='big_island'||sh==='cove'?1.9:sh==='village'?0:2.2)+(sh==='village'?62:40)):Math.max(d0,rr*(sh==='big_island'?2.4:sh==='island_beach'||sh==='cove'?2.1:3.2)+(sh==='big_island'?110:sh==='island_beach'||sh==='cove'?70:52)),base=p.params?.shape==='pair'?0:Math.atan2(ux,uz);
-    search:for(let d=want;d>(photo?40:d0);d-=20)for(let k=0;k<14;k++){const ang=base+(k%2?1:-1)*Math.ceil(k/2)*.3,qx=p.x+Math.sin(ang)*d,qz=p.z+Math.cos(ang)*d;
-      if(navFree(qx,qz)&&navFree(p.x+Math.sin(ang)*(d-30),p.z+Math.cos(ang)*(d-30))){ax=qx;az=qz;break search}}
+    const [ax,az]=viewPoint(p);
     bayShip.x=ax;bayShip.z=az;bayShip.speed=0;bayShip.trail.length=0;
     if(Math.hypot(p.x-ax,p.z-az)>1)bayShip.heading=Math.atan2(p.x-ax,p.z-az);viewYaw=0;
     bayAt={p,x:ax,z:az};updateBay(0);camera.position.copy(bayCam);bayLastNear=p;refreshBayHud();drawBayMap();
@@ -1832,7 +1851,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;bayShip.x=px;bayShip.z=pz;bayShip.speed=0;bayShip.trail.length=0;viewYaw=0;
     updateBay(0);camera.position.copy(bayCam);refreshBayHud();drawBayMap();document.body.classList.add('bay-warp');setTimeout(()=>document.body.classList.remove('bay-warp'),60);bayCaption('✨ Đã đến vị trí bạn chọn trên bản đồ',4000);
   }
-  function goLandmark(p){const a=p.params?.approach||[p.x,p.z];setDestination(a[0],a[1],p.name);bayAt={p,x:a[0],z:a[1]}}
+  function goLandmark(p){let a=viewPoint(p);setDestination(a[0],a[1],p.name);if(!bayShip.path.length&&Math.hypot(a[0]-bayShip.x,a[1]-bayShip.z)>30){a=p.params?.approach||[p.x,p.z];setDestination(a[0],a[1],p.name)}bayAt={p,x:a[0],z:a[1]};bayShip.faceLm=p}
   document.getElementById('bayMapCanvas').addEventListener('click',e=>{if(!bayBuilt)return;const cv=e.currentTarget,r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*cv.width,pz=(e.clientY-r.top)/r.height*cv.height;
     const x=(px-mapView.ox)/mapView.s,z=(pz-mapView.oz)/mapView.s;let near=null;for(const p of bayData.props){if(p.kind!=='landmark')continue;const d=Math.hypot(p.x-x,p.z-z)*mapView.s;if(d<14&&(!near||d<near.d))near={p,d}}
     if(near)warpToLandmark(near.p);else warpToPoint(x,z);(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'))});
@@ -1844,6 +1863,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(act==='photo')openPhoto();
     if(act==='audio'){const p=document.getElementById('bayAudioPop');p.hidden=!p.hidden;document.body.classList.toggle('bay-pop-open',!p.hidden)}
     if(act==='pause'){if(bayPause)resumeShip();else pauseShip()}
+    if(act==='fast'){const N=bayMult()>1?1:5;setBayMult(N);bayCaption(N===1?'⛵ Về tốc độ thường':'⏩ Đi nhanh · tốc độ ×'+N+' (cả thời gian dừng ngắm)',2500)}
   });
   {const pr=document.getElementById('bayPauseRow');
     pr.addEventListener('click',e=>{const b=e.target.closest('[data-bp2]');if(!b||!bayPause)return;const k=b.dataset.bp2;
@@ -2132,15 +2152,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // ---- Mỗi khung hình ----
   const BAY_WATER={lanha:['#18786a','#3fb594'],btl:['#1f7686','#4fb3b0']};let bayWaterRegion='halong',bayWaterBase=null;const bayTmpC1=new THREE.Color(),bayTmpC2=new THREE.Color();
+  let bayCamYaw=null;
   const bayAvatar={pos:new THREE.Vector3(),yaw:0};const bayTmp=new THREE.Vector3(),bayLook=new THREE.Vector3(),bayCam=new THREE.Vector3();let bayLastNear=null,bayMapTimer=0;
   function updateBay(dt){
     const t=performance.now()/1000;bayU.time.value=t;const S=bayShip;
     if(bayBuilt){
       if(S.path.length){const [tx,tz]=S.path[0],dx=tx-S.x,dz=tz-S.z,dist=Math.hypot(dx,dz),last=S.path.length===1;
-        if(dist<(last?3:Math.max(18,S.speed*2.2))){S.path.shift();if(!S.path.length){const label=S.dest?.label;S.dest=null;bayMarker.visible=false;refreshBayHud();if(bayTour)arriveStop();else bayCaption(label?'Đã đến '+label:'⚓ Tàu đã tới nơi',5000)}}
-        else{const want=Math.atan2(dx,dz);let dh=want-S.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));const turn=S.turn*(.35+.65*Math.min(1,S.speed/S.max));S.heading+=Math.max(-turn*dt,Math.min(turn*dt,dh));
-          const top=S.max*(S.fast?3:1),slow=last?Math.min(1,dist/(60*(S.fast?2:1)))*.95+.05:1;const target=top*slow*Math.max(.25,Math.cos(Math.min(1.3,Math.abs(dh))));S.speed+=(target-S.speed)*Math.min(1,dt*.5)}}
-      else{S.speed+=(0-S.speed)*Math.min(1,dt*.6);if(bayTour&&bayTour.dwellUntil&&performance.now()>bayTour.dwellUntil)nextStop()}
+        if(dist<(last?3:Math.max(18,Math.min(70,S.speed*2.2)))){S.path.shift();if(!S.path.length){const label=S.dest?.label;S.dest=null;bayMarker.visible=false;refreshBayHud();if(bayTour)arriveStop();else bayCaption(label?'Đã đến '+label:'⚓ Tàu đã tới nơi',5000)}}
+        else{const want=Math.atan2(dx,dz);let dh=want-S.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));const turn=S.turn*Math.sqrt(bayMult())*(.35+.65*Math.min(1,S.speed/(S.max*bayMult())));S.heading+=Math.max(-turn*dt,Math.min(turn*dt,dh));
+          const top=S.max*bayMult(),slow=last?Math.min(1,dist/(60*Math.max(1,Math.sqrt(bayMult())*1.2)))*.95+.05:1;const target=top*slow*Math.max(.25,Math.cos(Math.min(1.3,Math.abs(dh))));S.speed+=(target-S.speed)*Math.min(1,dt*.5)}}
+      else{S.speed+=(0-S.speed)*Math.min(1,dt*.6);
+        if(S.faceLm&&bayAt&&bayAt.p===S.faceLm&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<60){const p=S.faceLm,want=Math.atan2(p.x-S.x,p.z-S.z),dh=Math.atan2(Math.sin(want-S.heading),Math.cos(want-S.heading));S.heading+=Math.max(-.6*dt,Math.min(.6*dt,dh));viewYaw*=1-Math.min(1,dt*1.5);const k=Math.min(1,dt*1.2);S.x+=(bayAt.x-S.x)*k;S.z+=(bayAt.z-S.z)*k;S.speed*=1-k;if(Math.abs(dh)<.01&&Math.abs(viewYaw)<.01&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<1){S.faceLm=null;viewYaw=0}}if(bayTour&&bayTour.dwellUntil&&performance.now()>bayTour.dwellUntil)nextStop()}
       S.x+=Math.sin(S.heading)*S.speed*dt;S.z+=Math.cos(S.heading)*S.speed*dt;
       S.trailT+=dt;if(S.trailT>.25){S.trailT=0;const sternX=S.x-Math.sin(S.heading)*(S.len/2-3),sternZ=S.z-Math.cos(S.heading)*(S.len/2-3);S.trail.push({x:sternX,z:sternZ,h:S.heading,t,s:Math.min(1,S.speed/6)});while(S.trail.length>WAKE_N)S.trail.shift()}
       updateWake(t);S.foam.material.opacity=Math.min(.75,S.speed/10);
@@ -2174,27 +2196,30 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     else if(view==='outfit'){const narrow=camera.aspect<1,yaw=S.heading+Math.PI+.35+viewYaw*.5,d=narrow?6.4:6;bayCam.set(bayTmp.x-Math.sin(yaw)*d,bayTmp.y+1.5,bayTmp.z-Math.cos(yaw)*d);camera.position.lerp(bayCam,Math.min(1,dt*4));
       // điện thoại: nhân vật ở nửa trên (bảng chọn ở dưới); màn rộng: nhân vật lệch trái (bảng chọn ở bên phải)
       const side=narrow?0:-2.1,rx=Math.cos(yaw),rz=-Math.sin(yaw);bayLook.set(bayTmp.x+rx*side,bayTmp.y+(narrow?-.72:.95),bayTmp.z+rz*side);camera.lookAt(bayLook)}
-    else{const yaw=S.heading+viewYaw,dist=(meActivity==='sit'?6:7.2)*wide*(view==='sundeck'?1.1:1),up=(view==='sundeck'?3.4:3.1)-Math.sin(walkPitch)*2.6;
-      bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up,bayTmp.z-Math.cos(yaw)*dist);camera.position.lerp(bayCam,Math.min(1,dt*7));
-      bayLook.set(bayTmp.x+Math.sin(yaw)*30,bayTmp.y+1.2+Math.sin(walkPitch)*14-(view==='sundeck'?4:0),bayTmp.z+Math.cos(yaw)*30);camera.lookAt(bayLook)}
+    else{
+      // Camera gắn chặt sau lưng người: khoảng cách cố định (không zoom tới lui khi tàu tăng/giảm tốc), chỉ hướng nhìn trễ nhẹ khi tàu đổi hướng
+      const want=S.heading+viewYaw;if(bayCamYaw==null||dt===0)bayCamYaw=want;else{const d=Math.atan2(Math.sin(want-bayCamYaw),Math.cos(want-bayCamYaw));bayCamYaw+=d*Math.min(1,dt*(Math.abs(d)>.6?6:2.4))}
+      const yaw=bayCamYaw,dist=(meActivity==='sit'?3.1:3.7)*wide*(view==='sundeck'?1.06:1),up=(view==='sundeck'?2.9:2.7)-Math.sin(walkPitch)*2.2;
+      bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up,bayTmp.z-Math.cos(yaw)*dist);camera.position.copy(bayCam);
+      bayLook.set(bayTmp.x+Math.sin(yaw)*30,bayTmp.y+(camera.aspect<1?1.6:2.6)+Math.sin(walkPitch)*14-(view==='sundeck'?4.5:0),bayTmp.z+Math.cos(yaw)*30);camera.lookAt(bayLook)}
     baySky.position.set(camera.position.x-BAY.x,0,camera.position.z-BAY.z);if(bayBackdrop){bayBackdrop.position.x=camera.position.x-BAY.x;bayBackdrop.position.z=camera.position.z-BAY.z}
     bayU.camL.value.set(camera.position.x-BAY.x,camera.position.y,camera.position.z-BAY.z);
     // ống nhìn xuyên: tới ngực người, hoặc tới thân tàu khi ngắm từ xa
-    SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
-    if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.6:2.2}
+    meTag.visible=view==='far';SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
+    if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
   }
   function loadBayData(){if(bayLoading)return bayLoading;bayLoading=fetch('data/world-halong_bay.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
   // Chỉ một cảnh chạy: khi vào vịnh, mọi vật của rừng thông được ẩn và ngừng cập nhật; rời vịnh thì hiện lại.
   function setVillageActive(on){for(const o of scene.children){if(o===bayGroup||o===me||o.isLight)continue;if(!on){if(!('_vis' in o.userData))o.userData._vis=o.visible;o.visible=false}else if('_vis' in o.userData){o.visible=o.userData._vis;delete o.userData._vis}}}
   // Lưu trạng thái từng cảnh trên máy để quay lại đúng chỗ (kể cả sau khi tải lại trang).
   function saveForestState(){try{localStorage.setItem('yen_forest_state',JSON.stringify({x:mePosition.x,z:mePosition.z,yaw:viewYaw,t:Date.now()}))}catch(e){}}
-  function saveBayState(){if(!bayBuilt)return;const S=bayShip;const st={x:S.x,z:S.z,heading:S.heading,fast:S.fast,t:Date.now()};
+  function saveBayState(){if(!bayBuilt)return;const S=bayShip;const st={x:S.x,z:S.z,heading:S.heading,fast:S.fast,mult:bayMult(),t:Date.now()};
     const T=bayTour||bayPause?.tour,D=S.dest||bayPause?.dest;
     if(D&&!T)st.dest={x:D.x,z:D.z,label:D.label};
     if(T)st.tour={id:T.tour.id,stops:T.stops.map(s=>s.landmark),idx:T.idx};
     try{localStorage.setItem('yen_bay_state',JSON.stringify(st))}catch(e){}}
   function restoreBayState(){let st=null;try{st=JSON.parse(localStorage.getItem('yen_bay_state')||'null')}catch(e){}if(!st||!Number.isFinite(st.x)||!navFree(st.x,st.z))return false;
-    bayShip.x=st.x;bayShip.z=st.z;bayShip.heading=st.heading||0;bayShip.fast=!!st.fast;bayShip.trail.length=0;bayShip.speed=0;bayShip.path=[];bayShip.dest=null;
+    bayShip.x=st.x;bayShip.z=st.z;bayShip.heading=st.heading||0;bayShip.mult=(st.mult>1||st.fast)?5:1;bayShip.fast=bayShip.mult>1;bayShip.trail.length=0;bayShip.speed=0;bayShip.path=[];bayShip.dest=null;
     if(st.tour){const t=bayData.props.find(p=>p.kind==='tour'&&p.id===st.tour.id),stops=t&&(t.params?.stops||[]).filter(s=>st.tour.stops.includes(s.landmark));if(stops?.length){bayTour={tour:t,stops,idx:Math.min(st.tour.idx||0,stops.length-1),dwellUntil:0};sailToStop();bayCaption('🧭 Tiếp tục tour · '+shortName(t.name),4500)}}
     else if(st.dest)setDestination(st.dest.x,st.dest.z,st.dest.label);
     return true}
@@ -2308,14 +2333,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   function exitBay(){
     if(!bayMode)return;saveBayState();dropPause();setVillageActive(true);if(meActivity==='sit')document.getElementById('realtimeSit')?.click();
-    bayMode=false;SEE.on.value=0;SEE.onShip.value=0;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN · KHÔNG GIAN 3D'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
+    bayMode=false;SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN · KHÔNG GIAN 3D'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
     if(bayStash){mePosition.copy(bayStash.pos);scene.background=bayStash.bg;scene.fog=bayStash.fog;viewYaw=bayStash.yaw;walkPitch=bayStash.pitch;camera.far=bayStash.far;camera.updateProjectionMatrix();
       hemiLight.color.copy(bayStash.hemi[0]);hemiLight.groundColor.copy(bayStash.hemi[1]);hemiLight.intensity=bayStash.hemi[2];sun.color.copy(bayStash.sun[0]);sun.intensity=bayStash.sun[1];sun.position.copy(bayStash.sun[2]);bayStash=null}
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
   window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z)};
-  window.__bay={photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
+  window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode)updateSenseHouses(performance.now()/1000);let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
