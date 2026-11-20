@@ -25,6 +25,8 @@
   - **🎥 Góc nhìn:** Mũi tàu · Boong thượng · Ngắm tàu từ xa · Tự xoay 360°.
   - Tốc độ Thong thả/Nhanh và tiếng sóng ở chân bảng tùy chọn.
   - **📷 Chụp ảnh:** nhân vật quay lưng về phía biển, nhìn vào máy; chọn dáng (Nhìn thẳng, Ngắm vịnh, Nghiêng đầu, Dáng nghiêng) và đổi góc; đếm ngược 3-2-1 rồi chụp. Ảnh có dải tên Làng Yên, địa danh và ngày; tải về hoặc chia sẻ.
+- **🔊 Âm thanh** (nút cuối hàng trên): Sóng biển · Nhạc thư giãn (tạo ngay trên máy) · Im lặng; nhớ lựa chọn trên máy.
+- **Chỉ một cảnh chạy một lúc:** khi ở vịnh, rừng thông được ẩn và ngừng cập nhật. Mỗi cảnh lưu trạng thái trên máy (rừng: vị trí, hướng nhìn; vịnh: vị trí, hướng tàu, điểm đang đến, tour và điểm dừng) để quay lại đúng chỗ, kể cả sau khi tải lại trang.
 - **Các thiên nhiên không đi thẳng sang nhau:** từ vịnh bấm **✕ Về Làng Yên** để ra trang chính, rồi mới chọn Khám phá Rừng Yên hoặc Khám phá Vịnh Yên (và ngược lại).
 - **🧭 Hành trình** (hoặc chạm chip trạng thái): một bảng ba thẻ — **Lịch trình** (3 tuyến dạo vịnh, tàu tự đi và dừng ngắm), **Chọn đảo** (mỗi nơi có “✨ Đến ngay” để dịch chuyển tức thì và “⛵ Đi tới” để tàu tự chạy), **Bản đồ** (chạm mặt nước để đi tới, bấm tên danh thắng để đến ngay).
 - **Chạm mặt nước** trong cảnh để tàu tự tìm đường vòng qua các đảo và đi tới. **Vuốt trái/phải** chỉ xoay góc nhìn, không đổi hướng tàu.
