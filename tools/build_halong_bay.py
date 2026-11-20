@@ -247,23 +247,15 @@ def main():
             # Trang phục riêng của vịnh (rừng thông giữ trang phục cũ). group "sea" = đi biển, "zen" = trang phục thiền như ở Rừng Yên.
             "outfits": {
                 "styles": [
-                    {"id": "sea_linen", "group": "sea", "label": "Sơ mi linen · quần lửng"},
-                    {"id": "sea_dress", "group": "sea", "label": "Đầm, áo dài nhẹ đi biển"},
-                    {"id": "sea_tee", "group": "sea", "label": "Áo thun · quần short"},
-                    {"id": "sea_wind", "group": "sea", "label": "Áo khoác gió · sáng sớm"},
-                    {"id": "robe", "group": "zen", "label": "Thiền phục truyền thống"},
-                    {"id": "linen", "group": "zen", "label": "Trang phục linen tối giản"},
-                    {"id": "casual", "group": "zen", "label": "Trang phục thường ngày"}
+                    {"id": "robe", "label": "Thiền phục"},
+                    {"id": "tee_jeans", "label": "Áo thun · quần jean"},
+                    {"id": "suit", "label": "Vest lịch sự"},
+                    {"id": "maxi", "label": "Đầm maxi đi chơi"},
+                    {"id": "gown", "label": "Đầm dài dạ tiệc"}
                 ],
-                "accessories": [
-                    {"id": "none", "label": "Không"}, {"id": "non_la", "label": "Nón lá"}, {"id": "mu_coi", "label": "Mũ cói rộng vành"},
-                    {"id": "kinh", "label": "Kính râm"}, {"id": "khan", "label": "Khăn choàng"}
-                ],
-                "colors": {
-                    "sea": [["Trắng", "#f4f1ea"], ["Xanh biển", "#3f7fb0"], ["Màu cát", "#d8c39a"], ["San hô", "#e2876b"], ["Xanh ngọc", "#4fb3a5"]],
-                    "zen": [["Vàng", "#d9b67d"], ["Xanh", "#90b7a5"], ["Kem", "#f0e5d4"], ["Tím", "#b5a1c7"], ["Rêu", "#687b48"], ["Hồng", "#e8a1b4"]]
-                },
-                "default": {"style": "sea_linen", "color": "#f4f1ea", "acc": "non_la"}
+                "accessories": [{"id": "hat", "label": "Nón"}, {"id": "glasses", "label": "Kính"}, {"id": "scarf", "label": "Khăn"}],
+                "colors": [["Vàng", "#d9b67d"], ["Xanh", "#90b7a5"], ["Kem", "#f0e5d4"], ["Tím", "#b5a1c7"], ["Rêu", "#687b48"], ["Hồng", "#e8a1b4"]],
+                "default": {"style": "tee_jeans", "color": "#90b7a5", "acc": ["hat"]}
             }
         },
         "nature": [
