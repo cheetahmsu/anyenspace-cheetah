@@ -208,24 +208,15 @@ def main():
 
     # Thuyền gỗ nhỏ chạy vòng trong vùng nước thoáng; phao vịnh dọc luồng.
     junks, buoys = [], []
-    for c in corridors[:1]:
-        for k in range(1, len(c) - 1, 2):
-            (ax, az), (bx, bz) = c[k], c[k + 1]
-            junks.append({"id": f"thuyen_go_{len(junks)+1}", "kind": "junk_boat", "name": "Thuyền gỗ",
-                          "x": round((ax + bx) / 2, 1), "z": round((az + bz) / 2, 1),
-                          "params": {"loop_radius": round(rnd.uniform(40, 70), 1), "speed": round(rnd.uniform(2.5, 4), 2),
-                                     "phase": round(rnd.uniform(0, 6.28), 2), "hull": rnd.choice(["#7d5a3d", "#8a6446", "#6f4f36"])},
-                          "activity": None})
-        for k in range(len(c) - 1):
-            (ax, az), (bx, bz) = c[k], c[k + 1]
-            n = int(math.hypot(bx - ax, bz - az) // 240)
-            for j in range(1, n + 1):
-                t = j / (n + 1); vx, vz = bx - ax, bz - az; L = math.hypot(vx, vz)
-                side = 1 if (len(buoys) % 2) else -1
-                buoys.append({"id": f"phao_{len(buoys)+1}", "kind": "buoy", "name": "Phao luồng",
-                              "x": round(ax + vx * t - vz / L * (CORRIDOR_HALF_WIDTH - 15) * side, 1),
-                              "z": round(az + vz * t + vx / L * (CORRIDOR_HALF_WIDTH - 15) * side, 1),
-                              "params": {"color": "#d8483a" if side > 0 else "#2f8a57"}, "activity": None})
+    # Không còn thuyền chạy vòng hay phao trên luồng (từng đi xuyên qua du thuyền).
+    # Chỉ vài thuyền gỗ neo yên sát chân các đảo lớn, nằm trong vùng đảo nên tàu không bao giờ đi qua.
+    for lid in ["dong_thien_cung", "dao_ti_top", "hang_sung_sot", "hang_luon", "hon_dinh_huong"]:
+        l = next(x for x in landmark_rows if x["id"] == lid)
+        ax, az = l["approach"]; ang = math.atan2(az - l["z"], ax - l["x"]) + 1.35
+        d = (l["radius"] or 14) * 1.05 + 9
+        junks.append({"id": f"thuyen_neo_{lid}", "kind": "moored_boat", "name": "Thuyền gỗ neo",
+                      "x": round(l["x"] + math.cos(ang) * d, 1), "z": round(l["z"] + math.sin(ang) * d, 1),
+                      "params": {"heading": round(ang + 1.57, 2), "hull": rnd.choice(["#7d5a3d", "#8a6446", "#6f4f36"])}, "activity": None})
 
     xs = [p[0] for L in land[2:] for p in L] + [k[0] for k in karsts] + [l["x"] for l in landmark_rows]
     zs = [k[1] for k in karsts] + [l["z"] for l in landmark_rows]
