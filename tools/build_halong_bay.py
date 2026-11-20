@@ -60,10 +60,10 @@ CAUSEWAY = [(20.9372, 106.9790), (20.9466, 106.9800), (20.9466, 106.9830), (20.9
 
 # ---- Vùng đảo đá vôi dày đặc (ước lượng theo bản đồ du lịch) ----
 KARST_ZONES = [
-    {"name": "Lõi di sản Hạ Long", "count": 520, "pts": [(20.921, 107.003), (20.918, 107.060), (20.905, 107.110), (20.880, 107.165),
+    {"name": "Lõi di sản Hạ Long", "count": 640, "pts": [(20.921, 107.003), (20.918, 107.060), (20.905, 107.110), (20.880, 107.165),
                                                         (20.830, 107.175), (20.790, 107.150), (20.785, 107.100), (20.825, 107.045),
                                                         (20.862, 107.012), (20.895, 107.000)]},
-    {"name": "Phía tây nam Tuần Châu", "count": 110, "pts": [(20.912, 106.955), (20.913, 106.990), (20.880, 107.000), (20.845, 106.990), (20.850, 106.950)]},
+    {"name": "Phía tây nam Tuần Châu", "count": 130, "pts": [(20.912, 106.955), (20.913, 106.990), (20.880, 107.000), (20.845, 106.990), (20.850, 106.950)]},
 ]
 
 # ---- Luồng tàu du lịch (giữ trống để du thuyền đi được) ----
@@ -151,18 +151,23 @@ def main():
             x = rnd.uniform(min(xs), max(xs)); z = rnd.uniform(min(zs), max(zs))
             if not in_poly(x, z, P):
                 continue
-            big = rnd.random() < .18
-            r = rnd.uniform(30, 58) if big else rnd.uniform(10, 30)
-            h = r * rnd.uniform(1.25, 2.1) + rnd.uniform(10, 28)
-            if near_corridor(x, z, r):
+            # Dáng núi: 0 tháp cao mảnh · 1 chóp nhọn · 2 đồi tròn · 3 dãy dài yên ngựa · 4 hai đỉnh
+            #          5 nấm thắt chân · 6 răng nghiêng · 7 hòn nhỏ sát nước
+            shape = rnd.choices(range(8), weights=[16, 16, 14, 10, 10, 8, 8, 18])[0]
+            r, h = {0: (rnd.uniform(9, 20), 0), 1: (rnd.uniform(18, 38), 0), 2: (rnd.uniform(24, 52), 0), 3: (rnd.uniform(26, 50), 0),
+                    4: (rnd.uniform(20, 36), 0), 5: (rnd.uniform(13, 26), 0), 6: (rnd.uniform(9, 17), 0), 7: (rnd.uniform(4, 10), 0)}[shape]
+            h = {0: r * rnd.uniform(3.2, 5.0), 1: r * rnd.uniform(2.0, 3.0), 2: r * rnd.uniform(.55, 1.0), 3: r * rnd.uniform(.9, 1.5),
+                 4: r * rnd.uniform(1.6, 2.5), 5: r * rnd.uniform(1.7, 2.6), 6: r * rnd.uniform(2.6, 4.0), 7: r * rnd.uniform(1.0, 2.2)}[shape] + rnd.uniform(2, 12)
+            er = r * (1.9 if shape == 3 else 1.0)          # bán kính hiệu dụng (dãy dài kéo dài 1,9 lần)
+            if near_corridor(x, z, er):
                 continue
             if any(in_poly(x, z, L) for L in land):
                 continue
-            if any(math.hypot(l["x"] - x, l["z"] - z) < (l["radius"] or 40) + r + 70 for l in landmark_rows):
+            if any(math.hypot(l["x"] - x, l["z"] - z) < (l["radius"] or 40) + er + 70 for l in landmark_rows):
                 continue
-            if any(math.hypot(k[0] - x, k[1] - z) < (k[2] + r) * .9 for k in karsts):
+            if any(math.hypot(k[0] - x, k[1] - z) < (k[2] * (1.9 if k[4] == 3 else 1) + er) * .9 for k in karsts):
                 continue
-            karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), rnd.randrange(5)])
+            karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), shape])
             made += 1
 
     # Điểm tàu ghé (trong luồng, cách danh thắng một khoảng an toàn)
@@ -250,7 +255,7 @@ def main():
                         "note": "Phông tranh 360° vẽ bằng code: các lớp núi đá xa sau đảo 3D; hướng bắc là đồi bờ Hạ Long"}},
             {"id": "halong_bay.karsts", "kind": "karst_field", "sort_order": 3,
              "params": {"seed": 20261119, "zones": [z["name"] for z in KARST_ZONES],
-                        "fields": ["x", "z", "radius", "height", "variant"], "items": karsts}},
+                        "fields": ["x", "z", "radius", "height", "shape"], "shapes": ["tháp", "chóp nhọn", "đồi tròn", "dãy dài", "hai đỉnh", "nấm", "răng nghiêng", "hòn nhỏ"], "items": karsts}},
             {"id": "halong_bay.channels", "kind": "channels", "sort_order": 4,
              "params": {"half_width": CORRIDOR_HALF_WIDTH, "lines": [[list(p) for p in c] for c in corridors]}},
         ],

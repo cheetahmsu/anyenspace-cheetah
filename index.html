@@ -830,17 +830,35 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     sh.vertexShader='attribute float aGreen;varying float vGreen;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGreen=aGreen;');
     sh.fragmentShader='uniform sampler2D leafMap;varying float vGreen;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{vec3 lf=texture2D(leafMap,vMapUv*1.7).rgb;float pch=(texture2D(leafMap,vMapUv*.23+.37).g-.2)*1.5;float g=smoothstep(.25,.7,vGreen+(lf.g-.2)*.8+pch*smoothstep(.0,.25,vGreen+.12));diffuseColor.rgb=mix(diffuseColor.rgb,lf*vec3(1.15,1.12,1.),g);}');};
   const bayChunks=new Map();// "cx,cz" -> {P,I,T,D,H,S,UV}
+  // Tám dáng núi đá (khớp trường "shape" trong dữ liệu): mỗi dáng có độ thon, đỉnh tròn/nhọn, kéo dài, yên ngựa riêng.
+  const KSHAPES=[
+    {taper:.32,dome:.24,point:true},                 // 0 tháp cao mảnh
+    {cone:true,dome:.14,point:true},                 // 1 chóp nhọn
+    {taper:.08,dome:.85,round:true},                 // 2 đồi tròn
+    {taper:.15,dome:.5,sx:1.9,sz:.8,saddle:.32},     // 3 dãy dài yên ngựa
+    {taper:.25,dome:.38,sx:1.35,sz:.9,saddle:.45},   // 4 hai đỉnh
+    {taper:.04,dome:.32,pinch:.64,bulge:.14},         // 5 nấm thắt chân
+    {taper:.6,dome:.26,lean:.2,point:true},          // 6 răng nghiêng
+    {taper:.2,dome:.55}                              // 7 hòn nhỏ sát nước
+  ];
   function addKarst(x,z,r,h,k,opt={}){
+    if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};
     const key=Math.floor(x/900)+','+Math.floor(z/900);let ch=bayChunks.get(key);if(!ch){ch={P:[],I:[],T:[],D:[],H:[],S:[],UV:[]};bayChunks.set(key,ch)}
-    const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.base??1,dome=opt.dome??(.16+bayHash(k,2,5)*.14),total=h+4,sq=opt.squash||1,rot=bayHash(k,9,1)*6.28;
-    const reps=Math.max(1,Math.round(2*Math.PI*r/44)),vo=bayHash(k,3,7)*4;
-    for(let i=0;i<KT.n;i++){const t=KT.t[i],a=KT.a[i]+rot,wy=-4+t*total;
-      let prof=1-.12*t+.07*Math.sin(Math.PI*t)*(opt.round?0:1);if(t>1-dome){const u=(t-(1-dome))/dome;prof*=Math.sqrt(Math.max(0,1-u*u))}
-      if(pinch!==1)prof*=pinch+(1-pinch)*baySm(.04,.62,t);
+    const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??opt.base??1,dome=opt.dome??(.16+bayHash(k,2,5)*.14),total=h+4,rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
+    const sx=opt.sx||1,sz=(opt.sz||1)*(opt.squash||1),taper=opt.taper??.12,saddle=opt.saddle||0,tilt=opt.round?0:opt.point?.03:.05+bayHash(k,4,8)*.08;
+    const reps=Math.max(1,Math.round(2*Math.PI*r*Math.max(sx,1)/44)),vo=bayHash(k,3,7)*4;
+    for(let i=0;i<KT.n;i++){const t=KT.t[i],al=KT.a[i];
+      let prof=opt.cone?Math.pow(Math.max(0,1-t*.96),.85):1-taper*t+(opt.round?0:.06*Math.sin(Math.PI*t));
+      if(t>1-dome){const u=(t-(1-dome))/dome;prof*=opt.point?Math.pow(Math.max(0,1-u),.85)*(1-.15*u)+.0:Math.sqrt(Math.max(0,1-u*u))}
+      if(pinch!==1)prof*=pinch+(1-pinch)*baySm(.04,.6,t);
+      if(opt.bulge)prof*=1+opt.bulge*Math.exp(-(((t-.72)/.15)**2));
+      // chiều cao thay đổi theo hướng: yên ngựa (hai đầu cao, giữa thấp) và đỉnh lệch về một phía
+      const hN=(1-saddle*.5)/(1+tilt),hRaw=(1-saddle*Math.pow(Math.sin(al),2))*(1+tilt*Math.cos(al-ph))/(1+tilt),hf=KT.ring[i]?hN+(hRaw-hN)*Math.min(1,prof*1.6):hN;
+      const wy=-4+t*total*(1-(1-hf)*baySm(.3,1,t));
       prof*=1-.2*Math.exp(-(((wy-1)/1.7)**2));
-      const nz=opt.round?1+.08*Math.sin(a*3+ph):1+.17*Math.sin(a*3+ph+t*2.2)+.11*Math.sin(a*5+ph*2.3+t*4)+.07*Math.sin(a*7+ph*1.3)+.05*Math.sin(a*11+ph*3.7+t*3)+.04*(bayHash(a*5,t*9,k)-.5);
-      const rr=r*prof*nz*KT.ring[i];
-      ch.P.push(x+Math.cos(a)*rr+lean*t*t*total,wy,z+Math.sin(a)*rr*sq);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,a));ch.S.push(opt.round?1:0);
+      const nz=opt.round?1+.08*Math.sin(al*3+ph):1+.15*Math.sin(al*3+ph+t*2.2)+.1*Math.sin(al*5+ph*2.3+t*4)+.06*Math.sin(al*7+ph*1.3)+.05*Math.sin(al*11+ph*3.7+t*3)+.04*(bayHash(al*5,t*9,k)-.5);
+      const rr=r*prof*nz*KT.ring[i],px=Math.cos(al)*rr*sx+lean*t*t*total,pz=Math.sin(al)*rr*sz;
+      ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);
       ch.UV.push(KT.u[i]*reps,wy/44+vo);}
     for(const j of KT.idx)ch.I.push(base+j);
   }
@@ -870,8 +888,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const sunNear=x=>{const d=Math.atan2(Math.sin(azOf(x)-sunAz),Math.cos(azOf(x)-sunAz));return Math.max(0,1-Math.abs(d)/1.1)};
     const angle=(y,dist)=>yPx(Math.tan(Math.atan2(y,dist))*R);// độ cao biểu kiến khi đặt núi ở khoảng cách dist
     const layers=p.layers||[{dist:5200,count:110,h:[70,170],w:[160,520]},{dist:4200,count:90,h:[80,190],w:[150,480]},{dist:3400,count:70,h:[90,210],w:[130,420]},{dist:2800,count:50,h:[100,220],w:[110,360]}];
-    const island=(cx,w,hTop,col,colTop,dist,mist)=>{for(const off of [-W,0,W]){const x0=cx+off-w/2,x1=cx+off+w/2;if(x1<0||x0>W)continue;
-      const bumps=2+Math.floor(rnd()*3),pts=[];for(let b=0;b<=bumps;b++){const t=b/bumps;pts.push([x0+w*(.12+.76*t),hTop+(rnd()*.22+(b%2?.06:0))*(base-hTop)])}
+    const island=(cx,w,hTop,col,colTop,dist,mist)=>{const kind=rnd();// tháp · chóp · đồi · dãy
+      if(kind<.28){w*=.38;hTop=base-(base-hTop)*1.35}else if(kind<.5){w*=.75;hTop=base-(base-hTop)*1.15}else if(kind<.7){hTop=base-(base-hTop)*.55;w*=1.1}
+      const prof=[];if(kind<.28)prof.push([.3,.04],[.5,0],[.7,.05]);else if(kind<.5)prof.push([.42,.08],[.5,0],[.6,.1]);else if(kind<.7)prof.push([.2,.3],[.5,0],[.8,.3]);else{const n=2+Math.floor(rnd()*3);for(let b=0;b<=n;b++)prof.push([.12+.76*b/n,(b%2?.28:0)+rnd()*.18])}
+      for(const off of [-W,0,W]){const x0=cx+off-w/2,x1=cx+off+w/2;if(x1<0||x0>W)continue;
+      const pts=prof.map(([u,d])=>[x0+w*u,hTop+d*(base-hTop)]);
       g.beginPath();g.moveTo(x0-w*.04,base+2);g.bezierCurveTo(x0+w*.02,base-(base-hTop)*.4,x0-w*.03,pts[0][1]+(base-hTop)*.25,pts[0][0],pts[0][1]);
       for(let b=1;b<pts.length;b++){const [px,py]=pts[b-1],[qx,qy]=pts[b];g.quadraticCurveTo((px+qx)/2,Math.min(py,qy)-(base-hTop)*.08,qx,qy)}
       g.bezierCurveTo(x1+w*.03,pts[pts.length-1][1]+(base-hTop)*.25,x1-w*.02,base-(base-hTop)*.4,x1+w*.04,base+2);g.closePath();
@@ -954,8 +975,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function buildLandmark(p){
     const q=p.params||{},x=p.x,z=p.z,r=q.radius||0,h=q.height||0,k=Math.round(x*7+z*3);
     if(q.shape==='big_island'){addKarst(x,z,r*.42,h*1.15,k,{dome:.22});for(let j=0;j<7;j++){const a=j*.9+.4,d=r*(.38+bayHash(k,j,3)*.32);addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(.24+bayHash(k,j,1)*.14),h*(.6+bayHash(k,j,2)*.5),k+j+1)}}
-    else if(q.shape==='pair'){addKarst(x-r*.55,z,r*.55,h,k,{lean:.16,base:.5,dome:.38});addKarst(x+r*.6,z+r*.1,r*.48,h*.85,k+1,{lean:-.19,base:.48,dome:.42})}
-    else if(q.shape==='incense'){addKarst(x,z,r,h,k,{base:.4,dome:.36})}
+    else if(q.shape==='pair'){addKarst(x-r*.5,z,r*.55,h,k,{lean:.22,pinch:.45,dome:.4,taper:.3,rot:0});addKarst(x+r*.55,z+r*.1,r*.48,h*.82,k+1,{lean:.22,pinch:.45,dome:.45,taper:.3,rot:Math.PI})}
+    else if(q.shape==='incense'){addKarst(x,z,r,h,k,{pinch:.38,bulge:.3,dome:.4})}
     else if(q.shape==='dog'){addKarst(x,z,r,h,k,{dome:.45,squash:.7});addKarst(x+r*.55,z,r*.45,h*1.18,k+1,{dome:.5})}
     else if(q.shape==='titop'){addKarst(x,z,r*.7,h*1.5,k,{dome:.32});addKarst(x-r*.45,z+r*.3,r*.45,h*1.05,k+1);const [ax,az]=q.approach||[x+r+50,z];const ang=Math.atan2(az-z,ax-x);
       const beach=new THREE.Mesh(new THREE.RingGeometry(r*.8,r*1.18,28,1,-ang-Math.PI*.38,Math.PI*.76),new THREE.MeshStandardMaterial({color:'#efe3c4',roughness:1}));beach.rotation.x=-Math.PI/2;beach.position.set(x,.25,z);bayGroup.add(beach);
@@ -987,7 +1008,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
           let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const r=L.hills>10?60+bayHash(k,3,3)*90:30+bayHash(k,3,3)*30;
             if(!inP(x,z)||!inP(x+r*.8,z)||!inP(x-r*.8,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;addKarst(x,z,r,r*(.45+bayHash(k,4,4)*.5)+L.height,9000+k,{round:true,dome:.75});made++}}}
       if(n.kind==='backdrop'){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
-      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>addKarst(x,z,r,h,i*7+v));
+      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>addKarst(x,z,r,h,i*7+v,{shape:v}));
     }
     for(const p of d.props){
       if(p.kind==='landmark')buildLandmark(p);
@@ -1008,7 +1029,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const blk=NAV.block=new Uint8Array(NAV.nx*NAV.nz);
     const disc=(x,z,r)=>{const i0=Math.max(0,Math.floor((x-r-NAV.x0)/C)),i1=Math.min(NAV.nx-1,Math.floor((x+r-NAV.x0)/C)),j0=Math.max(0,Math.floor((z-r-NAV.z0)/C)),j1=Math.min(NAV.nz-1,Math.floor((z+r-NAV.z0)/C));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const cx=NAV.x0+(i+.5)*C,cz=NAV.z0+(j+.5)*C;if(Math.hypot(cx-x,cz-z)<r)blk[j*NAV.nx+i]=1}};
-    for(const n of d.nature)if(n.kind==='karst_field')for(const [x,z,r] of n.params.items)disc(x,z,r*1.3+CL);
+    for(const n of d.nature)if(n.kind==='karst_field')for(const [x,z,r,,v] of n.params.items)disc(x,z,r*(v===3?1.9:v===4?1.35:1)*1.25+CL);
     for(const p of d.props)if(p.kind==='landmark'){const q=p.params||{};if(q.radius>0)disc(p.x,p.z,q.radius*(q.shape==='big_island'?1.25:1.4)+CL);if(q.shape==='village')for(let j=0;j<4;j++)disc(p.x+Math.cos(j*1.6+.8)*140,p.z+Math.sin(j*1.6+.8)*140,(28+j*6)*1.3+CL)}
     const inPoly=(x,z,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const [x1,z1]=P[i],[x2,z2]=P[j];if((z1>z)!==(z2>z)&&x<(x2-x1)*(z-z1)/(z2-z1)+x1)c=!c}return c};
     const segD=(px,pz,ax,az,bx,bz)=>{const vx=bx-ax,vz=bz-az,L=vx*vx+vz*vz||1,t=Math.max(0,Math.min(1,((px-ax)*vx+(pz-az)*vz)/L));return Math.hypot(ax+vx*t-px,az+vz*t-pz)};
