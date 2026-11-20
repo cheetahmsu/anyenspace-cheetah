@@ -170,6 +170,13 @@ def main():
             karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), shape])
             made += 1
 
+    # Chỉ giữ khoảng 1/3 số đảo: ưu tiên đảo lớn (bề ngang × chiều cao), danh thắng biểu tượng dựng riêng nên luôn còn.
+    KEEP_RATIO = 1 / 3
+    vol = lambda k: k[2] * (1.9 if k[4] == 3 else 1) * k[3]
+    keep = sorted(karsts, key=vol, reverse=True)[:max(1, round(len(karsts) * KEEP_RATIO))]
+    keep_ids = {id(k) for k in keep}
+    karsts = [k for k in karsts if id(k) in keep_ids]
+
     # Điểm tàu ghé (trong luồng, cách danh thắng một khoảng an toàn)
     for l in landmark_rows:
         best = None
