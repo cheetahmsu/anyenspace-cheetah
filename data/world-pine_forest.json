@@ -5,11 +5,11 @@
     "sky_color": "#173c35", "fog_color": "#264b42", "fog_density": 0.016, "ground_color": "#234c3e",
     "hemi_sky": "#f6dfaf", "hemi_ground": "#1b4234", "hemi_intensity": 2.1,
     "sun_color": "#f5c78c", "sun_intensity": 2.4, "sun_position": [-8, 19, -8],
-    "ambience": "pine_forest", "spawn": {"x": 0, "z": 24}, "bounds": {"x": 64, "z_min": -116, "z_max": 36}, "sense_pond_radius": 5.5
+    "ambience": "pine_forest", "spawn": {"x": 0, "z": 24}, "bounds": {"x": 72, "z_min": -124, "z_max": 36}, "sense_pond_radius": 5.5
   },
   "nature": [
     {"id": "pine_forest.pines", "kind": "pine_forest", "sort_order": 1,
-     "params": {"seed": 1121, "inner": 440, "outer": 440, "inner_gap": 3.1, "outer_gap": 2.3, "flower_patches": 150, "daquy": 70, "rocks": 70}}
+     "params": {"seed": 1121, "inner": 500, "outer": 460, "inner_gap": 3.1, "outer_gap": 2.3, "flower_patches": 150, "daquy": 70, "rocks": 70}}
   ],
   "rooms": [
     {"id": "sanh_chung", "name": "Sảnh chung", "topic": "anyen:room:lobby", "capacity": null, "kind": "public", "palette_color": "#092d27"},
@@ -20,11 +20,11 @@
   "buildings": [
     {"id": "tuong_dai", "name": "Thiền viện tượng đài", "kind": "sanctuary", "x": 0, "z": -62, "exterior": {"terrace_radius": 8.2, "terrace_top": 0.3, "hill": {"top": 8, "flat_radius": 11, "foot_radius": 26}, "stairs": [[0, -36.6], [5, -41.4], [-5, -46.4], [0, -51.4]]}, "room_id": null},
     {"id": "cau_ho_niem", "name": "Cầu vòm Hồ Niệm", "kind": "bridge", "x": 0, "z": -4, "exterior": {"arch_z": [-10.5, 2.5], "rise": 2.6}, "room_id": null},
-    {"id": "nha_hoa_lan", "name": "Nhà hoa lan", "kind": "portal", "x": -37.9, "z": -27.9, "exterior": {"w": 11, "d": 11, "rotation": 2.3, "beside": "ho_sac", "gap_to_pond": 2}, "room_id": null, "portal": {"provider": "viverse", "url": "https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=", "title": "ORCHID hoa lan | Dong Lan | Redmoon"}},
-    {"id": "chuong_gio", "name": "Nhà chuông gió", "kind": "sense_house", "x": 37.9, "z": -27.9, "exterior": {"w": 11, "d": 11, "rotation": -2.3, "beside": "ho_thanh", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
-    {"id": "xong_huong", "name": "Nhà xông hương", "kind": "sense_house", "x": -50.9, "z": -66.4, "exterior": {"w": 11, "d": 11, "rotation": 1.48, "beside": "ho_huong", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
-    {"id": "quan_tra", "name": "Quán trà", "kind": "sense_house", "x": 50.9, "z": -66.4, "exterior": {"w": 11, "d": 11, "rotation": -1.48, "beside": "ho_vi", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
-    {"id": "xuong_gom", "name": "Xưởng gốm", "kind": "sense_house", "x": -31.4, "z": -102.1, "exterior": {"w": 11, "d": 11, "rotation": 0.66, "beside": "ho_cham", "gap_to_pond": 2}, "room_id": null, "interior": "planned"}
+    {"id": "nha_hoa_lan", "name": "Nhà hoa lan", "kind": "portal", "x": -43.1, "z": -23.2, "exterior": {"w": 11, "d": 11, "rotation": 2.3, "beside": "ho_sac", "gap_to_pond": 9}, "room_id": null, "portal": {"provider": "viverse", "url": "https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=", "title": "ORCHID hoa lan | Dong Lan | Redmoon"}},
+    {"id": "chuong_gio", "name": "Nhà chuông gió", "kind": "sense_house", "x": 43.1, "z": -23.2, "exterior": {"w": 11, "d": 11, "rotation": -2.3, "beside": "ho_thanh", "gap_to_pond": 9}, "room_id": null, "interior": "planned"},
+    {"id": "xong_huong", "name": "Nhà xông hương", "kind": "sense_house", "x": -57.8, "z": -67.0, "exterior": {"w": 11, "d": 11, "rotation": 1.48, "beside": "ho_huong", "gap_to_pond": 9}, "room_id": null, "interior": "planned"},
+    {"id": "quan_tra", "name": "Quán trà", "kind": "sense_house", "x": 57.8, "z": -67.0, "exterior": {"w": 11, "d": 11, "rotation": -1.48, "beside": "ho_vi", "gap_to_pond": 9}, "room_id": null, "interior": "planned"},
+    {"id": "xuong_gom", "name": "Xưởng gốm", "kind": "sense_house", "x": -35.7, "z": -107.7, "exterior": {"w": 11, "d": 11, "rotation": 0.66, "beside": "ho_cham", "gap_to_pond": 9}, "room_id": null, "interior": "planned"}
   ],
   "props": [
     {"id": "ho_sac", "kind": "wish_lake", "name": "Sắc", "x": -28.2, "z": -36.6, "params": {"color": "#547d81", "theme": "thịnh vượng", "sense": "SẮC"}, "activity": "ném xu nhận lời nhắn"},
