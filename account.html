@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tài khoản · Làng Yên</title>
+<meta name="theme-color" content="#04201b">
+<style>
+:root{--bg:#04201b;--surf:#0a302a;--line:rgba(200,169,106,.28);--ivory:#f4e7c6;--ivory2:#f8ebc9;--mut:#b9c7bd;--mut2:#9fb0a6;--gold:#d8b575;--cta:linear-gradient(135deg,#e0c183,#b8935a);--ink:#1a2a22;--serif:Georgia,"Times New Roman",serif;--err:#f0a8a0;--ok:#a9dcb8}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 70% -10%,#124236 0%,#062a23 40%,#04201b 100%);background-color:#04201b;color:var(--ivory);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+a{color:inherit}button,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:0 20px 56px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--mut);text-decoration:none;font-size:14px}
+.eyebrow{font-size:12px;letter-spacing:3.5px;color:var(--gold);text-transform:uppercase}
+h1,h2{font-family:var(--serif);font-weight:400;color:var(--ivory2);margin:0}
+h1{font-size:clamp(30px,8vw,38px);line-height:1.15;margin-top:10px}
+.sub{margin:12px 0 0;color:#c9d5cc;font-size:15px}
+.card{border:1px solid var(--line);background:rgba(10,48,42,.75);border-radius:22px;padding:22px;margin-top:20px}
+.tabs{display:flex;gap:6px;padding:5px;border-radius:999px;border:1px solid var(--line);background:rgba(10,48,42,.6);margin-top:22px}
+.tabs button{flex:1;min-height:44px;border:0;border-radius:999px;background:transparent;color:var(--mut);cursor:pointer;font-size:15px}
+.tabs button.on{background:var(--cta);color:var(--ink);font-weight:700}
+label.f{display:block;margin-top:16px;font-size:13px;color:var(--mut)}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;min-height:50px;margin-top:6px;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(4,32,27,.8);font-size:16px}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:22px;border:0;border-radius:999px;background:var(--cta);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ivory);border:1px solid rgba(216,181,117,.6);font-weight:500;margin-top:12px}
+.link{background:none;border:0;padding:0;min-height:44px;color:var(--gold);cursor:pointer;text-decoration:underline;font-size:14px}
+.kinds{display:flex;gap:10px;margin-top:6px}
+.kind{flex:1;min-width:0;cursor:pointer}
+.kind input{position:absolute;opacity:0}
+.kind span{display:block;height:100%;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(4,32,27,.6)}
+.kind b{display:block;font-size:15px}.kind small{display:block;margin-top:4px;color:var(--mut2);font-size:12.5px;line-height:1.4}
+.kind input:checked+span{border-color:rgba(216,181,117,.9);background:linear-gradient(160deg,#17493d,#0a2d25)}
+.kind input:focus-visible+span{outline:2px solid var(--gold)}
+.chk{display:flex;gap:12px;align-items:flex-start;margin-top:18px;font-size:13.5px;color:#d7e0d9;cursor:pointer}
+.chk input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:#d8b575}
+.msg{margin-top:16px;padding:12px 14px;border-radius:14px;font-size:14px;display:none}
+.msg.err{display:block;background:rgba(240,168,160,.12);border:1px solid rgba(240,168,160,.4);color:var(--err)}
+.msg.ok{display:block;background:rgba(169,220,184,.12);border:1px solid rgba(169,220,184,.4);color:var(--ok)}
+.code{letter-spacing:10px;text-align:center;font-size:26px}
+.view{display:none}.view.on{display:block}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;letter-spacing:1.5px;background:rgba(216,181,117,.18);color:#e6c88e}
+.note{margin-top:14px;font-size:12.5px;color:var(--mut2)}
+ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="back" href="index.html">← LÀNG YÊN</a><span class="eyebrow" style="font-size:11px">Tài khoản</span></header>
+
+<!-- Chưa đăng nhập -->
+<div class="view on" id="v-auth">
+<h1>Vào Làng Yên</h1>
+<p class="sub">Khách vào nhanh. Thành viên có nhật ký riêng. Nhà trị liệu đồng hành 1:1 khi bạn đồng ý.</p>
+<div class="tabs" role="tablist"><button class="on" data-tab="login" role="tab">Đăng nhập</button><button data-tab="signup" role="tab">Đăng ký</button><button data-tab="guest" role="tab">Khách</button></div>
+
+<form class="card" id="f-login" novalidate>
+<label class="f">Email<input type="email" id="lEmail" autocomplete="email" required></label>
+<label class="f">Mật khẩu<input type="password" id="lPass" autocomplete="current-password" required></label>
+<div class="msg" id="lMsg" role="alert"></div>
+<button class="btn" type="submit" id="lBtn">Đăng nhập</button>
+<div style="text-align:center;margin-top:10px"><button class="link" type="button" id="toForgot">Quên mật khẩu?</button></div>
+</form>
+
+<form class="card" id="f-signup" novalidate hidden>
+<div style="font-size:13px;color:var(--mut)">Bạn đăng ký với tư cách</div>
+<div class="kinds">
+<label class="kind"><input type="radio" name="kind" value="member" checked><span><b>Thành viên</b><small>Nhật ký riêng, cá nhân hoá các hoạt động trong làng</small></span></label>
+<label class="kind"><input type="radio" name="kind" value="therapist"><span><b>Nhà trị liệu</b><small>Đồng hành 1:1 với khách và thành viên khi họ đồng ý</small></span></label>
+</div>
+<label class="f">Tên hiển thị<input type="text" id="sName" maxlength="40" autocomplete="nickname" required></label>
+<label class="f">Email<input type="email" id="sEmail" autocomplete="email" required></label>
+<label class="f">Mật khẩu (từ 8 ký tự)<input type="password" id="sPass" autocomplete="new-password" minlength="8" required></label>
+<label class="chk"><input type="checkbox" id="sAgree"><span>Tôi hiểu Làng Yên là không gian wellness, không phải y khoa, và đồng ý dùng email để nhận mã xác thực.</span></label>
+<div class="msg" id="sMsg" role="alert"></div>
+<button class="btn" type="submit" id="sBtn">Tạo tài khoản</button>
+</form>
+
+<div class="card" id="f-guest" hidden>
+<h2 style="font-size:24px">Vào với tư cách khách</h2>
+<p class="sub">Không cần email. Bạn có mặt trong làng, chọn tên và dáng vẻ, và có thể nhận lời mời trò chuyện 1:1 từ nhà trị liệu nếu bạn muốn. Nhật ký sẽ lưu trên thiết bị này.</p>
+<a class="btn" href="index.html">Vào làng ngay</a>
+</div>
+</div>
+
+<!-- Nhập mã xác thực -->
+<div class="view" id="v-verify">
+<h1>Nhập mã xác thực</h1>
+<p class="sub" id="vInfo"></p>
+<form class="card" id="f-verify" novalidate>
+<label class="f">Mã 6 chữ số<input type="text" class="code" id="vCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required></label>
+<div class="msg" id="vMsg" role="alert"></div>
+<button class="btn" type="submit" id="vBtn">Xác nhận</button>
+<div style="display:flex;justify-content:space-between;margin-top:8px"><button class="link" type="button" id="vResend">Gửi lại mã</button><button class="link" type="button" id="vBack">Quay lại</button></div>
+</form>
+<p class="note">Không thấy thư? Kiểm tra mục Spam. Mã có hiệu lực trong thời gian ngắn.</p>
+</div>
+
+<!-- Quên mật khẩu -->
+<div class="view" id="v-forgot">
+<h1>Quên mật khẩu</h1>
+<p class="sub">Nhập email đã đăng ký. Chúng tôi gửi mã để bạn đặt mật khẩu mới. Vì lý do an toàn, mật khẩu cũ không bao giờ được gửi qua email.</p>
+<form class="card" id="f-forgot" novalidate>
+<label class="f">Email<input type="email" id="fEmail" autocomplete="email" required></label>
+<div class="msg" id="fMsg" role="alert"></div>
+<button class="btn" type="submit" id="fBtn">Gửi mã</button>
+<button class="btn ghost" type="button" id="fBack">Quay lại đăng nhập</button>
+</form>
+</div>
+
+<!-- Đặt mật khẩu mới -->
+<div class="view" id="v-reset">
+<h1>Đặt mật khẩu mới</h1>
+<form class="card" id="f-reset" novalidate>
+<div id="rCodeRow"><label class="f">Mã 6 chữ số<input type="text" class="code" id="rCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label></div>
+<label class="f">Mật khẩu mới (từ 8 ký tự)<input type="password" id="rPass" autocomplete="new-password" minlength="8" required></label>
+<div class="msg" id="rMsg" role="alert"></div>
+<button class="btn" type="submit" id="rBtn">Lưu mật khẩu</button>
+</form>
+</div>
+
+<!-- Hồ sơ -->
+<div class="view" id="v-profile">
+<span class="badge" id="pBadge"></span>
+<h1 id="pTitle"></h1>
+<p class="sub" id="pEmail"></p>
+
+<form class="card" id="f-profile" novalidate>
+<label class="f">Tên hiển thị<input type="text" id="pName" maxlength="40" required></label>
+<div id="pTherapist" hidden>
+<label class="f">Chuyên môn<input type="text" id="pSpec" maxlength="200" placeholder="Ví dụ: thiền, hơi thở, giảm căng thẳng"></label>
+<label class="f">Giới thiệu cơ bản<textarea id="pBio" maxlength="1200" placeholder="Đoạn này sẽ được gửi tới khách khi bạn bắt đầu trò chuyện (tính năng đang làm)."></textarea></label>
+</div>
+<div class="msg" id="pMsg" role="alert"></div>
+<button class="btn" type="submit" id="pBtn">Lưu hồ sơ</button>
+</form>
+
+<div class="card" id="pSoon">
+<h2 style="font-size:20px" id="pSoonTitle"></h2>
+<ul class="soon" id="pSoonList"></ul>
+</div>
+
+<form class="card" id="f-pass" novalidate>
+<h2 style="font-size:20px">Đổi mật khẩu</h2>
+<label class="f">Mật khẩu mới (từ 8 ký tự)<input type="password" id="cPass" autocomplete="new-password" minlength="8"></label>
+<div class="msg" id="cMsg" role="alert"></div>
+<button class="btn ghost" type="submit">Đổi mật khẩu</button>
+</form>
+
+<a class="btn" href="index.html">Về Làng Yên</a>
+<button class="btn ghost" id="logout" type="button">Đăng xuất</button>
+</div>
+
+<div class="view" id="v-guestin">
+<span class="badge">KHÁCH</span>
+<h1>Bạn đang là khách</h1>
+<p class="sub">Bạn có thể vào làng ngay. Muốn có nhật ký riêng và cá nhân hoá, hãy đăng ký làm thành viên.</p>
+<a class="btn" href="index.html">Vào làng</a>
+<button class="btn ghost" id="guestToSignup" type="button">Đăng ký thành viên hoặc nhà trị liệu</button>
+</div>
+
+<div class="view" id="v-nocfg"><h1>Chưa kết nối được</h1><p class="sub">Thiếu cấu hình Supabase hoặc thư viện chưa tải. Tải lại trang, hoặc quay về Làng Yên.</p><a class="btn" href="index.html">Về Làng Yên</a></div>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+var cfg=window.ANYEN_CONFIG||{};
+var client=null,pending={email:'',kind:'signup'},cooldown=0,cdTimer=null,recovering=false;
+
+function show(id){$$('.view').forEach(function(v){v.classList.toggle('on',v.id==='v-'+id)});window.scrollTo(0,0)}
+function msg(id,type,text){var el=$(id);el.className='msg'+(type?' '+type:'');el.textContent=text||''}
+function busy(btn,on,label){btn.disabled=on;if(label)btn.textContent=label}
+var ERR={
+ 'Invalid login credentials':'Email hoặc mật khẩu chưa đúng.',
+ 'Email not confirmed':'Email chưa được xác thực. Hãy nhập mã đã gửi tới email của bạn.',
+ 'User already registered':'Email này đã đăng ký. Hãy đăng nhập.',
+ 'Token has expired or is invalid':'Mã không đúng hoặc đã hết hạn. Hãy gửi lại mã.',
+ 'New password should be different from the old password.':'Mật khẩu mới phải khác mật khẩu cũ.'
+};
+function vi(e){var m=(e&&e.message)||String(e||'');var c=e&&(e.code||'');
+ if(ERR[m])return ERR[m];
+ if(c==='over_email_send_rate_limit'||/rate limit/i.test(m))return 'Gửi email quá nhanh. Hãy đợi vài phút rồi thử lại.';
+ if(c==='weak_password'||/password/i.test(m)&&/(least|weak|short)/i.test(m))return 'Mật khẩu quá yếu. Dùng ít nhất 8 ký tự.';
+ if(/network|fetch/i.test(m))return 'Không kết nối được mạng. Hãy thử lại.';
+ return 'Có lỗi: '+m}
+function okEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)}
+
+/* ---- Tab ---- */
+function tab(t){$$('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t)});
+ $('#f-login').hidden=t!=='login';$('#f-signup').hidden=t!=='signup';$('#f-guest').hidden=t!=='guest'}
+$$('.tabs button').forEach(function(b){b.onclick=function(){tab(b.dataset.tab)}});
+$('#guestToSignup').onclick=function(){show('auth');tab('signup')};
+
+/* ---- Đăng ký ---- */
+$('#f-signup').addEventListener('submit',async function(e){e.preventDefault();
+ var kind=$('input[name=kind]:checked').value,name=$('#sName').value.trim(),email=$('#sEmail').value.trim().toLowerCase(),pass=$('#sPass').value;
+ if(!name)return msg('#sMsg','err','Hãy nhập tên hiển thị.');
+ if(!okEmail(email))return msg('#sMsg','err','Email chưa hợp lệ.');
+ if(pass.length<8)return msg('#sMsg','err','Mật khẩu cần ít nhất 8 ký tự.');
+ if(!$('#sAgree').checked)return msg('#sMsg','err','Hãy tick đồng ý để tiếp tục.');
+ msg('#sMsg');busy($('#sBtn'),true,'Đang tạo...');
+ try{
+  var r=await client.auth.signUp({email:email,password:pass,options:{data:{account_type:kind,display_name:name},emailRedirectTo:location.origin+location.pathname.replace(/[^/]*$/,'')+'account.html'}});
+  if(r.error)throw r.error;
+  if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){msg('#sMsg','err','Email này đã đăng ký. Hãy đăng nhập hoặc dùng "Quên mật khẩu".');return}
+  if(r.data.session){await loadProfile();return}
+  pending={email:email,kind:'signup'};openVerify('Chúng tôi đã gửi mã 6 chữ số tới '+email+'. Nhập mã để hoàn tất đăng ký.');
+ }catch(err){msg('#sMsg','err',vi(err))}finally{busy($('#sBtn'),false,'Tạo tài khoản')}
+});
+
+/* ---- Xác thực mã ---- */
+function openVerify(info){$('#vInfo').textContent=info;$('#vCode').value='';msg('#vMsg');show('verify');startCooldown(60);$('#vCode').focus()}
+function startCooldown(s){cooldown=s;clearInterval(cdTimer);var b=$('#vResend');var t=function(){if(cooldown>0){b.disabled=true;b.textContent='Gửi lại mã ('+cooldown+'s)';cooldown--}else{clearInterval(cdTimer);b.disabled=false;b.textContent='Gửi lại mã'}};t();cdTimer=setInterval(t,1000)}
+$('#f-verify').addEventListener('submit',async function(e){e.preventDefault();
+ var code=$('#vCode').value.replace(/\s/g,'');if(code.length<6)return msg('#vMsg','err','Hãy nhập đủ 6 chữ số.');
+ msg('#vMsg');busy($('#vBtn'),true,'Đang xác nhận...');
+ try{var r=await client.auth.verifyOtp({email:pending.email,token:code,type:pending.kind==='signup'?'signup':'email'});if(r.error)throw r.error;await loadProfile()}
+ catch(err){msg('#vMsg','err',vi(err))}finally{busy($('#vBtn'),false,'Xác nhận')}
+});
+$('#vResend').onclick=async function(){
+ msg('#vMsg');
+ try{var r=await client.auth.resend({type:'signup',email:pending.email});if(r.error)throw r.error;msg('#vMsg','ok','Đã gửi lại mã.');startCooldown(60)}catch(err){msg('#vMsg','err',vi(err))}
+};
+$('#vBack').onclick=function(){show('auth')};
+
+/* ---- Đăng nhập ---- */
+$('#f-login').addEventListener('submit',async function(e){e.preventDefault();
+ var email=$('#lEmail').value.trim().toLowerCase(),pass=$('#lPass').value;
+ if(!okEmail(email)||!pass)return msg('#lMsg','err','Hãy nhập email và mật khẩu.');
+ msg('#lMsg');busy($('#lBtn'),true,'Đang đăng nhập...');
+ try{var r=await client.auth.signInWithPassword({email:email,password:pass});
+  if(r.error){if(r.error.message==='Email not confirmed'||r.error.code==='email_not_confirmed'){pending={email:email,kind:'signup'};try{await client.auth.resend({type:'signup',email:email})}catch(_){}openVerify('Email này chưa được xác thực. Chúng tôi vừa gửi mã tới '+email+'.');return}throw r.error}
+  await loadProfile();
+ }catch(err){msg('#lMsg','err',vi(err))}finally{busy($('#lBtn'),false,'Đăng nhập')}
+});
+
+/* ---- Quên mật khẩu ---- */
+$('#toForgot').onclick=function(){$('#fEmail').value=$('#lEmail').value;msg('#fMsg');show('forgot')};
+$('#fBack').onclick=function(){show('auth');tab('login')};
+$('#f-forgot').addEventListener('submit',async function(e){e.preventDefault();
+ var email=$('#fEmail').value.trim().toLowerCase();if(!okEmail(email))return msg('#fMsg','err','Email chưa hợp lệ.');
+ msg('#fMsg');busy($('#fBtn'),true,'Đang gửi...');
+ try{var r=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(r.error)throw r.error;
+  pending={email:email,kind:'recovery'};recovering=false;$('#rCodeRow').hidden=false;$('#rCode').value='';$('#rPass').value='';msg('#rMsg','ok','Nếu email đã đăng ký, mã đã được gửi tới '+email+'.');show('reset')}
+ catch(err){msg('#fMsg','err',vi(err))}finally{busy($('#fBtn'),false,'Gửi mã')}
+});
+$('#f-reset').addEventListener('submit',async function(e){e.preventDefault();
+ var pass=$('#rPass').value;if(pass.length<8)return msg('#rMsg','err','Mật khẩu cần ít nhất 8 ký tự.');
+ msg('#rMsg');busy($('#rBtn'),true,'Đang lưu...');
+ try{
+  if(!recovering){var code=$('#rCode').value.replace(/\s/g,'');if(code.length<6)throw {message:'Hãy nhập đủ 6 chữ số.'};var v=await client.auth.verifyOtp({email:pending.email,token:code,type:'recovery'});if(v.error)throw v.error}
+  var u=await client.auth.updateUser({password:pass});if(u.error)throw u.error;recovering=false;await loadProfile();
+ }catch(err){msg('#rMsg','err',vi(err))}finally{busy($('#rBtn'),false,'Lưu mật khẩu')}
+});
+
+/* ---- Hồ sơ ---- */
+var profile=null;
+async function loadProfile(){
+ var s=await client.auth.getSession();var session=s.data&&s.data.session;
+ if(!session){show('auth');return}
+ var r=await client.rpc('anyen_get_my_profile');if(r.error){show('auth');return}
+ profile=r.data;
+ if(!profile||profile.role==='guest'){show('guestin');return}
+ var th=profile.role==='therapist';
+ $('#pBadge').textContent=th?'NHÀ TRỊ LIỆU':'THÀNH VIÊN';
+ $('#pTitle').textContent=profile.display_name||'Bạn';
+ $('#pEmail').textContent=profile.email||'';
+ $('#pName').value=profile.display_name||'';
+ $('#pTherapist').hidden=!th;$('#pSpec').value=profile.specialty||'';$('#pBio').value=profile.bio||'';
+ $('#pSoonTitle').textContent=th?'Sắp có cho nhà trị liệu':'Sắp có cho thành viên';
+ var items=th?['Giới thiệu cơ bản tự gửi tới khách khi bắt đầu trò chuyện','Trò chuyện 1:1, mỗi lúc chỉ với một người','Mời vào không gian kiến trúc, chỉ khi người kia đồng ý']:['Nhật ký riêng lưu theo tài khoản','Cá nhân hoá trang phục, không gian xuất phát, nhịp thở, âm thanh'];
+ var ul=$('#pSoonList');ul.textContent='';items.forEach(function(t){var li=document.createElement('li');li.textContent=t;ul.appendChild(li)});
+ msg('#pMsg');show('profile');
+}
+$('#f-profile').addEventListener('submit',async function(e){e.preventDefault();
+ var name=$('#pName').value.trim();if(!name)return msg('#pMsg','err','Tên hiển thị không được trống.');
+ msg('#pMsg');busy($('#pBtn'),true,'Đang lưu...');
+ try{var r=await client.rpc('anyen_update_my_profile',{p_display_name:name,p_bio:$('#pBio').value,p_specialty:$('#pSpec').value,p_prefs:null});if(r.error)throw r.error;profile=r.data;$('#pTitle').textContent=profile.display_name;msg('#pMsg','ok','Đã lưu.')}
+ catch(err){msg('#pMsg','err',vi(err))}finally{busy($('#pBtn'),false,'Lưu hồ sơ')}
+});
+$('#f-pass').addEventListener('submit',async function(e){e.preventDefault();
+ var p=$('#cPass').value;if(p.length<8)return msg('#cMsg','err','Mật khẩu cần ít nhất 8 ký tự.');
+ try{var r=await client.auth.updateUser({password:p});if(r.error)throw r.error;$('#cPass').value='';msg('#cMsg','ok','Đã đổi mật khẩu.')}catch(err){msg('#cMsg','err',vi(err))}
+});
+$('#logout').onclick=async function(){try{await client.auth.signOut()}catch(_){}profile=null;show('auth');tab('login')};
+
+/* ---- Khởi động ---- */
+(async function(){
+ var create=window.supabase&&window.supabase.createClient;
+ if(!cfg.supabaseUrl||!cfg.publishableKey||!create){show('nocfg');return}
+ client=create(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ client.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY'){recovering=true;$('#rCodeRow').hidden=true;msg('#rMsg');show('reset')}});
+ if(/type=recovery/.test(location.hash+location.search)){recovering=true;$('#rCodeRow').hidden=true;show('reset');return}
+ try{await loadProfile()}catch(e){show('auth')}
+ var h=location.hash.replace('#','');if(h==='signup')tab('signup');
+})();
+window.__acct={tab:tab};
+})();
+</script>
+</body>
+</html>
