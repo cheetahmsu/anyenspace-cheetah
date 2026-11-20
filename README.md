@@ -17,7 +17,8 @@
 
 ## Vịnh Hạ Long · Du thuyền Yên (beta)
 - Bấm **Khám phá Vịnh Yên**: bạn đứng ở mũi một du thuyền 5 sao, xuất phát từ cảng Tuần Châu.
-- **Hàng trên (tàu):** chip trạng thái tàu — ⚓ đang neo · ⛵ đang đi tới (còn bao xa) · 🧭 dạo vịnh điểm 2/5 · 📍 dừng ngắm (đi tiếp sau … giây) · 📍 đang ở danh thắng; nút ⏹ dừng hiện khi tàu đang chạy. Tiếp theo là các tùy chọn: 🧭 Hành trình · Thong thả/Nhanh · Tiếng sóng · Về Rừng Yên.
+- **Hàng trên (tàu):** chip trạng thái tàu — ⚓ đang neo · ⛵ đang đi tới (còn bao xa) · 🧭 dạo vịnh điểm 2/5 · 📍 dừng ngắm (đi tiếp sau … giây) · 📍 đang ở danh thắng; nút ⏹ dừng hiện khi tàu đang chạy. Tiếp theo là các tùy chọn: 🧭 Hành trình · Thong thả/Nhanh · Tiếng sóng.
+- **Các thiên nhiên không đi thẳng sang nhau:** từ vịnh bấm **✕ Về Làng Yên** để ra trang chính, rồi mới chọn Khám phá Rừng Yên hoặc Khám phá Vịnh Yên (và ngược lại).
 - **🧭 Hành trình** (hoặc chạm chip trạng thái): một bảng ba thẻ — **Lịch trình** (3 tuyến dạo vịnh, tàu tự đi và dừng ngắm), **Chọn đảo** (mỗi nơi có “✨ Đến ngay” để dịch chuyển tức thì và “⛵ Đi tới” để tàu tự chạy), **Bản đồ** (chạm mặt nước để đi tới, bấm tên danh thắng để đến ngay).
 - **Chạm mặt nước** trong cảnh để tàu tự tìm đường vòng qua các đảo và đi tới. **Vuốt trái/phải** chỉ xoay góc nhìn, không đổi hướng tàu.
 - **Hàng dưới (người):** thanh Toạ thiền · Thỉnh chuông · Nghi thức · Tương tác · Menu (sẽ thiết kế lại cho vịnh).
