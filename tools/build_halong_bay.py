@@ -38,7 +38,7 @@ LANDMARKS = [
      "Khu Ba Hang, phía nam Trống Mái", "Những nhà bè nổi bình yên giữa vòng đá"),
     ("dao_ti_top", "Đảo Ti Tốp", 20.8589, 107.0809, "titop", 58, 28, "source",
      "Waymarking: N 20°51.528 E 107°04.858; khớp Wikipedia tiếng Pháp 20°51′32″N 107°04′49″E", "Bãi cát hình trăng lưỡi liềm, đỉnh ngắm toàn cảnh"),
-    ("hang_sung_sot", "Hang Sửng Sốt · đảo Bồ Hòn", 20.8556, 107.0905, "big_island", 150, 70, "approx",
+    ("hang_sung_sot", "Hang Sửng Sốt · đảo Bồ Hòn", 20.8556, 107.0905, "big_island", 85, 70, "approx",
      "Trên đảo Bồ Hòn, đối diện Ti Tốp", "Hang lớn và đẹp bậc nhất vịnh Hạ Long"),
     ("hang_luon", "Hang Luồn", 20.8478, 107.0985, "arch", 40, 34, "approx",
      "Phía đông nam đảo Bồ Hòn", "Vòm đá dẫn vào hồ nước lặng giữa núi"),
@@ -192,6 +192,10 @@ def main():
         l["approach"] = [round(px, 1), round(pz, 1)]
     port = next(l for l in landmark_rows if l["id"] == "cang_tuan_chau")
     port["approach"] = [port["x"] + 40, port["z"] + 60]
+    # Bến hang Sửng Sốt nằm ở phía đảo Bồ Hòn nhìn sang Ti Tốp (tàu ghé ở vùng nước giữa hai đảo)
+    ss = next(l for l in landmark_rows if l["id"] == "hang_sung_sot"); tt = next(l for l in landmark_rows if l["id"] == "dao_ti_top")
+    ang = math.atan2(tt["approach"][1] - ss["z"], tt["approach"][0] - ss["x"]) + 0.8; dd = ss["radius"] * 1.25 + 26 + 30
+    ss["approach"] = [round(ss["x"] + math.cos(ang) * dd, 1), round(ss["z"] + math.sin(ang) * dd, 1)]
     bridge = next(l for l in landmark_rows if l["id"] == "cau_bai_chay")
     bridge["approach"] = [bridge["x"] - 20, bridge["z"] + 190]
 
@@ -239,7 +243,28 @@ def main():
                 "dawn_dusk": {"status": "draft", "label": "Bình minh / Hoàng hôn"},
                 "night": {"status": "draft", "label": "Buổi tối", "lights": ["den_du_thuyen"]}
             },
-            "active_time_slot": "morning"
+            "active_time_slot": "morning",
+            # Trang phục riêng của vịnh (rừng thông giữ trang phục cũ). group "sea" = đi biển, "zen" = trang phục thiền như ở Rừng Yên.
+            "outfits": {
+                "styles": [
+                    {"id": "sea_linen", "group": "sea", "label": "Sơ mi linen · quần lửng"},
+                    {"id": "sea_dress", "group": "sea", "label": "Đầm, áo dài nhẹ đi biển"},
+                    {"id": "sea_tee", "group": "sea", "label": "Áo thun · quần short"},
+                    {"id": "sea_wind", "group": "sea", "label": "Áo khoác gió · sáng sớm"},
+                    {"id": "robe", "group": "zen", "label": "Thiền phục truyền thống"},
+                    {"id": "linen", "group": "zen", "label": "Trang phục linen tối giản"},
+                    {"id": "casual", "group": "zen", "label": "Trang phục thường ngày"}
+                ],
+                "accessories": [
+                    {"id": "none", "label": "Không"}, {"id": "non_la", "label": "Nón lá"}, {"id": "mu_coi", "label": "Mũ cói rộng vành"},
+                    {"id": "kinh", "label": "Kính râm"}, {"id": "khan", "label": "Khăn choàng"}
+                ],
+                "colors": {
+                    "sea": [["Trắng", "#f4f1ea"], ["Xanh biển", "#3f7fb0"], ["Màu cát", "#d8c39a"], ["San hô", "#e2876b"], ["Xanh ngọc", "#4fb3a5"]],
+                    "zen": [["Vàng", "#d9b67d"], ["Xanh", "#90b7a5"], ["Kem", "#f0e5d4"], ["Tím", "#b5a1c7"], ["Rêu", "#687b48"], ["Hồng", "#e8a1b4"]]
+                },
+                "default": {"style": "sea_linen", "color": "#f4f1ea", "acc": "non_la"}
+            }
         },
         "nature": [
             {"id": "halong_bay.sea", "kind": "sea", "sort_order": 1, "params": {"wave_scale": 1, "swell": 0.35}},
@@ -269,7 +294,13 @@ def main():
         "buildings": [
             {"id": "du_thuyen_yen", "name": "Du thuyền Yên", "kind": "cruise_ship", "x": port["approach"][0], "z": port["approach"][1],
              "exterior": {"length": 46, "beam": 10, "decks": 3, "hull_color": "#2f8c8a", "body_color": "#f4f2ec", "deck_wood": "#b98a5c",
-                          "glass": "#3f5f6c", "max_speed": 14, "turn_rate": 0.45, "clearance": 26, "bow_spot": [0, 2.62, 18.8]},
+                          "glass": "#3f5f6c", "max_speed": 10, "turn_rate": 0.45, "clearance": 26, "bow_spot": [0, 2.62, 18.8],
+                          "deck_spot": [0, 11.06, -1.4],
+                          "real_speed_kmh": 15, "real_speed_note": "Tốc độ ước tính của tàu du lịch trên vịnh, dùng để tính thời gian ngoài đời",
+                          "views": [{"id": "bow", "label": "Mũi tàu", "note": "Đứng ở mũi tàu, nhìn về phía trước"},
+                                    {"id": "sundeck", "label": "Boong thượng", "note": "Lên tầng cao nhất, ngắm toàn cảnh"},
+                                    {"id": "far", "label": "Ngắm tàu từ xa", "note": "Nhìn cả du thuyền lướt giữa các đảo"},
+                                    {"id": "spin", "label": "Tự xoay 360°", "note": "Góc nhìn chậm rãi xoay quanh"}]},
              "entry": {"label": "Vào du thuyền", "status": "draft", "rooms": ["du_thuyen_sanh", "du_thuyen_tra", "du_thuyen_sundeck", "du_thuyen_cabin"]},
              "room_id": "du_thuyen_mui"},
         ],
