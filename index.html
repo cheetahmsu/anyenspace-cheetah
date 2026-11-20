@@ -1266,29 +1266,41 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function makeSeaWear(group,head){
     const w={group:new THREE.Group(),m:{}};group.add(w.group);w.group.visible=false;
     const M=(k,c,o={})=>w.m[k]=new THREE.MeshStandardMaterial({color:c,roughness:.8,...o});
-    M('legs','#3d5a80');M('shoe','#2b2b2b',{roughness:.5});M('top','#90b7a5');M('trim','#ffffff');M('shirt','#f4f2ec');M('tie','#3a3f52');M('dress','#e8a1b4',{side:THREE.DoubleSide});M('gown','#b5a1c7',{roughness:.45,metalness:.12,side:THREE.DoubleSide});M('gold','#d9b56a',{roughness:.35,metalness:.5});M('scarf','#f0e5d4');M('straw','#e2cf9c');M('band','#7a5a3c');M('lens','#1f2629',{roughness:.2,metalness:.4});
+    M('legs','#3d5a80');M('shoe','#2b2b2b',{roughness:.5});M('top','#90b7a5');M('trim','#ffffff');M('shirt','#f4f2ec');M('tie','#3a3f52');M('dress','#e8a1b4',{side:THREE.DoubleSide});M('gown','#b5a1c7',{roughness:.32,metalness:.22,side:THREE.DoubleSide});M('gold','#d9b56a',{roughness:.35,metalness:.5});M('scarf','#f0e5d4');M('straw','#e2cf9c');M('band','#7a5a3c');M('lens','#1f2629',{roughness:.2,metalness:.4});
     // quần: hai ống côn từ hông xuống giày
     w.legs=new THREE.Group();for(const sx of [-.14,.14]){const leg=new THREE.Mesh(lathe([[0,.06],[.105,.07],[.13,.45],[.155,.8],[0,.84]],14),w.m.legs);leg.position.x=sx;const shoe=new THREE.Mesh(new THREE.BoxGeometry(.16,.07,.28),w.m.shoe);shoe.position.set(sx,.035,.04);w.legs.add(leg,shoe)}w.group.add(w.legs);
     // áo thun: viền gấu, cổ tròn, tay ngắn
-    w.tee=new THREE.Group();{const hem=new THREE.Mesh(new THREE.TorusGeometry(.345,.035,8,24),w.m.top);hem.rotation.x=Math.PI/2;hem.position.y=.84;const col=new THREE.Mesh(new THREE.TorusGeometry(.17,.03,8,20),w.m.trim);col.rotation.x=Math.PI/2;col.position.y=1.53;w.tee.add(hem,col);
+    w.tee=new THREE.Group();{const col=new THREE.Mesh(new THREE.TorusGeometry(.17,.03,8,20),w.m.trim);col.rotation.x=Math.PI/2;col.position.y=1.53;w.tee.add(col);
       for(const sx of [-1,1]){const sl=new THREE.Mesh(new THREE.CapsuleGeometry(.11,.12,4,10),w.m.top);sl.position.set(sx*.4,1.32,0);sl.rotation.z=sx*.5;w.tee.add(sl)}}w.group.add(w.tee);
     // vest: áo khoác dài qua hông, ve áo chữ V lộ sơ mi trắng và cà vạt, hàng cúc
-    w.suit=new THREE.Group();{const coat=new THREE.Mesh(new THREE.CapsuleGeometry(.37,.5,4,14),w.m.top);coat.position.y=1.12;coat.scale.z=1.03;w.suit.add(coat);
-      const v=new THREE.Shape();v.moveTo(-.13,.24);v.lineTo(.13,.24);v.lineTo(0,-.12);v.closePath();const shirt=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);shirt.position.set(0,1.12,.377);w.suit.add(shirt);
-      const tie=new THREE.Mesh(new THREE.BoxGeometry(.06,.26,.01),w.m.tie);tie.position.set(0,1.18,.383);w.suit.add(tie);
-      for(const sx of [-1,1]){const lap=new THREE.Mesh(new THREE.BoxGeometry(.06,.3,.012),w.m.trim);lap.position.set(sx*.1,1.2,.378);lap.rotation.z=sx*.38;w.suit.add(lap);
-        const sl=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,4,10),w.m.top);sl.position.set(sx*.43,1.08,0);sl.rotation.z=sx*.12;w.suit.add(sl)}
-      for(const y of [1.05,.92]){const b=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),w.m.tie);b.position.set(0,y,.39);w.suit.add(b)}}w.group.add(w.suit);
+    w.suit=new THREE.Group();{const coat=new THREE.Mesh(lathe([[0,.6],[.25,.6],[.265,.72],[.25,.92],[.27,1.12],[.3,1.34],[.31,1.46],[.26,1.56],[.18,1.6],[0,1.6]],28),w.m.top);coat.scale.z=.82;w.suit.add(coat);
+      const collar=new THREE.Mesh(new THREE.CylinderGeometry(.17,.21,.16,20,1,true),w.m.top);collar.position.y=1.63;w.suit.add(collar);
+      const scol=new THREE.Mesh(new THREE.CylinderGeometry(.155,.165,.13,20,1,true),w.m.shirt);scol.position.y=1.66;w.suit.add(scol);
+      for(const sx of [-1,1]){const pt=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.012),w.m.shirt);pt.position.set(sx*.05,1.6,.168);pt.rotation.z=sx*.75;w.suit.add(pt)}
+      const v=new THREE.Shape();v.moveTo(-.11,.24);v.lineTo(.11,.24);v.lineTo(0,-.12);v.closePath();const shirt=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);shirt.position.set(0,1.12,.236);w.suit.add(shirt);
+      const tie=new THREE.Mesh(new THREE.BoxGeometry(.06,.26,.01),w.m.tie);tie.position.set(0,1.18,.242);w.suit.add(tie);
+      for(const sx of [-1,1]){const lap=new THREE.Mesh(new THREE.BoxGeometry(.06,.3,.012),w.m.trim);lap.position.set(sx*.09,1.2,.24);lap.rotation.z=sx*.38;w.suit.add(lap);
+        const sl=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,4,10),w.m.top);sl.position.set(sx*.35,1.12,0);sl.rotation.z=sx*.08;w.suit.add(sl)}
+      for(const y of [.98,.86]){const b=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),w.m.tie);b.position.set(0,y,.215);w.suit.add(b)}}w.group.add(w.suit);
     // đầm maxi: thân áo hai dây, chân váy dài xòe nhẹ có nếp gợn, nơ eo
     w.maxi=new THREE.Group();{const pts=[];for(let k=0;k<=10;k++){const t=k/10;pts.push([.25+t*.12+t*t*.3,.86-t*.82])}pts.push([0,.04]);const skirt=new THREE.Mesh(lathe(pts.reverse().map(([r,y])=>[r,y]),36),w.m.dress);
       const pos=skirt.geometry.attributes.position;for(let q=0;q<pos.count;q++){const x=pos.getX(q),z=pos.getZ(q),y=pos.getY(q),a=Math.atan2(z,x),f=1+.05*Math.sin(a*9)*(1-y/.86);pos.setX(q,x*f);pos.setZ(q,z*f)}skirt.geometry.computeVertexNormals();w.maxi.add(skirt);
       const sash=new THREE.Mesh(new THREE.TorusGeometry(.33,.035,8,24),w.m.scarf);sash.rotation.x=Math.PI/2;sash.position.y=.87;sash.scale.set(.8,.8,1);w.maxi.add(sash);const bow=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),w.m.scarf);bow.scale.set(1.6,1,.6);bow.position.set(.08,.87,.27);w.maxi.add(bow);
       for(const sx of [-1,1]){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.22,6),w.m.dress);st.position.set(sx*.16,1.52,.08);w.maxi.add(st)}}w.group.add(w.maxi);
-    // đầm dạ tiệc: ôm eo hông, thu ở gối, xòe đuôi cá chạm sàn; thắt lưng ánh vàng, cổ thuyền
-    w.gown=new THREE.Group();{const skirt=new THREE.Mesh(lathe([[0,.02],[.6,.02],[.48,.1],[.27,.32],[.24,.46],[.29,.64],[.31,.74],[.26,.9],[0,.9]],40),w.m.gown);w.gown.add(skirt);
-      const belt=new THREE.Mesh(new THREE.TorusGeometry(.27,.026,8,28),w.m.gold);belt.rotation.x=Math.PI/2;belt.position.y=.9;w.gown.add(belt);
-      const neck=new THREE.Mesh(new THREE.TorusGeometry(.28,.045,8,28),w.m.gown);neck.position.set(0,1.5,0);neck.rotation.x=Math.PI/2;neck.scale.set(1,.95,1);w.gown.add(neck);
-      const brooch=new THREE.Mesh(new THREE.OctahedronGeometry(.04),w.m.gold);brooch.position.set(0,.9,.29);w.gown.add(brooch)}w.group.add(w.gown);
+    // đầm dạ tiệc: dáng cột thanh mảnh xòe nhẹ chạm sàn, tà dài kéo phía sau, dải lụa vắt chéo một bên vai,
+    // đai eo đính đá, khăn voan mỏng buông từ vai xuống tà
+    w.gown=new THREE.Group();{
+      w.m.drape=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.3,metalness:.25,side:THREE.DoubleSide});
+      w.m.veil=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.6,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false});
+      const skirt=new THREE.Mesh(lathe([[0,.01],[.44,.01],[.4,.08],[.33,.3],[.29,.55],[.27,.78],[.25,.9],[0,.9]],40),w.m.gown);w.gown.add(skirt);
+      const train=new THREE.Mesh(lathe([[0,.01],[.42,.01],[.36,.07],[.27,.3],[.22,.5],[0,.5]],32),w.m.gown);train.scale.set(.85,1,2.5);train.position.z=-.3;w.gown.add(train);
+      const sash=new THREE.Mesh(new THREE.TorusGeometry(.27,.05,8,30),w.m.drape);sash.position.y=1.22;sash.rotation.set(Math.PI/2,.62,0);sash.scale.set(1,.85,1);w.gown.add(sash);
+      const knot=new THREE.Mesh(new THREE.SphereGeometry(.07,12,10),w.m.drape);knot.scale.set(1,1.3,.7);knot.position.set(-.2,1.46,.08);w.gown.add(knot);
+      const tail=new THREE.Mesh(new THREE.PlaneGeometry(.12,.75),w.m.drape);tail.position.set(-.24,1.08,-.2);tail.rotation.set(.12,.5,.08);w.gown.add(tail);
+      const belt=new THREE.Mesh(new THREE.TorusGeometry(.255,.022,8,30),w.m.gold);belt.rotation.x=Math.PI/2;belt.position.y=.92;w.gown.add(belt);
+      for(let k=-2;k<=2;k++){const a=k*.32,g=new THREE.Mesh(new THREE.OctahedronGeometry(.026),w.m.gold);g.position.set(Math.sin(a)*.26,.92,Math.cos(a)*.24);w.gown.add(g)}
+      const veil=new THREE.Mesh(new THREE.PlaneGeometry(.62,1.62,1,8),w.m.veil);const vp=veil.geometry.attributes.position;for(let q=0;q<vp.count;q++){const y=vp.getY(q),t=(y+.81)/1.62;vp.setX(q,vp.getX(q)*(1.6-t*.8));vp.setZ(q,-(1-t)*(1-t)*.55)}veil.geometry.computeVertexNormals();veil.position.set(0,.8,-.24);w.gown.add(veil);
+    }w.group.add(w.gown);
     // phụ kiện trên đầu
     w.hat=new THREE.Group();{const brim=new THREE.Mesh(new THREE.CylinderGeometry(.48,.5,.02,32),w.m.straw);brim.position.y=.13;const crown=new THREE.Mesh(new THREE.SphereGeometry(.22,20,10,0,Math.PI*2,0,Math.PI/2),w.m.straw);crown.scale.y=.85;crown.position.y=.13;const band=new THREE.Mesh(new THREE.CylinderGeometry(.222,.222,.05,24),w.m.band);band.position.y=.165;w.hat.add(brim,crown,band)}head.add(w.hat);
     w.glasses=new THREE.Group();{for(const sx of [-.085,.085]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.02,16),w.m.lens);l.rotation.x=Math.PI/2;l.position.set(sx,.03,.236);w.glasses.add(l)}const br=new THREE.Mesh(new THREE.BoxGeometry(.06,.012,.015),w.m.lens);br.position.set(0,.04,.24);w.glasses.add(br)}head.add(w.glasses);
@@ -1304,13 +1316,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     w.legs.visible=!!st?.legs;w.tee.visible=st?.legs==='jeans';w.suit.visible=!!st?.jacket;w.maxi.visible=st?.dress==='maxi';w.gown.visible=st?.dress==='gown';
     if(st){parts.robe.visible=false;parts.vest.visible=false;parts.sash.visible=false;
       const legC=st.legs==='jeans'?'#3d5a80':st.legs==='suit'?shade(c,.55):c;
-      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set(st.legs==='suit'?shade(c,.75):'#ffffff');w.m.dress.color.set(c);w.m.gown.color.set(c);
+      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set(st.legs==='suit'?shade(c,.75):'#ffffff');w.m.dress.color.set(c);w.m.gown.color.set(c);if(w.m.drape){w.m.drape.color.set(shade(c,1.18));w.m.veil.color.set(shade(c,1.3))}
       torso.material.color.set(c);
       w.m.scarf.color.set(st.dress==='maxi'?'#fbf6ec':(c==='#f0e5d4'?'#e8a1b4':'#f0e5d4'));
       // ngồi thiền: chân xếp mang màu quần hoặc màu váy; áo vest vẫn mặc
       if(sitting&&parts.legMat)parts.legMat.color.set(legC);
       // đứng: thân áo ngắn lại thành phần trên (eo ~0,8) để lộ quần hoặc chân váy; ngồi: áo vest thành màu thân
-      if(!sitting){torso.scale.y=.62;torso.position.y=1.26;if(st.dress){torso.scale.x=.78;torso.scale.z=.74}}
+      if(!sitting){torso.scale.y=.62;torso.position.y=1.26;if(st.dress){torso.scale.x=.78;torso.scale.z=.74}if(st.jacket){torso.scale.x=.76;torso.scale.z=.68}}
       if(sitting&&st.jacket)torso.material.color.set(c)}
     const acc=active?o.acc:[];w.hat.visible=acc.includes('hat');w.glasses.visible=acc.includes('glasses');w.scarf.visible=acc.includes('scarf');
   }
