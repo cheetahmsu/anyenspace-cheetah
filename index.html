@@ -1309,17 +1309,20 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       g.computeVertexNormals();return g};
     const B=(x,y,z,sx,sy,sz,m,g)=>{const thin=Math.min(sx,sy,sz)<.03;const b=new THREE.Mesh(thin?new THREE.BoxGeometry(sx,sy,sz):rbox(sx,sy,sz),m);b.position.set(x,y,z);g.add(b);return b};
     w.bk={};const mk=()=>{const g=new THREE.Group();w.group.add(g);g.visible=false;return g};
-    // ---- vest ----
+    // ---- vest: dáng chiết eo (ngực rộng, eo thon, vạt xòe nhẹ), vai tròn mềm, ve áo satin, khăn cài túi ngực ----
     {const up=mk(),lg=mk();w.bk.suit={up,lg};
+      M('satin','#000000',{roughness:.35,metalness:.08});M('gloss','#1b1b1b',{roughness:.25,metalness:.15});w.m.top.roughness=.6;
+      const R=(x,y,z,sx,sy,sz,m,g,k)=>{const b=new THREE.Mesh(rbox(sx,sy,sz,k),m);b.position.set(x,y,z);g.add(b);return b};
       B(0,1.585,0,.15,.14,.15,w.m.skin,up);
-      B(0,1.2,0,.6,.66,.32,w.m.top,up);B(0,.9,0,.62,.1,.33,w.m.top,up);
-      const v=new THREE.Shape();v.moveTo(-.11,0);v.lineTo(.11,0);v.lineTo(0,-.3);v.closePath();const sh=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);sh.position.set(0,1.53,.162);up.add(sh);
-      for(const sx of [-1,1]){const l=B(sx*.075,1.39,.163,.07,.3,.008,w.m.lapel,up);l.rotation.z=sx*.36}
-      B(0,1.38,.166,.05,.26,.008,w.m.tie,up);
-      const bt=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),w.m.tie);bt.position.set(0,1.13,.162);up.add(bt);
-      const col=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,6,18),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
-      for(const sx of [-1,1]){B(sx*.37,1.2,0,.15,.6,.18,w.m.top,up);B(sx*.37,.885,0,.13,.035,.16,w.m.shirt,up);B(sx*.37,.82,0,.11,.1,.12,w.m.skin,up);
-        B(sx*.12,.47,0,.21,.78,.23,w.m.pants,lg);B(sx*.12,.04,.04,.21,.08,.3,w.m.shoe,lg)}}
+      const coat=new THREE.Mesh(lathe([[0,.84],[.255,.84],[.275,.88],[.27,.95],[.235,1.06],[.25,1.18],[.29,1.32],[.3,1.42],[.28,1.5],[.2,1.55],[.08,1.57],[0,1.57]],32),w.m.top);coat.scale.z=.56;up.add(coat);
+      const v=new THREE.Shape();v.moveTo(-.1,0);v.lineTo(.1,0);v.lineTo(0,-.3);v.closePath();const sh=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);sh.position.set(0,1.53,.163);up.add(sh);
+      for(const sx of [-1,1]){const l=B(sx*.07,1.4,.164,.075,.3,.012,w.m.satin,up);l.rotation.z=sx*.34}
+      B(0,1.38,.167,.045,.26,.008,w.m.tie,up);
+      for(const y of [1.12,1.02]){const bt=new THREE.Mesh(new THREE.SphereGeometry(.016,10,8),w.m.satin);bt.position.set(0,y,.138);up.add(bt)}
+      const sq=new THREE.Shape();sq.moveTo(-.04,0);sq.lineTo(.04,0);sq.lineTo(.02,.04);sq.lineTo(0,.025);sq.lineTo(-.02,.045);sq.closePath();const pk=new THREE.Mesh(new THREE.ShapeGeometry(sq),w.m.shirt);pk.position.set(.16,1.33,.165);up.add(pk);
+      const col=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,8,20),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
+      for(const sx of [-1,1]){const arm=R(sx*.335,1.17,0,.13,.6,.15,w.m.top,up,.5);arm.rotation.z=sx*.05;B(sx*.345,.865,0,.115,.035,.14,w.m.shirt,up);R(sx*.345,.8,0,.1,.1,.11,w.m.skin,up,.48);
+        R(sx*.11,.47,0,.19,.78,.21,w.m.pants,lg,.45);R(sx*.11,.04,.04,.19,.08,.3,w.m.gloss,lg,.45)}}
     // ---- áo thun · quần jean ----
     {const up=mk(),lg=mk();w.bk.tee={up,lg};
       B(0,1.585,0,.15,.14,.15,w.m.skin,up);
@@ -1357,7 +1360,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     torso.visible=!st?.block;if(w.head){const k=st?.block?1.14:1;w.head.scale.setScalar(k)}
     if(st){parts.robe.visible=false;parts.vest.visible=false;parts.sash.visible=false;
       const legC=st.block==='tee'?'#2c3a52':st.block==='suit'?c:st.block==='aodai'?c:c;
-      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set('#ffffff');w.m.pants.color.set(c);w.m.ad.color.set(c);w.m.lapel.color.set(shade(c,.78));w.m.dress.color.set(c);w.m.gown.color.set(c);
+      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set('#ffffff');w.m.pants.color.set(c);w.m.ad.color.set(c);w.m.lapel.color.set(shade(c,.78));if(w.m.satin)w.m.satin.color.set(shade(c,.62));w.m.dress.color.set(c);w.m.gown.color.set(c);
       torso.material.color.set(c);
       w.m.scarf.color.set(st.dress==='maxi'?'#fbf6ec':(c==='#f0e5d4'?'#e8a1b4':'#f0e5d4'));w.m.tie.color.set('#1f2430');
       // ngồi thiền: chân xếp mang màu quần hoặc màu váy; áo vest vẫn mặc
