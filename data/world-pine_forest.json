@@ -10,7 +10,7 @@
   "nature": [
     {"id": "pine_forest.pines", "kind": "tree_grid", "sort_order": 1,
      "params": {"count": 32, "cols": 8, "dx": 4.4, "dz": 18, "z0": -29, "z_remap": {"25": 32.5},
-                "clear_rects": [[-11, -15, 11, 7], [-9, -99, 9, -25]], "trunk_color": "#654c33", "leaf_color": "#47745c"}}
+                "clear_rects": [[-11, -15, 11, 7], [-9, -99, 9, -25], [9, -99, 14, -25]], "trunk_color": "#654c33", "leaf_color": "#47745c"}}
   ],
   "rooms": [
     {"id": "sanh_chung", "name": "Sảnh chung", "topic": "anyen:room:lobby", "capacity": null, "kind": "public", "palette_color": "#092d27"},
@@ -20,7 +20,8 @@
   ],
   "buildings": [
     {"id": "tuong_dai", "name": "Thiền viện tượng đài", "kind": "sanctuary", "x": 0, "z": -31, "exterior": {"terrace_radius": 8.2, "terrace_top": 0.3}, "room_id": null},
-    {"id": "cau_ho_niem", "name": "Cầu vòm Hồ Niệm", "kind": "bridge", "x": 0, "z": -4, "exterior": {"arch_z": [-15.6, 7.6], "rise": 2.6}, "room_id": null}
+    {"id": "cau_ho_niem", "name": "Cầu vòm Hồ Niệm", "kind": "bridge", "x": 0, "z": -4, "exterior": {"arch_z": [-15.6, 7.6], "rise": 2.6}, "room_id": null},
+    {"id": "nha_hoa_lan", "name": "Nhà hoa lan", "kind": "portal", "x": 11, "z": -31, "exterior": {"w": 3.6, "d": 4, "door": [11, -27.8]}, "room_id": null, "portal": {"provider": "viverse", "url": "https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=", "title": "ORCHID hoa lan | Dong Lan | Redmoon"}}
   ],
   "props": [
     {"id": "ho_sac", "kind": "wish_lake", "name": "Sắc", "x": -23, "z": 18, "params": {"color": "#547d81", "theme": "thịnh vượng", "sense": "SẮC"}, "activity": "ném xu nhận lời nhắn"},
