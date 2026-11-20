@@ -15,6 +15,26 @@
 - 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khoác ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
 - Giữ ngồi thiền/thiền hành khi gõ chuông.
 
+## Vịnh Hạ Long · Du thuyền Yên (beta)
+- Bấm **Khám phá Vịnh Yên**: bạn đứng ở mũi một du thuyền 5 sao, xuất phát từ cảng Tuần Châu.
+- **Trang phục ở vịnh:** lần đầu vào vịnh mở bảng "Lên Du thuyền Yên" có xem trước dáng đứng và ngồi thiền. Năm kiểu: Thiền phục · Áo thun · quần jean · Vest lịch sự · Đầm maxi đi chơi · Áo dài truyền thống; màu như bảng màu cũ; tích chọn thêm Nón, Kính, Khăn. Chỉ dùng ở vịnh, mở lại bằng Menu → Trang phục.
+- **Hàng trên (tàu):** chip trạng thái tàu (đang neo · đang đi tới, còn bao xa · tour điểm 2/5 · dừng ngắm, đi tiếp sau … giây · đang ở danh thắng), nút ⏹ khi tàu chạy, rồi bốn tùy chọn:
+  - **🧭 Tour trải nghiệm:** chọn tour và đoạn "Từ … Đến …"; mỗi chặng ghi khoảng cách, thời gian trên web và thời gian ngoài đời (ước tính tàu du lịch 15 km/giờ).
+  - **⛵ Dạo ngắm vịnh:** chọn điểm đến tiếp theo (gần đến xa) với khoảng cách và hai mốc thời gian, tàu tự chạy tới.
+  - **📍 Điểm đến:** bản đồ vịnh, chạm một điểm hoặc tên danh thắng để đến ngay lập tức.
+  - **🎥 Góc nhìn:** Mũi tàu · Boong thượng · Ngắm tàu từ xa · Tự xoay 360°.
+  - Tốc độ Thong thả/Nhanh và tiếng sóng ở chân bảng tùy chọn.
+- **Các thiên nhiên không đi thẳng sang nhau:** từ vịnh bấm **✕ Về Làng Yên** để ra trang chính, rồi mới chọn Khám phá Rừng Yên hoặc Khám phá Vịnh Yên (và ngược lại).
+- **🧭 Hành trình** (hoặc chạm chip trạng thái): một bảng ba thẻ — **Lịch trình** (3 tuyến dạo vịnh, tàu tự đi và dừng ngắm), **Chọn đảo** (mỗi nơi có “✨ Đến ngay” để dịch chuyển tức thì và “⛵ Đi tới” để tàu tự chạy), **Bản đồ** (chạm mặt nước để đi tới, bấm tên danh thắng để đến ngay).
+- **Chạm mặt nước** trong cảnh để tàu tự tìm đường vòng qua các đảo và đi tới. **Vuốt trái/phải** chỉ xoay góc nhìn, không đổi hướng tàu.
+- **Hàng dưới (người):** thanh Toạ thiền · Thỉnh chuông · Nghi thức · Tương tác · Menu (sẽ thiết kế lại cho vịnh).
+
+### Dữ liệu dùng chung của vịnh
+- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hoàng hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 630 đảo đá, luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
+- Toạ độ chiếu từ vĩ độ/kinh độ thật quanh cảng Tuần Châu, 1 đơn vị = 4 m; kích thước đảo được phóng đại. Mỗi danh thắng ghi rõ `precision` (`source` có nguồn công bố, `approx` ước lượng) và `source`.
+- Phông tranh 360° (`nature` kind `backdrop`) và chất liệu đá vôi, tán cây đều được vẽ bằng code khi mở cảnh, không cần tải ảnh.
+- Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
+
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
 - Thiền đường cộng hưởng vẫn sử dụng SQL của phiên bản 3.4. Không chạy lại SQL nếu đã cấu hình.
