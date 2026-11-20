@@ -20,11 +20,11 @@
   "buildings": [
     {"id": "tuong_dai", "name": "Thiền viện tượng đài", "kind": "sanctuary", "x": 0, "z": -62, "exterior": {"terrace_radius": 8.2, "terrace_top": 0.3, "hill": {"top": 8, "flat_radius": 11, "foot_radius": 26}, "stairs": [[0, -36.6], [5, -41.4], [-5, -46.4], [0, -51.4]]}, "room_id": null},
     {"id": "cau_ho_niem", "name": "Cầu vòm Hồ Niệm", "kind": "bridge", "x": 0, "z": -4, "exterior": {"arch_z": [-10.5, 2.5], "rise": 2.6}, "room_id": null},
-    {"id": "nha_hoa_lan", "name": "Nhà hoa lan", "kind": "portal", "x": -37.1, "z": -28.6, "exterior": {"w": 11, "d": 11, "rotation": 2.3, "beside": "ho_sac", "gap_to_pond": 1}, "room_id": null, "portal": {"provider": "viverse", "url": "https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=", "title": "ORCHID hoa lan | Dong Lan | Redmoon"}},
-    {"id": "chuong_gio", "name": "Nhà chuông gió", "kind": "sense_house", "x": 37.1, "z": -28.6, "exterior": {"w": 11, "d": 11, "rotation": -2.3, "beside": "ho_thanh", "gap_to_pond": 1}, "room_id": null, "interior": "planned"},
-    {"id": "xong_huong", "name": "Nhà xông hương", "kind": "sense_house", "x": -49.9, "z": -66.3, "exterior": {"w": 11, "d": 11, "rotation": 1.48, "beside": "ho_huong", "gap_to_pond": 1}, "room_id": null, "interior": "planned"},
-    {"id": "quan_tra", "name": "Quán trà", "kind": "sense_house", "x": 49.9, "z": -66.3, "exterior": {"w": 11, "d": 11, "rotation": -1.48, "beside": "ho_vi", "gap_to_pond": 1}, "room_id": null, "interior": "planned"},
-    {"id": "xuong_gom", "name": "Xưởng gốm", "kind": "sense_house", "x": -30.8, "z": -101.4, "exterior": {"w": 11, "d": 11, "rotation": 0.66, "beside": "ho_cham", "gap_to_pond": 1}, "room_id": null, "interior": "planned"}
+    {"id": "nha_hoa_lan", "name": "Nhà hoa lan", "kind": "portal", "x": -37.9, "z": -27.9, "exterior": {"w": 11, "d": 11, "rotation": 2.3, "beside": "ho_sac", "gap_to_pond": 2}, "room_id": null, "portal": {"provider": "viverse", "url": "https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=", "title": "ORCHID hoa lan | Dong Lan | Redmoon"}},
+    {"id": "chuong_gio", "name": "Nhà chuông gió", "kind": "sense_house", "x": 37.9, "z": -27.9, "exterior": {"w": 11, "d": 11, "rotation": -2.3, "beside": "ho_thanh", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
+    {"id": "xong_huong", "name": "Nhà xông hương", "kind": "sense_house", "x": -50.9, "z": -66.4, "exterior": {"w": 11, "d": 11, "rotation": 1.48, "beside": "ho_huong", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
+    {"id": "quan_tra", "name": "Quán trà", "kind": "sense_house", "x": 50.9, "z": -66.4, "exterior": {"w": 11, "d": 11, "rotation": -1.48, "beside": "ho_vi", "gap_to_pond": 2}, "room_id": null, "interior": "planned"},
+    {"id": "xuong_gom", "name": "Xưởng gốm", "kind": "sense_house", "x": -31.4, "z": -102.1, "exterior": {"w": 11, "d": 11, "rotation": 0.66, "beside": "ho_cham", "gap_to_pond": 2}, "room_id": null, "interior": "planned"}
   ],
   "props": [
     {"id": "ho_sac", "kind": "wish_lake", "name": "Sắc", "x": -28.2, "z": -36.6, "params": {"color": "#547d81", "theme": "thịnh vượng", "sense": "SẮC"}, "activity": "ném xu nhận lời nhắn"},

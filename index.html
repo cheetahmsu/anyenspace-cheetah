@@ -340,20 +340,50 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const eaveSlab=sbox(7.6,.14,7.6,eave,0,beamY+.22,STATUE.z);
   const roofCone=new THREE.Mesh(new THREE.ConeGeometry(6.3,2.3,4,1),tile);roofCone.rotation.y=Math.PI/4;roofCone.position.set(0,beamY+1.45,STATUE.z);shrine.add(roofCone);
   const finial=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),gold);finial.position.set(0,beamY+2.7,STATUE.z);shrine.add(finial);
-  // Seated Buddha in meditation, built from simple shapes.
-  const buddha=new THREE.Group();const skin=mat('#c9a35f',.55),robeGold=mat('#b88d45',.6);
+  // 3.14: Seated Buddha in full lotus (kiết già), dhyana mudra: crossed shins with upturned soles, hands resting in the lap,
+  // robe over the left shoulder with the right shoulder bare, curled hair and ushnisha, long earlobes, eyes lowered.
+  const buddha=new THREE.Group();const skin=mat('#c9a35f',.55),robeGold=mat('#b88d45',.6),robeFold=mat('#a87d3b',.6),hairM=mat('#5e4a2e',.7),lineM=mat('#7a5a2e',.6);
   const lotusBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.2,.28,24),gold);lotusBase.position.y=.14;buddha.add(lotusBase);
   for(let ring=0;ring<2;ring++)for(let k=0;k<12;k++){const a=k*Math.PI/6+ring*Math.PI/12,r=ring?.95:1.12;const pet=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),ring?robeGold:gold);pet.scale.set(.55,.42,1.1);pet.position.set(Math.cos(a)*r,.34+ring*.1,Math.sin(a)*r);pet.rotation.y=-a+Math.PI/2;pet.rotation.x=ring?-.5:-.25;buddha.add(pet)}
-  const legs=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),robeGold);legs.scale.set(.98,.3,.62);legs.position.set(0,.66,.12);buddha.add(legs);
-  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.42,.6,1.15,18),robeGold);torso.position.y=1.38;buddha.add(torso);
-  const shoulders=new THREE.Mesh(new THREE.SphereGeometry(.6,18,12),robeGold);shoulders.scale.set(1,.42,.72);shoulders.position.y=1.9;buddha.add(shoulders);
-  for(const side of [-1,1]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.14,.75,4,10),robeGold);arm.position.set(side*.55,1.42,.16);arm.rotation.z=side*.28;arm.rotation.x=-.38;buddha.add(arm)}
-  const hands=new THREE.Mesh(new THREE.SphereGeometry(.24,14,10),skin);hands.scale.set(1.25,.45,.8);hands.position.set(0,.92,.5);buddha.add(hands);
-  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.15,.18,.2,12),skin);neck.position.y=2.1;buddha.add(neck);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.36,20,16),skin);head.scale.set(1,1.1,1);head.position.y=2.45;buddha.add(head);
-  const ushnisha=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10),robeGold);ushnisha.position.y=2.86;buddha.add(ushnisha);
-  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.24,3,8),skin);ear.position.set(side*.35,2.38,0);buddha.add(ear)}
-  const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.95,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false}));halo.position.set(0,2.5,-.32);buddha.add(halo);
+  const bAdd=(geo,m,x,y,z,sx=1,sy=1,sz=1)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);buddha.add(o);return o};
+  const limb=(r,a,b,m)=>{const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),o=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,d.length()),5,12),m);o.position.copy(A).add(B).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());buddha.add(o);return o};
+  // lap and crossed legs
+  bAdd(new THREE.SphereGeometry(1,24,14),robeGold,0,.6,.12,1.02,.27,.66);
+  limb(.19,[-.82,.62,.12],[.36,.66,.46],robeGold);limb(.19,[.82,.66,.18],[-.34,.74,.4],robeFold);
+  bAdd(new THREE.SphereGeometry(.22,14,10),robeGold,-.84,.6,.14);bAdd(new THREE.SphereGeometry(.22,14,10),robeFold,.84,.64,.18);
+  for(const [x,z,s] of [[.44,.44,1],[-.42,.38,-1]]){const sole=bAdd(new THREE.SphereGeometry(.14,12,8),skin,x,.82,z,1.5,.5,.85);sole.rotation.z=s*.35;for(let t=0;t<5;t++)bAdd(new THREE.SphereGeometry(.032,6,5),skin,x+s*.2,.86+t*.012,z-.09+t*.045)}
+  // robe hem pooling over the lotus
+  bAdd(new THREE.CylinderGeometry(1.02,1.08,.12,28),robeFold,0,.46,.1,1,1,.68);
+  // torso from a lathe profile, slightly flattened front to back
+  const torsoG=new THREE.LatheGeometry([[0,.82],[.44,.84],[.42,1.05],[.46,1.35],[.53,1.62],[.6,1.84],[.5,1.98],[.2,2.07],[0,2.08]].map(([r,y])=>new THREE.Vector2(r,y)),24);
+  bAdd(torsoG,robeGold,0,0,.02,1,1,.7);
+  // bare right shoulder and chest, robe edge falling diagonally from the left shoulder
+  bAdd(new THREE.SphereGeometry(.34,16,12),skin,.28,1.72,.06,1,.95,.72);bAdd(new THREE.SphereGeometry(.24,14,10),skin,.56,1.84,.0,1,.8,.85);
+  limb(.06,[-.42,1.98,.3],[.4,1.1,.34],robeFold);limb(.05,[-.5,1.95,-.05],[-.55,1.2,-.2],robeFold);
+  // arms: upper arms down the sides, forearms in toward the lap
+  limb(.15,[-.6,1.82,.02],[-.66,1.22,.12],robeGold);limb(.14,[.6,1.82,.02],[.66,1.22,.12],skin);
+  limb(.13,[-.66,1.22,.12],[-.22,.92,.48],robeGold);limb(.12,[.66,1.22,.12],[.22,.94,.5],skin);
+  bAdd(new THREE.SphereGeometry(.15,14,10),robeFold,-.66,1.22,.12);bAdd(new THREE.SphereGeometry(.14,14,10),skin,.66,1.22,.12);
+  // dhyana mudra: right hand resting on the left, palms up, thumb tips touching
+  bAdd(new THREE.SphereGeometry(.2,14,10),skin,0,.9,.5,1.25,.32,.78);bAdd(new THREE.SphereGeometry(.19,14,10),skin,0,.95,.52,1.2,.3,.74);
+  limb(.035,[-.13,.98,.6],[0,1.05,.6],skin);limb(.035,[.13,.98,.6],[0,1.05,.6],skin);
+  // neck with the three beauty folds
+  bAdd(new THREE.CylinderGeometry(.15,.18,.24,14),skin,0,2.14,0);for(const y of [2.08,2.14,2.2]){const f=bAdd(new THREE.TorusGeometry(.16,.008,4,20),lineM,0,y,0);f.rotation.x=Math.PI/2}
+  // head
+  const hy=2.48;bAdd(new THREE.SphereGeometry(.34,24,18),skin,0,hy,.02,1,1.14,1.02);
+  bAdd(new THREE.SphereGeometry(.355,24,14,0,Math.PI*2,0,Math.PI*.45),hairM,0,hy+.02,-.01,1,1.12,1.04);
+  bAdd(new THREE.SphereGeometry(.17,16,12),hairM,0,hy+.42,-.02,1,1.05,1);
+  for(let ring=0;ring<4;ring++){const n=[14,12,9,5][ring],el=.25+ring*.22;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+ring*.2;const r=.36*Math.sin(Math.PI/2-el)*1.02;bAdd(new THREE.SphereGeometry(.04,6,5),hairM,Math.sin(a)*r,hy+.02+.38*Math.cos(Math.PI/2-el)*1.1,Math.cos(a)*r*1.02)}}
+  for(let k=0;k<7;k++){const a=k/7*Math.PI*2;bAdd(new THREE.SphereGeometry(.035,6,5),hairM,Math.sin(a)*.12,hy+.47,Math.cos(a)*.12-.02)}
+  for(const s of [-1,1]){bAdd(new THREE.CapsuleGeometry(.05,.3,3,8),skin,s*.34,hy-.1,0);
+    const lid=bAdd(new THREE.TorusGeometry(.065,.009,4,12,Math.PI),lineM,s*.12,hy+.02,.33);lid.rotation.z=Math.PI;
+    const brow=bAdd(new THREE.TorusGeometry(.1,.008,4,14,Math.PI*.8),lineM,s*.12,hy+.06,.32);brow.rotation.z=Math.PI*.1}
+  bAdd(new THREE.ConeGeometry(.035,.14,8),skin,0,hy-.06,.37).rotation.x=.2;bAdd(new THREE.SphereGeometry(.018,6,5),gold,0,hy+.1,.36);
+  const mouth=bAdd(new THREE.TorusGeometry(.05,.008,4,10,Math.PI),lineM,0,hy-.16,.33);mouth.rotation.z=Math.PI;
+  // halo behind the head and a soft aura behind the body
+  const glow=c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.36,side:THREE.DoubleSide,depthWrite:false});
+  bAdd(new THREE.RingGeometry(.55,.9,48),glow('#f0cf86'),0,hy+.04,-.36);bAdd(new THREE.RingGeometry(.92,.97,48),glow('#f4dca0'),0,hy+.04,-.37);
+  const aura=bAdd(new THREE.RingGeometry(1.25,1.33,56),glow('#e9c77a'),0,1.45,-.42,1,1.25,1);
   buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);shrine.add(buddha);
   // Bodhi tree behind the shrine.
   const bodhiTree=new THREE.Group();{const bodhi=bodhiTree;bodhi.position.set(0,0,STATUE.z-11.7);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});shrine.add(bodhi)}
@@ -366,7 +396,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const houseMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
   // 3.7/3.12: Nhà hoa lan, a large glasshouse beside Hồ Sắc, as wide as the pond (11 × 11 m), its door turned toward the pond.
   // Its door opens the Viverse scene "ORCHID hoa lan" full screen; the forest stops rendering while it is open.
-  const HOUSE_GAP=1;
+  const HOUSE_GAP=2;
   const ORCHID={...besidePond('Sắc',HOUSE_GAP,2*POND_R),w:2*POND_R,d:2*POND_R,url:'https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=',title:'ORCHID hoa lan | Dong Lan | Redmoon'};
   const ORCHID_DOOR=[ORCHID.x+Math.sin(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2),ORCHID.z+Math.cos(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2)];
   let pendingOrchid=false,orchidOpen=false;
@@ -2256,7 +2286,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function lakeApproach(l){const dx=FOOT.x-l.x,dz=FOOT.z-l.z,d=Math.hypot(dx,dz)||1,px=l.x+dx/d*(POND_R+1.6),pz=l.z+dz/d*(POND_R+1.6);return [px,pz,Math.atan2(l.x-px,l.z-pz)]}
   function quickPlaces(){const out=[['⛩','Cổng Yên',0,31,Math.PI],['🌿','Sân đón',0,20.5,Math.PI],['🪷','Hồ sen · bờ nam',8,11.5,Math.PI],
       ['🚣','Bến thuyền tây',-BOAT_LAND_X,BOAT_LANE_Z,Math.PI/2],['🚣','Bến thuyền đông',BOAT_LAND_X,BOAT_LANE_Z,-Math.PI/2],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
-      ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
+      ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🪜','Bậc đá lên đồi',STAIRS[STAIRS.length-1][0],STAIRS[STAIRS.length-1][1]+.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
       ['🌸','Nhà hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'orchid'],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id])];
     for(const l of wishLakes){if(l.name==='Niệm')continue;const [x,z,yaw]=lakeApproach(l);out.push(['💧','Hồ '+l.name+' · '+l.theme,x,z,yaw])}
     return out}
