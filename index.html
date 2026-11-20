@@ -1390,7 +1390,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const webSecs=len=>len/(bayShip.max*bayMult())+(len>1?5/bayMult():0);
   const realSecs=len=>len*(bayData?.map?.geo?.meters_per_unit||4)/1000/(bayShip.ex?.real_speed_kmh||15)*3600;
   const legInfo=(len,dwell=0)=>fmtKm(len)+' · web '+fmtDur(webSecs(len)+dwell/bayMult())+' · ngoài đời ≈ '+fmtDur(realSecs(len));
-  const approachOf=p=>p.params?.approach||[p.x,p.z];
+  const approachOf=p=>viewPoint(p);
   const sheetBody=(note)=>{document.getElementById('baySheetTitle').textContent=note;const body=document.getElementById('baySheetBody');body.innerHTML='';return body};
   function renderTours(){
     const body=sheetBody('Chọn tour và đoạn muốn đi: từ điểm nào đến điểm nào. Thời gian ngoài đời là ước tính theo tàu du lịch thật ('+(bayShip.ex?.real_speed_kmh||15)+' km/giờ).');
@@ -1485,7 +1485,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Dịch chuyển tức thì: tàu hiện ngay ở điểm ghé, mũi tàu quay về phía danh thắng.
   // Điểm ngắm: lùi đủ xa để danh thắng nằm trọn trong khung (cao và ngang), nhìn vào mặt đẹp nhất, không bị đảo khác che
   const LM_SIZE={big_island:[2.2,1.15],titop:[2.4,1.5],pair:[2.6,1],incense:[2.2,1],dog:[2.4,1],arch:[2.6,1.35],trio:[2,1],beach:[2.4,1],island_beach:[2.3,1],cove:[2.6,1.25]};
-  function viewPoint(p){const q=p.params||{},sh=q.shape,r=q.radius||20,h=q.height||20,f=lmFacing(p);
+  const VP_CACHE=new Map();
+  function viewPoint(p){const key=p.id+'|'+(camera.aspect<1?'n':'w');if(VP_CACHE.has(key))return VP_CACHE.get(key).slice();const v=viewPointCalc(p);VP_CACHE.set(key,v);return v.slice()}
+  function viewPointCalc(p){const q=p.params||{},sh=q.shape,r=q.radius||20,h=q.height||20,f=lmFacing(p);
     let vx=Math.cos(f),vz=Math.sin(f);
     if(sh==='pair'){const A=.78+Math.PI/2;let px=Math.cos(A),pz=Math.sin(A);if(px*vx+pz*vz<0){px=-px;pz=-pz}vx=px;vz=pz}// Trống Mái: nhìn ngang trục hai hòn
     const [kw,kh]=LM_SIZE[sh]||[0,0];let W=Math.max(30,r*kw),H=h*kh;if(sh==='village'){W=120;H=36}if(sh==='pier'){W=60;H=12}if(sh==='bridge'){W=300;H=40}
@@ -1821,7 +1823,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         else{const want=Math.atan2(dx,dz);let dh=want-S.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));const turn=S.turn*Math.sqrt(bayMult())*(.35+.65*Math.min(1,S.speed/(S.max*bayMult())));S.heading+=Math.max(-turn*dt,Math.min(turn*dt,dh));
           const top=S.max*bayMult(),slow=last?Math.min(1,dist/(60*Math.max(1,Math.sqrt(bayMult())*1.2)))*.95+.05:1;const target=top*slow*Math.max(.25,Math.cos(Math.min(1.3,Math.abs(dh))));S.speed+=(target-S.speed)*Math.min(1,dt*.5)}}
       else{S.speed+=(0-S.speed)*Math.min(1,dt*.6);
-        if(S.faceLm&&bayAt&&bayAt.p===S.faceLm&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<60){const p=S.faceLm,want=Math.atan2(p.x-S.x,p.z-S.z),dh=Math.atan2(Math.sin(want-S.heading),Math.cos(want-S.heading));S.heading+=Math.max(-.35*dt,Math.min(.35*dt,dh));if(Math.abs(dh)<.01)S.faceLm=null}if(bayTour&&bayTour.dwellUntil&&performance.now()>bayTour.dwellUntil)nextStop()}
+        if(S.faceLm&&bayAt&&bayAt.p===S.faceLm&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<60){const p=S.faceLm,want=Math.atan2(p.x-S.x,p.z-S.z),dh=Math.atan2(Math.sin(want-S.heading),Math.cos(want-S.heading));S.heading+=Math.max(-.6*dt,Math.min(.6*dt,dh));viewYaw*=1-Math.min(1,dt*1.5);const k=Math.min(1,dt*1.2);S.x+=(bayAt.x-S.x)*k;S.z+=(bayAt.z-S.z)*k;S.speed*=1-k;if(Math.abs(dh)<.01&&Math.abs(viewYaw)<.01&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<1){S.faceLm=null;viewYaw=0}}if(bayTour&&bayTour.dwellUntil&&performance.now()>bayTour.dwellUntil)nextStop()}
       S.x+=Math.sin(S.heading)*S.speed*dt;S.z+=Math.cos(S.heading)*S.speed*dt;
       S.trailT+=dt;if(S.trailT>.25){S.trailT=0;const sternX=S.x-Math.sin(S.heading)*(S.len/2-3),sternZ=S.z-Math.cos(S.heading)*(S.len/2-3);S.trail.push({x:sternX,z:sternZ,h:S.heading,t,s:Math.min(1,S.speed/6)});while(S.trail.length>WAKE_N)S.trail.shift()}
       updateWake(t);S.foam.material.opacity=Math.min(.75,S.speed/10);
@@ -1924,7 +1926,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  window.__bay={camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
+  window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
