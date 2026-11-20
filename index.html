@@ -1061,6 +1061,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       for(const s of [-1,1]){const a=f+s*.45;addKarst(x+Math.cos(a)*R,z+Math.sin(a)*R,r*.26,h,k+3+s,{shape:0,rot:a})}
       const sh=[0,4,7,0,5];for(let j=0;j<5;j++){const a=f+.9+j*(2*Math.PI-1.8)/4,low=j===2;addKarst(x+Math.cos(a)*R,z+Math.sin(a)*R,r*(low?.2:.26+bayHash(k,j,1)*.1),h*(low?.32:.8+bayHash(k,j,2)*.35),k+10+j,{shape:sh[j],rot:a})}// đỉnh đối diện vòm thấp để nhìn xuyên thấy hồ và trời
     }
+    else if(q.shape==='trio'){
+      // Hòn Ba Trái Đào: ba đỉnh đá tròn nối chân nhau, xếp ngang tầm nhìn từ luồng tàu, bãi cát nhỏ phía trước
+      const px=-fz,pz=fx;for(let j=-1;j<=1;j++)addKarst(x+px*j*r*.55,z+pz*j*r*.55,r*.42,h*(j?(j>0?.86:.92):1),k+j+2,{taper:.18,dome:.62,ribs:4,ribAmp:.07,rough:.2});
+      const m=new THREE.Mesh(new THREE.RingGeometry(r*.6,r*.95,24,1,-f-Math.PI*.3,Math.PI*.6),new THREE.MeshStandardMaterial({color:'#efe3c4',roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,.26,z);bayGroup.add(m);
+    }
+    else if(q.shape==='beach'){
+      // Đảo có bãi tắm (Đảo Khỉ): đồi đá phủ rừng, bãi cát khô + cát ẩm lưỡi liềm quay về phía tàu, hai mũi đá
+      addKarst(x,z,r*.62,h,k,{taper:.12,dome:.5,ribs:5,rough:.2});addKarst(x-fx*r*.38,z-fz*r*.38,r*.5,h*.8,k+1,{shape:2});
+      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.36,Math.PI*.72),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      sand(.74,1.1,.28,'#f1e6c8');sand(1.08,1.24,.2,'#c9b48e');
+      for(const s of [-1,1]){const a=f+s*Math.PI*.4;addKarst(x+Math.cos(a)*r*1.05,z+Math.sin(a)*r*1.05,r*.17,h*.3,k+5+s,{shape:6,rot:a})}
+    }
     else if(q.shape==='village'){const walls=['#93b2bf','#e3d2a2','#a2c0ab','#d9ae96','#ece6d6','#adb9cd'];for(let j=0;j<9;j++){const a=j*2.39,d=14+j*5;const g=new THREE.Group();g.position.set(x+Math.cos(a)*d,0,z+Math.sin(a)*d);g.rotation.y=a;
         const raft=new THREE.Mesh(new THREE.BoxGeometry(10,.6,8),new THREE.MeshStandardMaterial({color:'#977a5c'}));raft.position.y=.2;g.add(raft);
         const w=new THREE.Mesh(new THREE.BoxGeometry(6,3.4,5),new THREE.MeshStandardMaterial({color:walls[j%6]}));w.position.set(-1,2.1,0);g.add(w);
@@ -1306,6 +1318,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     for(const L of bayLand){ctx.beginPath();L.pts.forEach(([x,z],i)=>i?ctx.lineTo(X(x),Z(z)):ctx.moveTo(X(x),Z(z)));ctx.closePath();ctx.fillStyle=L.color;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1}
     for(const n of bayData.nature){if(n.kind==='karst_field'){ctx.fillStyle='#7f9b77';for(const [x,z,r] of n.params.items){ctx.beginPath();ctx.arc(X(x),Z(z),Math.max(1.2,r*mapView.s),0,6.283);ctx.fill()}}
       if(n.kind==='channels'){ctx.strokeStyle='#ffffffaa';ctx.setLineDash([4,5]);ctx.lineWidth=1.2;for(const line of n.params.lines){ctx.beginPath();line.forEach(([x,z],i)=>i?ctx.lineTo(X(x),Z(z)):ctx.moveTo(X(x),Z(z)));ctx.stroke()}ctx.setLineDash([])}}
+    {const lb=bayData.nature.find(n=>n.kind==='map_labels');if(lb){ctx.textAlign='center';for(const L of lb.params.items){ctx.fillStyle='#2f5a52aa';ctx.font='italic 600 15px Georgia,serif';ctx.fillText(L.name,X(L.x),Z(L.z));if(L.sub){ctx.font='italic 12px Georgia,serif';ctx.fillText(L.sub,X(L.x),Z(L.z)+16)}}ctx.textAlign='left'}}
     if(bayShip.path.length){ctx.strokeStyle='#e9a94f';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(X(bayShip.x),Z(bayShip.z));for(const [x,z] of bayShip.path)ctx.lineTo(X(x),Z(z));ctx.stroke()}
     ctx.font='600 13px Inter,system-ui,sans-serif';ctx.textBaseline='middle';
     for(const p of bayData.props){if(p.kind!=='landmark')continue;ctx.fillStyle='#b8862f';ctx.beginPath();ctx.arc(X(p.x),Z(p.z),4.5,0,6.283);ctx.fill();const label=p.name.split(' · ')[0];ctx.lineWidth=3;ctx.strokeStyle='#ffffffdd';ctx.strokeText(label,X(p.x)+7,Z(p.z));ctx.fillStyle='#24423c';ctx.fillText(label,X(p.x)+7,Z(p.z))}
