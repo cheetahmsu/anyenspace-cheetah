@@ -991,19 +991,27 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // ---- Du thuyền 5 sao: thân xanh ngọc, ba tầng trắng có dải kính, boong mũi gỗ, lan can kính ----
   let bayPause=null;
   const bayShip={group:new THREE.Group(),x:0,z:0,heading:0,speed:0,path:[],dest:null,fast:false,stopped:true,trail:[],trailT:0};
+  // Ván sàn: dải ván 0,25 đơn vị chạy dọc thân tàu, mạch ghép so le, vân màu nâu óc chó ấm
+  function deckPlankTex(base){const c=document.createElement('canvas');c.width=256;c.height=512;const x=c.getContext('2d'),col=new THREE.Color(base);
+    for(let i=0;i<8;i++){const off=(i*197)%512;for(let seg=-1;seg<2;seg++){const y0=off+seg*512,k=.9+((i*37+seg*11)%7)/30,cc=col.clone().multiplyScalar(k);x.fillStyle='#'+cc.getHexString();x.fillRect(i*32,y0,32,512);
+        x.strokeStyle='rgba(0,0,0,.08)';for(let g=0;g<5;g++){x.beginPath();x.moveTo(i*32+4+g*6,y0);x.lineTo(i*32+4+g*6+((g%2)?2:-2),y0+512);x.stroke()}
+        x.fillStyle='rgba(20,12,8,.55)';x.fillRect(i*32,y0,32,2)}
+      x.fillStyle='rgba(20,12,8,.6)';x.fillRect(i*32,0,1.6,512)}
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(.5,1/6);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
   function buildShip(ex){
     const g=bayShip.group,L=ex.length/2,B=ex.beam/2,mat=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.6,...o});
     const outline=(inset,front=L,back=-L)=>{const s=new THREE.Shape(),b=B-inset,f=front-inset,k=back+inset;s.moveTo(-b,-(k+2));s.quadraticCurveTo(-b,-k,0,-k);s.quadraticCurveTo(b,-k,b,-(k+2));s.lineTo(b,-(f-12));s.quadraticCurveTo(b*.95,-(f-3),0,-f);s.quadraticCurveTo(-b*.95,-(f-3),-b,-(f-12));s.closePath();return s};
     const slab=(shape,y,h,m)=>{const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:14});geo.rotateX(-Math.PI/2);const mesh=new THREE.Mesh(geo,m);mesh.position.y=y;g.add(mesh);return mesh};
-    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat(ex.deck_wood||'#b98a5c',{roughness:.8}),dark=mat('#25363c');
+    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#5b4637')}),dark=mat('#25363c');
     slab(outline(0),-2.6,3.8,hull);slab(outline(-.05),1.15,1.4,white);slab(outline(.25),2.5,.12,wood);
     const stripe=slab(outline(-.07),1.05,.14,dark);stripe.scale.set(1,1,1);
     // dải cửa sổ tròn ở thân
     for(let z=-L+5;z<L-12;z+=2.6)for(const sx of [-1,1]){const p=new THREE.Mesh(new THREE.CircleGeometry(.28,10),dark);p.position.set(sx*(B+.02),.2,z);p.rotation.y=sx*Math.PI/2;g.add(p)}
     // ba tầng thượng tầng
+    let topRail=null;
     const decks=[[0,-L+2.5,L-14,4.7],[1,-L+2.5,L-17.5,4.5],[2,-L+5,L-23,4.2]];
     decks.forEach(([i,back,front,b])=>{const y=2.62+i*2.85;const sh=(w)=>{const s=new THREE.Shape();s.moveTo(-w,-back);s.lineTo(w,-back);s.lineTo(w,-(front-w));s.absarc(0,-(front-w),w,0,Math.PI,true);s.lineTo(-w,-back);return s};
-      slab(sh(b+.35),y-.1,.32,white);slab(sh(b-.06),y+.22,.55,white);const gl=slab(sh(b-.12),y+.77,1.55,glass);slab(sh(b+.42),y+2.32,.42,white);
+      slab(sh(b+.35),y-.1,.32,white);slab(sh(b-.06),y+.22,.55,white);const gl=slab(sh(b-.12),y+.77,1.55,glass);slab(sh(b+.42),y+2.32,.42,white);if(i===2){slab(sh(b+.3),y+2.74,.03,wood);topRail=sh(b+.1).getPoints(10).map(p=>new THREE.Vector3(p.x,0,-p.y))}
       for(let z=back+1.5;z<front-b;z+=3.2)for(const sx of [-1,1]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.32,2.1,.42),white);pillar.position.set(sx*(b-.02),y+1.27,z);g.add(pillar)}
       if(i===0){const rail=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,front-back),white);}});
     // boong thượng: hồ bơi, ghế nằm, cột anten
@@ -1018,10 +1026,22 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const railPts=[],rw=B-.35,fz=L-.6,bz=L-14;const bez=t=>{const p0=[rw,fz-12],p1=[rw*.95,fz-3],p2=[0,fz];return[(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],(1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]]};
     const half=[[rw,bz],[rw,(bz+fz-12)/2]];for(let k=0;k<=10;k++)half.push(bez(k/10*.94));
     for(const [x,z] of half)railPts.push(new THREE.Vector3(-x,3.55,z));for(let k=half.length-1;k>=0;k--)railPts.push(new THREE.Vector3(half[k][0],3.55,half[k][1]));
-    const rail=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(railPts),60,.07,6,false),mat('#d8dde0',{metalness:.7,roughness:.25}));g.add(rail);
-    {const pos=[],idx=[];railPts.forEach((p,i)=>{pos.push(p.x,2.55,p.z,p.x,3.5,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
-     g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#bfe3ea',transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,roughness:.1})));}
-    for(let k=0;k<railPts.length;k+=2){const p=railPts[k];const post=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1,6),mat('#d8dde0',{metalness:.7,roughness:.25}));post.position.set(p.x,3.05,p.z);g.add(post)}
+    const steel=mat('#e3e6e8',{metalness:.8,roughness:.22}),cap=mat(ex.rail_wood||'#7a4a36',{roughness:.45}),curve=new THREE.CatmullRomCurve3(railPts);
+    const handrail=new THREE.Mesh(new THREE.TubeGeometry(curve,80,.085,8,false),cap);handrail.scale.set(1,1,1);g.add(handrail);
+    {const low=railPts.map(p=>new THREE.Vector3(p.x,2.66,p.z));g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(low),80,.035,6,false),steel))}
+    {const pos=[],idx=[],cp=curve.getSpacedPoints(80);cp.forEach((p,i)=>{pos.push(p.x,2.62,p.z,p.x,3.47,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
+     g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#d6f0f2',transparent:true,opacity:.16,metalness:.1,side:THREE.DoubleSide,depthWrite:false,roughness:.05})));
+     // mép kính hơi xanh như kính cường lực
+     const edge=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cp.map(p=>new THREE.Vector3(p.x,3.45,p.z))),80,.02,4,false),new THREE.MeshStandardMaterial({color:'#9fd3d6',transparent:true,opacity:.6,roughness:.1}));g.add(edge)}
+    {const cp=curve.getSpacedPoints(26);for(const p of cp){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.92,8),steel);post.position.set(p.x,3.06,p.z);g.add(post);
+      const clip=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.12),steel);clip.position.set(p.x,3.48,p.z);g.add(clip)}}
+    // lan can kính + tay vịn gỗ quanh boong thượng (chừa lối cầu thang phía sau)
+    if(topRail){const y0=2.62+2*2.85+2.77,pts=topRail.filter(p=>p.z>-L+3.2);pts.sort((a,b)=>Math.atan2(a.x,a.z)-Math.atan2(b.x,b.z));
+      const cv=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x,y0+.95,p.z))),cp=cv.getSpacedPoints(70);
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(cv,90,.075,8,false),cap));
+      const pos=[],idx=[];cp.forEach((p,i)=>{pos.push(p.x,y0,p.z,p.x,y0+.9,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
+      g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#d6f0f2',transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false,roughness:.05})));
+      for(const p of cv.getSpacedPoints(22)){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.95,8),steel);post.position.set(p.x,y0+.47,p.z);g.add(post)}}
     // bọt sóng ở mũi
     const foam=new THREE.Mesh(new THREE.RingGeometry(3.5,5.2,24,1,Math.PI*.15,Math.PI*.7),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));foam.rotation.x=-Math.PI/2;foam.position.set(0,.25,L-3.2);g.add(foam);bayShip.foam=foam;
     bayShip.bow=new THREE.Vector3(...(ex.bow_spot||[0,2.62,18.8]));bayShip.deck=new THREE.Vector3(...(ex.deck_spot||[0,11.06,-3.2]));bayShip.ex=ex;bayShip.max=ex.max_speed||10;bayShip.turn=ex.turn_rate||.45;bayShip.clear=ex.clearance||26;bayShip.len=ex.length;
