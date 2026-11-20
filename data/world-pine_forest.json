@@ -9,7 +9,7 @@
   },
   "nature": [
     {"id": "pine_forest.pines", "kind": "pine_forest", "sort_order": 1,
-     "params": {"seed": 1121, "inner": 280, "outer": 340, "inner_gap": 3.1, "outer_gap": 2.3, "grass": 4200, "daquy": 70, "rocks": 70}}
+     "params": {"seed": 1121, "inner": 280, "outer": 340, "inner_gap": 3.1, "outer_gap": 2.3, "flower_patches": 150, "daquy": 70, "rocks": 70}}
   ],
   "rooms": [
     {"id": "sanh_chung", "name": "Sảnh chung", "topic": "anyen:room:lobby", "capacity": null, "kind": "public", "palette_color": "#092d27"},

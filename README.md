@@ -51,8 +51,9 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - Bản đồ dài khoảng 130 m: **Cổng Yên** (phía nam) → **Sân đón** → lối đá giữa hai cánh **hồ sen** → **cầu vòm** bắc qua lạch → **Sân chân đồi** → **bậc đá zíc zắc** lên **đồi tượng Phật** (đỉnh cao 8 m, z = -62).
 - **Hồ sen hai cánh** (hồ Niệm mở rộng): hai cánh 30 × 26 m nối bằng lạch nước dưới cầu. Thuyền chung đi từ bến tây, qua gầm cầu, sang bến đông.
 - **Vòng Ngũ quan** quanh chân đồi: Sắc, Thanh, Hương, Vị, Chạm. **Nhà hoa lan** nằm cạnh hồ Sắc, cửa quay ra hồ.
-- **Rừng thông kiểu Đà Lạt**: khoảng 600 cây cao thấp ngẫu nhiên (thân cao, tán xếp tầng ở ngọn; thông non hình nón), sinh từ hạt giống cố định nên mọi khách thấy cùng một khu rừng. Dưới gốc là thảm lá thông, trảng trống là cỏ xanh lốm đốm vàng, có khóm dã quỳ và đá rêu.
-- Mỗi loại cây/cỏ/hoa/đá là một InstancedMesh (một lần vẽ). Không dùng bóng đổ. Cây đứng giữa máy quay và nhân vật tự ẩn đi.
+- **Rừng thông kiểu Đà Lạt**: khoảng 600 cây cao thấp ngẫu nhiên (thân cao, tán xếp tầng ở ngọn; thông non hình nón), sinh từ hạt giống cố định nên mọi khách thấy cùng một khu rừng. Dưới gốc là thảm lá thông, trảng trống là thảm cỏ xanh lốm đốm vàng, điểm vài cụm hoa dại nhỏ nhiều màu (cúc, chuông, chùm sao), khóm dã quỳ và đá rêu.
+- Mỗi loại cây/hoa/đá là một InstancedMesh (một lần vẽ). Không dùng bóng đổ. Cây, cổng, Nhà hoa lan và cây bồ đề che tầm nhìn thì **mờ đi** (không xoá).
+- **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
 - Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
 
 ## Lưu ý
