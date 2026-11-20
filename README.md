@@ -46,6 +46,15 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - Phông tranh 360° (`nature` kind `backdrop`) và chất liệu đá vôi, tán cây đều được vẽ bằng code khi mở cảnh, không cần tải ảnh.
 - Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
 
+## Rừng Yên 3.8 · Bản đồ mở rộng (beta)
+
+- Bản đồ dài khoảng 130 m: **Cổng Yên** (phía nam) → **Sân đón** → lối đá giữa hai cánh **hồ sen** → **cầu vòm** bắc qua lạch → **Sân chân đồi** → **bậc đá zíc zắc** lên **đồi tượng Phật** (đỉnh cao 8 m, z = -62).
+- **Hồ sen hai cánh** (hồ Niệm mở rộng): hai cánh 30 × 26 m nối bằng lạch nước dưới cầu. Thuyền chung đi từ bến tây, qua gầm cầu, sang bến đông.
+- **Vòng Ngũ quan** quanh chân đồi: Sắc, Thanh, Hương, Vị, Chạm. **Nhà hoa lan** nằm cạnh hồ Sắc, cửa quay ra hồ.
+- **Rừng thông kiểu Đà Lạt**: khoảng 600 cây cao thấp ngẫu nhiên (thân cao, tán xếp tầng ở ngọn; thông non hình nón), sinh từ hạt giống cố định nên mọi khách thấy cùng một khu rừng. Dưới gốc là thảm lá thông, trảng trống là cỏ xanh lốm đốm vàng, có khóm dã quỳ và đá rêu.
+- Mỗi loại cây/cỏ/hoa/đá là một InstancedMesh (một lần vẽ). Không dùng bóng đổ. Cây đứng giữa máy quay và nhân vật tự ẩn đi.
+- Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
+
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
 - Thiền đường cộng hưởng vẫn sử dụng SQL của phiên bản 3.4. Không chạy lại SQL nếu đã cấu hình.

@@ -243,20 +243,38 @@ window.anyenRetry3D=async function initialize3D(){
   const holder=document.querySelector('.scene');holder.append(renderer.domElement);window.anyenRetry3D=null;
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();console.warn('LÀNG YÊN 3D: WebGL context lost');document.getElementById('zenHint').textContent='Đang khôi phục không gian 3D… Nếu màn hình vẫn đứng, hãy tải lại trang.'},false);
   renderer.domElement.addEventListener('webglcontextrestored',()=>{console.info('LÀNG YÊN 3D: WebGL context restored');document.getElementById('zenHint').textContent='Đã khôi phục không gian 3D.'},false);
-  const scene=new THREE.Scene();scene.background=new THREE.Color('#173c35');scene.fog=new THREE.FogExp2('#264b42',.022);
-  const camera=new THREE.PerspectiveCamera(57,innerWidth/innerHeight,.1,250);camera.position.set(0,7,21);
+  const scene=new THREE.Scene();scene.background=new THREE.Color('#2d5a50');scene.fog=new THREE.FogExp2('#4a6f63',.0125);
+  const camera=new THREE.PerspectiveCamera(57,innerWidth/innerHeight,.1,320);camera.position.set(0,7,21);
   const hemiLight=new THREE.HemisphereLight('#f6dfaf','#1b4234',2.1);scene.add(hemiLight);const sun=new THREE.DirectionalLight('#f5c78c',2.4);sun.position.set(-8,19,-8);scene.add(sun);
   const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness,side:THREE.DoubleSide});
-  let bayMode=false;const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat('#234c3e'));ground.rotation.x=-Math.PI/2;ground.position.y=-.1;scene.add(ground);
-  const water=new THREE.Mesh(new THREE.CircleGeometry(10.5,80),new THREE.MeshStandardMaterial({color:'#306c68',metalness:.35,roughness:.24,transparent:true,opacity:.91}));water.rotation.x=-Math.PI/2;water.position.set(0,.02,-4);scene.add(water);
+  let bayMode=false;
+  // 3.8: Bản đồ mở rộng. Phía nam là hồ sen hai cánh, phía bắc là đồi tượng Phật; vành ngoài nâng thành triền thông.
+  // terrainHeight() là nguồn duy nhất cho cao độ: lưới mặt đất, người đi, cây và tọa cụ đều đọc từ đây.
+  const HILL={x:0,z:-62,top:8,flat:11,foot:26};
+  const LOTUS_LAKE={z:-4,lobes:[[-18,15,13],[18,15,13]],channel:[7,4]};
+  function lakeSDF(x,z){let d=Infinity;for(const [cx,rx,rz] of LOTUS_LAKE.lobes){const dx=(x-cx)/rx,dz=(z-LOTUS_LAKE.z)/rz;d=Math.min(d,(Math.hypot(dx,dz)-1)*Math.min(rx,rz))}const qx=Math.abs(x)-LOTUS_LAKE.channel[0],qz=Math.abs(z-LOTUS_LAKE.z)-LOTUS_LAKE.channel[1];return Math.min(d,Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0))}
+  const smoothstep=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t)};
+  function terrainHeight(x,z){
+    const lk=lakeSDF(x,z);if(lk<0)return Math.max(-1.1,lk*.35)-.12;
+    const hr=Math.hypot(x-HILL.x,z-HILL.z),slope=smoothstep(HILL.foot,HILL.flat,hr);
+    let y=HILL.top*slope+.5*Math.sin(Math.atan2(z-HILL.z,x-HILL.x)*3+.7)*slope*(1-slope)*4;
+    const e=Math.max((Math.abs(x)-44)/14,(z-37)/12,(-z-87)/10);
+    if(e>0)y+=9*smoothstep(0,1,e)+Math.sin(x*.21+z*.13)*.8*smoothstep(0,.5,e);
+    return y;
+  }
+  const ground=(()=>{const g=new THREE.PlaneGeometry(160,190,160,190);g.rotateX(-Math.PI/2);g.translate(0,0,-25);const p=g.attributes.position;
+    for(let i=0;i<p.count;i++)p.setY(i,terrainHeight(p.getX(i),p.getZ(i)));g.computeVertexNormals();
+    g.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(p.count*3).fill(.25),3));
+    return new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}))})();scene.add(ground);
+  const water=new THREE.Mesh(new THREE.PlaneGeometry(78,38),new THREE.MeshStandardMaterial({color:'#306c68',metalness:.12,roughness:.32,transparent:true,opacity:.86}));water.rotation.x=-Math.PI/2;water.position.set(0,-.05,-4);scene.add(water);
 
-// Six contemplative ponds, placed away from the main bridge and sanctuary.
+// Six contemplative ponds: Hồ Niệm (hồ sen hai cánh) and five sense ponds around the foot of the Buddha hill.
 const wishLakes=[
- {name:'Sắc',x:-23,z:18,color:'#547d81',theme:'thịnh vượng'},
- {name:'Thanh',x:23,z:18,color:'#57758b',theme:'công việc'},
- {name:'Hương',x:-25,z:2,color:'#688b78',theme:'sức khỏe'},
- {name:'Vị',x:25,z:2,color:'#947a67',theme:'tình duyên'},
- {name:'Chạm',x:-23,z:-19,color:'#8c7188',theme:'kết nối'},
+ {name:'Sắc',x:-26,z:-40,color:'#547d81',theme:'thịnh vượng'},
+ {name:'Thanh',x:26,z:-40,color:'#57758b',theme:'công việc'},
+ {name:'Hương',x:-33,z:-58,color:'#688b78',theme:'sức khỏe'},
+ {name:'Vị',x:33,z:-58,color:'#947a67',theme:'tình duyên'},
+ {name:'Chạm',x:-30,z:-78,color:'#8c7188',theme:'kết nối'},
  {name:'Niệm',x:0,z:-4,color:'#5a9b91',theme:'an yên'}
 ];
 const lakeVisuals=new Map();let wishDestination=null;let selectedWishLake='Niệm';window.anyenSelectedWishLake='Niệm';
@@ -282,12 +300,12 @@ window.addEventListener('anyen-item-receive',e=>{const {id,emoji,name,source,fro
 });
 
 window.addEventListener('anyen-wish-select',e=>{const l=wishLakes.find(v=>v.name===e.detail?.lake);if(!l)return;selectedWishLake=l.name;window.anyenSelectedWishLake=l.name;const selector=document.getElementById('anyenWishLake');if(selector)selector.value=l.name;
- const candidates=[];for(let k=0;k<24;k++){const a=k*Math.PI/12,r=l.name==='Niệm'?12.8:4.65;candidates.push([l.x+Math.cos(a)*r,l.z+Math.sin(a)*r]);}
+ const candidates=[];for(let k=0;k<24;k++){const a=k*Math.PI/12;if(l.name==='Niệm'){for(const s of [-1,1])candidates.push([s*18+Math.cos(a)*16.6,-4+Math.sin(a)*14.6]);}else candidates.push([l.x+Math.cos(a)*4.65,l.z+Math.sin(a)*4.65]);}
  candidates.sort((a,b)=>Math.hypot(a[0]-mePosition.x,a[1]-mePosition.z)-Math.hypot(b[0]-mePosition.x,b[1]-mePosition.z));
  let ok=false;for(const p of candidates){if(!walkable(...p))continue;if(navigateTo(...p)){ok=true;break;}}
  wishDestination=ok?l.name:null;if(!ok)document.getElementById('zenHint').textContent='Chưa tìm được đường đến Hồ '+l.name+'. Hãy thử đến gần hơn.';});
-// Measure to the shore, not the centre: Hồ Niệm is much larger (r 10.5) than the five small ponds (r 3.25).
-function lakeShoreDistance(l){return Math.hypot(mePosition.x-l.x,mePosition.z-l.z)-(l.name==='Niệm'?10.5:3.25)}
+// Measure to the shore, not the centre: Hồ Niệm is the large two-lobed lotus lake, the others are small ponds (r 3.25).
+function lakeShoreDistance(l){return l.name==='Niệm'?lakeSDF(mePosition.x,mePosition.z):Math.hypot(mePosition.x-l.x,mePosition.z-l.z)-3.25}
 function nearestWishLake(){let best=wishLakes[0],distance=Infinity;for(const l of wishLakes){const d=lakeShoreDistance(l);if(d<distance){distance=d;best=l}}return best.name}
 function isNearWishLake(){return wishLakes.some(l=>lakeShoreDistance(l)<=7)}
 function updateWishLake(){const name=nearestWishLake();if(name===selectedWishLake)return;selectedWishLake=name;window.anyenSelectedWishLake=name;const el=document.getElementById('anyenCurrentLake');if(el)el.textContent='🪷 Hồ '+name;const selector=document.getElementById('anyenWishLake');if(selector)selector.value=name}
@@ -295,24 +313,30 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
  const lake=e.detail?.remote?e.detail?.lake:nearestWishLake();if(!wishLakes.some(v=>v.name===lake))return;animateCoin(lake,!!e.detail?.remote);if(!e.detail?.remote){wishQuote(lake);window.dispatchEvent(new CustomEvent('anyen-coin-thrown',{detail:{lake}}))}});
   const box=(w,h,d,m,x,y,z)=>{let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o};
   const wood=mat('#654c33'),roof=mat('#23332f'),gold=mat('#c8a96a'),stone=mat('#8a8d78');
-  // 3.6: Outdoor meditation terrace north of Hồ Niệm. A seated Buddha under a wide roof,
-  // facing the bridge, with three arcs of meditation cushions in front.
-  const STATUE={x:0,z:-31},TERRACE_TOP=.3;
+  // 3.8: The meditation terrace sits on the flat top of the hill at the north end. A seated Buddha under a wide roof,
+  // facing the lake and the gate, with rings of meditation cushions in front. Everything here is in the shrine group,
+  // which is lifted to the hilltop; x/z stay in world coordinates.
+  const STATUE={x:HILL.x,z:HILL.z},TERRACE_TOP=.3;
+  const shrine=new THREE.Group();shrine.position.y=HILL.top;scene.add(shrine);
+  const sbox=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);shrine.add(o);return o};
+  const FOOT={x:0,z:-31,r:6},GATHER={x:0,z:24,r:6.5};
+  const STAIRS=[[0,-36.6],[5,-41.4],[-5,-46.4],[0,-51.4]];
+  function stairsDistance(x,z){let best=Infinity;for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz)));best=Math.min(best,Math.hypot(ax+vx*u-x,az+vz*u-z))}return best}
   const terraceMat=mat('#9a9580'),terraceEdge=mat('#7f7b68'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
   const TERRACE_R=8.2;
   // Arched footbridge over Hồ Niệm: walkers follow this height while on the bridge.
-  const BRIDGE_ARCH=[-15.6,7.6],BRIDGE_RISE=2.6;
+  const BRIDGE_ARCH=[-10.5,2.5],BRIDGE_RISE=2.6;
   function bridgeHeight(z){if(z<=BRIDGE_ARCH[0]||z>=BRIDGE_ARCH[1])return 0;const u=(z-BRIDGE_ARCH[0])/(BRIDGE_ARCH[1]-BRIDGE_ARCH[0]);return .18+BRIDGE_RISE*Math.sin(Math.PI*u);}
-  const groundHeight=(x,z)=>Math.abs(x)<=1.8?bridgeHeight(z):0;const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);scene.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);scene.add(kerb);
+  const groundHeight=(x,z)=>Math.abs(x)<=1.8&&z>BRIDGE_ARCH[0]&&z<BRIDGE_ARCH[1]?bridgeHeight(z):terrainHeight(x,z);const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);shrine.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);shrine.add(kerb);
   // Round three-step dais for the statue.
-  [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);scene.add(d)});
+  [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);shrine.add(d)});
   const DAIS_TOP=TERRACE_TOP+.54;
   // Wide pyramid roof that only shelters the statue.
-  for(const x of [-1.9,1.9])for(const z of [STATUE.z-1.9,STATUE.z+1.9]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.17,.2,5.2,10),wood);post.position.set(x,TERRACE_TOP+2.6,z);scene.add(post);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.3,.34,.22,10),terraceEdge);foot.position.set(x,TERRACE_TOP+.11,z);scene.add(foot)}
-  const beamY=TERRACE_TOP+5.2;box(4.2,.28,.32,eave,0,beamY,STATUE.z-1.9);box(4.2,.28,.32,eave,0,beamY,STATUE.z+1.9);box(.32,.28,4.2,eave,-1.9,beamY,STATUE.z);box(.32,.28,4.2,eave,1.9,beamY,STATUE.z);
-  const eaveSlab=box(7.6,.14,7.6,eave,0,beamY+.22,STATUE.z);
-  const roofCone=new THREE.Mesh(new THREE.ConeGeometry(6.3,2.3,4,1),tile);roofCone.rotation.y=Math.PI/4;roofCone.position.set(0,beamY+1.45,STATUE.z);scene.add(roofCone);
-  const finial=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),gold);finial.position.set(0,beamY+2.7,STATUE.z);scene.add(finial);
+  for(const x of [-1.9,1.9])for(const z of [STATUE.z-1.9,STATUE.z+1.9]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.17,.2,5.2,10),wood);post.position.set(x,TERRACE_TOP+2.6,z);shrine.add(post);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.3,.34,.22,10),terraceEdge);foot.position.set(x,TERRACE_TOP+.11,z);shrine.add(foot)}
+  const beamY=TERRACE_TOP+5.2;sbox(4.2,.28,.32,eave,0,beamY,STATUE.z-1.9);sbox(4.2,.28,.32,eave,0,beamY,STATUE.z+1.9);sbox(.32,.28,4.2,eave,-1.9,beamY,STATUE.z);sbox(.32,.28,4.2,eave,1.9,beamY,STATUE.z);
+  const eaveSlab=sbox(7.6,.14,7.6,eave,0,beamY+.22,STATUE.z);
+  const roofCone=new THREE.Mesh(new THREE.ConeGeometry(6.3,2.3,4,1),tile);roofCone.rotation.y=Math.PI/4;roofCone.position.set(0,beamY+1.45,STATUE.z);shrine.add(roofCone);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),gold);finial.position.set(0,beamY+2.7,STATUE.z);shrine.add(finial);
   // Seated Buddha in meditation, built from simple shapes.
   const buddha=new THREE.Group();const skin=mat('#c9a35f',.55),robeGold=mat('#b88d45',.6);
   const lotusBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.2,.28,24),gold);lotusBase.position.y=.14;buddha.add(lotusBase);
@@ -327,17 +351,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const ushnisha=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10),robeGold);ushnisha.position.y=2.86;buddha.add(ushnisha);
   for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.24,3,8),skin);ear.position.set(side*.35,2.38,0);buddha.add(ear)}
   const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.95,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false}));halo.position.set(0,2.5,-.32);buddha.add(halo);
-  buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);scene.add(buddha);
+  buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);shrine.add(buddha);
   // Stone lanterns where the bridge meets the terrace.
-  for(const x of [-2.3,2.3]){const l=new THREE.Group();l.position.set(x,0,STATUE.z+8.6);const post=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.1,8),terraceEdge);post.position.y=.55;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.42,.5),terraceMat);lamp.position.y=1.3;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.3,.24,.52),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=1.3;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.45,.35,4),terraceEdge);cap.rotation.y=Math.PI/4;cap.position.y=1.7;l.add(cap);scene.add(l)}
+  for(const x of [-2.3,2.3]){const l=new THREE.Group();l.position.set(x,0,STATUE.z+8.6);const post=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.1,8),terraceEdge);post.position.y=.55;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.42,.5),terraceMat);lamp.position.y=1.3;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.3,.24,.52),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=1.3;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.45,.35,4),terraceEdge);cap.rotation.y=Math.PI/4;cap.position.y=1.7;l.add(cap);shrine.add(l)}
   // Bodhi tree behind the shrine.
-  {const bodhi=new THREE.Group();bodhi.position.set(0,0,STATUE.z-11.7);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});scene.add(bodhi)}
-  // 3.7: Nhà hoa lan, a small glasshouse ~10 m to the right of the statue (as seen from the bridge).
+  {const bodhi=new THREE.Group();bodhi.position.set(0,0,STATUE.z-11.7);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});shrine.add(bodhi)}
+  // 3.7: Nhà hoa lan, a small glasshouse beside Hồ Sắc (3.8), its door turned toward the pond.
   // Its door opens the Viverse scene "ORCHID hoa lan" full screen; the forest stops rendering while it is open.
-  const ORCHID={x:11,z:-31,w:3.6,d:4,url:'https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=',title:'ORCHID hoa lan | Dong Lan | Redmoon'};
-  const ORCHID_DOOR=[ORCHID.x,ORCHID.z+ORCHID.d/2+1.2];
+  const ORCHID={x:-33,z:-35,rot:2.19,w:3.6,d:4,url:'https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=',title:'ORCHID hoa lan | Dong Lan | Redmoon'};
+  const ORCHID_DOOR=[ORCHID.x+Math.sin(ORCHID.rot)*(ORCHID.d/2+1.2),ORCHID.z+Math.cos(ORCHID.rot)*(ORCHID.d/2+1.2)];
   let pendingOrchid=false,orchidOpen=false;
-  const orchidHouse=new THREE.Group();orchidHouse.position.set(ORCHID.x,0,ORCHID.z);scene.add(orchidHouse);
+  const orchidHouse=new THREE.Group();orchidHouse.position.set(ORCHID.x,0,ORCHID.z);orchidHouse.rotation.y=ORCHID.rot;scene.add(orchidHouse);
   {const W=ORCHID.w,D=ORCHID.d,H=2.6,iron=mat('#2f3a33',.5),glass=new THREE.MeshStandardMaterial({color:'#d8efe6',roughness:.1,metalness:.1,transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide});
     const add=(m,x,y,z)=>{m.position.set(x,y,z);orchidHouse.add(m);return m};
     add(new THREE.Mesh(new THREE.BoxGeometry(W+.5,.2,D+.5),terraceEdge),0,.1,0);
@@ -368,13 +392,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // Soft pulsing ring on the ground in front of the door.
   const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(ORCHID_DOOR[0],.03,ORCHID_DOOR[1]);scene.add(orchidRing);
-  // Footbridge across Hồ Niệm, landing on the terrace steps.
+  // Footbridge across the channel between the two lotus lobes, on the main axis from the gate to the hill.
   // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
-  {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(-16.55,BRIDGE_ARCH[0]);
-   // Stone path from the foot of the bridge to the meditation terrace, edged with low stones.
-   {const z0=STATUE.z+TERRACE_R-.3,z1=-16.5,path=new THREE.Mesh(new THREE.BoxGeometry(3.2,.08,z1-z0),mat('#a59c82'));path.position.set(0,.04,(z0+z1)/2);scene.add(path);
+  {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(BRIDGE_ARCH[0]-1.2,BRIDGE_ARCH[0]);
+   // Stone paths on the main axis (gate, gathering plaza, bridge, foot of the hill), edged with low stones.
+   const stonePath=(z0,z1)=>{const path=new THREE.Mesh(new THREE.BoxGeometry(3.2,.08,z1-z0),mat('#a59c82'));path.position.set(0,.04,(z0+z1)/2);scene.add(path);
     for(let z=z0+.4;z<z1;z+=.9)for(const x of [-1.75,1.75]){const st=new THREE.Mesh(new THREE.DodecahedronGeometry(.16,0),stone);st.position.set(x,.08,z);st.scale.y=.6;scene.add(st)}
-    for(let z=z0+.45;z<z1-.2;z+=1.1){const slab=new THREE.Mesh(new THREE.BoxGeometry(2.9,.03,.08),mat('#8e866e'));slab.position.set(0,.09,z);scene.add(slab)}}flat(BRIDGE_ARCH[1],14.85);
+    for(let z=z0+.45;z<z1-.2;z+=1.1){const slab=new THREE.Mesh(new THREE.BoxGeometry(2.9,.03,.08),mat('#8e866e'));slab.position.set(0,.09,z);scene.add(slab)}};
+   stonePath(FOOT.z+FOOT.r-.3,BRIDGE_ARCH[0]-1.2);stonePath(BRIDGE_ARCH[1]+1.2,GATHER.z-GATHER.r+.3);stonePath(GATHER.z+GATHER.r-.3,35);flat(BRIDGE_ARCH[1],BRIDGE_ARCH[1]+1.2);
    const N=36,span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0];let prev=null;
    for(let k=0;k<=N;k++){const z=BRIDGE_ARCH[0]+span*k/N,y=bridgeHeight(z);const pt={z,y};
      if(prev){const len=Math.hypot(pt.z-prev.z,pt.y-prev.y),mz=(pt.z+prev.z)/2,my=(pt.y+prev.y)/2,tilt=-Math.atan2(pt.y-prev.y,pt.z-prev.z);
@@ -385,8 +410,20 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
      prev=pt;}
    // Stone abutments where the arch meets the shore.
    for(const z of BRIDGE_ARCH){const a=new THREE.Mesh(new THREE.BoxGeometry(4,.5,1.2),stone);a.position.set(0,.05,z);scene.add(a)}}
+
+  // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
+  for(const p of [GATHER,FOOT]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(p.r,p.r+.1,.12,48),mat('#a59c82'));disc.position.set(p.x,.06,p.z);scene.add(disc);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(p.r+.05,.09,6,48),mat('#8e866e'));rim.rotation.x=-Math.PI/2;rim.position.set(p.x,.1,p.z);scene.add(rim)}
+  // Zig-zag stone stairs up the south face of the hill, with a stone lantern at every turn.
+  {const slabMat=mat('#9b937b'),edgeMat=mat('#7f7b68');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
+      for(let t=0;t<=len;t+=.62){const x=ax+(bx-ax)*t/len,z=az+(bz-az)*t/len,slab=new THREE.Mesh(new THREE.BoxGeometry(2.8,.16,.56),slabMat);slab.position.set(x,terrainHeight(x,z)+.06,z);slab.rotation.y=yaw;scene.add(slab)}}
+    for(const [x,z] of STAIRS){for(const side of [-1,1]){const l=new THREE.Group();l.position.set(x+side*1.9,terrainHeight(x+side*1.9,z),z);const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,8),edgeMat);post.position.y=.4;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.36,.3,.36),slabMat);lamp.position.y=.95;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.22,.18,.38),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=.95;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.32,.26,4),edgeMat);cap.rotation.y=Math.PI/4;cap.position.y=1.24;l.add(cap);scene.add(l)}}}
+  // Cổng Yên: a plain wooden gate at the south end of the main axis.
+  {const g=new THREE.Group();g.position.set(0,0,34.2);const post=mat('#5b3d2a'),beam=mat('#6b4a32');for(const x of [-2.4,2.4]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,4.4,10),post);p.position.set(x,2.2,0);g.add(p);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.3,10),stone);foot.position.set(x,.15,0);g.add(foot)}
+    const top=new THREE.Mesh(new THREE.BoxGeometry(6.4,.32,.5),beam);top.position.y=4.5;g.add(top);const tie=new THREE.Mesh(new THREE.BoxGeometry(5.2,.2,.3),beam);tie.position.y=3.7;g.add(tie);
+    const roofG=new THREE.Mesh(new THREE.BoxGeometry(7,.14,1.1),mat('#4b3a31'));roofG.position.y=4.74;g.add(roofG);scene.add(g)}
   // Simple ritual altar within sanctuary; all offerings are local visual feedback for now.
-  const altar=new THREE.Group();altar.position.set(0,TERRACE_TOP+.08,STATUE.z+2.7);scene.add(altar);
+  const altar=new THREE.Group();altar.position.set(0,TERRACE_TOP+.08,STATUE.z+2.7);shrine.add(altar);
   const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(.62,.7,.22,24),mat('#6b4a32'));altar.add(altarBase);
   const offerings=[];const seenOfferings=new Set();
   window.addEventListener('anyen-offering',e=>{const kind=e.detail?.kind;if(!['incense','flower','candle'].includes(kind))return;
@@ -416,9 +453,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     document.getElementById('zenHint').textContent=kind==='flower'?'🪷 Đã dâng hoa sen':kind==='incense'?'🪔 Đã dâng hương':'🕯️ Đã dâng nến';
   });
   const leaf=mat('#47745c'),pink=mat('#e5a9aa'),petal=mat('#edc6b4');
-  // Trees between the camera and the avatar fade out so they never block the view.
-  const fadeTrees=[];
-  function fadeBlockingTrees(cam,target,dt){const ax=cam.x,az=cam.z,bx=target.x,bz=target.z,vx=bx-ax,vz=bz-az,len2=vx*vx+vz*vz||1;for(const t of fadeTrees){const u=Math.max(0,Math.min(1,((t.x-ax)*vx+(t.z-az)*vz)/len2));const d=Math.hypot(ax+vx*u-t.x,az+vz*u-t.z);const blocking=u>0&&u<1&&d<2.3;const goal=blocking?.18:1;if(Math.abs(t.opacity-goal)<.01&&t.opacity===goal)continue;t.opacity+= (goal-t.opacity)*Math.min(1,dt*8);if(Math.abs(t.opacity-goal)<.01)t.opacity=goal;for(const m of t.meshes){m.material.transparent=t.opacity<1;m.material.opacity=t.opacity;m.material.depthWrite=t.opacity>=1;}}}
   // Hồ Niệm lotus: floating notched pads, raised bowl-shaped leaves on stems, open flowers with layered pointed petals
   // around a yellow seed pod, and a few closed buds. Kept clear of the bridge.
   const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalInner=mat('#f6b6c8'),seedPod=mat('#e2cf62'),budMat=mat('#e98aaa');
@@ -431,16 +465,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
   function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
   const flowers=[];
-  for(let i=0;i<26;i++){const a=i*2.399,r=2.4+(i%6)*1.25;let x=Math.cos(a)*r;const z=-4+Math.sin(a)*r;if(Math.abs(x)<2.8)x=Math.sign(x||1)*(2.8+Math.abs(x)*.4);
-    if(Math.abs(z+4)<1.8)continue;/* boat lane across the pond */
-    const clump=new THREE.Group();clump.position.set(x,.04,z);clump.rotation.y=a;clump.userData.y0=.04;
+  const lotusRand=(()=>{let a=0x5e17;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}})();
+  for(let i=0,tries=0;i<44&&tries<600;tries++){const x=(lotusRand()*2-1)*32,z=-4+(lotusRand()*2-1)*12;
+    if(lakeSDF(x,z)>-1.6||Math.abs(x)<9||Math.abs(z+4)<2.2)continue;/* inside a lobe, clear of the bridge channel and the boat lane */
+    if(flowers.some(f=>Math.hypot(f.position.x-x,f.position.z-z)<2.6))continue;i++;const a=lotusRand()*6.28;
+    const clump=new THREE.Group();clump.position.set(x,-.03,z);clump.rotation.y=a;clump.userData.y0=-.03;
     for(let k=0;k<3;k++){const pad=lotusPad(.7+Math.random()*.6);pad.position.set((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4);clump.add(pad)}
     if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
     if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
     scene.add(clump);flowers.push(clump)}
-  // One shared boat for the whole village (no oars). It moors at the west or east pier. Tap it to board; it crosses
-  // under the arched bridge to the opposite bank and you step ashore. Everyone sees it.
-  const BOAT_LANE_Z=-4,BOAT_DOCK_X=9.9,BOAT_LAND_X=13.1,BOAT_SPEED=1.25,BOAT_STEP_MS=900,BOAT_WAIT_MS=8000,BOAT_WATER_R=9.2;
+  // One shared boat for the whole village (no oars). It moors at the west or east pier. Tap it to board; it glides
+  // across the west lobe, under the arched bridge and through the east lobe, and you step ashore. Everyone sees it.
+  const BOAT_LANE_Z=-4,BOAT_DOCK_X=27.5,BOAT_LAND_X=35.2,BOAT_PIER_X=32.3,BOAT_SPEED=2,BOAT_STEP_MS=900,BOAT_WAIT_MS=8000,BOAT_WATER_R=9.2;
   function makeBoat(){const g=new THREE.Group(),hullMat=mat('#7a5634'),trim=mat('#a07448');
     // Hull from a pointed boat outline: a hollow rim (outline with an inset hole) on a solid floor.
    const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
@@ -453,7 +489,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const boat={...makeBoat(),side:-1};boat.group.position.set(boat.side*BOAT_DOCK_X,.02,BOAT_LANE_Z);scene.add(boat.group);
   const piers=[];
   {   // Wooden piers on both banks.
-   for(const sx of [-1,1]){const pier=new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,1.5),mat('#8a6a48'));pier.position.set(sx*12,.16,BOAT_LANE_Z);scene.add(pier);pier.userData.side=sx;piers.push(pier);for(const dz of [-.65,.65])for(const dx of [-1.4,0,1.4]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,6),wood);post.position.set(sx*12+dx,0,BOAT_LANE_Z+dz);scene.add(post)}}}
+   for(const sx of [-1,1]){const pier=new THREE.Mesh(new THREE.BoxGeometry(3.2,.12,1.5),mat('#8a6a48'));pier.position.set(sx*BOAT_PIER_X,.16,BOAT_LANE_Z);scene.add(pier);pier.userData.side=sx;piers.push(pier);for(const dz of [-.65,.65])for(const dx of [-1.4,0,1.4]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.6,6),wood);post.position.set(sx*BOAT_PIER_X+dx,0,BOAT_LANE_Z+dz);scene.add(post)}}}
   // boatStamp: when the boat last moored (ms). Guests share side+stamp in position updates; the newest wins.
   let boatRide=null,pendingBoat=false,boatStamp=0,boatBusy=false;
   const boatLand=side=>[side*BOAT_LAND_X,BOAT_LANE_Z];
@@ -486,25 +522,139 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     else if(r.phase==='ashore'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u),[lx,lz]=boatLand(r.dock);mePosition.set(g.position.x+(lx-g.position.x)*e,0,g.position.z+(lz-g.position.z)*e);r.heading=r.dock>0?Math.PI/2:-Math.PI/2;
       if(u>=1){boat.side=r.dock;boatStamp=Date.now();boatRide=null;mePosition.set(lx,0,lz);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz,bs:boat.side,bt:boatStamp}}));document.getElementById('zenHint').textContent='Đã lên bờ · Chạm thuyền để chèo tiếp';}}
     g.rotation.y=(r.heading||0)-Math.PI/2;g.position.y=.02+Math.sin(now/700)*.025;g.rotation.z=Math.sin(now/900)*.02;
-  }  // Pine trunks are obstacles: nobody walks or stands inside them.
-  const treeSpots=[],TREE_CLEAR=1.0;
-  function pushOutOfTrees(x,z){for(const [tx,tz] of treeSpots){const d=Math.hypot(x-tx,z-tz);if(d<TREE_CLEAR){const k=d>1e-3?TREE_CLEAR/d:0;return k?[tx+(x-tx)*k,tz+(z-tz)*k]:[tx+TREE_CLEAR,tz];}}return [x,z];}
-  const PINE_DEFAULT={count:32,cols:8,dx:4.4,dz:18,z0:-29,z_remap:{'25':32.5},clear_rects:[[-11,-15,11,7],[-9,-99,9,-25],[9,-99,14,-25]],trunk_color:'#654c33',leaf_color:'#47745c'};
-  let pineMeshes=[],pineKey=JSON.stringify(PINE_DEFAULT);
-  function buildPines(p){
-    for(const m of pineMeshes){scene.remove(m);m.geometry.dispose();m.material.dispose()}
-    pineMeshes=[];treeSpots.length=0;fadeTrees.length=0;
-    for(let i=0;i<p.count;i++){let x=(i%p.cols-(p.cols-1)/2)*p.dx,z=p.z0+Math.floor(i/p.cols)*p.dz;if(p.z_remap&&p.z_remap[z]!==undefined)z=p.z_remap[z];/* keep the arrival area clear */if((p.clear_rects||[]).some(([x0,z0,x1,z1])=>x>x0&&x<x1&&z>z0&&z<z1))continue;treeSpots.push([x,z]);const tm=wood.clone(),lm=leaf.clone();if(p.trunk_color)tm.color.set(p.trunk_color);if(p.leaf_color)lm.color.set(p.leaf_color);let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.28,3,8),tm);trunk.position.set(x,1.4,z);scene.add(trunk);let canopy=new THREE.Mesh(new THREE.ConeGeometry(1.4,4,9),lm);canopy.position.set(x,4.6,z);scene.add(canopy);pineMeshes.push(trunk,canopy);fadeTrees.push({x,z,meshes:[trunk,canopy],opacity:1})}
   }
-  buildPines(PINE_DEFAULT);
+  // 3.8: Rừng thông kiểu Đà Lạt. Thân cao thẳng màu nâu đỏ, tán xếp thành nhiều tầng mỏng ở phần ngọn,
+  // cây cao thấp xen nhau; dưới gốc là thảm lá thông, ngoài trảng là cỏ xanh lốm đốm vàng và khóm dã quỳ.
+  // Mỗi loại cây/cỏ/hoa/đá là một InstancedMesh (một lần vẽ), nên vài trăm cây vẫn nhẹ cho điện thoại.
+  // Rừng sinh từ một hạt giống cố định: mọi khách nhìn thấy cùng một khu rừng.
+  const treeSpots=[],TREE_CLEAR=1.0,TREE_CELL=4,treeGrid=new Map();
+  const treeCellKey=(cx,cz)=>cx*1000+cz;
+  function treeBlocked(x,z){const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=treeGrid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<TREE_CLEAR)return t}return null}
+  function pushOutOfTrees(x,z){const t=treeBlocked(x,z);if(!t)return [x,z];const d=Math.hypot(x-t[0],z-t[1]);return d>1e-3?[t[0]+(x-t[0])*TREE_CLEAR/d,t[1]+(z-t[1])*TREE_CLEAR/d]:[t[0]+TREE_CLEAR,t[1]]}
+  const FOREST_DEFAULT={seed:1121,inner:280,outer:340,inner_gap:3.1,outer_gap:2.3,grass:4200,daquy:70,rocks:70};
+  let forestKey=JSON.stringify(FOREST_DEFAULT);const forestMeshes=[],forestTrees=[];
+  function seededRandom(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  // Merge simple parts into one geometry with per-vertex colours, so a whole tree is a single draw.
+  function mergeColored(parts){let n=0;const geos=parts.map(([g,c])=>{const q=g.index?g.toNonIndexed():g;n+=q.attributes.position.count;return [q,c]});
+    const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+    for(const [g,c] of geos){const k=g.attributes.position.count;pos.set(g.attributes.position.array,o*3);if(!g.attributes.normal)g.computeVertexNormals();nor.set(g.attributes.normal.array,o*3);const cc=new THREE.Color(c);for(let i=0;i<k;i++){col[(o+i)*3]=cc.r;col[(o+i)*3+1]=cc.g;col[(o+i)*3+2]=cc.b}o+=k}
+    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(pos,3));out.setAttribute('normal',new THREE.BufferAttribute(nor,3));out.setAttribute('color',new THREE.BufferAttribute(col,3));return out}
+  const part=(geo,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0)=>{const g=geo.clone();g.scale(sx,sy,sz);if(rz)g.rotateZ(rz);if(ry)g.rotateY(ry);g.translate(x,y,z);return g};
+  // Tree templates, built at a nominal height and scaled per instance.
+  function pineTemplates(){
+    const bark='#6e4632',barkDark='#5a3a2a',needle=['#2f5a3c','#3a6a45','#2a5236','#45734a'];
+    const blob=new THREE.IcosahedronGeometry(1,0),cyl=(rt,rb,h)=>new THREE.CylinderGeometry(rt,rb,h,7,1),cone=(r,h)=>new THREE.ConeGeometry(r,h,7,1);
+    // Tall Pinus kesiya: long bare trunk, a few short dead branch stubs, crown of flat tiers in the top third.
+    const tall=(H,tiers,stubs)=>mergeColored([[part(cyl(.13,.42,H),0,H/2,0),bark],
+      ...stubs.map(([y,a])=>[part(cyl(.03,.06,1.3),Math.sin(a)*.55,y,Math.cos(a)*.55,1,1,1,a,1.25),barkDark]),
+      ...tiers.map(([x,y,z,sx,sy,sz],i)=>[part(blob,x,y,z,sx,sy,sz,i*.9),needle[i%4]])]);
+    return {
+      tallA:{h:17,geo:tall(17,[[0,16.7,0,1.4,.8,1.4],[.9,15.5,.4,2.1,.7,1.8],[-1.1,14.6,-.3,2.2,.62,1.9],[.5,13.5,-1,1.9,.58,1.7],[-.5,12.5,1,1.8,.55,1.6],[1.3,11.8,.2,1.3,.5,1.2]],[[6,0],[7.5,2.2],[9,4.1],[10.4,1.1]])},
+      tallB:{h:15,geo:tall(15,[[.3,14.7,0,1.3,.8,1.3],[-.9,13.7,.5,2.3,.62,1.8],[1.1,12.9,-.4,2.1,.6,1.9],[-.3,11.8,-.9,1.8,.55,1.6],[.8,11,.9,1.4,.5,1.3]],[[5,1],[6.8,3.3],[8.6,5.2]])},
+      mid:{h:10,geo:mergeColored([[part(cyl(.09,.26,10),0,5,0),bark],[part(cone(2.2,3),0,6.1,0),needle[1]],[part(cone(1.8,2.7),0,7.6,0,1,1,1,.4),needle[0]],[part(cone(1.25,2.3),0,8.9,0,1,1,1,.9),needle[3]],[part(cone(.6,1.6),0,10.1,0),needle[1]]])},
+      young:{h:4.6,geo:mergeColored([[part(cyl(.05,.11,2),0,1,0),bark],[part(cone(1.25,2.1),0,2,0),needle[3]],[part(cone(.9,1.8),0,3.1,0,1,1,1,.5),needle[1]],[part(cone(.5,1.2),0,4.05,0),needle[0]]])}
+    };}
+  const forestMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
+  const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+  // Open ground that must stay clear of trees: water, paths, plazas, hilltop, stairs, ponds, buildings, piers.
+  function forestClear(x,z,pad){
+    if(lakeSDF(x,z)<2.4+pad)return true;
+    if(Math.abs(x)<4.6+pad&&z>-37&&z<40)return true;
+    if(Math.hypot(x-GATHER.x,z-GATHER.z)<11+pad||Math.hypot(x-FOOT.x,z-FOOT.z)<9+pad)return true;
+    if(Math.abs(x)<20&&z>11&&z<33)return true;/* the arrival meadow */
+    const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.flat+2.5)return true;if(hr<HILL.foot&&z>HILL.z&&Math.abs(x)<15)return true;/* keep the statue visible from the gate */
+    if(stairsDistance(x,z)<3.2+pad)return true;
+    if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<7.5+pad))return true;
+    if(Math.hypot(x-ORCHID.x,z-ORCHID.z)<6.5+pad)return true;
+    if(Math.abs(Math.abs(x)-BOAT_LAND_X)<4+pad&&Math.abs(z-BOAT_LANE_Z)<4+pad)return true;
+    return false;}
+  const inWalkArea=(x,z)=>Math.abs(x)<46&&z<36&&z>-86;
+  function buildForest(p){
+    for(const m of forestMeshes){scene.remove(m);m.geometry.dispose()}forestMeshes.length=0;forestTrees.length=0;treeSpots.length=0;treeGrid.clear();
+    const rnd=seededRandom(p.seed||1),T=pineTemplates(),kinds=Object.keys(T),list={tallA:[],tallB:[],mid:[],young:[]};
+    const placedTrees=[],near=new Map(),nearKey=(x,z)=>treeCellKey(Math.floor(x/TREE_CELL),Math.floor(z/TREE_CELL));
+    const tooClose=(x,z,gap)=>{const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=near.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<gap)return true}return false};
+    const addTree=(x,z,kind,h)=>{const t=[x,z,kind,h];placedTrees.push(t);const k=nearKey(x,z);if(!near.has(k))near.set(k,[]);near.get(k).push(t);list[kind].push(t)};
+    // Inner forest: open stands of tall pines, a few young ones near clearings. Outer belt: denser, all sizes.
+    for(let n=0,tries=0;n<p.inner&&tries<p.inner*60;tries++){const x=(rnd()*2-1)*45,z=-85+rnd()*120;if(forestClear(x,z,0)||tooClose(x,z,p.inner_gap))continue;
+      const r=rnd(),kind=r<.42?'tallA':r<.72?'tallB':r<.9?'mid':'young';const t=T[kind];addTree(x,z,kind,t.h*(kind==='young'?.6+rnd()*.6:.78+rnd()*.42));n++}
+    for(let n=0,tries=0;n<p.outer&&tries<p.outer*60;tries++){const x=(rnd()*2-1)*72,z=-112+rnd()*176;if(inWalkArea(x,z)&&!(Math.abs(x)>40||z>31||z<-80))continue;if(forestClear(x,z,0)||tooClose(x,z,p.outer_gap))continue;
+      const r=rnd(),kind=r<.36?'tallA':r<.62?'tallB':r<.86?'mid':'young';const t=T[kind];addTree(x,z,kind,t.h*(kind==='young'?.6+rnd()*.6:.75+rnd()*.45));n++}
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),c=new THREE.Color();
+    for(const kind of kinds){const arr=list[kind];if(!arr.length)continue;const mesh=new THREE.InstancedMesh(T[kind].geo,forestMat,arr.length);
+      arr.forEach((t,i)=>{const [x,z,,h]=t,s=h/T[kind].h,w=s*(.85+rnd()*.3);e.set((rnd()-.5)*.05,rnd()*Math.PI*2,(rnd()-.5)*.05);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.08,z);sc.set(w,s,w);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);
+        c.setHSL(.0,0,.86+rnd()*.24);c.offsetHSL((rnd()-.5)*.025,0,0);mesh.setColorAt(i,c);
+        if(inWalkArea(x,z)){treeSpots.push([x,z]);const k=nearKey(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push([x,z])}
+        forestTrees.push({x,z,mesh,index:i,matrix:m4.clone(),hidden:false})});
+      mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+    paintGround(placedTrees,rnd);
+    // Grass tufts: three thin blades leaning out, scattered over the open ground.
+    {const blades=[];for(let k=0;k<3;k++){const g=new THREE.BufferGeometry(),a=k*Math.PI*2/3;g.setAttribute('position',new THREE.Float32BufferAttribute([-.05,0,0,.05,0,0,.07,.42,.05],3));g.computeVertexNormals();blades.push([part(g,0,0,0,1,1,1,a),k?'#6f9a4a':'#5f8a40'])}
+      const geo=mergeColored(blades),pts=[];
+      for(let tries=0;pts.length<p.grass&&tries<p.grass*6;tries++){const x=(rnd()*2-1)*47,z=-87+rnd()*126;
+        if(lakeSDF(x,z)<.5||(Math.abs(x)<2.1&&z>-37&&z<36)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+.3||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+.3||Math.hypot(x-HILL.x,z-HILL.z)<8.6||stairsDistance(x,z)<1.6)continue;
+        if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.6)||Math.hypot(x-ORCHID.x,z-ORCHID.z)<3)continue;pts.push([x,z])}
+      const mesh=new THREE.InstancedMesh(geo,grassMat,pts.length);
+      pts.forEach(([x,z],i)=>{const s=.6+rnd()*.9;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.02,z);sc.set(s,s*(.8+rnd()*.6),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);const dry=rnd()<.18;c.setRGB(dry?1.25:.85+rnd()*.3,dry?1.15:.9+rnd()*.25,dry?.6:.8+rnd()*.2);mesh.setColorAt(i,c)});
+      mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+    // Dã quỳ (wild sunflowers, Đà Lạt in November): leafy bushes topped with yellow flowers, along clearings and the main axis.
+    {const leafG=new THREE.IcosahedronGeometry(.36,0),stemG=new THREE.CylinderGeometry(.02,.025,.5,4),head=new THREE.CylinderGeometry(.15,.11,.05,9),eye=new THREE.CylinderGeometry(.055,.055,.07,6);
+      const parts=[[part(leafG,0,.3,0,1.3,.9,1.2),'#4f8040'],[part(leafG,.28,.48,.12,1,.85,1,1),'#5f9148'],[part(leafG,-.25,.52,-.1,.9,.8,.9,2),'#55883f']];
+      [[0,1.05,0],[.32,.98,.22],[-.3,.94,.16],[.12,.9,-.33],[-.18,1.12,-.2],[.4,.86,-.12],[-.38,.84,-.2]].forEach(([x,y,z],k)=>{parts.push([part(stemG,x*.7,y-.25,z*.7),'#4f7a3a']);parts.push([part(head,x,y,z,1,1,1,k,(k%3-1)*.25),'#f4c21f']);parts.push([part(eye,x,y+.025,z,1,1,1,0,(k%3-1)*.25),'#8a5a1e'])});
+      const geo=mergeColored(parts),pts=[];
+      for(let tries=0;pts.length<p.daquy&&tries<p.daquy*120;tries++){const x=(rnd()*2-1)*46,z=-86+rnd()*122,lk=lakeSDF(x,z),ax=Math.abs(x);
+        const edge=(ax>18.6&&ax<21.6&&z>11&&z<33)||(ax>5.2&&ax<7.6&&((z>4&&z<17)||(z>-36&&z<-13)))||(lk>2.6&&lk<4&&z>-4);
+        if(!edge||ax<4.8||treeBlocked(x,z)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+3||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+2)continue;
+        if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<2.2)||Math.hypot(ax-BOAT_LAND_X,z-BOAT_LANE_Z)<4)continue;pts.push([x,z])}
+      const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
+      pts.forEach(([x,z],i)=>{const s=.6+rnd()*.35;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z),z);sc.set(s,s*(.9+rnd()*.4),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
+      mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+    // Mossy rocks under the pines and along the shore.
+    {const geo=mergeColored([[part(new THREE.DodecahedronGeometry(.6,0),0,.18,0,1.3,.6,1),'#8a8b7c'],[part(new THREE.DodecahedronGeometry(.45,0),.1,.38,.05,1.1,.35,.9),'#6f8656']]),pts=[];
+      for(let tries=0;pts.length<p.rocks&&tries<p.rocks*60;tries++){const x=(rnd()*2-1)*47,z=-87+rnd()*126,lk=lakeSDF(x,z);
+        if(!(lk>.6&&lk<2.2)&&rnd()<.6)continue;if(forestClear(x,z,-2.4)&&!(lk>.6&&lk<2.2))continue;if(Math.abs(x)<2.6&&z>-37&&z<36)continue;if(stairsDistance(x,z)<2||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat||treeBlocked(x,z))continue;
+        if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<4.2)||Math.hypot(x-ORCHID.x,z-ORCHID.z)<3.4||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+.8||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+.8)continue;if(Math.hypot(Math.abs(x)-BOAT_LAND_X,z-BOAT_LANE_Z)<3)continue;pts.push([x,z])}
+      const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
+      pts.forEach(([x,z],i)=>{const s=.5+rnd()*1.1;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.05,z);sc.set(s,s*(.7+rnd()*.5),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
+      mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+  }
+  // Ground colours: mottled grass with dry patches, a needle carpet under every pine, earth along the main axis,
+  // darker wet soil at the shore, muddy lake bed, darker forest floor on the outer slopes.
+  function paintGround(trees,rnd){
+    const hash=(i,j)=>{const h=Math.sin(i*127.1+j*311.7)*43758.5453;return h-Math.floor(h)};
+    const vnoise=(x,z)=>{const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);const a=hash(i,j),b=hash(i+1,j),c2=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*ux+(c2-a)*uz+(a-b-c2+d)*ux*uz};
+    const fbm=(x,z)=>.6*vnoise(x,z)+.3*vnoise(x*2.1+7,z*2.1+3)+.1*vnoise(x*4.3+1,z*4.3+9);
+    const C=h=>new THREE.Color(h),grassA=C('#4c7d3a'),grassB=C('#6b9847'),dry=C('#a39a58'),needles=C('#6a5236'),earth=C('#a8916a'),wet=C('#3e5c35'),bed=C('#3a4636'),floor=C('#3f5b36'),moss=C('#5d7d45');
+    const grid=new Map();for(const t of trees){const k=treeCellKey(Math.floor(t[0]/TREE_CELL),Math.floor(t[1]/TREE_CELL));if(!grid.has(k))grid.set(k,[]);grid.get(k).push(t)}
+    const nearestTree=(x,z)=>{let best=99;const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=grid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a){const d=Math.hypot(x-t[0],z-t[1])/(t[3]>8?1:.6);if(d<best)best=d}}return best};
+    const pos=ground.geometry.attributes.position,col=ground.geometry.attributes.color,out=new THREE.Color();
+    for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),lk=lakeSDF(x,z);
+      if(lk<0){out.copy(bed)}else{
+        const n=fbm(x*.06,z*.06),n2=fbm(x*.17+11,z*.17+5);out.copy(grassA).lerp(grassB,n);out.lerp(dry,smoothstep(.62,.82,n2)*.55);
+        const rim=Math.max((Math.abs(x)-44)/14,(z-37)/12,(-z-87)/10);if(rim>0)out.lerp(floor,smoothstep(0,.6,rim));
+        const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.foot&&hr>HILL.flat)out.lerp(moss,.35);
+        out.lerp(needles,smoothstep(3.4,.7,nearestTree(x,z))*.8);
+        out.lerp(earth,Math.max(z>-37&&z<36?smoothstep(2.9,1.7,Math.abs(x)):0,smoothstep(2.4,1.2,stairsDistance(x,z))*(hr<HILL.foot?1:0)));
+        out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
+      col.setXYZ(i,out.r,out.g,out.b)}
+    col.needsUpdate=true;}
+  buildForest(FOREST_DEFAULT);
+  // Pines between the camera and the avatar step aside (are hidden) so they never block the view.
+  const hiddenMatrix=new THREE.Matrix4().makeScale(0,0,0);
+  function fadeBlockingTrees(cam,target,dt){const ax=cam.x,az=cam.z,bx=target.x,bz=target.z,vx=bx-ax,vz=bz-az,len2=vx*vx+vz*vz||1;const dirty=new Set();
+    for(const t of forestTrees){if(Math.abs(t.x-bx)>16||Math.abs(t.z-bz)>16){if(t.hidden){t.hidden=false;t.mesh.setMatrixAt(t.index,t.matrix);dirty.add(t.mesh)}continue}
+      const u=Math.max(0,Math.min(1,((t.x-ax)*vx+(t.z-az)*vz)/len2)),d=Math.hypot(ax+vx*u-t.x,az+vz*u-t.z),block=u>0&&u<1&&d<1.7;
+      if(block!==t.hidden){t.hidden=block;t.mesh.setMatrixAt(t.index,block?hiddenMatrix:t.matrix);dirty.add(t.mesh)}}
+    for(const m of dirty)m.instanceMatrix.needsUpdate=true;}
   // Waypoint navigation: smooth guided movement between five destinations.
   const destinations={
-    gate:{pos:[0,3.5,25],look:[0,3,-13]},
-    garden:{pos:[-15,3.4,8],look:[-7,1.5,-7]},
-    lotus:{pos:[9,3.5,7],look:[0,.2,-4]},
-    meditation:{pos:[-6,4.2,-17.2],look:[0,1.6,-28.2]},
-    sanctuary:{pos:[0,4,-19.7],look:[0,2.6,-31]}
+    gate:{pos:[0,4.5,42],look:[0,4,0]},
+    garden:{pos:[-15,3.6,24],look:[-6,1.5,8]},
+    lotus:{pos:[10,3.8,16],look:[0,.4,-4]},
+    meditation:{pos:[-6,HILL.top+4.2,STATUE.z+13.8],look:[0,HILL.top+1.6,STATUE.z+2.8]},
+    sanctuary:{pos:[0,HILL.top+4,STATUE.z+11.3],look:[0,HILL.top+2.6,STATUE.z]}
   };
+
   // Portal markers are part of the 3D scene and can be selected by click/tap.
   const markers=[];
   const addMarker=(zone,x,y,z)=>{
@@ -514,7 +664,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.8,8),gold);stem.position.y=-.72;group.add(stem);
     group.scale.setScalar(.7);scene.add(group);group.userData.zone=zone;markers.push(group);
   };
-  addMarker('garden',-12,2.5,-3);addMarker('lotus',7,2.2,-2);addMarker('meditation',-7.2,1.8,-23.6);addMarker('sanctuary',7.2,1.8,-23.6);
+  addMarker('garden',-12,2.5,15);addMarker('lotus',9,2.2,8);addMarker('meditation',-7.2,HILL.top+1.8,STATUE.z+7.4);addMarker('sanctuary',7.2,HILL.top+1.8,STATUE.z+7.4);
   let currentLook=new THREE.Vector3(0,3,-13),targetLook=currentLook.clone();
   const targetPosition=new THREE.Vector3(...destinations.gate.pos);
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -537,7 +687,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
     if(cushionHits.length){let obj=cushionHits[0].object;while(obj.parent&&!cushions.some(c=>c.group===obj))obj=obj.parent;const seat=cushions.find(c=>c.group===obj);if(seat){tapSeat(seat);}return;}
     const groundHits=raycaster.intersectObject(ground,false);
-    if(groundHits.length){const q=groundHits[0].point;if(Math.abs(q.x)<35&&q.z>-40&&q.z<36){navigateTo(q.x,q.z);}}
+    if(groundHits.length){const q=groundHits[0].point;if(Math.abs(q.x)<46&&q.z>-86&&q.z<36){navigateTo(q.x,q.z);}}
 
   }
   renderer.domElement.addEventListener('pointerup',e=>{dragging3d=false;if(moved)return;handleSceneTap(e);});
@@ -584,17 +734,27 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
   let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,24],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
   // Navigation around the lotus pond and temple: visibility graph, shortest valid route.
-  const zoneWalkPoints={gate:[0,24],garden:[-17,8],lotus:[13,7],meditation:[0,STATUE.z+7.2],sanctuary:[0,STATUE.z+4.2]};
+  const zoneWalkPoints={gate:[0,30],garden:[-12,17],lotus:[6,11],meditation:[0,STATUE.z+7.2],sanctuary:[0,STATUE.z+4.2]};
   const routeGuides=[[-17,-19],[-17,-10],[-17,4],[-17,13],[17,-19],[17,-10],[17,4],[17,13],[-11,-22],[11,-22],[-23,0],[23,0],[0,24],[0,14],[0,9],[0,3],[0,-3],[0,-9],[0,-12],[0,-15],[0,-18],[0,-20.5],[-6,-19],[6,-19]];
  for(const l of wishLakes){if(l.name==='Niệm')continue;for(let k=0;k<12;k++){const a=k*Math.PI/6;routeGuides.push([l.x+Math.cos(a)*4.65,l.z+Math.sin(a)*4.65]);}}
  for(let k=0;k<24;k++){const a=k*Math.PI/12;routeGuides.push([Math.cos(a)*12.8,-4+Math.sin(a)*12.8]);}
-  function walkable(x,z){if(bayMode)return false;if(Math.abs(x-ORCHID.x)<ORCHID.w/2+.45&&Math.abs(z-ORCHID.z)<ORCHID.d/2+.45)return false;const onTerrace=Math.hypot(x-STATUE.x,z-STATUE.z)<=TERRACE_R-.2;if(treeSpots.some(([tx,tz])=>Math.hypot(x-tx,z-tz)<TREE_CLEAR))return false;if(Math.abs(x)>=34||(z<=STATUE.z-3.2&&!onTerrace)||z>=35)return false;if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.85))return false;if(Math.hypot(x-STATUE.x,z-STATUE.z)<2.5||Math.hypot(x-STATUE.x,z-STATUE.z-2.7)<.7)return false;const temple=onTerrace;const bridge=(Math.abs(x)<=1.7&&z>=STATUE.z+TERRACE_R-1&&z<=15);/* bridge plus the stone path to the terrace */return temple||bridge||Math.hypot(x,z+4)>12.3;}
+  function walkable(x,z){if(bayMode)return false;
+    if(Math.abs(x)>=46||z>=36||z<=-86)return false;
+    // Hồ sen: only the bridge crosses the water.
+    if(lakeSDF(x,z)<.8)return Math.abs(x)<=1.7&&z>=BRIDGE_ARCH[0]-1.4&&z<=BRIDGE_ARCH[1]+1.4;
+    if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.85))return false;
+    if(Math.hypot(x-ORCHID.x,z-ORCHID.z)<3.1)return false;
+    // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
+    const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
+    if(hr<HILL.flat-.3)return !(hr<2.5||Math.hypot(x-STATUE.x,z-STATUE.z-2.7)<.7);
+    if(hr<HILL.foot-1&&stairsDistance(x,z)>1.8)return false;
+    return !treeBlocked(x,z);}
   function clearWalk(a,b){for(let i=0;i<=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35);i++){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35)),t=i/n;if(!walkable(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false;}return true;}
   // A* grid pathfinding. Unlike the old sparse visibility graph, this can route
   // around the central lotus pond and reach all five peripheral ponds.
   // Reliable, bounded A* grid routing, with a binary heap for mobile.
   function findWalkPath(tx,tz){
-    const step=1.25,minX=-32.5,minZ=-40,nx=53,nz=61,N=nx*nz;
+    const step=1.25,minX=-45,minZ=-85,nx=73,nz=97,N=nx*nz;
     const pos=i=>[minX+(i%nx)*step,minZ+Math.floor(i/nx)*step];
     const cell=(x,z)=>Math.max(0,Math.min(nx-1,Math.round((x-minX)/step)))+nx*Math.max(0,Math.min(nz-1,Math.round((z-minZ)/step)));
     function nearest(x,z){const c=cell(x,z),cx=c%nx,cz=Math.floor(c/nx);for(let r=0;r<=9;r++){let best=-1,dist=Infinity;for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;const xx=cx+dx,zz=cz+dz;if(xx<0||zz<0||xx>=nx||zz>=nz)continue;const i=xx+zz*nx,p=pos(i);if(!walkable(...p))continue;const d=Math.hypot(p[0]-x,p[1]-z);if(d<dist){dist=d;best=i}}if(best>=0)return best}return -1}
@@ -614,7 +774,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(!walkable(x,z)){document.getElementById('zenHint').textContent='Không thể đứng trong hồ. Hãy chọn bờ hồ.';return false;}
     let path=findWalkPath(x,z);
     // Some spawn positions are off the grid by a fraction; re-anchor at the nearest safe path point.
-    if(!path){const anchors=[[0,16],[0,19],[0,23],[-14,17],[14,17],[-16,0],[16,0],[-17,-20],[17,-20]];
+    if(!path){const anchors=[[0,16],[0,19],[0,23],[-14,17],[14,17],[0,-20],[0,-28],[-12,-30],[12,-30],[0,STATUE.z+7]];
       const saved=mePosition.clone();for(const [ax,az] of anchors.sort((a,b)=>Math.hypot(a[0]-saved.x,a[1]-saved.z)-Math.hypot(b[0]-saved.x,b[1]-saved.z))){if(!walkable(ax,az))continue;mePosition.set(ax,0,az);path=findWalkPath(x,z);if(path){mePosition.copy(saved);if(clearWalk([saved.x,saved.z],[ax,az]))path.unshift([ax,az]);else{mePosition.set(ax,0,az);}break;}mePosition.copy(saved);}}
     if(!path){document.getElementById('zenHint').textContent='Chưa tìm được lối đi đến bờ hồ.';return false;}
     walkRoute.length=0;walkRoute.push(...path);tapTarget=null;
@@ -645,7 +805,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   seatLocations.forEach(([x,z,inner,a=0,ring=0],i)=>{
     if(!walkable(x,z))return;
     // Inner two rings: brown zabuton with zafu. Outer rings: pink lotus cushions.
-    const group=buildCushion(ring<2?'zabuton':'lotus');group.position.set(x,TERRACE_TOP,z);group.rotation.y=a;const base=group.userData.base;
+    const group=buildCushion(ring<2?'zabuton':'lotus');group.position.set(x,HILL.top+TERRACE_TOP,z);group.rotation.y=a;const base=group.userData.base;
     scene.add(group);cushions.push({x,z,mesh:base,inner,group});
   });
   let previousActivity='idle',pendingSeat=null,occupiedPositions=[];
@@ -694,7 +854,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
      Nằm trong tệp tĩnh data/world-pine_forest.json cùng trang web. Cảnh luôn dựng sẵn từ giá trị gốc ở trên;
      tệp chỉ ghi đè khi tải được, nên thiếu tệp hoặc mất mạng thì cảnh vẫn như cũ. */
   const WORLD_ID='pine_forest';
-  let appliedSky='173c35';
+  let appliedSky='2d5a50';
   function applyWorld(w,source){
     if(!w||!w.map)return false;
     const m=w.map;
@@ -702,10 +862,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(scene.background&&scene.background.getHexString&&scene.background.getHexString()===appliedSky){scene.background=new THREE.Color(m.sky_color);appliedSky=scene.background.getHexString()}
       if(scene.fog&&scene.fog.density!==undefined){scene.fog.color.set(m.fog_color);scene.fog.density=Number(m.fog_density)}
     }
-    ground.material.color.set(m.ground_color);
     hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);
     sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);if(Array.isArray(m.sun_position))sun.position.set(...m.sun_position);
-    for(const n of w.nature||[]){if(n.kind==='tree_grid'){const key=JSON.stringify(n.params);if(key!==pineKey){pineKey=key;buildPines(n.params)}}}
+    for(const n of w.nature||[]){if(n.kind==='pine_forest'){const key=JSON.stringify(n.params);if(key!==forestKey){forestKey=key;buildForest(n.params)}}}
     for(const r of w.rooms||[])if(r.name&&r.palette_color)roomPalettes[r.name]=r.palette_color;
     for(const pr of w.props||[]){if(pr.kind!=='wish_lake')continue;const l=wishLakes.find(v=>v.name===pr.name);if(!l)continue;
       l.x=Number(pr.x);l.z=Number(pr.z);if(pr.params?.color)l.color=pr.params.color;if(pr.params?.theme)l.theme=pr.params.theme;
@@ -743,7 +902,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,entry.activity==='sit');
       const label=String(entry.name||'Khách Yên').slice(0,24);if(mesh.lastName!==label){const c=mesh.tagCtx;c.clearRect(0,0,512,112);c.font='bold 36px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#f4e2b9';c.fillText(label,256,57,470);mesh.tagTex.needsUpdate=true;mesh.lastName=label;}
       const sitting=entry.activity==='sit';poseAvatar(mesh.torso,mesh.head,mesh.tag,sitting);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,sitting);
-      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const peerBoat=!!entry.boat;const [px,pz]=peerBoat?[entry.x,entry.z]:pushOutOfTrees(Math.max(-34,Math.min(34,entry.x)),Math.max(-40,Math.min(28,entry.z)));mesh.group.position.set(px,peerBoat?.35:groundHeight(px,pz),pz);
+      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const peerBoat=!!entry.boat;const [px,pz]=peerBoat?[entry.x,entry.z]:pushOutOfTrees(Math.max(-46,Math.min(46,entry.x)),Math.max(-86,Math.min(36,entry.z)));mesh.group.position.set(px,peerBoat?.35:groundHeight(px,pz),pz);
       // Guests rowing on Hồ Niệm get a boat under them, pointed the way they are moving.
       if(peerBoat){if(!mesh.boat){mesh.boat=makeBoat();scene.add(mesh.boat.group);}const mx=px-(mesh.lastX??px),mz=pz-(mesh.lastZ??pz);if(Math.hypot(mx,mz)>.02)mesh.heading=Math.atan2(mx,mz);const h=mesh.heading??0;mesh.boat.group.visible=true;mesh.boat.group.position.set(px,.02,pz);mesh.boat.group.rotation.y=h-Math.PI/2;mesh.group.userData.yaw=h;poseAvatar(mesh.torso,mesh.head,mesh.tag,true);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,true);}
       else if(mesh.boat)mesh.boat.group.visible=false;
@@ -1857,8 +2016,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const f=document.createElement('iframe');f.src=ORCHID.url;f.title=ORCHID.title;f.allow='clipboard-write; fullscreen; autoplay; xr-spatial-tracking; gyroscope; accelerometer';f.allowFullscreen=true;
     orchidBox.querySelector('.orchid-frame').replaceChildren(f);orchidBox.hidden=false;document.body.classList.add('orchid-open');}
   function closeOrchid(){if(!orchidOpen)return;orchidOpen=false;orchidBox.hidden=true;orchidBox.querySelector('.orchid-frame').replaceChildren();document.body.classList.remove('orchid-open');
-    // Step out of the door facing the statue.
-    mePosition.set(ORCHID_DOOR[0],0,ORCHID_DOOR[1]+.4);viewYaw=walkYaw=-Math.PI/2;lastWalkFrame=performance.now();
+    // Step out of the door facing Hồ Sắc.
+    mePosition.set(ORCHID_DOOR[0]+Math.sin(ORCHID.rot)*.4,0,ORCHID_DOOR[1]+Math.cos(ORCHID.rot)*.4);viewYaw=walkYaw=ORCHID.rot;lastWalkFrame=performance.now();
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
     document.getElementById('zenHint').textContent='Đã trở về Rừng Yên · Chạm Nhà hoa lan để vào lại';}
   document.getElementById('orchidBack').addEventListener('click',closeOrchid);
@@ -1900,7 +2059,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         else{const step=Math.min(dist,dt*3.2),nx=mePosition.x+dx/dist*step,nz=mePosition.z+dz/dist*step;
           if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
       }
-      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,up=sittingNow?5.2:6.5;if(bayMode){}else if(onBoat()){const h=boatRide.heading;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(h)*6.5+2,2.6,mePosition.z-Math.cos(h)*6.5+2),.06);camera.lookAt(mePosition.x,.9,mePosition.z);}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,1.2+Math.sin(walkPitch)*2,mePosition.z);}if(!bayMode)fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);if(bayMode)updateBay(dt);
+      const sittingNow=meActivity==='sit';const behind=sittingNow?7.2:9.5,gy=bayMode?0:groundHeight(mePosition.x,mePosition.z),camX=mePosition.x-Math.sin(viewYaw)*behind,camZ=mePosition.z-Math.cos(viewYaw)*behind,up=Math.max((sittingNow?5.2:6.5)+gy,bayMode?0:terrainHeight(camX,camZ)+2.2);if(!bayMode&&Math.hypot(camX-STATUE.x,camZ-STATUE.z)<6.8)up=Math.min(up,HILL.top+5);if(bayMode){}else if(onBoat()){const h=boatRide.heading;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(h)*6.5+2,2.6,mePosition.z-Math.cos(h)*6.5+2),.06);camera.lookAt(mePosition.x,.9,mePosition.z);}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,gy+1.2+Math.sin(walkPitch)*2,mePosition.z);}if(!bayMode)fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);if(bayMode)updateBay(dt);
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
     me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;const inBoat=onBoat();if(inBoat){me.position.y=boat.group.position.y+.33;me.rotation.y=boatRide.heading;}if(bayMode){me.position.copy(bayAvatar.pos);me.rotation.y=bayAvatar.yaw;if(bayPhoto){const p=bayPhoto.pose,sd=bayPhoto.side;me.rotation.y+=Math.PI+p.yaw*sd+sd*.32;me.rotation.z=p.lean*sd;meHead.rotation.set(0,-p.yaw*sd*.7,p.tilt*sd)}}if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,bayMode?bayOutfit.color:myColor,bayMode?bayBaseStyle():myStyle,meActivity==='sit'||inBoat);bayDress(meActivity==='sit');
     for(const peer of onlineAvatars.values()){
@@ -1919,7 +2078,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(document.body.classList.contains('immersive')){const near=[...onlineAvatars.values()].some(p=>p.group.position.distanceTo(me.position)<7);document.querySelector('#nearGuest').textContent=near?'Có một khách tham quan gần bạn':'Dạo gần một người để chào'};
     markers.forEach((m,i)=>{m.rotation.y=t*.3;m.children[0].rotation.z=t*.35;m.position.y=(i===0?2.5:i===1?2.2:i===2?2.8:4)+Math.sin(t*1.2+i)*.13});
     flowers.forEach((f,i)=>f.position.y=f.userData.y0+Math.sin(t*.8+i)*.02);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
-    water.material.color.setHSL(.48,.31,.27+Math.sin(t*.5)*.01);renderer.render(scene,camera)
+    water.material.color.setHSL(.47,.38,.23+Math.sin(t*.5)*.01);renderer.render(scene,camera)
   }animate();
 
  }catch(err){console.error('LÀNG YÊN 3D:',err,err?.cause||'');window.anyen3DLoading=false;document.querySelector('#sceneMode').textContent='3D chưa tải được';let message=String(err?.message||err||'Lỗi không xác định');if(!err?.kind&&/webgl/i.test(message))message='Thiết bị chưa tạo được WebGL nên chưa mở được 3D ('+message+')';message=message.slice(0,220);document.getElementById('zenHint').textContent='Lỗi 3D: '+message;window.anyen3DError=message;document.body.classList.add('yen-3d-error');return false}
