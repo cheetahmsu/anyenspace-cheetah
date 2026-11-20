@@ -1008,18 +1008,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     // dải cửa sổ tròn ở thân
     for(let z=-L+5;z<L-12;z+=2.6)for(const sx of [-1,1]){const p=new THREE.Mesh(new THREE.CircleGeometry(.28,10),dark);p.position.set(sx*(B+.02),.2,z);p.rotation.y=sx*Math.PI/2;g.add(p)}
     // ba tầng thượng tầng
-    let topRail=null;
+    const railSets=[];
     const decks=[[0,-L+2.5,L-14,4.7],[1,-L+2.5,L-17.5,4.5],[2,-L+5,L-23,4.2]];
     decks.forEach(([i,back,front,b])=>{const y=2.62+i*2.85;const sh=(w)=>{const s=new THREE.Shape();s.moveTo(-w,-back);s.lineTo(w,-back);s.lineTo(w,-(front-w));s.absarc(0,-(front-w),w,0,Math.PI,true);s.lineTo(-w,-back);return s};
-      slab(sh(b+.35),y-.1,.32,white);slab(sh(b-.06),y+.22,.55,white);const gl=slab(sh(b-.12),y+.77,1.55,glass);slab(sh(b+.42),y+2.32,.42,white);if(i===2){slab(sh(b+.3),y+2.74,.03,wood);topRail=sh(b+.1).getPoints(10).map(p=>new THREE.Vector3(p.x,0,-p.y))}
+      slab(sh(b+.35),y-.1,.32,white);slab(sh(b-.06),y+.22,.55,white);const gl=slab(sh(b-.12),y+.77,1.55,glass);slab(sh(b+.42),y+2.32,.42,white);slab(sh(b+.3),y+2.74,.03,wood);// mái mỗi tầng là sân gỗ của tầng trên
+      const nextFront=i<2?decks[i+1][2]:-1e9,ring=sh(b+.1).getPoints(10).map(p=>new THREE.Vector3(p.x,0,-p.y));
+      railSets.push({pts:i===2?ring.filter(p=>p.z>-L+3.2):ring.filter(p=>p.z>nextFront-.6),y0:y+2.77})
       for(let z=back+1.5;z<front-b;z+=3.2)for(const sx of [-1,1]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.32,2.1,.42),white);pillar.position.set(sx*(b-.02),y+1.27,z);g.add(pillar)}
       if(i===0){const rail=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,front-back),white);}});
     // boong thượng: hồ bơi, ghế nằm, cột anten
     const topY=2.62+2*2.85+2.74;const pool=new THREE.Mesh(new THREE.BoxGeometry(5.5,.12,4),mat('#5cc6d6',{roughness:.2}));pool.position.set(0,topY+.08,-L+12);g.add(pool);
     for(let k=0;k<4;k++){const ch=new THREE.Mesh(new THREE.BoxGeometry(.8,.25,2),white);ch.position.set(-3+k*2,topY+.15,-L+7.5);ch.rotation.x=-.12;g.add(ch)}
-    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,6,8),white);mast.position.set(0,topY+3,-L+5.5);g.add(mast);
     const arch=new THREE.Mesh(new THREE.TorusGeometry(2.2,.2,8,20,Math.PI),white);arch.position.set(0,topY,-L+5.5);arch.rotation.y=Math.PI/2;g.add(arch);
-    const radar=new THREE.Mesh(new THREE.BoxGeometry(2.4,.15,.3),white);radar.position.set(0,topY+5.2,-L+5.5);g.add(radar);
     const awning=new THREE.Mesh(new THREE.BoxGeometry(7,.18,4.5),white);awning.position.set(0,topY+2.4,-L+9.5);g.add(awning);
     for(const sx of [-3.2,3.2])for(const sz of [-L+7.7,-L+11.3]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,2.4,6),white);p.position.set(sx,topY+1.2,sz);g.add(p)}
     // lan can kính và tay vịn quanh mũi tàu
@@ -1036,12 +1036,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     {const cp=curve.getSpacedPoints(26);for(const p of cp){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.92,8),steel);post.position.set(p.x,3.06,p.z);g.add(post);
       const clip=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.12),steel);clip.position.set(p.x,3.48,p.z);g.add(clip)}}
     // lan can kính + tay vịn gỗ quanh boong thượng (chừa lối cầu thang phía sau)
-    if(topRail){const y0=2.62+2*2.85+2.77,pts=topRail.filter(p=>p.z>-L+3.2);pts.sort((a,b)=>Math.atan2(a.x,a.z)-Math.atan2(b.x,b.z));
+    for(const {pts,y0} of railSets){if(pts.length<3)continue;const cz=pts.reduce((s,p)=>s+p.z,0)/pts.length-3;pts.sort((a,b)=>Math.atan2(a.x,a.z-cz)-Math.atan2(b.x,b.z-cz));
       const cv=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x,y0+.95,p.z))),cp=cv.getSpacedPoints(70);
       g.add(new THREE.Mesh(new THREE.TubeGeometry(cv,90,.075,8,false),cap));
       const pos=[],idx=[];cp.forEach((p,i)=>{pos.push(p.x,y0,p.z,p.x,y0+.9,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
       g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#d6f0f2',transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false,roughness:.05})));
-      for(const p of cv.getSpacedPoints(22)){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.95,8),steel);post.position.set(p.x,y0+.47,p.z);g.add(post)}}
+      for(const p of cv.getSpacedPoints(Math.max(8,Math.round(cv.getLength()/1.1)))){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.95,8),steel);post.position.set(p.x,y0+.47,p.z);g.add(post)}}
     // bọt sóng ở mũi
     const foam=new THREE.Mesh(new THREE.RingGeometry(3.5,5.2,24,1,Math.PI*.15,Math.PI*.7),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));foam.rotation.x=-Math.PI/2;foam.position.set(0,.25,L-3.2);g.add(foam);bayShip.foam=foam;
     bayShip.bow=new THREE.Vector3(...(ex.bow_spot||[0,2.62,18.8]));bayShip.deck=new THREE.Vector3(...(ex.deck_spot||[0,11.06,-3.2]));bayShip.ex=ex;bayShip.max=ex.max_speed||10;bayShip.turn=ex.turn_rate||.45;bayShip.clear=ex.clearance||26;bayShip.len=ex.length;
@@ -1883,7 +1883,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  window.__bay={pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
+  window.__bay={photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
