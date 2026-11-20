@@ -213,7 +213,7 @@ $('#f-signup').addEventListener('submit',async function(e){e.preventDefault();
   var r=await client.auth.signUp({email:email,password:pass,options:{data:{account_type:kind,display_name:name},emailRedirectTo:location.origin+location.pathname.replace(/[^/]*$/,'')+'account.html'}});
   if(r.error)throw r.error;
   if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){msg('#sMsg','err','Email này đã đăng ký. Hãy đăng nhập hoặc dùng "Quên mật khẩu".');return}
-  if(r.data.session){await loadProfile();return}
+  if(r.data.session){await loadProfile(true);return}
   pending={email:email,kind:'signup'};openVerify('Chúng tôi đã gửi mã 6 chữ số tới '+email+'. Nhập mã để hoàn tất đăng ký.');
  }catch(err){msg('#sMsg','err',vi(err))}finally{busy($('#sBtn'),false,'Tạo tài khoản')}
 });
@@ -224,7 +224,7 @@ function startCooldown(s){cooldown=s;clearInterval(cdTimer);var b=$('#vResend');
 $('#f-verify').addEventListener('submit',async function(e){e.preventDefault();
  var code=$('#vCode').value.replace(/\s/g,'');if(code.length<6)return msg('#vMsg','err','Hãy nhập đủ 6 chữ số.');
  msg('#vMsg');busy($('#vBtn'),true,'Đang xác nhận...');
- try{var r=await client.auth.verifyOtp({email:pending.email,token:code,type:pending.kind==='signup'?'signup':'email'});if(r.error)throw r.error;await loadProfile()}
+ try{var r=await client.auth.verifyOtp({email:pending.email,token:code,type:pending.kind==='signup'?'signup':'email'});if(r.error)throw r.error;await loadProfile(true)}
  catch(err){msg('#vMsg','err',vi(err))}finally{busy($('#vBtn'),false,'Xác nhận')}
 });
 $('#vResend').onclick=async function(){
@@ -240,7 +240,7 @@ $('#f-login').addEventListener('submit',async function(e){e.preventDefault();
  msg('#lMsg');busy($('#lBtn'),true,'Đang đăng nhập...');
  try{var r=await client.auth.signInWithPassword({email:email,password:pass});
   if(r.error){if(r.error.message==='Email not confirmed'||r.error.code==='email_not_confirmed'){pending={email:email,kind:'signup'};try{await client.auth.resend({type:'signup',email:email})}catch(_){}openVerify('Email này chưa được xác thực. Chúng tôi vừa gửi mã tới '+email+'.');return}throw r.error}
-  await loadProfile();
+  await loadProfile(true);
  }catch(err){msg('#lMsg','err',vi(err))}finally{busy($('#lBtn'),false,'Đăng nhập')}
 });
 
@@ -259,17 +259,19 @@ $('#f-reset').addEventListener('submit',async function(e){e.preventDefault();
  msg('#rMsg');busy($('#rBtn'),true,'Đang lưu...');
  try{
   if(!recovering){var code=$('#rCode').value.replace(/\s/g,'');if(code.length<6)throw {message:'Hãy nhập đủ 6 chữ số.'};var v=await client.auth.verifyOtp({email:pending.email,token:code,type:'recovery'});if(v.error)throw v.error}
-  var u=await client.auth.updateUser({password:pass});if(u.error)throw u.error;recovering=false;await loadProfile();
+  var u=await client.auth.updateUser({password:pass});if(u.error)throw u.error;recovering=false;await loadProfile(true);
  }catch(err){msg('#rMsg','err',vi(err))}finally{busy($('#rBtn'),false,'Lưu mật khẩu')}
 });
 
 /* ---- Hồ sơ ---- */
 var profile=null;
-async function loadProfile(){
+var NEXT=(new URLSearchParams(location.search)).get('next');if(!/^[a-z0-9_-]+\.html$/i.test(NEXT||''))NEXT=null;
+async function loadProfile(fromAuth){
  var s=await client.auth.getSession();var session=s.data&&s.data.session;
  if(!session){show('auth');return}
  var r=await client.rpc('anyen_get_my_profile');if(r.error){show('auth');return}
  profile=r.data;
+ if(fromAuth&&NEXT&&profile&&profile.role!=='guest'){location.href=NEXT;return}
  if(!profile||profile.role==='guest'){show('guestin');return}
  var th=profile.role==='therapist';
  $('#pBadge').textContent=th?'NHÀ TRỊ LIỆU':'THÀNH VIÊN';
