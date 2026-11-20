@@ -836,7 +836,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // khe gân đá sẫm, sọc tầng đá và ngấn hàm ếch được tô thẳng vào màu đỉnh.
   const KSHAPES=[
     {taper:.1,dome:.22,ribs:10,ribAmp:.15},                        // 0 tháp vách đứng, gân đá sắc
-    {cone:true,dome:.48,ribs:7,ribAmp:.1},                         // 1 núi chóp nón (đầu chóp bo tròn)
+    {taper:.55,dome:.5,ribs:7,ribAmp:.1,rough:.24},                // 1 núi chóp nón (đầu chóp bo tròn)
     {taper:.08,dome:.85,round:true},                               // 2 đồi tròn thảm xanh
     {taper:.15,dome:.5,sx:1.9,sz:.8,saddle:.3,ribs:8,ribAmp:.09},  // 3 dãy núi yên ngựa dài
     {taper:.2,dome:.4,sx:1.5,sz:.9,saddle:.64,ribs:8,ribAmp:.1},   // 4 núi hai đỉnh tách rõ
@@ -852,17 +852,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??1,dome=opt.dome??(.16+bayHash(k,2,5)*.14),rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
     const floating=opt.y0!=null,yb=floating?opt.y0:-4,total=floating?h:h+4;
     const sx=opt.sx||1,sz=(opt.sz||1)*(opt.squash||1),taper=opt.taper??.12,saddle=opt.saddle||0,tilt=opt.round?0:.05+bayHash(k,4,8)*.08;
-    const ribN=opt.round?0:(opt.ribs??5),ribA=opt.ribAmp??.12,notch=floating?0:(opt.notch??.26),steps=opt.steps||0;
+    const rough=opt.rough??(opt.round?.1:.18),ribN=opt.round?0:(opt.ribs??5),ribA=opt.ribAmp??.12,notch=floating?0:(opt.notch??.26),steps=opt.steps||0;
     const reps=Math.max(1,Math.round(2*Math.PI*r*Math.max(sx,1)/44)),vo=bayHash(k,3,7)*4;
     for(let i=0;i<KT.n;i++){const t=KT.t[i],al=KT.a[i];
       let prof=opt.cone?Math.pow(Math.max(0,1-t*.92),.9):1-taper*t+(opt.round?0:.06*Math.sin(Math.PI*t));
-      if(steps){const f=t*steps,fl=Math.floor(f);prof*=1-.3*(fl+baySm(.78,1,f-fl))/steps}
+      if(steps){const f=t*steps,fl=Math.floor(f);prof*=1-.18*(fl+baySm(.6,1,f-fl))/steps}
       if(t>1-dome){const u=(t-(1-dome))/dome;prof*=Math.pow(Math.max(0,1-u*u),.42)}
       if(!opt.round&&!floating)prof*=1+.1*Math.exp(-((t/.1)**2));// chân loe nhẹ ra mặt nước
       if(pinch!==1)prof*=pinch+(1-pinch)*baySm(.04,.6,t);
       if(opt.bulge)prof*=1+opt.bulge*Math.exp(-(((t-(opt.bulgeAt??.72))/.15)**2));
       const hN=(1-saddle*.5)/(1+tilt),hRaw=(1-saddle*Math.pow(Math.sin(al),2))*(1+tilt*Math.cos(al-ph))/(1+tilt),hf=KT.ring[i]?hN+(hRaw-hN)*Math.min(1,prof*1.6):hN;
-      const lump=opt.round?0:baySm(.6,1,t)*(.06*Math.sin(al*3+ph*2.1)+.04*Math.sin(al*5+ph*.7))*(KT.ring[i]?Math.min(1,prof*1.6):0);
+      const lump=opt.round?0:baySm(.55,1,t)*(.08*Math.sin(al*2+ph*2.1)+.05*Math.sin(al*5+ph*.7)+.03*Math.sin(al*9+ph))*(KT.ring[i]?Math.min(1,prof*1.6):0);
       const wy=yb+t*total*(1-(1-hf)*baySm(.3,1,t))*(1+lump);
       // ngấn hàm ếch do sóng bào mòn sát mực nước (0..2,6) và các rãnh ăn mòn ngang
       if(notch)prof*=1-notch*baySm(-.25,.55,wy)*(1-baySm(1.9,2.7,wy));
@@ -870,7 +870,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       // khe gân đá: đường lõm hẹp chạy dọc vách, sẫm màu
       let crev=0;if(ribN){const rs=Math.abs(Math.sin(al*ribN*.5+ph+Math.sin(t*3.1+ph)*.35));crev=Math.pow(1-rs,6)*baySm(.06,.25,t)*(1-baySm(1-dome-.05,1-dome+.1,t))}
       const crown=baySm(.55,1,t);
-      const nz=opt.round?1+.08*Math.sin(al*3+ph):1+.13*Math.sin(al*3+ph+t*2.2)+.09*Math.sin(al*5+ph*2.3+t*4)+.06*Math.sin(al*7+ph*1.3)+.04*(bayHash(al*5,t*9,k)-.5)+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
+      // mặt đá bào mòn không đều: nhiều lớp gợn theo cả góc lẫn chiều cao, lệch pha từng đảo
+      const nz=opt.round?1+.08*Math.sin(al*3+ph)+.05*Math.sin(al*5+t*4+ph):1+rough*(.75*Math.sin(al*2+ph+t*1.7)+.55*Math.sin(al*3+ph*1.9+t*3.3)+.35*Math.sin(al*5+ph*2.3+t*5.1)+.25*Math.sin(al*7-ph+t*7.3)+.3*(bayHash(al*5,t*9,k)-.5))+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
       const rr=r*prof*nz*KT.ring[i],px=Math.cos(al)*rr*sx+lean*t*t*total,pz=Math.sin(al)*rr*sz;
       ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);ch.R.push(crev);
       ch.UV.push(KT.u[i]*reps,wy/44+vo);}
@@ -1026,38 +1027,26 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       caveMouth(x,z,f,r*.43,h*.2,r*.15,r*.1);
     }
     else if(q.shape==='pair'){
-      // Hòn Trống Mái: bệ đá ngập chung; Trống cao có mào và mỏ chầu vào, Mái thấp ức tròn; trục xoay 0,78 rad
-      const A=.78,ux=Math.cos(A),uz=Math.sin(A),sep=r*.74;
-      addKarst(x,z,r*1.05,.5,k,{round:true,sx:1.7,sz:.8,rot:A,notch:0});
-      const tx=x-ux*sep,tz=z-uz*sep,lean=.09,topOff=lean*(h+4);
-      addKarst(tx,tz,r*.5,h,k+1,{taper:.28,pinch:.42,dome:.36,lean,rot:A,ribs:7,ribAmp:.1,bulge:.1,bulgeAt:.6});
-      const cx=tx+ux*topOff,cz=tz+uz*topOff;
-      for(let j=-1;j<=1;j++)addKarst(cx-uz*j*.7-ux*.4,cz+ux*j*.7-uz*.4,.55,1.9-Math.abs(j)*.5,k+10+j,{y0:h-1.3,dome:.7,taper:.3,ribs:0,rot:A});// mào gợn
-      addKarst(cx+ux*1.2,cz+uz*1.2,.42,1.2,k+14,{y0:h*.8,sx:2.2,dome:.6,taper:.2,ribs:0,rot:A});// mỏ hướng vào
-      const mx=x+ux*sep,mz=z+uz*sep;
-      addKarst(mx,mz,r*.46,h*.78,k+2,{taper:.22,pinch:.45,dome:.46,lean,rot:A+Math.PI,ribs:5,ribAmp:.08,bulge:.26,bulgeAt:.62});// ức tròn chầu lại
+      // Hòn Trống Mái: hai khối đá chân thắt mảnh, nghiêng tựa vào nhau trên một rạn đá ngầm; không tạc chi tiết
+      const A=.78,ux=Math.cos(A),uz=Math.sin(A),sep=r*.7;
+      addKarst(x,z,r*.9,.2,k,{round:true,sx:1.6,sz:.75,rot:A,notch:0});
+      addKarst(x-ux*sep,z-uz*sep,r*.5,h,k+1,{taper:.15,pinch:.45,dome:.42,lean:.1,rot:A,ribs:5,ribAmp:.08,bulge:.12,bulgeAt:.62,sz:.82,rough:.2});
+      addKarst(x+ux*sep,z+uz*sep,r*.46,h*.8,k+2,{taper:.15,pinch:.48,dome:.5,lean:.1,rot:A+Math.PI,ribs:4,ribAmp:.07,bulge:.18,bulgeAt:.6,sz:.85,rough:.2});
     }
     else if(q.shape==='incense'){
-      // Hòn Đỉnh Hương: cổ chân mảnh có hai rãnh ăn mòn, phiến đá đỉnh phẳng rộng xoay ngang tầm nhìn từ luồng tàu, tán tùng trên đỉnh
-      const rot=f+Math.PI/2,neckH=h*.6;
-      addKarst(x,z,r*.3,neckH,k,{taper:-.4,dome:.04,sx:1.3,sz:.8,rot,ribs:6,notch:.34,grooves:[h*.2,h*.38]});
-      addKarst(x,z,r*.56,h*.45,k+1,{y0:h*.55,sx:1.9,sz:.6,taper:-.12,dome:.16,rot,ribs:8,ribAmp:.08});
-      pines(x,h-.6,z,rot,r*.85,r*.26,9,k);
+      // Hòn Đỉnh Hương: một khối liền, chân bị sóng khoét thắt lại, thân nở dần lên đỉnh rộng và bằng, phủ cây bụi
+      const rot=f+Math.PI/2;
+      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.42,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22});
     }
     else if(q.shape==='dog'){
-      // Hòn Chó Đá: chó ngồi vươn ngực, cổ, mõm và đôi tai quay về phía luồng du thuyền
-      const sx=-fz,sz=fx;
-      addKarst(x-fx*r*.28,z-fz*r*.28,r*.62,h*.46,k,{taper:.1,dome:.6,sx:1.2,rot:f,ribs:5});// mông ngồi
-      addKarst(x+fx*r*.15,z+fz*r*.15,r*.42,h*.8,k+1,{taper:.32,dome:.38,lean:.12,rot:f,ribs:6,bulge:.12,bulgeAt:.55});// ngực, cổ
-      const hx=x+fx*r*.42,hz=z+fz*r*.42;
-      addKarst(hx,hz,r*.3,h*.32,k+2,{y0:h*.68,dome:.7,taper:.15,rot:f,ribs:0});// đầu
-      addKarst(hx+fx*r*.3,hz+fz*r*.3,r*.15,h*.12,k+3,{y0:h*.76,sx:2,dome:.6,rot:f,ribs:0});// mõm
-      for(const s of [-1,1])addKarst(hx+sx*s*r*.15,hz+sz*s*r*.15,r*.08,h*.17,k+4+s,{y0:h*.95,cone:true,dome:.3,rot:f,ribs:0});// tai
+      // Hòn Chó Đá: cụm đá tự nhiên, khối cao phía trước tựa vào khối thấp phía sau, gợi dáng chó ngồi khi nhìn từ luồng tàu
+      addKarst(x-fx*r*.3,z-fz*r*.3,r*.62,h*.5,k,{taper:.1,dome:.55,sx:1.15,rot:f,ribs:5,rough:.22});
+      addKarst(x+fx*r*.18,z+fz*r*.18,r*.42,h,k+1,{taper:.3,dome:.42,lean:.08,rot:f,ribs:6,bulge:.1,bulgeAt:.55,rough:.22});
     }
     else if(q.shape==='titop'){
       // Ti Tốp: đỉnh vách giật cấp, vai núi phía sau, bãi cát khô và cát ẩm hình lưỡi liềm, hai mũi đá ôm bãi, lầu vọng cảnh 2 mái đỏ
-      addKarst(x,z,r*.62,h*1.5,k,{taper:.12,dome:.3,steps:3,ribs:8});
-      addKarst(x-fx*r*.4,z-fz*r*.4,r*.45,h*1.05,k+1,{taper:.15,dome:.4,steps:2,ribs:6});
+      addKarst(x,z,r*.62,h*1.5,k,{taper:.14,dome:.34,steps:2,ribs:7,rough:.2});
+      addKarst(x-fx*r*.4,z-fz*r*.4,r*.45,h*1.05,k+1,{taper:.15,dome:.42,ribs:6,rough:.2});
       const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.38,Math.PI*.76),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
       sand(.78,1.12,.28,'#efe3c4');sand(1.1,1.26,.2,'#c9b48e');
       for(const s of [-1,1]){const a=f+s*Math.PI*.42;addKarst(x+Math.cos(a)*r*1.08,z+Math.sin(a)*r*1.08,r*.2,h*.38,k+5+s,{shape:6,rot:a})}
