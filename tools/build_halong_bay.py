@@ -55,14 +55,65 @@ LANDMARKS = [
      "Khoảng 1,5 km phía đông nam thị trấn Cát Bà, gần bến Bèo", "Làng chài cổ nhất vịnh Lan Hạ, nhà bè san sát"),
     ("cau_bai_chay", "Cầu Bãi Cháy", 20.9560, 107.0712, "bridge", 0, 0, "approx",
      "Bắc qua eo Cửa Lục giữa Bãi Cháy và Hòn Gai", "Cây cầu dây văng nối hai bờ thành phố Hạ Long"),
+    # ---- Bổ sung (bản đồ du lịch vịnh Hạ Long của vietnamtourism.com; hành trình vịnh Bái Tử Long, QĐ 2119/QĐ-UBND Quảng Ninh) ----
+    ("dong_me_cung", "Động Mê Cung", 20.8665, 107.0620, "big_island", 62, 48, "approx",
+     "Đảo Lom Bò, gần Ti Tốp (tuyến 2)", "Hang nhiều ngách như mê cung, cửa hang nhìn ra vịnh"),
+    ("dao_soi_sim", "Đảo Soi Sim", 20.8710, 107.0890, "beach", 40, 30, "approx",
+     "Phía đông bắc Ti Tốp", "Bãi tắm nhỏ và đường mòn lên đỉnh ngắm toàn cảnh"),
+    ("hang_thien_canh_son", "Hang Thiên Cảnh Sơn", 20.8800, 107.1400, "big_island", 70, 52, "approx",
+     "Tuyến 4 (hang Cỏ · Thiên Cảnh Sơn), phía đông vịnh", "Hang cổ có dấu tích người Hạ Long, nhìn ra vịnh rộng"),
+    ("lang_chai_vung_vieng", "Làng chài Vung Viêng", 20.8580, 107.1700, "village", 0, 0, "approx",
+     "Tuyến 4, đi qua hang Cao vào áng nước kín", "Làng chài yên ả nhất vịnh, nhà bè nép chân vách đá"),
+    ("dao_cong_do", "Đảo Cống Đỏ", 20.8600, 107.2350, "cove", 70, 58, "approx",
+     "Tuyến 4, giáp vịnh Bái Tử Long", "Những áng nước kín giữa vách đá dựng, nước trong xanh"),
+    ("ho_ba_ham", "Hồ Ba Hầm", 20.7880, 107.1050, "arch", 36, 32, "approx",
+     "Giữa vịnh Hạ Long và Lan Hạ, vào hồ qua các vòm đá", "Ba hồ nước kín nối nhau bằng hang xuyên thủy"),
+    ("cua_viet_hai", "Làng Việt Hải · cửa Việt Hải", 20.7930, 107.0450, "village", 0, 0, "approx",
+     "Bờ đông đảo Cát Bà, trên tuyến 2 vịnh Lan Hạ", "Làng cổ trong thung lũng, bến thuyền ở cửa Việt Hải"),
+    ("hon_rua", "Hòn Rùa", 20.7500, 107.0690, "dog", 14, 18, "approx",
+     "Giữa Đảo Khỉ và cửa Việt Hải (tuyến 2 Lan Hạ)", "Hòn đá thấp dáng mai rùa nổi trên mặt nước"),
+    ("bai_van_boi", "Bãi tắm Vạn Bội", 20.7640, 107.1120, "beach", 48, 34, "approx",
+     "Phía đông vịnh Lan Hạ", "Bãi cát nhỏ nước trong, chỗ tắm vịnh và chèo kayak"),
+    ("dao_nam_cat", "Đảo Nam Cát", 20.7430, 107.1060, "beach", 42, 28, "approx",
+     "Phía đông nam vịnh Lan Hạ", "Bãi cát trắng nhỏ, nhà gỗ ven biển"),
+    ("hon_dua", "Hòn Đũa (hòn Dù)", 20.9850, 107.3150, "incense", 9, 44, "approx",
+     "Hành trình kết nối Hạ Long – Cẩm Phả, gần Cửa Ông", "Cột đá mảnh vươn thẳng như chiếc đũa giữa vịnh"),
+    ("dao_thang_loi", "Đảo Thắng Lợi", 20.9180, 107.3850, "island_beach", 70, 48, "approx",
+     "Hành trình kết nối Hạ Long – Vân Đồn", "Đảo nhỏ bãi cát dài, nước nông xanh"),
+    ("dao_ngoc_vung", "Đảo Ngọc Vừng", 20.8950, 107.4300, "island_beach", 100, 62, "approx",
+     "Vịnh Bái Tử Long, phía tây nam đảo Quan Lạn", "Bãi Ngọc Vừng cát trắng mịn, đảo đồi xanh"),
+    ("bai_quan_lan", "Bãi biển Quan Lạn", 20.8800, 107.5450, "island_beach", 90, 50, "approx",
+     "Đảo Quan Lạn: 20°53′N 107°30′E (Tạp chí Khoa học ĐHQGHN)", "Bãi cát trắng dài, rừng phi lao, làng cổ Quan Lạn"),
+    ("bai_minh_chau", "Bãi biển Minh Châu", 20.9800, 107.6450, "island_beach", 90, 52, "approx",
+     "Đầu đông bắc đảo Quan Lạn", "Bãi cát trắng mịn hướng ra biển khơi, rừng trâm cổ thụ"),
+    ("dao_ban_sen", "Đảo Bản Sen · Hang Nhà Trò", 21.0020, 107.4650, "big_island", 70, 44, "approx",
+     "Hành trình 1 vịnh Bái Tử Long (cảng Ao Tiên – Tây Hoi – hòn Mèo Lười – Bản Sen – hang Nhà Trò)", "Đảo Trà Bản yên bình, hang Nhà Trò bên mép nước"),
+    ("hon_meo_luoi", "Hòn Mèo Lười", 21.0360, 107.4500, "dog", 16, 22, "approx",
+     "Hành trình 1 vịnh Bái Tử Long, gần cảng Ao Tiên", "Hòn đá dáng chú mèo nằm lười phơi nắng"),
+    ("vqg_bai_tu_long", "Vườn quốc gia Bái Tử Long · Ba Mùn", 21.0700, 107.6100, "big_island", 120, 60, "approx",
+     "Wikipedia: vườn quốc gia ~21°06′N 107°38′E", "Rừng nguyên sinh trên đảo đá, hang Soi Nhụ"),
 ]
+REGION = {"hang_sang_toi": "lanha", "ba_trai_dao": "lanha", "dao_khi": "lanha", "lang_chai_cai_beo": "lanha", "cua_viet_hai": "lanha",
+          "hon_rua": "lanha", "bai_van_boi": "lanha", "dao_nam_cat": "lanha", "ho_ba_ham": "lanha",
+          "hon_dua": "btl", "dao_thang_loi": "btl", "dao_ngoc_vung": "btl", "bai_quan_lan": "btl", "bai_minh_chau": "btl",
+          "dao_ban_sen": "btl", "hon_meo_luoi": "btl", "vqg_bai_tu_long": "btl", "dao_cong_do": "btl"}
+REGIONS = [{"id": "all", "name": "Toàn cảnh"}, {"id": "halong", "name": "Vịnh Hạ Long"}, {"id": "lanha", "name": "Vịnh Lan Hạ"}, {"id": "btl", "name": "Vịnh Bái Tử Long"}]
 
 # ---- Bờ đất liền (Bãi Cháy · Hòn Gai) và đảo Tuần Châu (ước lượng) ----
-MAINLAND_WEST = [(21.000, 106.930), (20.958, 106.935), (20.950, 106.958), (20.946, 106.976), (20.947, 106.992),
+MAINLAND_WEST = [(21.130, 106.930), (21.000, 106.930), (20.958, 106.935), (20.950, 106.958), (20.946, 106.976), (20.947, 106.992),
                  (20.951, 107.006), (20.948, 107.024), (20.951, 107.044), (20.955, 107.061), (20.958, 107.068),
-                 (20.975, 107.068), (21.000, 107.060)]
-MAINLAND_EAST = [(21.000, 107.080), (20.962, 107.076), (20.952, 107.082), (20.947, 107.098), (20.946, 107.118),
-                 (20.949, 107.140), (20.958, 107.170), (21.000, 107.180)]
+                 (20.975, 107.068), (21.000, 107.060), (21.130, 107.060)]
+MAINLAND_EAST = [(21.130, 107.080), (21.000, 107.080), (20.962, 107.076), (20.952, 107.082), (20.947, 107.098), (20.946, 107.118),
+                 (20.949, 107.140), (20.958, 107.170), (20.966, 107.220), (20.978, 107.265), (20.995, 107.300),
+                 (21.012, 107.335), (21.030, 107.355), (21.060, 107.365), (21.100, 107.362), (21.130, 107.360)]
+# Bái Tử Long (ước lượng theo bản đồ du lịch): đảo Cái Bầu (Vân Đồn), đảo Quan Lạn chạy chéo đông bắc, đảo Trà Bản, đảo Ba Mùn
+CAI_BAU = [(21.150, 107.385), (21.110, 107.392), (21.075, 107.398), (21.052, 107.412), (21.055, 107.432), (21.072, 107.442),
+           (21.100, 107.452), (21.135, 107.462), (21.165, 107.452), (21.170, 107.400)]
+QUAN_LAN = [(20.872, 107.478), (20.880, 107.500), (20.893, 107.522), (20.910, 107.545), (20.935, 107.572), (20.958, 107.598),
+            (20.985, 107.622), (20.996, 107.630), (20.990, 107.640), (20.968, 107.622), (20.940, 107.592), (20.915, 107.565),
+            (20.893, 107.540), (20.876, 107.515), (20.865, 107.490)]
+TRA_BAN = [(21.018, 107.478), (21.035, 107.482), (21.046, 107.505), (21.040, 107.528), (21.022, 107.535), (21.008, 107.515), (21.006, 107.490)]
+BA_MUN = [(21.095, 107.585), (21.112, 107.610), (21.130, 107.650), (21.125, 107.662), (21.105, 107.640), (21.088, 107.600)]
 TUAN_CHAU = [(20.9372, 106.9725), (20.9385, 106.9845), (20.9370, 106.9955), (20.9318, 107.0010), (20.9262, 106.9998),
              (20.9238, 106.9905), (20.9262, 106.9790), (20.9300, 106.9730)]
 # Đảo Cát Bà (ước lượng): bờ phía tây vịnh Lan Hạ
@@ -79,7 +130,14 @@ KARST_ZONES = [
     {"name": "Vịnh Lan Hạ", "count": 300, "pts": [(20.805, 107.050), (20.805, 107.130), (20.770, 107.150), (20.720, 107.130),
                                                 (20.700, 107.090), (20.712, 107.062), (20.745, 107.052), (20.780, 107.048)]},
     {"name": "Phía tây nam Tuần Châu", "count": 130, "pts": [(20.912, 106.955), (20.913, 106.990), (20.880, 107.000), (20.845, 106.990), (20.850, 106.950)]},
+    {"name": "Đông vịnh Hạ Long · Vung Viêng", "count": 220, "pts": [(20.905, 107.120), (20.915, 107.200), (20.900, 107.260), (20.840, 107.270), (20.820, 107.200), (20.835, 107.150)]},
+    {"name": "Bái Tử Long tây", "count": 200, "weights": [6, 8, 26, 22, 14, 6, 4, 14],
+     "pts": [(20.955, 107.270), (20.975, 107.330), (20.960, 107.400), (20.920, 107.420), (20.880, 107.360), (20.880, 107.290), (20.915, 107.265)]},
+    {"name": "Bái Tử Long đông", "count": 160, "weights": [4, 8, 30, 24, 12, 4, 4, 14],
+     "pts": [(21.040, 107.500), (21.060, 107.570), (21.050, 107.640), (21.010, 107.630), (20.990, 107.560), (20.960, 107.500), (20.985, 107.460)]},
 ]
+# Lan Hạ: vách dựng đứng, đỉnh tròn phủ rừng (tháp + yên ngựa + hai đỉnh nhiều hơn)
+KARST_ZONES[1]["weights"] = [24, 10, 8, 18, 18, 8, 6, 8]
 
 # ---- Luồng tàu du lịch (giữ trống để du thuyền đi được) ----
 CORRIDORS = [
@@ -90,6 +148,15 @@ CORRIDORS = [
     ["hang_luon", (20.818, 107.100), (20.800, 107.088), "hang_sang_toi", (20.778, 107.082), "ba_trai_dao", (20.752, 107.078), "dao_khi",
      (20.730, 107.072), "lang_chai_cai_beo"],
     ["cang_tuan_chau", (20.935, 107.012), (20.942, 107.035), (20.945, 107.055)],
+    ["lang_chai_ba_hang", (20.875, 107.058), "dong_me_cung"],
+    ["dao_ti_top", (20.868, 107.080), "dao_soi_sim", (20.878, 107.108), "hang_thien_canh_son", (20.868, 107.158), "lang_chai_vung_vieng",
+     (20.872, 107.205), "dao_cong_do", (20.890, 107.280), (20.925, 107.300), "hon_dua"],
+    [(20.890, 107.280), (20.905, 107.345), "dao_thang_loi", (20.912, 107.415), "dao_ngoc_vung", (20.895, 107.475), (20.868, 107.520),
+     "bai_quan_lan", (20.905, 107.585), (20.945, 107.625), "bai_minh_chau", (21.020, 107.640), "vqg_bai_tu_long"],
+    [(20.912, 107.415), (20.965, 107.440), "dao_ban_sen", (21.022, 107.452), "hon_meo_luoi"],
+    ["lang_chai_cua_van", (20.792, 107.118), "ho_ba_ham", (20.778, 107.108), "bai_van_boi", (20.752, 107.100), "dao_nam_cat", (20.742, 107.088), "dao_khi"],
+    ["hang_sang_toi", (20.795, 107.060), "cua_viet_hai"],
+    ["dao_khi", (20.748, 107.075), "hon_rua"],
 ]
 CORRIDOR_HALF_WIDTH = 105
 
@@ -122,6 +189,32 @@ TOURS = [
                ("ba_trai_dao", 16, "Ba đỉnh đá tròn như ba trái đào bên bãi cát nhỏ."),
                ("dao_khi", 20, "Đảo Khỉ (Cát Dứa): bãi cát trắng, đàn khỉ sống tự do."),
                ("lang_chai_cai_beo", 22, "Làng chài Cái Bèo, làng chài cổ nhất vùng Cát Bà – Lan Hạ.")]},
+    {"id": "tuyen_4", "name": "Tuyến 4 · Thiên Cảnh Sơn, Vung Viêng, Cống Đỏ", "summary": "Sang phía đông vịnh: hang cổ Thiên Cảnh Sơn, làng chài Vung Viêng yên ả, áng nước kín Cống Đỏ.",
+     "stops": [("dao_ti_top", 10, "Rời Ti Tốp, tàu đi về phía đông."),
+               ("dao_soi_sim", 14, "Đảo Soi Sim: bãi tắm nhỏ, đường mòn lên đỉnh."),
+               ("hang_thien_canh_son", 18, "Hang Thiên Cảnh Sơn, nơi tìm thấy dấu tích người Hạ Long xưa."),
+               ("lang_chai_vung_vieng", 22, "Làng chài Vung Viêng nép dưới vách đá, nhịp sống chậm."),
+               ("dao_cong_do", 20, "Cống Đỏ: những áng nước kín giữa vách dựng, nước trong như gương.")]},
+    {"id": "bai_tu_long", "name": "Vịnh Bái Tử Long · Ngọc Vừng, Quan Lạn, Minh Châu", "summary": "Hành trình dài sang vịnh Bái Tử Long (Vân Đồn): đảo đồi xanh, bãi cát trắng dài, vườn quốc gia.",
+     "stops": [("dao_cong_do", 10, "Từ Cống Đỏ, tàu ra vùng nước rộng của Bái Tử Long."),
+               ("hon_dua", 14, "Hòn Đũa vươn thẳng giữa vịnh."),
+               ("dao_thang_loi", 14, "Đảo Thắng Lợi, bãi cát dài nước nông."),
+               ("dao_ngoc_vung", 18, "Bãi Ngọc Vừng cát trắng mịn."),
+               ("bai_quan_lan", 20, "Bãi biển Quan Lạn và làng cổ trên đảo."),
+               ("bai_minh_chau", 20, "Bãi Minh Châu hướng ra biển khơi."),
+               ("vqg_bai_tu_long", 18, "Vườn quốc gia Bái Tử Long, rừng nguyên sinh trên đảo đá.")]},
+    {"id": "lan_ha_2", "name": "Lan Hạ tuyến 2 · Đảo Khỉ, Hòn Rùa, Việt Hải, Ba Trái Đào", "summary": "Theo tuyến 2 của vịnh Lan Hạ: Đảo Khỉ, hòn Rùa, cửa Việt Hải, bãi Ba Trái Đào, hang Sáng Tối.",
+     "stops": [("lang_chai_cai_beo", 12, "Xuất phát từ làng chài Cái Bèo."),
+               ("dao_khi", 16, "Đảo Khỉ (Cát Dứa)."),
+               ("hon_rua", 12, "Hòn Rùa nổi trên mặt nước."),
+               ("cua_viet_hai", 18, "Cửa Việt Hải, lối vào làng cổ Việt Hải trên đảo Cát Bà."),
+               ("ba_trai_dao", 16, "Bãi Ba Trái Đào."),
+               ("hang_sang_toi", 18, "Hang Sáng Tối, chèo kayak xuyên hang.")]},
+    {"id": "lan_ha_bien", "name": "Lan Hạ · bãi tắm Vạn Bội, Nam Cát, Hồ Ba Hầm", "summary": "Các bãi cát nhỏ phía đông vịnh Lan Hạ và hồ nước kín Ba Hầm.",
+     "stops": [("dao_khi", 10, "Rời Đảo Khỉ, đi về phía đông."),
+               ("dao_nam_cat", 16, "Đảo Nam Cát, bãi cát trắng nhỏ."),
+               ("bai_van_boi", 18, "Bãi tắm Vạn Bội, nước trong để tắm vịnh."),
+               ("ho_ba_ham", 20, "Hồ Ba Hầm: ba hồ nước kín nối nhau qua hang xuyên thủy.")]},
 ]
 
 def lm(i):
@@ -153,13 +246,13 @@ def in_poly(x, z, P):
 def main():
     rnd = random.Random(20261119)
     corridors = [corridor_pts(c) for c in CORRIDORS]
-    land = [poly(MAINLAND_WEST), poly(MAINLAND_EAST), poly(TUAN_CHAU), poly(CAUSEWAY), poly(CAT_BA)]
+    land = [poly(MAINLAND_WEST), poly(MAINLAND_EAST), poly(TUAN_CHAU), poly(CAUSEWAY), poly(CAT_BA), poly(CAI_BAU), poly(QUAN_LAN), poly(TRA_BAN), poly(BA_MUN)]
 
     landmark_rows = []
     for (i, name, lat, lon, shape, r, h, prec, src, desc) in LANDMARKS:
         x, z = xz(lat, lon)
         landmark_rows.append({"id": i, "name": name, "lat": lat, "lon": lon, "x": x, "z": z, "shape": shape,
-                              "radius": r, "height": h, "precision": prec, "source": src, "description": desc})
+                              "radius": r, "height": h, "precision": prec, "source": src, "description": desc, "region": REGION.get(i, "halong")})
 
     def near_corridor(x, z, pad):
         return any(seg_dist(x, z, c[k], c[k + 1]) < CORRIDOR_HALF_WIDTH + pad for c in corridors for k in range(len(c) - 1))
@@ -176,7 +269,7 @@ def main():
                 continue
             # Dáng núi: 0 tháp cao mảnh · 1 chóp nhọn · 2 đồi tròn · 3 dãy dài yên ngựa · 4 hai đỉnh
             #          5 nấm thắt chân · 6 răng nghiêng · 7 hòn nhỏ sát nước
-            shape = rnd.choices(range(8), weights=[16, 16, 14, 10, 10, 8, 8, 18])[0]
+            shape = rnd.choices(range(8), weights=zone.get("weights", [16, 16, 14, 10, 10, 8, 8, 18]))[0]
             r, h = {0: (rnd.uniform(9, 20), 0), 1: (rnd.uniform(18, 38), 0), 2: (rnd.uniform(24, 52), 0), 3: (rnd.uniform(26, 50), 0),
                     4: (rnd.uniform(20, 36), 0), 5: (rnd.uniform(13, 26), 0), 6: (rnd.uniform(9, 17), 0), 7: (rnd.uniform(4, 10), 0)}[shape]
             h = {0: r * rnd.uniform(3.2, 5.0), 1: r * rnd.uniform(2.0, 3.0), 2: r * rnd.uniform(.55, 1.0), 3: r * rnd.uniform(.9, 1.5),
@@ -248,7 +341,7 @@ def main():
     data = {
         "version": 1,
         "map": {
-            "id": "halong_bay", "kind": "bay", "name": "Vịnh Hạ Long – Lan Hạ · Du thuyền Yên", "status": "live",
+            "id": "halong_bay", "kind": "bay", "name": "Vịnh Hạ Long – Lan Hạ – Bái Tử Long · Du thuyền Yên", "status": "live",
             "sky_color": "#bcd8e8", "fog_color": "#cfe0e6", "fog_density": 0.00105, "ground_color": "#2f9c8a",
             "hemi_sky": "#eaf4ff", "hemi_ground": "#3c7f72", "hemi_intensity": 1.9,
             "sun_color": "#fff2dc", "sun_intensity": 2.1, "sun_position": [60, 90, -40],
@@ -286,7 +379,11 @@ def main():
                                      {"name": "Hòn Gai", "pts": land[1], "height": 16, "color": "#6a965f", "hills": 22},
                                      {"name": "Đảo Tuần Châu", "pts": land[2], "height": 8, "color": "#78a46c", "hills": 5},
                                      {"name": "Đường nối Tuần Châu", "pts": land[3], "height": 3, "color": "#c9bfa4"},
-                                     {"name": "Đảo Cát Bà", "pts": land[4], "height": 18, "color": "#5f8f5a", "hills": 30}],
+                                     {"name": "Đảo Cát Bà", "pts": land[4], "height": 18, "color": "#5f8f5a", "hills": 30},
+                                     {"name": "Đảo Cái Bầu (Vân Đồn)", "pts": land[5], "height": 16, "color": "#63935c", "hills": 28},
+                                     {"name": "Đảo Quan Lạn", "pts": land[6], "height": 8, "color": "#76a06a", "hills": 12},
+                                     {"name": "Đảo Trà Bản", "pts": land[7], "height": 12, "color": "#6a965f", "hills": 20},
+                                     {"name": "Đảo Ba Mùn", "pts": land[8], "height": 14, "color": "#5f8f5a", "hills": 24}],
                         "precision": "approx"}},
             {"id": "halong_bay.backdrop", "kind": "backdrop", "sort_order": 0,
              "params": {"style": "painted_panorama", "seed": 1119, "radius": 2200, "top": 420, "haze": "#cfe0e6",
@@ -298,7 +395,11 @@ def main():
             {"id": "halong_bay.labels", "kind": "map_labels", "sort_order": 5,
              "params": {"items": [{"name": "VỊNH HẠ LONG", "x": xz(20.875, 107.120)[0], "z": xz(20.875, 107.120)[1], "sub": "Quảng Ninh"},
                                   {"name": "VỊNH LAN HẠ", "x": xz(20.752, 107.150)[0], "z": xz(20.752, 107.150)[1], "sub": "Hải Phòng"},
-                                  {"name": "ĐẢO CÁT BÀ", "x": xz(20.785, 106.975)[0], "z": xz(20.785, 106.975)[1], "sub": ""}]}},
+                                  {"name": "ĐẢO CÁT BÀ", "x": xz(20.785, 106.975)[0], "z": xz(20.785, 106.975)[1], "sub": ""},
+                                  {"name": "VỊNH BÁI TỬ LONG", "x": xz(20.945, 107.470)[0], "z": xz(20.945, 107.470)[1], "sub": "Vân Đồn · Quảng Ninh"},
+                                  {"name": "ĐẢO QUAN LẠN", "x": xz(20.925, 107.600)[0], "z": xz(20.925, 107.600)[1], "sub": ""},
+                                  {"name": "ĐẢO CÁI BẦU", "x": xz(21.110, 107.420)[0], "z": xz(21.110, 107.420)[1], "sub": ""}]}},
+            {"id": "halong_bay.regions", "kind": "map_regions", "sort_order": 6, "params": {"items": REGIONS}},
             {"id": "halong_bay.channels", "kind": "channels", "sort_order": 4,
              "params": {"half_width": CORRIDOR_HALF_WIDTH, "lines": [[list(p) for p in c] for c in corridors]}},
         ],
@@ -323,7 +424,7 @@ def main():
              "room_id": "du_thuyen_mui"},
         ],
         "props": [{"id": l["id"], "kind": "landmark", "name": l["name"], "x": l["x"], "z": l["z"],
-                   "params": {k: l[k] for k in ("lat", "lon", "shape", "radius", "height", "precision", "source", "description", "approach")},
+                   "params": {k: l[k] for k in ("lat", "lon", "shape", "radius", "height", "precision", "source", "description", "approach", "region")},
                    "activity": {"dao_ti_top": "swim", "hang_luon": "kayak", "lang_chai_cua_van": "kayak"}.get(l["id"])}
                   for l in landmark_rows] + junks + buoys + [
                   {"id": t["id"], "kind": "tour", "name": t["name"], "x": port["approach"][0], "z": port["approach"][1],

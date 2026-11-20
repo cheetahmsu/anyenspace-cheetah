@@ -15,7 +15,11 @@
 - 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khoác ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
 - Giữ ngồi thiền/thiền hành khi gõ chuông.
 
-## Vịnh Hạ Long – Lan Hạ · Du thuyền Yên (beta)
+## Vịnh Hạ Long – Lan Hạ – Bái Tử Long · Du thuyền Yên (beta)
+
+- Bản đồ chia vùng: Toàn cảnh · Vịnh Hạ Long · Vịnh Lan Hạ · Vịnh Bái Tử Long; danh sách điểm theo vùng, mỗi điểm có nút 📸 check-in (đưa tàu tới góc chụp đẹp và mở máy ảnh, danh thắng phía sau lưng).
+- Điểm bổ sung (theo bản đồ du lịch vịnh Hạ Long của vietnamtourism.com và các hành trình vịnh Bái Tử Long do UBND Quảng Ninh công bố): Động Mê Cung, Đảo Soi Sim, Hang Thiên Cảnh Sơn, Làng chài Vung Viêng, Đảo Cống Đỏ, Hồ Ba Hầm, Làng Việt Hải, Hòn Rùa, Bãi Vạn Bội, Đảo Nam Cát, Hòn Đũa, Đảo Thắng Lợi, Đảo Ngọc Vừng, Bãi Quan Lạn, Bãi Minh Châu, Đảo Bản Sen · Hang Nhà Trò, Hòn Mèo Lười, Vườn quốc gia Bái Tử Long. Toạ độ các điểm mới là gần đúng.
+- Dáng mới: `cove` (áng nước kín vách dựng kiểu Lan Hạ), `island_beach` (đảo đồi thấp bãi cát dài kiểu Bái Tử Long); Ti Tốp có ki-ốt, ô dù, bậc lên đỉnh; làng chài là dãy nhà bè san sát. Màu nước đổi theo vùng (Lan Hạ xanh ngọc).
 
 Bản đồ gồm vịnh Hạ Long (Quảng Ninh) và vịnh Lan Hạ (Hải Phòng, phía đông đảo Cát Bà): Hang Sáng Tối, Hòn Ba Trái Đào, Đảo Khỉ · Cát Dứa, Làng chài Cái Bèo; tour "Tuyến Lan Hạ". Toạ độ các điểm Lan Hạ là gần đúng.
 
