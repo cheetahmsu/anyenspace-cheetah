@@ -313,7 +313,7 @@ function updateWishLake(){const name=nearestWishLake();if(name===selectedWishLak
 window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()){const near=nearestWishLake();let toast=document.getElementById('anyenWishQuoteToast');if(!toast){toast=document.createElement('div');toast.id='anyenWishQuoteToast';toast.setAttribute('role','status');document.body.append(toast)}toast.textContent='🪙 Hãy đi đến gần một hồ rồi ném xu. Hồ gần nhất: Hồ '+near+'.';toast.classList.add('show');clearTimeout(window.anyenQuoteTimer);window.anyenQuoteTimer=setTimeout(()=>toast.classList.remove('show'),3200);return}
  const lake=e.detail?.remote?e.detail?.lake:nearestWishLake();if(!wishLakes.some(v=>v.name===lake))return;animateCoin(lake,!!e.detail?.remote);if(!e.detail?.remote){wishQuote(lake);window.dispatchEvent(new CustomEvent('anyen-coin-thrown',{detail:{lake}}))}});
   const box=(w,h,d,m,x,y,z)=>{let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o};
-  const wood=mat('#654c33'),roof=mat('#23332f'),gold=mat('#c8a96a'),stone=mat('#8a8d78');
+  const wood=mat('#654c33'),roof=mat('#23332f'),gold=mat('#c8a96a'),stone=mat('#6f7166');
   // 3.8: The meditation terrace sits on the flat top of the hill at the north end. A seated Buddha under a wide roof,
   // facing the lake and the gate, with rings of meditation cushions in front. Everything here is in the shrine group,
   // which is lifted to the hilltop; x/z stay in world coordinates.
@@ -323,7 +323,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const FOOT={x:0,z:-31,r:6},GATHER={x:0,z:24,r:6.5};
   const STAIRS=[[0,-36.6],[5,-41.4],[-5,-46.4],[0,-51.4]];
   function stairsDistance(x,z){let best=Infinity;for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz)));best=Math.min(best,Math.hypot(ax+vx*u-x,az+vz*u-z))}return best}
-  const terraceMat=mat('#9a9580'),terraceEdge=mat('#7f7b68'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
+  const terraceMat=mat('#77735f'),terraceEdge=mat('#5f5c4d'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
   const TERRACE_R=8.2;
   // Arched footbridge over Hồ Niệm: walkers follow this height while on the bridge.
   const BRIDGE_ARCH=[-10.5,2.5],BRIDGE_RISE=2.6;
@@ -395,11 +395,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(ORCHID_DOOR[0],.03,ORCHID_DOOR[1]);scene.add(orchidRing);
   // Footbridge across the channel between the two lotus lobes, on the main axis from the gate to the hill.
   // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
+  const flagPts=[],flagRand=seededRandom(77);
   {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(BRIDGE_ARCH[0]-1.2,BRIDGE_ARCH[0]);
-   // Stone paths on the main axis (gate, gathering plaza, bridge, foot of the hill), edged with low stones.
-   const stonePath=(z0,z1)=>{const path=new THREE.Mesh(new THREE.BoxGeometry(3.2,.08,z1-z0),mat('#a59c82'));path.position.set(0,.04,(z0+z1)/2);scene.add(path);
-    for(let z=z0+.4;z<z1;z+=.9)for(const x of [-1.75,1.75]){const st=new THREE.Mesh(new THREE.DodecahedronGeometry(.16,0),stone);st.position.set(x,.08,z);st.scale.y=.6;scene.add(st)}
-    for(let z=z0+.45;z<z1-.2;z+=1.1){const slab=new THREE.Mesh(new THREE.BoxGeometry(2.9,.03,.08),mat('#8e866e'));slab.position.set(0,.09,z);scene.add(slab)}};
+   // Stone paths on the main axis (gate, gathering plaza, bridge, foot of the hill): irregular flagstones half sunk
+   // into a strip of packed earth, with earth showing between them, so the path melts into the ground.
+   const stonePath=(z0,z1)=>{for(let z=z0+.3;z<z1-.2;z+=.66){let x=-1.45+flagRand()*.2;while(x<1.3){const w=.32+flagRand()*.28;if(flagRand()>.2)flagPts.push([x+w,z+(flagRand()-.5)*.18,w,.26+flagRand()*.12,0]);x+=w*2+.08+flagRand()*.12}}};
    stonePath(FOOT.z+FOOT.r-.3,BRIDGE_ARCH[0]-1.2);stonePath(BRIDGE_ARCH[1]+1.2,GATHER.z-GATHER.r+.3);stonePath(GATHER.z+GATHER.r-.3,35);flat(BRIDGE_ARCH[1],BRIDGE_ARCH[1]+1.2);
    const N=36,span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0];let prev=null;
    for(let k=0;k<=N;k++){const z=BRIDGE_ARCH[0]+span*k/N,y=bridgeHeight(z);const pt={z,y};
@@ -413,10 +413,15 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
    for(const z of BRIDGE_ARCH){const a=new THREE.Mesh(new THREE.BoxGeometry(4,.5,1.2),stone);a.position.set(0,.05,z);scene.add(a)}}
 
   // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
-  for(const p of [GATHER,FOOT]){const disc=new THREE.Mesh(new THREE.CylinderGeometry(p.r,p.r+.1,.12,48),mat('#a59c82'));disc.position.set(p.x,.06,p.z);scene.add(disc);
-    const rim=new THREE.Mesh(new THREE.TorusGeometry(p.r+.05,.09,6,48),mat('#8e866e'));rim.rotation.x=-Math.PI/2;rim.position.set(p.x,.1,p.z);scene.add(rim)}
+  // Flagstones laid loosely over packed earth, a ring of larger dark stones at the edge.
+  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
+    const n=Math.round(p.r*2*Math.PI/.85);for(let k=0;k<n;k++){const a=k/n*Math.PI*2;flagPts.push([p.x+Math.cos(a)*(p.r-.1),p.z+Math.sin(a)*(p.r-.1),.36+flagRand()*.1,.3+flagRand()*.08,1])}}
+  {const geo=new THREE.DodecahedronGeometry(1,0),cols=['#4b4a41','#525046','#46453d','#57544a','#4d4f45'].map(h=>new THREE.Color(h)),edge=new THREE.Color('#3e3d36'),mesh=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),flagPts.length);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
+    flagPts.forEach(([x,z,w,d,rim],i)=>{e.set(0,flagRand()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+(rim?.03:.005),z);sc.set(w,rim?.13:.07,d);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);mesh.setColorAt(i,rim?edge:cols[Math.floor(flagRand()*cols.length)])});
+    mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;scene.add(mesh)}
   // Zig-zag stone stairs up the south face of the hill, with a stone lantern at every turn.
-  {const slabMat=mat('#9b937b'),edgeMat=mat('#7f7b68');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
+  {const slabMat=mat('#5f5b4e'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
       for(let t=0;t<=len;t+=.62){const x=ax+(bx-ax)*t/len,z=az+(bz-az)*t/len,slab=new THREE.Mesh(new THREE.BoxGeometry(2.8,.16,.56),slabMat);slab.position.set(x,terrainHeight(x,z)+.06,z);slab.rotation.y=yaw;scene.add(slab)}}
     for(const [x,z] of STAIRS){for(const side of [-1,1]){const l=new THREE.Group();l.position.set(x+side*1.9,terrainHeight(x+side*1.9,z),z);const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,8),edgeMat);post.position.y=.4;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.36,.3,.36),slabMat);lamp.position.y=.95;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.22,.18,.38),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=.95;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.32,.26,4),edgeMat);cap.rotation.y=Math.PI/4;cap.position.y=1.24;l.add(cap);scene.add(l)}}}
   // Cổng Yên: a plain wooden gate at the south end of the main axis.
@@ -638,7 +643,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const hash=(i,j)=>{const h=Math.sin(i*127.1+j*311.7)*43758.5453;return h-Math.floor(h)};
     const vnoise=(x,z)=>{const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);const a=hash(i,j),b=hash(i+1,j),c2=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*ux+(c2-a)*uz+(a-b-c2+d)*ux*uz};
     const fbm=(x,z)=>.6*vnoise(x,z)+.3*vnoise(x*2.1+7,z*2.1+3)+.1*vnoise(x*4.3+1,z*4.3+9);
-    const C=h=>new THREE.Color(h),grassA=C('#1f4637'),grassB=C('#2d5a43'),dry=C('#4d5f3f'),needles=C('#463b29'),earth=C('#6d6450'),wet=C('#1b3d33'),bed=C('#1a302c'),floor=C('#183629'),moss=C('#2a5240');
+    const C=h=>new THREE.Color(h),grassA=C('#1f4637'),grassB=C('#2d5a43'),dry=C('#4d5f3f'),needles=C('#463b29'),earth=C('#3f3a2d'),wet=C('#1b3d33'),bed=C('#1a302c'),floor=C('#183629'),moss=C('#2a5240');
     const grid=new Map();for(const t of trees){const k=treeCellKey(Math.floor(t[0]/TREE_CELL),Math.floor(t[1]/TREE_CELL));if(!grid.has(k))grid.set(k,[]);grid.get(k).push(t)}
     const nearestTree=(x,z)=>{let best=99;const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=grid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a){const d=Math.hypot(x-t[0],z-t[1])/(t[3]>8?1:.6);if(d<best)best=d}}return best};
     const pos=ground.geometry.attributes.position,col=ground.geometry.attributes.color,out=new THREE.Color();
@@ -648,7 +653,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         const rim=Math.max((Math.abs(x)-44)/14,(z-37)/12,(-z-87)/10);if(rim>0)out.lerp(floor,smoothstep(0,.6,rim));
         const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.foot&&hr>HILL.flat)out.lerp(moss,.35);
         out.lerp(needles,smoothstep(3.4,.7,nearestTree(x,z))*.8);
-        out.lerp(earth,Math.max(z>-37&&z<36?smoothstep(2.9,1.7,Math.abs(x)):0,smoothstep(2.4,1.2,stairsDistance(x,z))*(hr<HILL.foot?1:0)));
+        out.lerp(earth,Math.max(z>-37&&z<36?smoothstep(2.6,1.5,Math.abs(x)):0,smoothstep(2.4,1.2,stairsDistance(x,z))*(hr<HILL.foot?1:0),smoothstep(GATHER.r+1,GATHER.r-.6,Math.hypot(x-GATHER.x,z-GATHER.z)),smoothstep(FOOT.r+1,FOOT.r-.6,Math.hypot(x-FOOT.x,z-FOOT.z)))*.85);
         out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
       col.setXYZ(i,out.r,out.g,out.b)}
     col.needsUpdate=true;}
@@ -2100,9 +2105,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     c.fillRect(fmX(-LOTUS_LAKE.channel[0]),fmY(LOTUS_LAKE.z-LOTUS_LAKE.channel[1]),fmS(LOTUS_LAKE.channel[0]*2),fmS(LOTUS_LAKE.channel[1]*2));
     c.fillStyle='#e99ab6';for(const f of flowers){c.beginPath();c.arc(fmX(f.position.x),fmY(f.position.z),1.6,0,7);c.fill()}
     // main axis, plazas, stairs, bridge, gate, piers
-    c.strokeStyle='#cdb98f';c.lineCap='round';c.lineWidth=fmS(3.2);c.beginPath();c.moveTo(fmX(0),fmY(35));c.lineTo(fmX(0),fmY(FOOT.z));c.stroke();
+    c.strokeStyle='#8a8068';c.lineCap='round';c.lineWidth=fmS(3.2);c.beginPath();c.moveTo(fmX(0),fmY(35));c.lineTo(fmX(0),fmY(FOOT.z));c.stroke();
     c.lineWidth=fmS(2.8);c.beginPath();STAIRS.forEach(([x,z],i)=>i?c.lineTo(fmX(x),fmY(z)):c.moveTo(fmX(x),fmY(z)));c.stroke();
-    c.fillStyle='#cdb98f';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(p.r),0,7);c.fill()}
+    c.fillStyle='#8a8068';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(p.r),0,7);c.fill()}
     c.fillStyle='#8a6a48';c.fillRect(fmX(-1.8),fmY(BRIDGE_ARCH[0]),fmS(3.6),fmY(BRIDGE_ARCH[1])-fmY(BRIDGE_ARCH[0]));
     for(const sx of [-1,1])c.fillRect(fmX(sx*BOAT_PIER_X-1.6),fmY(BOAT_LANE_Z-.75),fmS(3.2),fmS(1.5));
     c.fillStyle='#6b4a32';c.fillRect(fmX(-3.4),fmY(34.2)-3,fmS(6.8),6);
