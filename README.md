@@ -18,6 +18,8 @@
 ## Vịnh Hạ Long – Lan Hạ · Du thuyền Yên (beta)
 
 Bản đồ gồm vịnh Hạ Long (Quảng Ninh) và vịnh Lan Hạ (Hải Phòng, phía đông đảo Cát Bà): Hang Sáng Tối, Hòn Ba Trái Đào, Đảo Khỉ · Cát Dứa, Làng chài Cái Bèo; tour "Tuyến Lan Hạ". Toạ độ các điểm Lan Hạ là gần đúng.
+
+Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành trình (giữ nguyên tour/điểm đến), hiện hàng điều khiển xoay trái/phải (giữ nút), tự xoay 360°, nhìn về mũi tàu, chụp ảnh, ▶ đi tiếp hoặc ⏹ neo lại.
 - Bấm **Khám phá Vịnh Yên**: bạn đứng ở mũi một du thuyền 5 sao, xuất phát từ cảng Tuần Châu.
 - **Trang phục ở vịnh:** lần đầu vào vịnh mở bảng "Lên Du thuyền Yên" có xem trước dáng đứng và ngồi thiền. Năm kiểu: Thiền phục · Áo thun · quần jean · Vest lịch sự · Đầm maxi đi chơi · Áo dài truyền thống; màu như bảng màu cũ; tích chọn thêm Nón, Kính, Khăn. Chỉ dùng ở vịnh, mở lại bằng Menu → Trang phục.
 - **Hàng trên (tàu):** chip trạng thái tàu (đang neo · đang đi tới, còn bao xa · tour điểm 2/5 · dừng ngắm, đi tiếp sau … giây · đang ở danh thắng), nút ⏹ khi tàu chạy, rồi bốn tùy chọn:
