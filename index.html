@@ -353,8 +353,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.24,3,8),skin);ear.position.set(side*.35,2.38,0);buddha.add(ear)}
   const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.95,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false}));halo.position.set(0,2.5,-.32);buddha.add(halo);
   buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);shrine.add(buddha);
-  // Stone lanterns where the bridge meets the terrace.
-  for(const x of [-2.3,2.3]){const l=new THREE.Group();l.position.set(x,0,STATUE.z+8.6);const post=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.1,8),terraceEdge);post.position.y=.55;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.5,.42,.5),terraceMat);lamp.position.y=1.3;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.3,.24,.52),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=1.3;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.45,.35,4),terraceEdge);cap.rotation.y=Math.PI/4;cap.position.y=1.7;l.add(cap);shrine.add(l)}
   // Bodhi tree behind the shrine.
   const bodhiTree=new THREE.Group();{const bodhi=bodhiTree;bodhi.position.set(0,0,STATUE.z-11.7);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});shrine.add(bodhi)}
   // 3.7: Nhà hoa lan, a small glasshouse beside Hồ Sắc (3.8), its door turned toward the pond.
@@ -393,9 +391,80 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // Soft pulsing ring on the ground in front of the door.
   const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(ORCHID_DOOR[0],.03,ORCHID_DOOR[1]);scene.add(orchidRing);
+  // 3.10: Kiến trúc giác quan bên bốn hồ còn lại (Nhà hoa lan ở hồ Sắc đã có). Mỗi nhà đặt ở bờ ngoài của hồ,
+  // cửa quay ra mặt nước. Bên ngoài là khối đơn giản cho nhẹ; bên trong sẽ mở sau (lớp 2 của khung thiết kế).
+  const SENSE_HOUSES=[
+    {id:'chuong_gio',lake:'Thanh',name:'Nhà chuông gió',icon:'🎐',d:8.6,r:2.9,note:'Lắng nghe gió qua ống tre và chuông xoay'},
+    {id:'xong_huong',lake:'Hương',name:'Nhà xông hương',icon:'🌿',d:8.6,r:2.7,note:'Vườn thảo mộc và gian xông lá'},
+    {id:'quan_tra',lake:'Vị',name:'Quán trà',icon:'🍵',d:8.6,r:3.1,note:'Chén trà cho cuộc trò chuyện một kèm một'},
+    {id:'xuong_gom',lake:'Chạm',name:'Xưởng gốm',icon:'🏺',d:7.8,r:2.9,note:'Bàn xoay gốm và kệ gốm mộc'}];
+  for(const h of SENSE_HOUSES){const l=wishLakes.find(v=>v.name===h.lake),ux=l.x-HILL.x,uz=l.z-HILL.z,un=Math.hypot(ux,uz);h.x=l.x+ux/un*h.d;h.z=l.z+uz/un*h.d;h.rot=Math.atan2(l.x-h.x,l.z-h.z);
+    h.door=[h.x+Math.sin(h.rot)*(h.r+1.1),h.z+Math.cos(h.rot)*(h.r+1.1)]}
+  const houseAnim=[];
+  function buildSenseHouse(h){const g=new THREE.Group(),add=(m,x,y,z)=>{m.position.set(x,y,z);g.add(m);return m},B=(w,hh,d,mm)=>new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),mm),Cy=(rt,rb,hh,mm,seg=8)=>new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,hh,seg),mm);
+    const base=mat('#5f5b4e'),darkWood=mat('#4e3a2a'),warmWood=mat('#6b4a32'),thatch=mat('#5a4a32'),tileM=mat('#3f322a');
+    const pyramidRoof=(w,hh,y,mm)=>{const r=add(new THREE.Mesh(new THREE.ConeGeometry(w*.75,hh,4,1),mm),0,y,0);r.rotation.y=Math.PI/4;return r};
+    if(h.id==='chuong_gio'){// bamboo pavilion, chimes hang under the eaves, three singing bowls on a low table
+      const bamboo=mat('#8a8f4f'),node=mat('#6f7440'),metal=new THREE.MeshStandardMaterial({color:'#b8ab84',metalness:.6,roughness:.35}),bowlM=new THREE.MeshStandardMaterial({color:'#b88d45',metalness:.55,roughness:.4});
+      add(B(4,.22,4,base),0,.11,0);
+      for(const x of [-1.7,1.7])for(const z of [-1.7,1.7]){add(Cy(.09,.1,2.7,bamboo,7),x,1.55,z);for(const y of [.9,1.7,2.4])add(Cy(.105,.105,.05,node,7),x,y,z)}
+      for(const z of [-1.7,1.7]){const b=add(Cy(.07,.07,3.8,bamboo,6),0,2.85,z);b.rotation.z=Math.PI/2}for(const x of [-1.7,1.7]){const b=add(Cy(.07,.07,3.8,bamboo,6),x,2.85,0);b.rotation.x=Math.PI/2}
+      pyramidRoof(4.4,1.5,3.6,thatch);
+      // back wall of split bamboo screens
+      for(let i=0;i<14;i++)add(Cy(.055,.055,2.4,i%2?bamboo:node,5),-1.6+i*.245,1.42,-1.72);
+      for(const [x,z] of [[-1.35,1.75],[-.45,1.82],[.45,1.82],[1.35,1.75],[1.82,.6],[-1.82,.6]]){const ch=new THREE.Group();ch.position.set(x,2.75,z);const top=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.03,10),warmWood);ch.add(top);
+        for(let k=0;k<5;k++){const a=k*1.2566,len=.32+k*.07,tube=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,len,6),metal);tube.position.set(Math.cos(a)*.08,-.05-len/2,Math.sin(a)*.08);ch.add(tube)}
+        const clap=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.02,8),warmWood);clap.position.y=-.55;ch.add(clap);g.add(ch);houseAnim.push({kind:'chime',obj:ch,phase:x*3+z})}
+      add(B(1.3,.3,.7,darkWood),0,.37,-.4);[[-.38,0],[0,-.05],[.38,0]].forEach(([x,z],k)=>{const bw=new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0,0),new THREE.Vector2(.1+k*.02,.02),new THREE.Vector2(.15+k*.025,.1),new THREE.Vector2(.16+k*.025,.13)],14),bowlM);bw.position.set(x,.52,-.4+z);g.add(bw)});
+      for(const x of [-.7,.7]){const c=add(Cy(.3,.32,.12,mat('#6e4a33'),12),x,.28,.6)}
+    }else if(h.id==='xong_huong'){// small wooden hut with a gable roof, herb beds in front, a clay burner with rising smoke
+      add(B(3.2,.2,3,base),0,.1,-.4);add(B(2.8,2.2,2.4,warmWood),0,1.3,-.6);add(B(.9,1.7,.06,mat('#2e2219')),0,1.05,.62);
+      for(const s of [-1,1]){const r=add(B(1.9,.1,3.1,thatch),s*.78,2.72,-.6);r.rotation.z=-s*.62}
+      const ridge=add(B(.16,.16,3.2,darkWood),0,3.3,-.6);
+      const gable=new THREE.Shape();gable.moveTo(-1.4,0);gable.lineTo(0,1.05);gable.lineTo(1.4,0);for(const z of [-1.8,.6]){add(new THREE.Mesh(new THREE.ShapeGeometry(gable),warmWood),0,2.4,z)}
+      const herbs=[['#7c62a8',.28,.45],['#4f8a4c',.3,.3],['#8fa94a',.18,.7],['#5f9a62',.32,.28],['#9a7fc0',.26,.42],['#6b9a48',.3,.35]];
+      for(let bx=0;bx<3;bx++){const bed=add(B(.9,.22,1.3,mat('#4a3c2c')),-1.15+bx*1.15,.11,1.9);for(let k=0;k<4;k++){const [c,r,hh]=herbs[(bx*2+k)%herbs.length],tuft=new THREE.Mesh(new THREE.ConeGeometry(r,hh,5),mat(c));tuft.position.set(-1.15+bx*1.15+(k%2-.5)*.4,.22+hh/2,1.9+(k<2?-.3:.3));g.add(tuft)}}
+      const burner=add(Cy(.22,.3,.35,mat('#7a4e34'),10),1.75,.18,.9);const smokeMat=new THREE.MeshBasicMaterial({color:'#d9d4c5',transparent:true,opacity:.22,depthWrite:false});
+      for(let k=0;k<6;k++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.09+k*.025,8,6),smokeMat);puff.position.set(1.75,.5+k*.28,.9);g.add(puff);houseAnim.push({kind:'smoke',obj:puff,x:1.75,z:.9,k})}
+    }else if(h.id==='quan_tra'){// open tea pavilion on a raised wooden floor, a low table set for two, tea bushes beside
+      add(B(4.4,.3,4.4,warmWood),0,.15,0);for(let i=-2;i<=2;i++)add(B(.04,.02,4.4,darkWood),i*.88,.31,0);
+      for(const x of [-2,2])for(const z of [-2,2])add(Cy(.12,.14,2.6,darkWood,8),x,1.6,z);
+      add(B(4.8,.16,4.8,darkWood),0,2.95,0);pyramidRoof(5.2,1.4,3.7,tileM);
+      add(B(1.1,.28,.7,mat('#3e2c20')),0,.45,0);
+      const pot=add(new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),mat('#5d4636')),0,.69,0);pot.scale.y=.85;const spout=add(Cy(.02,.03,.16,mat('#5d4636'),6),.14,.7,0);spout.rotation.z=-1;
+      for(const z of [-.18,.18])add(Cy(.05,.04,.06,mat('#e8e0cc'),10),.32,.62,z);
+      for(const z of [-.95,.95]){add(Cy(.32,.34,.14,mat('#6e4a33'),12),0,.37,z)}
+      const steamMat=new THREE.MeshBasicMaterial({color:'#efe9dc',transparent:true,opacity:.2,depthWrite:false});for(let k=0;k<4;k++){const st=new THREE.Mesh(new THREE.SphereGeometry(.05+k*.02,7,5),steamMat);st.position.set(.2,.8+k*.14,0);g.add(st);houseAnim.push({kind:'smoke',obj:st,x:.2,z:0,k,small:true})}
+      const tea=mat('#2f5a3a');for(let r=0;r<2;r++)for(let k=0;k<4;k++){const b=add(new THREE.Mesh(new THREE.IcosahedronGeometry(.42,0),tea),-3.2-r*1.1,.32,-1.6+k*1.05);b.scale.set(1,.7,1)}
+    }else{// xưởng gốm: rammed-earth workshop with an open front, a pottery wheel, shelves of pots, a small kiln
+      const earthM=mat('#7a5b44'),clay=mat('#a8704f'),clayDark=mat('#8a5a40'),glaze=mat('#6f8a86');
+      add(B(3.8,.2,3.2,base),0,.1,-.3);add(B(3.6,2.3,.3,earthM),0,1.35,-1.75);for(const s of [-1,1])add(B(.3,2.3,3,earthM),s*1.65,1.35,-.4);
+      const roofS=add(B(4.3,.14,3.8,tileM),0,2.7,-.35);roofS.rotation.x=.16;
+      add(Cy(.35,.4,.42,darkWood,12),0,.41,-.2);const wheelTop=add(Cy(.3,.3,.05,mat('#5a4636'),14),0,.64,-.2);const lump=add(Cy(.12,.15,.2,clay,10),0,.76,-.2);houseAnim.push({kind:'spin',obj:wheelTop});houseAnim.push({kind:'spin',obj:lump});
+      add(Cy(.22,.24,.4,mat('#6e4a33'),10),0,.2,.45);
+      for(const y of [.7,1.35,2.0]){add(B(2.6,.08,.42,darkWood),0,y,-1.42);for(let k=0;k<5;k++){const pts=[new THREE.Vector2(0,0),new THREE.Vector2(.09,.01),new THREE.Vector2(.12,.1),new THREE.Vector2(.07,.2),new THREE.Vector2(.08,.24)],p=new THREE.Mesh(new THREE.LatheGeometry(pts,10),[clay,clayDark,glaze][(k+Math.round(y*3))%3]);p.position.set(-1.05+k*.52,y+.04,-1.42);p.scale.setScalar(.9+((k*7+y*10)%3)*.15);g.add(p)}}
+      const kiln=add(new THREE.Mesh(new THREE.SphereGeometry(.85,10,6,0,Math.PI*2,0,Math.PI/2),clayDark),2.7,.05,-.6);add(B(.4,.36,.1,mat('#3a2a20')),2.7,.25,.22);
+      for(let k=0;k<4;k++){const r=add(new THREE.Mesh(new THREE.DodecahedronGeometry(.35,0),mat(k%2?'#5c6a52':'#6c7066')),-2.6+(k%2)*.5,.12,.9+k*.45);r.scale.y=.45}
+    }
+    // a small wooden name board on a post by the door
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 50px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(h.icon+' '+h.name.toUpperCase(),256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const post=add(Cy(.05,.06,1.3,darkWood,6),h.r*.55+.4,.65,h.r+.25);const board=add(new THREE.Mesh(new THREE.PlaneGeometry(1.2,.3),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide})),h.r*.55+.4,1.35,h.r+.27);
+    g.position.set(h.x,terrainHeight(h.x,h.z),h.z);g.rotation.y=h.rot;g.userData.house=h;scene.add(g);h.group=g;return g}
+  SENSE_HOUSES.forEach(buildSenseHouse);
+  function updateSenseHouses(t){for(const a of houseAnim){if(a.kind==='chime'){a.obj.rotation.z=Math.sin(t*1.3+a.phase)*.12;a.obj.rotation.x=Math.sin(t*.9+a.phase*.7)*.08}
+    else if(a.kind==='spin')a.obj.rotation.y=t*2.4;
+    else{const u=((t*.35+a.k*.17)%1),rise=a.small?.6:1.6;a.obj.position.y=(a.small?.8:.5)+u*rise;a.obj.position.x=a.x+Math.sin(t+a.k)*.08*u;a.obj.material.opacity=(a.small?.2:.24)*(1-u);a.obj.scale.setScalar(1+u*1.4)}}}
+  // Nhà chuông gió: a soft synthesized chime, started from the tap (iOS needs a user gesture to unlock audio).
+  let chimeCtx=null;
+  function unlockChime(){try{chimeCtx=chimeCtx||new (window.AudioContext||window.webkitAudioContext)();if(chimeCtx.state==='suspended')chimeCtx.resume()}catch(e){chimeCtx=null}}
+  function playChime(){if(!chimeCtx)return;const now=chimeCtx.currentTime,notes=[1046.5,1174.7,1318.5,1568,1760,2093];for(let i=0;i<7;i++){const o=chimeCtx.createOscillator(),gn=chimeCtx.createGain(),t0=now+i*.18+Math.random()*.08;o.type='sine';o.frequency.value=notes[Math.floor(Math.random()*notes.length)];gn.gain.setValueAtTime(0,t0);gn.gain.linearRampToValueAtTime(.05,t0+.01);gn.gain.exponentialRampToValueAtTime(.0005,t0+2.6);o.connect(gn).connect(chimeCtx.destination);o.start(t0);o.stop(t0+2.7)}}
+  let pendingHouse=null;
+  function arriveHouse(h){if(h.id==='chuong_gio')playChime();document.getElementById('zenHint').textContent=h.icon+' '+h.name+' · '+h.note+' · Không gian bên trong sắp mở';}
+  function goToHouse(h){if(bayMode||boatRide)return;if(h.id==='chuong_gio')unlockChime();if(Math.hypot(mePosition.x-h.door[0],mePosition.z-h.door[1])<1.6){viewYaw=walkYaw=h.rot+Math.PI;arriveHouse(h);return}
+    if(navigateTo(...h.door)){pendingHouse=h;document.getElementById('zenHint').textContent=h.icon+' Đang đến '+h.name+'…'}}
   // Footbridge across the channel between the two lotus lobes, on the main axis from the gate to the hill.
   // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
-  const flagPts=[],flagRand=seededRandom(77);
+  const flagPts=[],flagRand=seededRandom(77),NONBO_R=1.6,nonBo=[];
   {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(BRIDGE_ARCH[0]-1.2,BRIDGE_ARCH[0]);
    // Stone paths on the main axis (gate, gathering plaza, bridge, foot of the hill): irregular flagstones half sunk
    // into a strip of packed earth, with earth showing between them, so the path melts into the ground.
@@ -414,16 +483,29 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
 
   // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
   // Flagstones laid loosely over packed earth, a ring of larger dark stones at the edge.
-  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
+  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||Math.hypot(jx-p.x,jz-p.z)<NONBO_R+.25||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
     const n=Math.round(p.r*2*Math.PI/.85);for(let k=0;k<n;k++){const a=k/n*Math.PI*2;flagPts.push([p.x+Math.cos(a)*(p.r-.1),p.z+Math.sin(a)*(p.r-.1),.36+flagRand()*.1,.3+flagRand()*.08,1])}}
-  {const geo=new THREE.DodecahedronGeometry(1,0),cols=['#4b4a41','#525046','#46453d','#57544a','#4d4f45'].map(h=>new THREE.Color(h)),edge=new THREE.Color('#3e3d36'),mesh=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),flagPts.length);
+  {const geo=new THREE.DodecahedronGeometry(1,0),cols=['#5c5a4f','#646155','#56544a','#6a665b','#5f6156'].map(h=>new THREE.Color(h)),edge=new THREE.Color('#4b4941'),mesh=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),flagPts.length);
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
     flagPts.forEach(([x,z,w,d,rim],i)=>{e.set(0,flagRand()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+(rim?.03:.005),z);sc.set(w,rim?.13:.07,d);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);mesh.setColorAt(i,rim?edge:cols[Math.floor(flagRand()*cols.length)])});
     mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;scene.add(mesh)}
-  // Zig-zag stone stairs up the south face of the hill, with a stone lantern at every turn.
-  {const slabMat=mat('#5f5b4e'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
+  // Hòn non bộ: a small stone basin of still water with craggy limestone peaks, moss, a tiny pine and a little hut,
+  // at the centre of each round resting plaza.
+  for(const p of [GATHER,FOOT]){const g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=p===GATHER?.5:2.2;
+    const rim=new THREE.Mesh(new THREE.CylinderGeometry(NONBO_R,NONBO_R+.08,.42,10),mat('#6c695d'));rim.position.y=.21;g.add(rim);
+    const pool=new THREE.Mesh(new THREE.CylinderGeometry(NONBO_R-.14,NONBO_R-.14,.04,24),new THREE.MeshStandardMaterial({color:'#3d7570',metalness:.3,roughness:.22}));pool.position.y=.38;g.add(pool);
+    const rockM=mat('#a19d8e'),rockD=mat('#868377'),mossM=mat('#4c8052');
+    [[0,-.15,2.1,.5,rockM],[.5,.2,1.45,.38,rockD],[-.52,.25,1.2,.36,rockM],[.2,.62,.85,.28,rockD],[-.25,-.65,.75,.26,rockD],[.62,-.45,.6,.22,rockM],[-.7,-.2,.55,.2,rockD]].forEach(([x,z,h,r,m],k)=>{const peak=new THREE.Mesh(new THREE.ConeGeometry(r,h,5+k%2,2),m);peak.position.set(x,.4+h/2,z);peak.rotation.set((k%2-.5)*.18,k*1.3,(k%3-1)*.12);g.add(peak);
+      const moss=new THREE.Mesh(new THREE.IcosahedronGeometry(r*.55,0),mossM);moss.position.set(x+r*.3,.4+h*.42,z+r*.2);moss.scale.y=.45;g.add(moss)});
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.015,.025,.3,5),mat('#5a3a2a'));trunk.position.set(-.05,.4+2.02,-.12);trunk.rotation.z=.35;g.add(trunk);
+    const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),mat('#2f5a3c'));crown.scale.set(1.4,.6,1.1);crown.position.set(.03,.4+2.18,-.12);g.add(crown);
+    const hut=new THREE.Mesh(new THREE.BoxGeometry(.12,.08,.1),mat('#6b4a32'));hut.position.set(.5,.4+1.12,.22);g.add(hut);const hr=new THREE.Mesh(new THREE.ConeGeometry(.1,.07,4),mat('#3f322a'));hr.rotation.y=Math.PI/4;hr.position.set(.5,.4+1.2,.22);g.add(hr);
+    for(let k=0;k<3;k++){const st=new THREE.Mesh(new THREE.DodecahedronGeometry(.08,0),rockD);const a=k*2.1+.4;st.position.set(Math.cos(a)*1.05,.4,Math.sin(a)*1.05);st.scale.y=.5;g.add(st)}
+    scene.add(g);nonBo.push(g)}
+  // Zig-zag stone stairs up the south face of the hill (no lamps along the paths).
+  {const slabMat=mat('#6c6758'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
       for(let t=0;t<=len;t+=.62){const x=ax+(bx-ax)*t/len,z=az+(bz-az)*t/len,slab=new THREE.Mesh(new THREE.BoxGeometry(2.8,.16,.56),slabMat);slab.position.set(x,terrainHeight(x,z)+.06,z);slab.rotation.y=yaw;scene.add(slab)}}
-    for(const [x,z] of STAIRS){for(const side of [-1,1]){const l=new THREE.Group();l.position.set(x+side*1.9,terrainHeight(x+side*1.9,z),z);const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,8),edgeMat);post.position.y=.4;l.add(post);const lamp=new THREE.Mesh(new THREE.BoxGeometry(.36,.3,.36),slabMat);lamp.position.y=.95;l.add(lamp);const glow=new THREE.Mesh(new THREE.BoxGeometry(.22,.18,.38),new THREE.MeshBasicMaterial({color:'#ffd38a'}));glow.position.y=.95;l.add(glow);const cap=new THREE.Mesh(new THREE.ConeGeometry(.32,.26,4),edgeMat);cap.rotation.y=Math.PI/4;cap.position.y=1.24;l.add(cap);scene.add(l)}}}
+    }
   // Cổng Yên: a plain wooden gate at the south end of the main axis.
   const yenGate=new THREE.Group();{const g=yenGate;g.position.set(0,0,34.2);const post=mat('#5b3d2a'),beam=mat('#6b4a32');for(const x of [-2.4,2.4]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,4.4,10),post);p.position.set(x,2.2,0);g.add(p);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.3,10),stone);foot.position.set(x,.15,0);g.add(foot)}
     const top=new THREE.Mesh(new THREE.BoxGeometry(6.4,.32,.5),beam);top.position.y=4.5;g.add(top);const tie=new THREE.Mesh(new THREE.BoxGeometry(5.2,.2,.3),beam);tie.position.y=3.7;g.add(tie);
@@ -578,6 +660,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(stairsDistance(x,z)<3.2+pad)return true;
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<7.5+pad))return true;
     if(Math.hypot(x-ORCHID.x,z-ORCHID.z)<6.5+pad)return true;
+    if(SENSE_HOUSES.some(h=>Math.hypot(x-h.x,z-h.z)<h.r+4.2+pad))return true;
     if(Math.abs(Math.abs(x)-BOAT_LAND_X)<4+pad&&Math.abs(z-BOAT_LANE_Z)<4+pad)return true;
     return false;}
   const inWalkArea=(x,z)=>Math.abs(x)<46&&z<36&&z>-86;
@@ -609,7 +692,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         mergeColored([[part(stemG,0,.06,0),S],[part(pet,0,.13,0),W],[part(pet,.045,.11,.02,.9,.9,.9),W],[part(pet,-.03,.115,-.035,.85,.85,.85),W],[part(pet,-.01,.1,.045,.8,.8,.8),W]])];
       const palette=['#f6f3ea','#f7dc5e','#f3a6c4','#b08ae0','#8db6ee','#ec7f5c','#e6b3f0','#fff2a8','#f08aa0'].map(h=>new THREE.Color(h)),byShape=shapes.map(()=>[]);
       const flowerOk=(x,z)=>lakeSDF(x,z)>.8&&!(Math.abs(x)<2.3&&z>-37&&z<36)&&Math.hypot(x-GATHER.x,z-GATHER.z)>GATHER.r+.4&&Math.hypot(x-FOOT.x,z-FOOT.z)>FOOT.r+.4&&Math.hypot(x-HILL.x,z-HILL.z)>8.7&&stairsDistance(x,z)>1.7
-        &&!wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.7)&&Math.hypot(x-ORCHID.x,z-ORCHID.z)>3&&!treeBlocked(x,z)&&Math.abs(x)<46&&z<36&&z>-86;
+        &&!wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.7)&&Math.hypot(x-ORCHID.x,z-ORCHID.z)>3&&!SENSE_HOUSES.some(h=>Math.hypot(x-h.x,z-h.z)<h.r+1.6)&&!treeBlocked(x,z)&&Math.abs(x)<46&&z<36&&z>-86;
       for(let patch=0,tries=0;patch<p.flower_patches&&tries<p.flower_patches*40;tries++){const cx=(rnd()*2-1)*45,cz=-85+rnd()*120;if(!flowerOk(cx,cz))continue;patch++;
         const shape=Math.floor(rnd()*shapes.length),c1=palette[Math.floor(rnd()*palette.length)],c2=rnd()<.5?c1:palette[Math.floor(rnd()*palette.length)],n=3+Math.floor(rnd()*8);
         for(let k=0;k<n;k++){const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*1.1,x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;if(flowerOk(x,z))byShape[shape].push([x,z,rnd()<.7?c1:c2])}}
@@ -623,7 +706,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const geo=mergeColored(parts),pts=[];
       for(let tries=0;pts.length<p.daquy&&tries<p.daquy*120;tries++){const x=(rnd()*2-1)*46,z=-86+rnd()*122,lk=lakeSDF(x,z),ax=Math.abs(x);
         const edge=(ax>18.6&&ax<21.6&&z>11&&z<33)||(ax>5.2&&ax<7.6&&((z>4&&z<17)||(z>-36&&z<-13)))||(lk>2.6&&lk<4&&z>-4);
-        if(!edge||ax<4.8||treeBlocked(x,z)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+3||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+2)continue;
+        if(!edge||ax<4.8||treeBlocked(x,z)||SENSE_HOUSES.some(h=>Math.hypot(x-h.x,z-h.z)<h.r+2)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+3||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+2)continue;
         if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<2.2)||Math.hypot(ax-BOAT_LAND_X,z-BOAT_LANE_Z)<4)continue;pts.push([x,z])}
       const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
       pts.forEach(([x,z],i)=>{const s=.6+rnd()*.35;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z),z);sc.set(s,s*(.9+rnd()*.4),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
@@ -632,7 +715,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     {const geo=mergeColored([[part(new THREE.DodecahedronGeometry(.6,0),0,.18,0,1.3,.6,1),'#6c7066'],[part(new THREE.DodecahedronGeometry(.45,0),.1,.38,.05,1.1,.35,.9),'#4b6648']]),pts=[];
       for(let tries=0;pts.length<p.rocks&&tries<p.rocks*60;tries++){const x=(rnd()*2-1)*47,z=-87+rnd()*126,lk=lakeSDF(x,z);
         if(!(lk>.6&&lk<2.2)&&rnd()<.6)continue;if(forestClear(x,z,-2.4)&&!(lk>.6&&lk<2.2))continue;if(Math.abs(x)<2.6&&z>-37&&z<36)continue;if(stairsDistance(x,z)<2||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat||treeBlocked(x,z))continue;
-        if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<4.2)||Math.hypot(x-ORCHID.x,z-ORCHID.z)<3.4||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+.8||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+.8)continue;if(Math.hypot(Math.abs(x)-BOAT_LAND_X,z-BOAT_LANE_Z)<3)continue;pts.push([x,z])}
+        if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<4.2)||Math.hypot(x-ORCHID.x,z-ORCHID.z)<3.4||SENSE_HOUSES.some(h=>Math.hypot(x-h.x,z-h.z)<h.r+2)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+.8||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+.8)continue;if(Math.hypot(Math.abs(x)-BOAT_LAND_X,z-BOAT_LANE_Z)<3)continue;pts.push([x,z])}
       const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
       pts.forEach(([x,z],i)=>{const s=.5+rnd()*1.1;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.05,z);sc.set(s,s*(.7+rnd()*.5),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
       mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
@@ -643,7 +726,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const hash=(i,j)=>{const h=Math.sin(i*127.1+j*311.7)*43758.5453;return h-Math.floor(h)};
     const vnoise=(x,z)=>{const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);const a=hash(i,j),b=hash(i+1,j),c2=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*ux+(c2-a)*uz+(a-b-c2+d)*ux*uz};
     const fbm=(x,z)=>.6*vnoise(x,z)+.3*vnoise(x*2.1+7,z*2.1+3)+.1*vnoise(x*4.3+1,z*4.3+9);
-    const C=h=>new THREE.Color(h),grassA=C('#1f4637'),grassB=C('#2d5a43'),dry=C('#4d5f3f'),needles=C('#463b29'),earth=C('#3f3a2d'),wet=C('#1b3d33'),bed=C('#1a302c'),floor=C('#183629'),moss=C('#2a5240');
+    const C=h=>new THREE.Color(h),grassA=C('#1f4637'),grassB=C('#2d5a43'),dry=C('#4d5f3f'),needles=C('#463b29'),earth=C('#4b4535'),wet=C('#1b3d33'),bed=C('#1a302c'),floor=C('#183629'),moss=C('#2a5240');
     const grid=new Map();for(const t of trees){const k=treeCellKey(Math.floor(t[0]/TREE_CELL),Math.floor(t[1]/TREE_CELL));if(!grid.has(k))grid.set(k,[]);grid.get(k).push(t)}
     const nearestTree=(x,z)=>{let best=99;const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=grid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a){const d=Math.hypot(x-t[0],z-t[1])/(t[3]>8?1:.6);if(d<best)best=d}}return best};
     const pos=ground.geometry.attributes.position,col=ground.geometry.attributes.color,out=new THREE.Color();
@@ -675,9 +758,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(t.slot<0){if(want===1||!ghostAdd(t))continue}
       t.alpha+=(want-t.alpha)*k;if(want===1&&t.alpha>.97){ghostRemove(t);continue}
       const ga=t.mesh.userData.ghost.geometry.attributes.gAlpha;ga.array[t.slot]=t.alpha;ga.needsUpdate=true}
-    for(const f of fadeables){const want=blocks(f.x,f.z,f.r)?.25:1;if(f.alpha===want)continue;f.alpha+=(want-f.alpha)*k;if(Math.abs(f.alpha-want)<.02)f.alpha=want;
+    // Buildings fade only when they stand between the camera and the avatar, not when the avatar faces them.
+    const uAvatar=Math.max(.05,1-5/Math.sqrt(len2)),blocksAvatar=(x,z,r)=>{const u=((x-ax)*vx+(z-az)*vz)/len2;return u>0&&u<uAvatar&&Math.hypot(ax+vx*u-x,az+vz*u-z)<r};
+    for(const f of fadeables){const want=blocksAvatar(f.x,f.z,f.r)?.25:1;if(f.alpha===want)continue;f.alpha+=(want-f.alpha)*k;if(Math.abs(f.alpha-want)<.02)f.alpha=want;
       const on=f.alpha<1;for(const e of f.mats){if(e.m.transparent!==(on||e.tr)){e.m.transparent=on||e.tr;e.m.needsUpdate=true}e.m.opacity=e.op*f.alpha;e.m.depthWrite=on?false:e.dw}}}
-  addFadeable(orchidHouse,ORCHID.x,ORCHID.z,2.8);addFadeable(yenGate,0,34.2,3.4);addFadeable(bodhiTree,STATUE.x,STATUE.z-11.7,3.2);
+  addFadeable(orchidHouse,ORCHID.x,ORCHID.z,2.8);for(const h of SENSE_HOUSES)addFadeable(h.group,h.x,h.z,h.r+.4);addFadeable(yenGate,0,34.2,4.2);addFadeable(bodhiTree,STATUE.x,STATUE.z-11.7,3.2);
   // Waypoint navigation: smooth guided movement between five destinations.
   const destinations={
     gate:{pos:[0,4.5,42],look:[0,4,0]},
@@ -715,6 +800,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const boatHits=raycaster.intersectObject(boat.group,true);if(boatHits.length&&boat.group.visible){tapBoat();return;}
     const peerBoats=[...onlineAvatars.values()].filter(p=>p.boat&&p.boat.group.visible).map(p=>p.boat.group);if(peerBoats.length&&raycaster.intersectObjects(peerBoats,true).length){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người chèo, chờ họ cập bến nhé';return;}
     if(raycaster.intersectObjects([orchidHouse,orchidRing],true).length){goToOrchid();return;}
+    {const hh=raycaster.intersectObjects(SENSE_HOUSES.map(h=>h.group),true);if(hh.length){let o=hh[0].object;while(o&&!o.userData.house)o=o.parent;if(o){goToHouse(o.userData.house);return;}}}
     // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
     const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
     if(cushionHits.length){let obj=cushionHits[0].object;while(obj.parent&&!cushions.some(c=>c.group===obj))obj=obj.parent;const seat=cushions.find(c=>c.group===obj);if(seat){tapSeat(seat);}return;}
@@ -764,7 +850,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     
   }
   const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
-  let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,24],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
+  let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,20.4],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
   // Navigation around the lotus pond and temple: visibility graph, shortest valid route.
   const zoneWalkPoints={gate:[0,30],garden:[-12,17],lotus:[6,11],meditation:[0,STATUE.z+7.2],sanctuary:[0,STATUE.z+4.2]};
   const routeGuides=[[-17,-19],[-17,-10],[-17,4],[-17,13],[17,-19],[17,-10],[17,4],[17,13],[-11,-22],[11,-22],[-23,0],[23,0],[0,24],[0,14],[0,9],[0,3],[0,-3],[0,-9],[0,-12],[0,-15],[0,-18],[0,-20.5],[-6,-19],[6,-19]];
@@ -776,6 +862,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(lakeSDF(x,z)<.8)return Math.abs(x)<=1.7&&z>=BRIDGE_ARCH[0]-1.4&&z<=BRIDGE_ARCH[1]+1.4;
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<3.85))return false;
     if(Math.hypot(x-ORCHID.x,z-ORCHID.z)<3.1)return false;
+    if(SENSE_HOUSES.some(h=>Math.hypot(x-h.x,z-h.z)<h.r))return false;
+    if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
     // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
     const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
     if(hr<HILL.flat-.3)return !(hr<2.5||Math.hypot(x-STATUE.x,z-STATUE.z-2.7)<.7);
@@ -799,7 +887,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       closed[u]=1;const ux=u%nx,uz=Math.floor(u/nx),p=pos(u);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const xx=ux+dx,zz=uz+dz;if(xx<0||zz<0||xx>=nx||zz>=nz)continue;const v=xx+zz*nx;if(closed[v])continue;const q=pos(v);if(!walkable(...q)||!clearWalk(p,q))continue;const score=g[u]+Math.hypot(dx,dz);if(score>=g[v])continue;g[v]=score;prev[v]=u;push(v,score+Math.hypot(q[0]-goal[0],q[1]-goal[1])/step)}}
     return null;
   }
-  function navigateTo(x,z){if(bayMode){document.getElementById('zenHint').textContent='⛵ Vịnh Yên · Vuốt để xoay nhìn quanh 360°';return false;}if(boatRide){document.getElementById('zenHint').textContent='🚣 Đợi thuyền cập bến rồi hãy đi bộ nhé';return false;}pendingSeat=null;pendingBoat=false;pendingOrchid=false;
+  function navigateTo(x,z){if(bayMode){document.getElementById('zenHint').textContent='⛵ Vịnh Yên · Vuốt để xoay nhìn quanh 360°';return false;}if(boatRide){document.getElementById('zenHint').textContent='🚣 Đợi thuyền cập bến rồi hãy đi bộ nhé';return false;}pendingSeat=null;pendingBoat=false;pendingOrchid=false;pendingHouse=null;
     // Destination selection overrides meditation states, including async realtime updates.
     meActivity='idle';walkGoal=null;tapTarget=null;
     window.dispatchEvent(new CustomEvent('anyen-activity',{detail:{activity:'idle'}}));
@@ -2084,7 +2172,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function quickPlaces(){const out=[['⛩','Cổng Yên',0,31,Math.PI],['🌿','Sân đón',0,20.5,Math.PI],['🪷','Hồ sen · bờ nam',8,11.5,Math.PI],
       ['🚣','Bến thuyền tây',-BOAT_LAND_X,BOAT_LANE_Z,Math.PI/2],['🚣','Bến thuyền đông',BOAT_LAND_X,BOAT_LANE_Z,-Math.PI/2],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
       ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
-      ['🌸','Nhà hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'orchid']];
+      ['🌸','Nhà hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'orchid'],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id])];
     for(const l of wishLakes){if(l.name==='Niệm')continue;const [x,z,yaw]=lakeApproach(l);out.push(['💧','Hồ '+l.name+' · '+l.theme,x,z,yaw])}
     return out}
   function nearestWalkable(x,z){if(walkable(x,z))return [x,z];for(let r=.6;r<=4.2;r+=.6)for(let k=0;k<16;k++){const a=k*Math.PI/8,q=[x+Math.cos(a)*r,z+Math.sin(a)*r];if(walkable(...q))return q}return null}
@@ -2092,7 +2180,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function teleportTo(x,z,yaw){if(bayMode||boatRide)return false;const p=nearestWalkable(x,z);if(!p)return false;standUpForTravel();
     walkRoute.length=0;pendingSeat=null;pendingBoat=false;pendingOrchid=false;wishDestination=null;walkingKeys.clear();tapTarget=null;
     mePosition.set(p[0],0,p[1]);if(yaw!=null){viewYaw=walkYaw=yaw}lookOffset=0;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:p[0],z:p[1]}}));return true}
-  function walkToPlace(x,z,kind){if(kind==='orchid'){standUpForTravel();goToOrchid();return true}const p=nearestWalkable(x,z);if(!p)return false;standUpForTravel();return navigateTo(...p)}
+  function walkToPlace(x,z,kind){if(kind==='orchid'){standUpForTravel();goToOrchid();return true}{const h=SENSE_HOUSES.find(v=>v.id===kind);if(h){standUpForTravel();goToHouse(h);return true}}const p=nearestWalkable(x,z);if(!p)return false;standUpForTravel();return navigateTo(...p)}
   function drawForestMap(){const c=fmCtx;c.clearRect(0,0,FM.w,FM.h);c.fillStyle='#163428';c.fillRect(0,0,FM.w,FM.h);
     c.fillStyle='#24503e';c.beginPath();c.roundRect(fmX(-46),fmY(-86),fmS(92),fmY(36)-fmY(-86),18);c.fill();
     // hill: foot, slope, flat top with the stone terrace
@@ -2107,18 +2195,19 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     // main axis, plazas, stairs, bridge, gate, piers
     c.strokeStyle='#8a8068';c.lineCap='round';c.lineWidth=fmS(3.2);c.beginPath();c.moveTo(fmX(0),fmY(35));c.lineTo(fmX(0),fmY(FOOT.z));c.stroke();
     c.lineWidth=fmS(2.8);c.beginPath();STAIRS.forEach(([x,z],i)=>i?c.lineTo(fmX(x),fmY(z)):c.moveTo(fmX(x),fmY(z)));c.stroke();
-    c.fillStyle='#8a8068';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(p.r),0,7);c.fill()}
+    c.fillStyle='#8a8068';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(p.r),0,7);c.fill()}c.fillStyle='#3f7f86';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(NONBO_R),0,7);c.fill()}
     c.fillStyle='#8a6a48';c.fillRect(fmX(-1.8),fmY(BRIDGE_ARCH[0]),fmS(3.6),fmY(BRIDGE_ARCH[1])-fmY(BRIDGE_ARCH[0]));
     for(const sx of [-1,1])c.fillRect(fmX(sx*BOAT_PIER_X-1.6),fmY(BOAT_LANE_Z-.75),fmS(3.2),fmS(1.5));
     c.fillStyle='#6b4a32';c.fillRect(fmX(-3.4),fmY(34.2)-3,fmS(6.8),6);
     // sense ponds and the orchid house
     for(const l of wishLakes){if(l.name==='Niệm')continue;c.fillStyle='#c1a676';c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(3.6),0,7);c.fill();c.fillStyle=l.color;c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(3.25),0,7);c.fill()}
     c.save();c.translate(fmX(ORCHID.x),fmY(ORCHID.z));c.rotate(-ORCHID.rot);c.fillStyle='#f0b8d0';c.fillRect(-fmS(1.8),-fmS(2),fmS(3.6),fmS(4));c.restore();
+    for(const h of SENSE_HOUSES){c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e0b07a';c.fillRect(-fmS(h.r*.75),-fmS(h.r*.75),fmS(h.r*1.5),fmS(h.r*1.5));c.restore()}
     c.fillStyle='#e8c46a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(1.6),0,7);c.fill();
     // labels
     c.font='600 13px system-ui,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(8,30,24,.85)';c.fillStyle='#f6ead0';
     const label=(t,x,z,dy=0)=>{c.strokeText(t,fmX(x),fmY(z)+dy);c.fillText(t,fmX(x),fmY(z)+dy)};
-    label('Tượng Phật',STATUE.x,STATUE.z,-26);label('Hồ sen',-18,LOTUS_LAKE.z,4);label('Hồ sen',18,LOTUS_LAKE.z,4);label('Sân chân đồi',FOOT.x+14,FOOT.z,4);label('Sân đón',GATHER.x+11,GATHER.z,4);label('Cổng Yên',0,34.2,18);label('Nhà hoa lan',ORCHID.x,ORCHID.z,-14);
+    label('Tượng Phật',STATUE.x,STATUE.z,-26);label('Hồ sen',-18,LOTUS_LAKE.z,4);label('Hồ sen',18,LOTUS_LAKE.z,4);label('Sân chân đồi',FOOT.x+14,FOOT.z,4);label('Sân đón',GATHER.x+11,GATHER.z,4);label('Cổng Yên',0,34.2,18);label('Nhà hoa lan',ORCHID.x,ORCHID.z,-14);for(const h of SENSE_HOUSES)label(h.name,h.x,h.z,fmS(h.r)+14);
     for(const l of wishLakes)if(l.name!=='Niệm')label('Hồ '+l.name,l.x,l.z,-fmS(4.4)-2);
     // other guests, then you (gold, with a heading arrow)
     c.fillStyle='#f4f1e6';for(const p of onlineAvatars.values()){const g=p.group;if(!g||!g.visible)continue;c.beginPath();c.arc(fmX(g.position.x),fmY(g.position.z),4,0,7);c.fill()}
@@ -2161,7 +2250,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
   window.__bay={photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
-  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);let t=clock.getElapsedTime();
+  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode)updateSenseHouses(performance.now()/1000);let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
       if(!bayMode)updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
@@ -2173,7 +2262,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(walkRoute.length){
         if(meActivity!=='idle')meActivity='idle';
         const goal=walkRoute[0],dx=goal[0]-mePosition.x,dz=goal[1]-mePosition.z,dist=Math.hypot(dx,dz);
-        if(dist<.16){walkRoute.shift();if(!walkRoute.length){const arrivedLake=wishDestination;if(wishDestination){wishDestination=null;}if(pendingBoat){boardBoat();}else if(pendingOrchid){pendingOrchid=false;openOrchid();}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}if(!boatRide)document.getElementById('zenHint').textContent=arrivedLake?'Đã đến Hồ '+arrivedLake+' · Bấm Ném xu để nguyện ước':'Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';}}
+        if(dist<.16){walkRoute.shift();if(!walkRoute.length){const arrivedLake=wishDestination;if(wishDestination){wishDestination=null;}if(pendingBoat){boardBoat();}else if(pendingOrchid){pendingOrchid=false;openOrchid();}else if(pendingHouse){const h=pendingHouse;pendingHouse=null;viewYaw=walkYaw=h.rot+Math.PI;arriveHouse(h);}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}if(!boatRide)document.getElementById('zenHint').textContent=arrivedLake?'Đã đến Hồ '+arrivedLake+' · Bấm Ném xu để nguyện ước':'Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';}}
         else{const step=Math.min(dist,dt*3.2),nx=mePosition.x+dx/dist*step,nz=mePosition.z+dz/dist*step;
           if(walkable(nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
       }
