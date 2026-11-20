@@ -2,7 +2,7 @@
   "version": 1,
   "map": {
     "id": "pine_forest", "kind": "forest", "name": "Rừng thông · Làng Yên", "status": "live",
-    "sky_color": "#2d5a50", "fog_color": "#4a6f63", "fog_density": 0.0125, "ground_color": "#4c7d3a",
+    "sky_color": "#173c35", "fog_color": "#264b42", "fog_density": 0.016, "ground_color": "#234c3e",
     "hemi_sky": "#f6dfaf", "hemi_ground": "#1b4234", "hemi_intensity": 2.1,
     "sun_color": "#f5c78c", "sun_intensity": 2.4, "sun_position": [-8, 19, -8],
     "ambience": "pine_forest", "spawn": {"x": 0, "z": 24}, "bounds": {"x": 46, "z_min": -86, "z_max": 36}
