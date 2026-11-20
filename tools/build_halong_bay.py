@@ -412,7 +412,7 @@ def main():
         ],
         "buildings": [
             {"id": "du_thuyen_yen", "name": "Du thuyền Yên", "kind": "cruise_ship", "x": port["approach"][0], "z": port["approach"][1],
-             "exterior": {"length": 46, "beam": 10, "decks": 3, "hull_color": "#2f8c8a", "body_color": "#f4f2ec", "deck_wood": "#5b4637", "rail_wood": "#7a4a36",
+             "exterior": {"length": 46, "beam": 10, "decks": 3, "hull_color": "#2f8c8a", "body_color": "#f4f2ec", "deck_wood": "#a07e60", "rail_wood": "#9a6448",
                           "glass": "#3f5f6c", "max_speed": 10, "turn_rate": 0.45, "clearance": 26, "bow_spot": [0, 2.62, 18.8],
                           "deck_spot": [0, 11.06, -1.4],
                           "real_speed_kmh": 15, "real_speed_note": "Tốc độ ước tính của tàu du lịch trên vịnh, dùng để tính thời gian ngoài đời",
