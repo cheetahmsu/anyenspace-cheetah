@@ -867,7 +867,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const SEE={cam:{value:new THREE.Vector3()},tgt:{value:new THREE.Vector3()},rad:{value:0},on:{value:0},onShip:{value:0}};
   function addSeeThrough(m,ship){const prev=m.onBeforeCompile;m.onBeforeCompile=(sh,r)=>{if(prev)prev(sh,r);sh.uniforms.seeCam=SEE.cam;sh.uniforms.seeTgt=SEE.tgt;sh.uniforms.seeRad=SEE.rad;sh.uniforms.seeOn=ship?SEE.onShip:SEE.on;
       sh.vertexShader='varying vec3 vSeeW;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvSeeW=(modelMatrix*vec4(transformed,1.)).xyz;');
-      sh.fragmentShader='uniform vec3 seeCam,seeTgt;uniform float seeRad,seeOn;varying vec3 vSeeW;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(seeOn>.5){vec3 ab=seeTgt-seeCam;float t=dot(vSeeW-seeCam,ab)/max(dot(ab,ab),1e-4);if(t>.0&&t<.94){float d=length(vSeeW-(seeCam+ab*t)),R=seeRad*(.55+.45*t);if(d<R){float k=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(k<.8*(1.-smoothstep(R*.65,R,d)))discard;}}}');};
+      sh.fragmentShader='uniform vec3 seeCam,seeTgt;uniform float seeRad,seeOn;varying vec3 vSeeW;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(seeOn>.5){vec3 ab=seeTgt-seeCam;float t=dot(vSeeW-seeCam,ab)/max(dot(ab,ab),1e-4);if(t>.0&&t<.88){float d=length(vSeeW-(seeCam+ab*t)),R=seeRad*(1.-.55*t);if(d<R){float k=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(k<.9*(1.-smoothstep(R*.6,R,d)))discard;}}}');};
     m.customProgramCacheKey=()=>'see'+(m.uuid);m.needsUpdate=true;return m}
   const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.95,vertexColors:true,map:bayTex.rock,normalMap:bayTex.normal,normalScale:new THREE.Vector2(1.3,1.3)});
   bayRockMat.onBeforeCompile=sh=>{sh.uniforms.leafMap={value:bayTex.leaf};
@@ -1015,7 +1015,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const g=bayShip.group,L=ex.length/2,B=ex.beam/2,mat=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.6,...o});
     const outline=(inset,front=L,back=-L)=>{const s=new THREE.Shape(),b=B-inset,f=front-inset,k=back+inset;s.moveTo(-b,-(k+2));s.quadraticCurveTo(-b,-k,0,-k);s.quadraticCurveTo(b,-k,b,-(k+2));s.lineTo(b,-(f-12));s.quadraticCurveTo(b*.95,-(f-3),0,-f);s.quadraticCurveTo(-b*.95,-(f-3),-b,-(f-12));s.closePath();return s};
     const slab=(shape,y,h,m)=>{const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:14});geo.rotateX(-Math.PI/2);const mesh=new THREE.Mesh(geo,m);mesh.position.y=y;g.add(mesh);return mesh};
-    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#a07e60')}),dark=mat('#25363c');addSeeThrough(white,1);addSeeThrough(glass,1);addSeeThrough(dark,1);
+    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#a07e60')}),dark=mat('#25363c');addSeeThrough(white,1);addSeeThrough(glass,1);addSeeThrough(dark,1);addSeeThrough(wood,1);addSeeThrough(hull,1);
     slab(outline(0),-2.6,3.8,hull);slab(outline(-.05),1.15,1.4,white);slab(outline(.25),2.5,.12,wood);
     const stripe=slab(outline(-.07),1.05,.14,dark);stripe.scale.set(1,1,1);
     // dải cửa sổ tròn ở thân
@@ -1039,7 +1039,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const railPts=[],rw=B-.35,fz=L-.6,bz=L-14;const bez=t=>{const p0=[rw,fz-12],p1=[rw*.95,fz-3],p2=[0,fz];return[(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],(1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]]};
     const half=[[rw,bz],[rw,(bz+fz-12)/2]];for(let k=0;k<=10;k++)half.push(bez(k/10*.94));
     for(const [x,z] of half)railPts.push(new THREE.Vector3(-x,3.55,z));for(let k=half.length-1;k>=0;k--)railPts.push(new THREE.Vector3(half[k][0],3.55,half[k][1]));
-    const steel=mat('#e3e6e8',{metalness:.8,roughness:.22}),cap=mat(ex.rail_wood||'#9a6448',{roughness:.45}),curve=new THREE.CatmullRomCurve3(railPts);
+    const steel=addSeeThrough(mat('#e3e6e8',{metalness:.8,roughness:.22}),1),cap=addSeeThrough(mat(ex.rail_wood||'#9a6448',{roughness:.45}),1),curve=new THREE.CatmullRomCurve3(railPts);
     const handrail=new THREE.Mesh(new THREE.TubeGeometry(curve,80,.085,8,false),cap);handrail.scale.set(1,1,1);g.add(handrail);
     {const low=railPts.map(p=>new THREE.Vector3(p.x,2.66,p.z));g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(low),80,.035,6,false),steel))}
     {const pos=[],idx=[],cp=curve.getSpacedPoints(80);cp.forEach((p,i)=>{pos.push(p.x,2.62,p.z,p.x,3.47,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
@@ -1835,14 +1835,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     else if(view==='outfit'){const narrow=camera.aspect<1,yaw=S.heading+Math.PI+.35+viewYaw*.5,d=narrow?6.4:6;bayCam.set(bayTmp.x-Math.sin(yaw)*d,bayTmp.y+1.5,bayTmp.z-Math.cos(yaw)*d);camera.position.lerp(bayCam,Math.min(1,dt*4));
       // điện thoại: nhân vật ở nửa trên (bảng chọn ở dưới); màn rộng: nhân vật lệch trái (bảng chọn ở bên phải)
       const side=narrow?0:-2.1,rx=Math.cos(yaw),rz=-Math.sin(yaw);bayLook.set(bayTmp.x+rx*side,bayTmp.y+(narrow?-.72:.95),bayTmp.z+rz*side);camera.lookAt(bayLook)}
-    else{const yaw=S.heading+viewYaw,dist=(meActivity==='sit'?6:7.2)*wide*(view==='sundeck'?1.1:1),up=(view==='sundeck'?3.4:3.1)-Math.sin(walkPitch)*2.6;
+    else{const yaw=S.heading+viewYaw,dist=(meActivity==='sit'?3.9:4.6)*wide*(view==='sundeck'?1.08:1),up=(view==='sundeck'?2.3:2.05)-Math.sin(walkPitch)*2.2;
       bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up,bayTmp.z-Math.cos(yaw)*dist);camera.position.lerp(bayCam,Math.min(1,dt*7));
-      bayLook.set(bayTmp.x+Math.sin(yaw)*30,bayTmp.y+1.2+Math.sin(walkPitch)*14-(view==='sundeck'?4:0),bayTmp.z+Math.cos(yaw)*30);camera.lookAt(bayLook)}
+      bayLook.set(bayTmp.x+Math.sin(yaw)*30,bayTmp.y+3.4+Math.sin(walkPitch)*14-(view==='sundeck'?4.5:0),bayTmp.z+Math.cos(yaw)*30);camera.lookAt(bayLook)}
     baySky.position.set(camera.position.x-BAY.x,0,camera.position.z-BAY.z);if(bayBackdrop){bayBackdrop.position.x=camera.position.x-BAY.x;bayBackdrop.position.z=camera.position.z-BAY.z}
     bayU.camL.value.set(camera.position.x-BAY.x,camera.position.y,camera.position.z-BAY.z);
     // ống nhìn xuyên: tới ngực người, hoặc tới thân tàu khi ngắm từ xa
-    SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
-    if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.6:2.2}
+    meTag.visible=view==='far';SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
+    if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
   }
   function loadBayData(){if(bayLoading)return bayLoading;bayLoading=fetch('data/world-halong_bay.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
   // Chỉ một cảnh chạy: khi vào vịnh, mọi vật của rừng thông được ẩn và ngừng cập nhật; rời vịnh thì hiện lại.
@@ -1895,7 +1895,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   function exitBay(){
     if(!bayMode)return;saveBayState();dropPause();setVillageActive(true);if(meActivity==='sit')document.getElementById('realtimeSit')?.click();
-    bayMode=false;SEE.on.value=0;SEE.onShip.value=0;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN · KHÔNG GIAN 3D'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
+    bayMode=false;SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN · KHÔNG GIAN 3D'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
     if(bayStash){mePosition.copy(bayStash.pos);scene.background=bayStash.bg;scene.fog=bayStash.fog;viewYaw=bayStash.yaw;walkPitch=bayStash.pitch;camera.far=bayStash.far;camera.updateProjectionMatrix();
       hemiLight.color.copy(bayStash.hemi[0]);hemiLight.groundColor.copy(bayStash.hemi[1]);hemiLight.intensity=bayStash.hemi[2];sun.color.copy(bayStash.sun[0]);sun.intensity=bayStash.sun[1];sun.position.copy(bayStash.sun[2]);bayStash=null}
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
