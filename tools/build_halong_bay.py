@@ -251,7 +251,7 @@ def main():
                     {"id": "tee_jeans", "label": "Áo thun · quần jean"},
                     {"id": "suit", "label": "Vest lịch sự"},
                     {"id": "maxi", "label": "Đầm maxi đi chơi"},
-                    {"id": "gown", "label": "Đầm dài dạ tiệc"}
+                    {"id": "ao_dai", "label": "Áo dài truyền thống"}
                 ],
                 "accessories": [{"id": "hat", "label": "Nón"}, {"id": "glasses", "label": "Kính"}, {"id": "scarf", "label": "Khăn"}],
                 "colors": [["Vàng", "#d9b67d"], ["Xanh", "#90b7a5"], ["Kem", "#f0e5d4"], ["Tím", "#b5a1c7"], ["Rêu", "#687b48"], ["Hồng", "#e8a1b4"]],

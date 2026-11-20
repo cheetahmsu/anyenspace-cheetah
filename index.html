@@ -1254,10 +1254,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // ---- Trang phục riêng cho Vịnh Yên: kiểu đi biển và trang phục thiền; rừng thông giữ trang phục cũ ----
   const BAY_OUTFIT_KEY='yen_bay_outfit_1',BAY_OUTFIT_SEEN='yen_bay_outfit_seen_1';
   // Năm kiểu: thiền phục (như Rừng Yên) và bốn kiểu dựng riêng cho vịnh. Phụ kiện chọn nhiều: nón, kính, khăn.
-  const SEA_STYLES={tee_jeans:{legs:'jeans'},suit:{legs:'suit',jacket:true},maxi:{dress:'maxi'},gown:{dress:'gown'}};
-  const BAY_STYLE_IDS=['robe','tee_jeans','suit','maxi','gown'];
+  const SEA_STYLES={tee_jeans:{block:'tee'},suit:{block:'suit'},maxi:{dress:'maxi'},ao_dai:{block:'aodai'}};
+  const BAY_STYLE_IDS=['robe','tee_jeans','suit','maxi','ao_dai'];
   let bayOutfit={style:'tee_jeans',color:'#90b7a5',acc:['hat']},bayOutfitSaved=null,bayOutfitOpen=false;
-  try{const o=JSON.parse(localStorage.getItem(BAY_OUTFIT_KEY)||'null');if(o&&BAY_STYLE_IDS.includes(o.style)){bayOutfit={style:o.style,color:/^#[0-9a-f]{6}$/i.test(o.color)?o.color:'#90b7a5',acc:Array.isArray(o.acc)?o.acc.filter(a=>['hat','glasses','scarf'].includes(a)):[]};bayOutfitSaved={...bayOutfit,acc:[...bayOutfit.acc]}}}catch(e){}
+  try{const o=JSON.parse(localStorage.getItem(BAY_OUTFIT_KEY)||'null');if(o&&o.style==='gown')o.style='ao_dai';if(o&&BAY_STYLE_IDS.includes(o.style)){bayOutfit={style:o.style,color:/^#[0-9a-f]{6}$/i.test(o.color)?o.color:'#90b7a5',acc:Array.isArray(o.acc)?o.acc.filter(a=>['hat','glasses','scarf'].includes(a)):[]};bayOutfitSaved={...bayOutfit,acc:[...bayOutfit.acc]}}}catch(e){}
   const wearMat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
   // Bộ đồ gắn vào một nhân vật (thân + đầu). Dựng từ khối đơn giản nhưng có dáng: quần ống côn, áo vest có ve áo,
   // đầm maxi xòe nhẹ, đầm dạ tiệc ôm dáng đuôi cá; phụ kiện gắn vào đầu.
@@ -1300,6 +1300,42 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const neck=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,6,24),w.m.gold);neck.rotation.x=Math.PI/2-.35;neck.position.set(0,1.6,.03);w.gown.add(neck);
       const pend=new THREE.Mesh(new THREE.OctahedronGeometry(.028),w.m.gold);pend.position.set(0,1.51,.12);w.gown.add(pend);
     }w.group.add(w.gown);
+    // Thân dạng khối (theo hình mẫu): cổ, thân áo, hai tay có bàn tay, hai ống quần, giày.
+    // Dùng cho vest, áo thun · quần jean và áo dài. Phần trên tách riêng để hạ xuống khi ngồi thiền.
+    M('pants','#3b3b3b');M('jean','#2c3a52');M('sneaker','#f2f0ea',{roughness:.6});M('silk','#f7f4ec',{roughness:.5,side:THREE.DoubleSide});M('lapel','#000000');M('ad','#e8a1b4',{roughness:.5,side:THREE.DoubleSide});
+    const B=(x,y,z,sx,sy,sz,m,g)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m);b.position.set(x,y,z);g.add(b);return b};
+    w.bk={};const mk=()=>{const g=new THREE.Group();w.group.add(g);g.visible=false;return g};
+    // ---- vest ----
+    {const up=mk(),lg=mk();w.bk.suit={up,lg};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      B(0,1.2,0,.6,.66,.32,w.m.top,up);B(0,.9,0,.62,.1,.33,w.m.top,up);
+      const v=new THREE.Shape();v.moveTo(-.11,0);v.lineTo(.11,0);v.lineTo(0,-.3);v.closePath();const sh=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);sh.position.set(0,1.53,.162);up.add(sh);
+      for(const sx of [-1,1]){const l=B(sx*.075,1.39,.163,.07,.3,.008,w.m.lapel,up);l.rotation.z=sx*.36}
+      B(0,1.38,.166,.05,.26,.008,w.m.tie,up);
+      const bt=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),w.m.tie);bt.position.set(0,1.13,.162);up.add(bt);
+      const col=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,6,18),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
+      for(const sx of [-1,1]){B(sx*.37,1.2,0,.15,.6,.18,w.m.top,up);B(sx*.37,.885,0,.13,.035,.16,w.m.shirt,up);B(sx*.37,.82,0,.11,.1,.12,w.m.skin,up);
+        B(sx*.12,.47,0,.21,.78,.23,w.m.pants,lg);B(sx*.12,.04,.04,.21,.08,.3,w.m.shoe,lg)}}
+    // ---- áo thun · quần jean ----
+    {const up=mk(),lg=mk();w.bk.tee={up,lg};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      B(0,1.2,0,.58,.66,.32,w.m.top,up);
+      const col=new THREE.Mesh(new THREE.TorusGeometry(.09,.02,6,18),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
+      for(const sx of [-1,1]){B(sx*.36,1.42,0,.17,.22,.22,w.m.top,up);B(sx*.36,1.07,0,.11,.48,.13,w.m.skin,up);
+        B(sx*.12,.47,0,.21,.78,.23,w.m.jean,lg);B(sx*.12,.04,.04,.21,.08,.3,w.m.sneaker,lg)}
+      B(0,.88,0,.585,.06,.325,w.m.belt,up);B(0,.88,.165,.07,.05,.01,w.m.buckle,up)}
+    // ---- áo dài: cổ đứng, tay dài ôm, thân ôm eo, tà trước và tà sau xẻ hông, quần lụa trắng ống rộng ----
+    {const up=mk(),lg=mk();w.bk.aodai={up,lg};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      const col=new THREE.Mesh(new THREE.CylinderGeometry(.095,.1,.13,20,1,true),w.m.ad);col.position.y=1.6;up.add(col);
+      const torso=new THREE.Mesh(lathe([[0,.86],[.23,.86],[.2,1.0],[.24,1.22],[.27,1.38],[.25,1.5],[.12,1.55],[0,1.55]],24),w.m.ad);torso.scale.z=.62;up.add(torso);
+      // đường xẻ cúc chéo từ cổ sang nách phải
+      const seam=B(.11,1.47,.156,.2,.016,.01,w.m.gold,up);seam.rotation.z=-.45;
+      for(const sx of [-1,1]){const a=B(sx*.33,1.2,0,.12,.62,.15,w.m.ad,up);a.rotation.z=sx*.06;B(sx*.345,.85,0,.1,.09,.11,w.m.skin,up)}
+      // hai tà: hình thang, hơi bay nhẹ ra sau
+      const panel=(z,tilt)=>{const s=new THREE.Shape();s.moveTo(-.21,0);s.lineTo(.21,0);s.lineTo(.25,-.74);s.quadraticCurveTo(0,-.78,-.25,-.74);s.closePath();const p=new THREE.Mesh(new THREE.ShapeGeometry(s,8),w.m.ad);p.position.set(0,.88,z);p.rotation.x=tilt;lg.add(p);return p};
+      panel(.125,-.06);const back=panel(-.125,.1);back.rotation.y=Math.PI;
+      for(const sx of [-1,1]){const pl=new THREE.Mesh(lathe([[0,.05],[.165,.05],[.15,.4],[.12,.86],[0,.86]],16),w.m.silk);pl.position.x=sx*.11;lg.add(pl);B(sx*.11,.03,.03,.14,.05,.24,w.m.sneaker,lg)}}
     // phụ kiện trên đầu
     w.hat=new THREE.Group();{const brim=new THREE.Mesh(new THREE.CylinderGeometry(.48,.5,.02,32),w.m.straw);brim.position.y=.13;const crown=new THREE.Mesh(new THREE.SphereGeometry(.22,20,10,0,Math.PI*2,0,Math.PI/2),w.m.straw);crown.scale.y=.85;crown.position.y=.13;const band=new THREE.Mesh(new THREE.CylinderGeometry(.222,.222,.05,24),w.m.band);band.position.y=.165;w.hat.add(brim,crown,band)}head.add(w.hat);
     w.glasses=new THREE.Group();{for(const sx of [-.085,.085]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.02,16),w.m.lens);l.rotation.x=Math.PI/2;l.position.set(sx,.03,.236);w.glasses.add(l)}const br=new THREE.Mesh(new THREE.BoxGeometry(.06,.012,.015),w.m.lens);br.position.set(0,.04,.24);w.glasses.add(br)}head.add(w.glasses);
@@ -1311,18 +1347,21 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const bayBaseStyle=(o=bayOutfit)=>SEA_STYLES[o.style]?'casual':o.style;
   // Mặc bộ đồ (gọi sau dressAvatar). active=false thì tháo hết (rời vịnh).
   function wearSea(w,parts,torso,o,sitting,active){
-    const st=active&&SEA_STYLES[o.style],c=o.color;w.group.visible=!!st&&!sitting;
-    w.legs.visible=!!st?.legs;w.tee.visible=st?.legs==='jeans';w.suit.visible=!!st?.jacket;w.maxi.visible=st?.dress==='maxi';w.gown.visible=st?.dress==='gown';
+    const st=active&&SEA_STYLES[o.style],c=o.color;w.group.visible=!!st&&(!sitting||!!st.block);
+    w.legs.visible=false;w.tee.visible=false;w.suit.visible=false;w.gown.visible=false;w.maxi.visible=st?.dress==='maxi'&&!sitting;
+    for(const [k,b] of Object.entries(w.bk)){const on=st?.block===k;b.up.visible=on;b.lg.visible=on&&!sitting;b.up.position.y=sitting?-.79:0}
+    torso.visible=!st?.block;
     if(st){parts.robe.visible=false;parts.vest.visible=false;parts.sash.visible=false;
-      const legC=st.legs==='jeans'?'#3d5a80':st.legs==='suit'?shade(c,.55):c;
-      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set(st.legs==='suit'?shade(c,.75):'#ffffff');w.m.dress.color.set(c);w.m.gown.color.set(c);
-      torso.material.color.set(st.dress==='gown'&&!sitting?'#e7c9a8':c);
-      w.m.scarf.color.set(st.dress==='maxi'?'#fbf6ec':(c==='#f0e5d4'?'#e8a1b4':'#f0e5d4'));
+      const legC=st.block==='tee'?'#2c3a52':st.block==='suit'?c:st.block==='aodai'?c:c;
+      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set('#ffffff');w.m.pants.color.set(c);w.m.ad.color.set(c);w.m.lapel.color.set(shade(c,.78));w.m.dress.color.set(c);w.m.gown.color.set(c);
+      torso.material.color.set(c);
+      w.m.scarf.color.set(st.dress==='maxi'?'#fbf6ec':(c==='#f0e5d4'?'#e8a1b4':'#f0e5d4'));w.m.tie.color.set('#1f2430');
       // ngồi thiền: chân xếp mang màu quần hoặc màu váy; áo vest vẫn mặc
       if(sitting&&parts.legMat)parts.legMat.color.set(legC);
       // đứng: thân áo ngắn lại thành phần trên (eo ~0,8) để lộ quần hoặc chân váy; ngồi: áo vest thành màu thân
-      if(!sitting){torso.scale.y=.62;torso.position.y=1.26;if(st.dress){torso.scale.x=.78;torso.scale.z=.74}if(st.dress==='gown'){torso.scale.set(.56,.56,.5);torso.position.y=1.3}}
-      if(sitting&&st.jacket)torso.material.color.set(c)}
+      if(!sitting&&st.dress){torso.scale.y=.62;torso.position.y=1.26;torso.scale.x=.78;torso.scale.z=.74}
+}
+    if(!st)torso.visible=true;
     const acc=active?o.acc:[];w.hat.visible=acc.includes('hat');w.glasses.visible=acc.includes('glasses');w.scarf.visible=acc.includes('scarf');
   }
   function bayDress(sitting){wearSea(bw,meOutfit,meTorso,bayOutfit,sitting,bayMode)}
