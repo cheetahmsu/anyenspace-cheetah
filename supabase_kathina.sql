@@ -33,3 +33,7 @@ revoke execute on function public.anyen_kathina_trim() from public, anon, authen
 alter table public.anyen_kathina_robes add column if not exists pieces text not null default '';
 alter table public.anyen_kathina_robes drop constraint if exists anyen_kathina_pieces;
 alter table public.anyen_kathina_robes add constraint anyen_kathina_pieces check (pieces ~ '^[0-3]{0,27}$');
+-- Lời hồi hướng (không bắt buộc) gửi kèm tấm y, hiện trong sổ kho y.
+alter table public.anyen_kathina_robes add column if not exists wish text not null default '';
+alter table public.anyen_kathina_robes drop constraint if exists anyen_kathina_wish;
+alter table public.anyen_kathina_robes add constraint anyen_kathina_wish check (char_length(wish) <= 80);
