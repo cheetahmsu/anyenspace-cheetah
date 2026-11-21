@@ -1,5 +1,5 @@
 -- LÀNG YÊN · Rừng Yên: tấm y dâng trong nghi thức Dâng y.
--- 5 phút đầu y nằm dưới chân tượng Phật (mọi khách đều thấy), sau đó vào kho y trong Tịnh thất. Giữ 9 tấm gần nhất.
+-- 5 phút đầu y nằm dưới chân tượng Phật (mọi khách đều thấy), sau đó vào kho y trong Tịnh thất. Kho bày 9 tấm gần nhất; sổ giữ 66 tấm, đầy thì xoá dần tấm cũ nhất.
 create table if not exists public.anyen_kathina_robes (
   id uuid primary key default gen_random_uuid(),
   seq bigint generated always as identity,
@@ -22,7 +22,7 @@ create or replace function public.anyen_kathina_trim() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   delete from public.anyen_kathina_robes
-  where seq < (select min(seq) from (select seq from public.anyen_kathina_robes order by seq desc limit 9) t);
+  where seq < (select min(seq) from (select seq from public.anyen_kathina_robes order by seq desc limit 66) t);
   return null;
 end $$;
 drop trigger if exists anyen_kathina_trim on public.anyen_kathina_robes;
