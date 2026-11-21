@@ -692,6 +692,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const r=boatRide,dt=Math.min(.25,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=r.b.group;
     if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1){r.phase='row';viewYaw=r.heading;r.heading0=r.heading;document.getElementById('zenHint').textContent='🚣 Thuyền rời Bến sen, dạo một vòng hồ sen…';refreshBoatHud()}}
     else if(r.phase==='row'){
+      // Give way: another boat close ahead (or meeting us under the bridge) and we pause until it has passed.
+      {const fx=Math.sin(r.heading),fz=Math.cos(r.heading);let wait=false;for(const p of onlineAvatars.values()){if(!p.boat||!p.boat.group.visible)continue;const q=p.boat.group.position,ox=q.x-g.position.x,oz=q.z-g.position.z,d=Math.hypot(ox,oz);if(d>4.2||d<.01)continue;const ahead=(ox*fx+oz*fz)/d;if(ahead>.35&&!(ahead<.8&&r.b.i<p.boatIndex)){wait=true;break}}
+        if(wait!==!!r.yielding){r.yielding=wait;document.getElementById('zenHint').textContent=wait?'🚣 Thuyền chờ một chút để thuyền khác đi qua…':'🚣 Thuyền đi tiếp…'}if(wait){mePosition.set(g.position.x,0,g.position.z);g.position.y=.02+Math.sin(now/700)*.025;return}}
       const hPrev=r.heading;let left=(r.home?BOAT_SPEED*4:BOAT_SPEED)*dt;/* Về bến: finish the loop four times faster, still on the water */
       while(left>0&&r.path.length){const [tx,tz]=r.path[0],dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
         if(d<=left){g.position.x=tx;g.position.z=tz;left-=d;r.travelled+=d;r.path.shift();continue}
@@ -755,6 +758,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(branchDistance(x,z)<2.8+pad)return true;
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+4.5+pad))return true;
     if(houseHit(x,z,3.5+pad)||inFrontStrip(x,z))return true;
+    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<5+pad))return true;
     if(SENSE_HOUSES.some(h=>h.id==='xuong_gom'&&rectHit(h.x,h.z,h.rot,h.W+8,h.D,x,z,3+pad)))return true;/* kiln and woodpile beside the workshop */
     if(Math.abs(x-BEN_SEN.x)<4+pad&&z>BEN_SEN.z0-2&&z<BEN_SEN.z1+4+pad)return true;
     return false;}
@@ -835,6 +839,33 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
       col.setXYZ(i,out.r,out.g,out.b)}
     col.needsUpdate=true;}
+  // 3.16: Viền cỏ thấp quanh hồ sen, điểm xuyết hoa nhỏ, và hai cây liễu rũ bên bờ nam.
+  const WILLOWS=[{x:12.5,z:10.6,lean:.18,rot:2.6},{x:-27.5,z:9.6,lean:.16,rot:.6}];
+  {const rnd=seededRandom(5150),tufts=[],blooms=[];
+    const shoreOk=(x,z)=>{const lk=lakeSDF(x,z);if(lk<.15||lk>2.3)return false;if(Math.abs(x)<2.3&&z>BRIDGE_ARCH[0]-3&&z<BRIDGE_ARCH[1]+4)return false;if(Math.abs(x)<2.2)return false;if(Math.abs(x-BEN_SEN.x)<1.6&&z>4&&z<BEN_SEN.z1+1)return false;if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.8))return false;return true};
+    for(let tries=0;tufts.length<2600&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z))continue;const lk=lakeSDF(x,z);if(rnd()>1.15-lk*.4)continue;tufts.push([x,z,lk])}
+    for(let tries=0;blooms.length<380&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z)||lakeSDF(x,z)<.35)continue;blooms.push([x,z])}
+    const blade=(a,h,c)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-.035,0,0,.035,0,0,.05,h,.03],3));g.computeVertexNormals();return [part(g,0,0,0,1,1,1,a),c]};
+    const tuftGeo=mergeColored([blade(0,.26,'#2f5a3a'),blade(1.3,.2,'#3a6842'),blade(2.5,.3,'#34613d'),blade(3.6,.18,'#2b5234'),blade(4.8,.24,'#3a6842')]);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),c=new THREE.Color();
+    const tm=new THREE.InstancedMesh(tuftGeo,grassMat,tufts.length);
+    tufts.forEach(([x,z,lk],i)=>{const s=.7+rnd()*.7;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,Math.max(terrainHeight(x,z),-.05)-.01,z);sc.set(s,s*(lk<.8?1.25:1),s);m4.compose(v,q,sc);tm.setMatrixAt(i,m4);c.setRGB(.85+rnd()*.3,.9+rnd()*.25,.85+rnd()*.2);tm.setColorAt(i,c)});
+    tm.instanceMatrix.needsUpdate=true;tm.instanceColor.needsUpdate=true;tm.frustumCulled=false;scene.add(tm);
+    const stem=new THREE.CylinderGeometry(.005,.006,.13,3),dot=new THREE.SphereGeometry(.026,5,3),bloomGeo=mergeColored([[part(stem,0,.065,0),'#3d5a2a'],[part(dot,0,.14,0,1,.55,1),'#ffffff'],[part(dot,.03,.125,.02,.8,.5,.8),'#ffffff'],[part(dot,-.025,.12,-.02,.75,.5,.75),'#ffffff']]);
+    const cols=['#f6f3ea','#f7dc5e','#f3a6c4','#b9a0e6','#9cc4f0','#fff2a8'].map(h=>new THREE.Color(h)),bm=new THREE.InstancedMesh(bloomGeo,grassMat,blooms.length);
+    blooms.forEach(([x,z],i)=>{const s=.8+rnd()*.5;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.01,z);sc.set(s,s,s);m4.compose(v,q,sc);bm.setMatrixAt(i,m4);bm.setColorAt(i,cols[Math.floor(rnd()*cols.length)])});
+    bm.instanceMatrix.needsUpdate=true;bm.instanceColor.needsUpdate=true;bm.frustumCulled=false;scene.add(bm);
+    // Weeping willows: a leaning trunk, a soft crown and long drooping strands that sway a little in the wind.
+    for(const w of WILLOWS){const g=new THREE.Group();g.position.set(w.x,terrainHeight(w.x,w.z)-.05,w.z);g.rotation.y=w.rot;const parts=[],P=(...a)=>parts.push([part(...a),'#5a4632']),wr=seededRandom(Math.round(w.x*31+w.z*7)+99);
+      const bark='#5a4632',leafA='#6f8f4a',leafB='#7d9c52',leafC='#5f7f40';
+      P(new THREE.CylinderGeometry(.28,.42,3.2,8),0,1.6,0,1,1,1,0,-w.lean);P(new THREE.CylinderGeometry(.2,.28,2.2,7),.62,3.9,0,1,1,1,0,-w.lean*2.2);
+      for(const [a,l] of [[.4,1.8],[2.2,1.6],[4,1.7],[5.3,1.5]])P(new THREE.CylinderGeometry(.06,.12,l,6),.9+Math.cos(a)*.5,4.9,Math.sin(a)*.5,1,1,1,a,.9);
+      for(let k=0;k<7;k++){const a=k/7*Math.PI*2,r=1.3+wr()*.6;parts.push([part(new THREE.IcosahedronGeometry(1.1+wr()*.4,0),1.1+Math.cos(a)*r,5.5+wr()*.6,Math.sin(a)*r,1.2,.55,1.2),[leafA,leafB,leafC][k%3]])}
+      const strands=[];for(let k=0;k<120;k++){const a=wr()*Math.PI*2,r=1+wr()*2.6,L=2+wr()*3,x=1.1+Math.cos(a)*r,z=Math.sin(a)*r,top=5.7-r*.3;strands.push([part(new THREE.ConeGeometry(.07+wr()*.06,L,3,1),x,top-L/2,z,1,1,1,0,Math.PI),[leafA,leafB,leafC][k%3]])}
+      const crown=new THREE.Mesh(mergeColored(parts),forestMat);g.add(crown);
+      const hang=new THREE.Group();hang.add(new THREE.Mesh(mergeColored(strands),forestMat));hang.position.y=0;g.add(hang);w.hang=hang;
+      scene.add(g);w.group=g}}
+  function updateWillows(t){for(const w of WILLOWS)if(w.hang){w.hang.rotation.z=Math.sin(t*.7+w.x)*.025;w.hang.rotation.x=Math.sin(t*.53+w.z)*.02}}
   buildForest(FOREST_DEFAULT);
   // Obstacles between the camera and the avatar fade to see-through (never removed): pines via their ghost copies,
   // buildings and large props via their own materials.
@@ -973,6 +1004,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(lakeSDF(x,z)<.8)return Math.abs(x)<=1.7&&z>=BRIDGE_ARCH[0]-1.4&&z<=BRIDGE_ARCH[1]+1.4;
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+.6))return false;
     if(houseHit(x,z,.25))return false;
+    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.7))return false;
     if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
     // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
     const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
@@ -1137,8 +1169,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const sitting=entry.activity==='sit';poseAvatar(mesh.torso,mesh.head,mesh.tag,sitting);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,sitting);
       const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const peerBoat=!!entry.boat;const [px,pz]=peerBoat?[entry.x,entry.z]:pushOutOfTrees(Math.max(-72,Math.min(72,entry.x)),Math.max(-124,Math.min(36,entry.z)));mesh.group.position.set(px,peerBoat?.35:groundHeight(px,pz),pz);
       // Guests rowing on Hồ Niệm get a boat under them, pointed the way they are moving.
-      if(peerBoat){if(!mesh.boat){mesh.boat=makeBoat();scene.add(mesh.boat.group);}const mx=px-(mesh.lastX??px),mz=pz-(mesh.lastZ??pz);if(Math.hypot(mx,mz)>.02)mesh.heading=Math.atan2(mx,mz);const h=mesh.heading??0;mesh.boat.group.visible=true;mesh.boat.group.position.set(px,.02,pz);mesh.boat.group.rotation.y=h-Math.PI/2;mesh.group.userData.yaw=h;poseAvatar(mesh.torso,mesh.head,mesh.tag,true);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,true);}
-      else if(mesh.boat)mesh.boat.group.visible=false;
+      if(peerBoat){if(!mesh.boat){mesh.boat=makeBoat();scene.add(mesh.boat.group);}const mx=px-(mesh.lastX??px),mz=pz-(mesh.lastZ??pz);if(Math.hypot(mx,mz)>.02)mesh.heading=Math.atan2(mx,mz);const h=mesh.heading??0;mesh.boat.group.visible=true;mesh.boatTarget=[px,pz];mesh.boatIndex=Number(entry.boat)-1;if(!mesh.boatShown){mesh.boat.group.position.set(px,.02,pz);mesh.boatShown=true}mesh.group.position.x=mesh.boat.group.position.x;mesh.group.position.z=mesh.boat.group.position.z;mesh.boat.group.rotation.y=h-Math.PI/2;mesh.group.userData.yaw=h;poseAvatar(mesh.torso,mesh.head,mesh.tag,true);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,true);}
+      else if(mesh.boat){mesh.boat.group.visible=false;mesh.boatShown=false;mesh.boatTarget=null}
       mesh.lastX=px;mesh.lastZ=pz;if(!peerBoat)mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);mesh.baseY=mesh.group.position.y;
     }
     for(const [id,obj] of onlineAvatars){if(!incoming[id]){scene.remove(obj.group);if(obj.boat)scene.remove(obj.boat.group);onlineAvatars.delete(id)}}
@@ -2394,9 +2426,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible)};
+  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
   window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
-  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode)updateSenseHouses(performance.now()/1000);let t=clock.getElapsedTime();
+  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
       if(!bayMode)updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
@@ -2425,6 +2457,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
     me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;const inBoat=onBoat();if(inBoat){me.position.y=boatRide.b.group.position.y+.33;me.rotation.y=boatRide.heading;}if(bayMode){me.position.copy(bayAvatar.pos);me.rotation.y=bayAvatar.yaw;if(bayPhoto){const p=bayPhoto.pose,sd=bayPhoto.side;me.rotation.y+=Math.PI+p.yaw*sd+sd*.32;me.rotation.z=p.lean*sd;meHead.rotation.set(0,-p.yaw*sd*.7,p.tilt*sd)}}if(meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,bayMode?bayOutfit.color:myColor,bayMode?bayBaseStyle():myStyle,meActivity==='sit'||inBoat);bayDress(meActivity==='sit');
     for(const peer of onlineAvatars.values()){
+      if(peer.boatTarget&&peer.boat&&peer.boat.group.visible){const g=peer.boat.group,k=Math.min(1,dt*5);g.position.x+=(peer.boatTarget[0]-g.position.x)*k;g.position.z+=(peer.boatTarget[1]-g.position.z)*k;g.position.y=.02+Math.sin(performance.now()/700+peer.boatIndex)*.025;peer.group.position.x=g.position.x;peer.group.position.z=g.position.z}
       peer.group.rotation.set(0,peer.group.userData.yaw||0,0);
       // Height comes from the ground / mat / boat each frame, so a jump never accumulates.
       if(Number.isFinite(peer.baseY))peer.group.position.y=peer.baseY;
