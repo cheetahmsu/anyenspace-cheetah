@@ -536,7 +536,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const out=[HILL.x+Math.sin(phi)*38,HILL.z+Math.cos(phi)*38];pts.push(out);
       const u=Math.atan2(t.door[0]-l.x,t.door[1]-l.z),a0=Math.atan2(out[0]-l.x,out[1]-l.z);let d=Math.atan2(Math.sin(u-a0),Math.cos(u-a0));const end=d,rr=Math.hypot(out[0]-l.x,out[1]-l.z);
       for(let k=1;k<=6;k++){const a=a0+end*k/6;pts.push([l.x+Math.sin(a)*rr,l.z+Math.cos(a)*rr])}
-      BRANCHES.push(pts)}}
+      BRANCHES.push(pts)}
+    // Nhánh Tịnh thất: continue the ring from the last pond spoke on the east side round to the north-east, then a straight
+    // spoke out toward the Tịnh thất door (it faces the hill, so the door lies on the same ray). Grass for the last metre or so.
+    {const TT=[27,-95],th=hillAng(...TT);let from=0;for(const t of targets){const l=wishLakes.find(v=>v.name===t.lake),a=hillAng(l.x,l.z);if(Math.sign(a)===Math.sign(th))from=Math.max(from*Math.sign(th),Math.abs(a-Math.sign(a)*delta))*Math.sign(th)}
+      const pts=[],sg=Math.sign(th);for(let a=from;Math.abs(a)<Math.abs(th);a+=sg*.08)pts.push(onRing(a));pts.push(onRing(th));
+      const far=Math.hypot(TT[0]-HILL.x,TT[1]-HILL.z)-3-1.3-1.1;pts.push([HILL.x+Math.sin(th)*far,HILL.z+Math.cos(th)*far]);BRANCHES.push(pts)}}
   function branchDistance(x,z){let best=Infinity;for(const pts of BRANCHES)for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz||1)));const d=Math.hypot(ax+vx*u-x,az+vz*u-z);if(d<best)best=d}return best}
   // Paved ground (main axis, plazas, stairs, Ngũ quan branches): walkers prefer it, grass costs more.
   function onPaved(x,z){return (Math.abs(x)<1.9&&z>-37&&z<36)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r||stairsDistance(x,z)<1.5||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat-.3||branchDistance(x,z)<1.3}
@@ -2388,11 +2393,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     c.save();c.translate(fmX(ORCHID.x),fmY(ORCHID.z));c.rotate(-ORCHID.rot);c.fillStyle='#f0b8d0';c.fillRect(-fmS(ORCHID.w/2),-fmS(ORCHID.d/2),fmS(ORCHID.w),fmS(ORCHID.d));c.restore();
     for(const g of FLOWER_GARDENS){c.fillStyle={hong:'#d94a5e',cam_tu_cau:'#8fb0e8',nhai:'#f4f1e6',cuc:'#f2c230',lan:'#9a78d0',sen:'#ef9fb9'}[g.kind];c.beginPath();c.arc(fmX(g.x),fmY(g.z),g.pier?3:5,0,7);c.fill()}
     for(const h of SENSE_HOUSES){c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e0b07a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
+    {const h=TINH_THAT;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#c98a1c';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
     c.fillStyle='#e8c46a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(1.6),0,7);c.fill();
     // labels
     c.font='600 13px system-ui,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(8,30,24,.85)';c.fillStyle='#f6ead0';
     const label=(t,x,z,dy=0)=>{const half=c.measureText(t).width/2+4,lx=Math.max(half,Math.min(FM.w-half,fmX(x)));c.strokeText(t,lx,fmY(z)+dy);c.fillText(t,lx,fmY(z)+dy)};
-    label('Tượng Phật',STATUE.x,STATUE.z,-26);label('Hồ sen',-18,LOTUS_LAKE.z,4);label('Hồ sen',18,LOTUS_LAKE.z,4);label('Sân chân đồi',FOOT.x+14,FOOT.z,4);label('Sân đón',GATHER.x+11,GATHER.z,4);label('Cổng Yên',0,34.2,18);label('Nhà hoa lan',ORCHID.x,ORCHID.z,fmS(ORCHID.d/2)+14);for(const h of SENSE_HOUSES)label(h.name,h.x,h.z,fmS(h.D/2)+14);
+    label('Tượng Phật',STATUE.x,STATUE.z,-26);label('Hồ sen',-18,LOTUS_LAKE.z,4);label('Hồ sen',18,LOTUS_LAKE.z,4);label('Sân chân đồi',FOOT.x+14,FOOT.z,4);label('Sân đón',GATHER.x+11,GATHER.z,4);label('Cổng Yên',0,34.2,18);label('Nhà hoa lan',ORCHID.x,ORCHID.z,fmS(ORCHID.d/2)+14);for(const h of SENSE_HOUSES)label(h.name,h.x,h.z,fmS(h.D/2)+14);label(TINH_THAT.name,TINH_THAT.x,TINH_THAT.z,fmS(TINH_THAT.D/2)+14);
     for(const l of wishLakes)if(l.name!=='Niệm')label('Hồ '+l.name,l.x,l.z,4);
     // other guests, then you (gold, with a heading arrow)
     c.fillStyle='#f4f1e6';for(const p of onlineAvatars.values()){const g=p.group;if(!g||!g.visible)continue;c.beginPath();c.arc(fmX(g.position.x),fmY(g.position.z),4,0,7);c.fill()}
