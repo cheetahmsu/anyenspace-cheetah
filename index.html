@@ -2448,37 +2448,39 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const leafGeo=mergeColored([[part(new THREE.SphereGeometry(.05,6,4),0,.09,0,.42,1.9,.14),'#4f7f45'],[part(new THREE.CylinderGeometry(.004,.005,.06,3),0,.02,0),'#4f7f45']]);
   function headFrame(n,layout){const pts=[];
     if(layout==='thap'){const rows=[[1,0,.78],[3,.085,.66],[5,.15,.52],[6,.2,.39]];let left=n;for(const [cap,r,y] of rows){const m=Math.min(cap,left);for(let k=0;k<m;k++){const a=k/m*Math.PI*2+(r?.4:0);pts.push([Math.sin(a)*r,y,Math.cos(a)*r])}left-=m;if(!left)break}}
-    else if(layout==='quat'){const rows=n<=4?[n]:n<=7?[n-3,3]:[5,n-5];rows.forEach((m,ri)=>{for(let k=0;k<m;k++){const a=m===1?0:(-1+2*k/(m-1))*(ri?.75:1.1);const R=ri?.17:.3;pts.push([Math.sin(a)*R,.3+Math.cos(a)*R*.85+(ri?.02:0),ri?.06:-.02])}})}
-    else{if(n===1)pts.push([0,.68,0]);else{pts.push([0,.72,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.11,.67,Math.cos(a)*.11])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.2,.6,Math.cos(a)*.2])}}}
+    else if(layout==='quat'){const rows=n<=4?[n]:n<=7?[n-3,3]:[5,n-5];rows.forEach((m,ri)=>{for(let k=0;k<m;k++){const a=m===1?0:(-1+2*k/(m-1))*(ri?.75:1.1);const R=ri?.17:.3;pts.push([Math.sin(a)*R,.19+Math.cos(a)*R*.85+(ri?.02:0),ri?.06:-.02])}})}
+    else{if(n===1)pts.push([0,.41,0]);else{pts.push([0,.45,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.11,.4,Math.cos(a)*.11])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.19,.33,Math.cos(a)*.19])}}}
     return pts}
-  const BQ_BASE={tron:[0,.06,0],thap:[0,.05,0],quat:[0,.06,0]};
+  const BQ_BASE={tron:[0,.02,0],thap:[0,.05,0],quat:[0,.02,0]};
   function placeStem(g,geo,mat_,head,headY,base,s){const P=new THREE.Vector3(...head),B=new THREE.Vector3(...base),d=P.clone().sub(B).normalize(),m=new THREE.Mesh(geo,mat_);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
   const bqMats={kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
     slat:new THREE.MeshStandardMaterial({color:'#c69a5e',roughness:.9}),slatDark:new THREE.MeshStandardMaterial({color:'#8f6a3c',roughness:.9}),bark:new THREE.MeshStandardMaterial({color:'#6a4a32',roughness:1,flatShading:true}),twine:new THREE.MeshStandardMaterial({color:'#b89a6a',roughness:1})};
-  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';const g=new THREE.Group(),base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
+  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';let g=new THREE.Group();const base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
     let seed=7;for(const f of flowers)seed=(seed*31+f.length*17+f.charCodeAt(0))|0;const rnd=seededRandom(seed+layout.length*101);
     heads.forEach((h,k)=>placeStem(g,flowerGeo(flowers[k]),flowerMat,h,HEAD_Y[flowers[k]]||.5,base,s));
     // fillers: pink sprays and leaves in the gaps around and between the heads
     const fill=[],leaves=[];heads.forEach(([x,y,z],k)=>{const n=layout==='quat'?2:2;for(let j=0;j<n;j++){const a=rnd()*Math.PI*2,r=.07+rnd()*.05;fill.push([x+Math.sin(a)*r,y-.02-rnd()*.05,z+Math.cos(a)*r])}});
-    const rim=layout==='tron'?[.23,.52]:layout==='thap'?[.2,.27]:[.24,.2];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
+    const rim=layout==='tron'?[.15,.26]:layout==='thap'?[.2,.27]:[.24,.1];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
     for(const p of fill)placeStem(g,fillerGeo,flowerMat,p,.125,base,1);
     for(const p of leaves)placeStem(g,leafGeo,flowerMat,p,.17,base,1);
-    if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon
+    if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon (built at full size, shown at half)
+      const wrapG=g;g=new THREE.Group();g.scale.setScalar(.5);wrapG.add(g);
       const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.34,12,1,true),bqMats.kraft);outer.position.y=.2;g.add(outer);
       const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.3,12,1,true),bqMats.paper);inner.position.y=.24;inner.rotation.y=.3;g.add(inner);
       const collar=new THREE.Mesh(new THREE.CylinderGeometry(.27,.2,.13,14,1,true),bqMats.kraft);collar.position.y=.42;g.add(collar);const collarIn=new THREE.Mesh(new THREE.CylinderGeometry(.25,.19,.12,14,1,true),bqMats.paper);collarIn.position.y=.45;collarIn.rotation.y=.2;g.add(collarIn);
       const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.08,10),bqMats.kraft);sleeve.position.y=.0;g.add(sleeve);
       const band=new THREE.Mesh(new THREE.TorusGeometry(.058,.008,6,18),bqMats.ribbon);band.rotation.x=Math.PI/2;band.position.y=.05;g.add(band);
-      for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}}
+      for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}
+      g=wrapG;}
     else if(layout==='thap'){// woven slat basket
       const body=new THREE.Mesh(new THREE.CylinderGeometry(.19,.15,.24,16),bqMats.slat);body.position.y=.12;g.add(body);
       for(let k=0;k<16;k++){const a=k/16*Math.PI*2,sl=new THREE.Mesh(new THREE.BoxGeometry(.008,.245,.012),bqMats.slatDark);sl.position.set(Math.sin(a)*.172,.12,Math.cos(a)*.172);sl.rotation.y=a;sl.rotation.x=Math.cos(a)*.08;sl.rotation.z=-Math.sin(a)*.08;g.add(sl)}
       for(const y of [.03,.21]){const hoop=new THREE.Mesh(new THREE.TorusGeometry(y>.1?.188:.155,.009,5,24),bqMats.slatDark);hoop.rotation.x=Math.PI/2;hoop.position.y=y;g.add(hoop)}}
     else{// rough wooden box with a twine tie
-      const box=new THREE.Mesh(new THREE.BoxGeometry(.4,.22,.18),bqMats.bark);box.position.y=.11;g.add(box);
-      for(let k=0;k<6;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.01),bqMats.slatDark);r.position.set(-.17+k*.068,.11,.091);g.add(r)}
-      const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.17,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.14,3),bqMats.twine);t.position.set(x,.1,.095);g.add(t)}}
+      const box=new THREE.Mesh(new THREE.BoxGeometry(.4,.11,.18),bqMats.bark);box.position.y=.055;g.add(box);
+      for(let k=0;k<6;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.012,.11,.01),bqMats.slatDark);r.position.set(-.17+k*.068,.055,.091);g.add(r)}
+      const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.08,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.1,3),bqMats.twine);t.position.set(x,.03,.095);g.add(t)}}
     return g}
 
   // Gardens at the five junctions of the Ngũ quan ring (where each branch leaves the ring), plus lotus picking at Bến sen.
@@ -2533,7 +2535,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Preview: a small separate renderer that spins the bouquet slowly.
   let pv=null;
   function startPreview(){const cv=document.getElementById('bouquetCanvas');if(!pv){const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.setSize(320,320,false);r.outputColorSpace=THREE.SRGBColorSpace;
-      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4dc','#2d4a3a',2.4));const d=new THREE.DirectionalLight('#ffe6c0',1.6);d.position.set(1,2,1.5);sc.add(d);const cam=new THREE.PerspectiveCamera(32,1,.01,10);cam.position.set(0,.62,1.75);cam.lookAt(0,.38,0);pv={r,sc,cam,holder:new THREE.Group(),run:false};sc.add(pv.holder)}
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4dc','#2d4a3a',2.4));const d=new THREE.DirectionalLight('#ffe6c0',1.6);d.position.set(1,2,1.5);sc.add(d);const cam=new THREE.PerspectiveCamera(32,1,.01,10);cam.position.set(0,.55,1.55);cam.lookAt(0,.32,0);pv={r,sc,cam,holder:new THREE.Group(),run:false};sc.add(pv.holder)}
     pv.holder.clear();pv.holder.add(buildBouquet(flowerBasket,bouquetLayout));if(!pv.run){pv.run=true;const t0=performance.now(),spin=()=>{if(!pv||!pv.run)return;pv.holder.rotation.y=Math.sin((performance.now()-t0)/1600)*.9;pv.r.render(pv.sc,pv.cam);requestAnimationFrame(spin)};spin()}}
   function stopPreview(){if(pv)pv.run=false}
   function renderBouquet(){document.getElementById('bouquetLayouts').innerHTML=Object.entries(BOUQUET_LAYOUTS).map(([k,l])=>'<button type="button" class="fl-chip wide'+(k===bouquetLayout?' sel':'')+'" data-layout="'+k+'">'+l+'</button>').join('');
