@@ -865,7 +865,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
 
   // Camera zoom: pinch with two fingers, mouse wheel, or the ＋/－ buttons. Remembered on this device.
   let camZoom=1;try{const z=Number(localStorage.getItem('yen_cam_zoom'));if(z>=.45&&z<=1.5)camZoom=z}catch(e){}
-  // Camera height: swipe up to raise the camera (see more from above), swipe down to lower it toward eye level.
+  // Camera height, like dragging the scene: swipe down to raise the camera (see more from above), swipe up to lower it toward eye level.
   let camLift=1;try{const v=Number(localStorage.getItem('yen_cam_lift'));if(v>=.35&&v<=2.6)camLift=v}catch(e){}
   const setCamLift=v=>{camLift=Math.max(.35,Math.min(2.6,v));try{localStorage.setItem('yen_cam_lift',String(camLift))}catch(e){}};
   const setZoom=z=>{camZoom=Math.max(.45,Math.min(1.5,z));try{localStorage.setItem('yen_cam_zoom',String(camZoom))}catch(e){}};
@@ -1153,7 +1153,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{if(e.pointerId===swipeId)swipeId=null});
   renderer.domElement.addEventListener('pointermove',e=>{if(!dragging3d||e.pointerId!==swipeId||!document.body.classList.contains('immersive'))return;const dx=e.clientX-swipeX,dy=e.clientY-swipeY;swipeX=e.clientX;swipeY=e.clientY;
     // A full-width swipe turns the view about 200°; turning only moves the camera, not the avatar.
-    viewYaw-=dx/Math.max(320,innerWidth)*3.5;if(bayMode)walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002));else setCamLift(camLift-dy/Math.max(320,innerHeight)*2.4)});
+    viewYaw-=dx/Math.max(320,innerWidth)*3.5;if(bayMode)walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002));else setCamLift(camLift+dy/Math.max(320,innerHeight)*2.4)});
   window.addEventListener('yen-zone',()=>{walking=false;walkingKeys.clear()});
   
   // ===== VỊNH HẠ LONG: du thuyền dạo vịnh theo bản đồ thật =====
