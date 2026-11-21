@@ -2615,7 +2615,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
   const bqMats={kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
     slat:new THREE.MeshStandardMaterial({color:'#c69a5e',roughness:.9}),slatDark:new THREE.MeshStandardMaterial({color:'#8f6a3c',roughness:.9}),bark:new THREE.MeshStandardMaterial({color:'#6a4a32',roughness:1,flatShading:true}),twine:new THREE.MeshStandardMaterial({color:'#b89a6a',roughness:1})};
-  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';let g=new THREE.Group();const base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
+  // Oải hương ưu tiên vào giữa bó, xen kẽ với hoa khác: lavender takes every other slot of the inner positions (not the very centre).
+  function arrangeLavender(flowers,layout){const n=flowers.length,lav=flowers.filter(f=>f==='lan'),rest=flowers.filter(f=>f!=='lan');if(!lav.length||lav.length===n)return flowers.slice();
+    const hs=headFrame(n,layout),order=hs.map((h,i)=>i).filter(i=>i>0).sort((a,b)=>Math.hypot(hs[a][0],hs[a][2])-Math.hypot(hs[b][0],hs[b][2])),pick=[];
+    for(let k=0;k<order.length&&pick.length<lav.length;k+=2)pick.push(order[k]);for(let k=1;k<order.length&&pick.length<lav.length;k+=2)pick.push(order[k]);
+    const out=new Array(n);pick.forEach(i=>out[i]='lan');let r=0;for(let i=0;i<n;i++)if(!out[i])out[i]=rest[r++];return out}
+  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';flowers=arrangeLavender(flowers,layout);let g=new THREE.Group();const base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
     let seed=7;for(const f of flowers)seed=(seed*31+f.length*17+f.charCodeAt(0))|0;const rnd=seededRandom(seed+layout.length*101);
     heads.forEach((h,k)=>placeStem(g,flowerGeo(flowers[k],'hi'),flowerMat,h,HEAD_Y[flowers[k]]||.5,base,s));
     // fillers: pink sprays and leaves in the gaps around and between the heads
