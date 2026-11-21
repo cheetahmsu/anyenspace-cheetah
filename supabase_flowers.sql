@@ -33,3 +33,6 @@ end $$;
 drop trigger if exists anyen_flower_trim on public.anyen_flower_offerings;
 create trigger anyen_flower_trim after insert on public.anyen_flower_offerings
   for each statement execute function public.anyen_flower_trim();
+
+-- Hàm dọn bảng chỉ chạy qua trigger, không gọi được từ ngoài.
+revoke execute on function public.anyen_flower_trim() from public, anon, authenticated;
