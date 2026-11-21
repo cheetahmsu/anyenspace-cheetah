@@ -2822,7 +2822,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // 3.21: Nhà gốm, theo gốm Chăm Bàu Trúc: không bàn xoay, không khuôn, không men, nung lộ thiên.
   // Trong nhà: nhào đất, rắc cát lên đôn gỗ, đi lùi quanh đôn sáu vòng để vuốt thân gốm, chuốt láng, khắc hoa văn, phơi nắng.
   // Đội gốm ra bãi nung bên hông nhà (phía rộng hơn): củi, rơm, trấu, lửa một phút (thực tế 4–6 giờ), phun nước tạo màu.
-  // Gốm lưu trên Supabase (anyen_pottery, giữ 9 chiếc gần nhất): trong phút nung mọi khách thấy lửa khói, sau đó gốm lên kệ cạnh bãi nung.
+  // Gốm lưu trên Supabase (anyen_pottery, giữ 36 chiếc gần nhất cho kệ 6 × 6): trong phút nung mọi khách thấy lửa khói, sau đó gốm lên kệ cạnh bãi nung.
   const GOM_SHAPES=[{name:'Lu nước',pts:[[0,0],[.16,0],[.23,.07],[.28,.19],[.26,.31],[.17,.4],[.13,.43],[.15,.46]]},
     {name:'Hũ',pts:[[0,0],[.12,0],[.17,.05],[.19,.15],[.17,.24],[.12,.27],[.115,.3],[.13,.31]]},
     {name:'Bình cổ cao',pts:[[0,0],[.1,0],[.15,.06],[.17,.15],[.13,.25],[.065,.33],[.05,.43],[.075,.49]]},
@@ -2852,10 +2852,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function gomMaterial(shape,pattern,seed,stage,polish){const tex=new THREE.CanvasTexture(gomCanvas(shape,pattern,seed,stage));tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=THREE.RepeatWrapping;
     const m=new THREE.MeshStandardMaterial({map:tex,roughness:polish?.55:.95,side:THREE.DoubleSide});
     if(shape===3&&stage==='fired'){const g=new THREE.CanvasTexture(gomGlow());g.colorSpace=THREE.SRGBColorSpace;m.emissiveMap=g;m.emissive=new THREE.Color('#ffffff');m.emissiveIntensity=1}return m}
+  const gomDispose=(m,parent)=>{parent.remove(m);m.geometry.dispose();const mt=m.material;if(mt.map)mt.map.dispose();if(mt.emissiveMap)mt.emissiveMap.dispose();mt.dispose()};
   const gomMesh=(r,scale=1)=>{const m=new THREE.Mesh(gomGeo(r.shape,1,16),gomMaterial(r.shape,r.pattern,r.seed,'fired',true));m.scale.setScalar(scale);return m};
   const gom={phase:'idle',step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:0,carry:null};
   // ---- the room: đôn gỗ in the middle, a guest bent over the clay, a shelf of the nine latest pots at the back
-  function roomXuongGom(st){st.target.set(0,.7,0);st.dist=3.3;st.pitch=.28;
+  function roomXuongGom(st){st.target.set(0,.85,0);st.dist=3.5;st.pitch=.16;
     if(gom.phase==='fire'||gom.phase==='spray'){rmHint('🔥 Gốm của bạn đang nung ngoài bãi bên hông nhà');rmPanel.innerHTML='<p>Gốm của bạn đang nằm trong lửa ở bãi nung bên hông nhà. Ra bãi nung để chờ lửa tàn và phun nước tạo màu.</p>';return}
     if(gom.phase==='carry'){setGomCarry(false);refreshGomPill();gom.phase='room';gom.step='xong'}
     if(gom.phase!=='room'){Object.assign(gom,{phase:'room',step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:Math.floor(Math.random()*9999)})}
@@ -2867,8 +2868,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const potter=new THREE.Group();/* the guest, bent over the clay */{const body=new THREE.Mesh(new THREE.ConeGeometry(.24,.95,10),mat(guestColor));body.position.y=.48;potter.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),mat('#d9b48f'));head.position.set(0,1.02,0);potter.add(head);
       for(const s of [-1,1]){const arm=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.42,6),mat(guestColor));arm.position.set(s*.13,.72,-.16);arm.rotation.x=.9;potter.add(arm)}}
     st.sc.add(potter);let ang=1.9;const placePotter=()=>{potter.position.set(Math.sin(ang)*.95,0,Math.cos(ang)*.95);potter.rotation.set(0,ang,0);potter.rotateX(-.32)};placePotter();
-    const shelf=new THREE.Group();shelf.position.set(0,0,-3.05);st.sc.add(shelf);for(const y of [.7,1.45]){const b=new THREE.Mesh(new THREE.BoxGeometry(4.2,.08,.5),mat('#4e3a2a'));b.position.y=y;shelf.add(b)}
-    const drawShelf=()=>{while(shelf.children.length>2)shelf.remove(shelf.children[2]);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,9).forEach((r,i)=>{const m=gomMesh(r,1.15);m.position.set(-1.6+(i%5)*.8,.74+Math.floor(i/5)*.75,0);shelf.add(m)})};drawShelf();st.onPots=drawShelf;
+    const shelf=new THREE.Group();shelf.position.set(0,0,-3.05);st.sc.add(shelf);for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(4,.06,.45),mat('#4e3a2a'));b.position.y=.12+k*.44;shelf.add(b)}
+    const drawShelf=()=>{while(shelf.children.length>6)gomDispose(shelf.children[6],shelf);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,36).forEach((r,i)=>{const m=gomMesh(r,.72);m.position.set(-1.65+(i%6)*.66,.15+Math.floor(i/6)*.44,0);shelf.add(m)})};drawShelf();st.onPots=drawShelf;
     let anim=null,dryT=null;
     const setPot=frac=>{pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,frac);pot.visible=frac>0;lump.visible=frac<1;const k=Math.max(.15,1-frac);lump.scale.set(k,.75*k,k);lump.position.y=.57+.15*k};
     const retex=stage=>{potMat.map.dispose();const t=new THREE.CanvasTexture(gomCanvas(gom.shape,['nhao','cat','dang','nan','chuot','hoavan'].includes(gom.step)?-1:gom.pattern,gom.seed,stage));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;potMat.map=t;potMat.roughness=gom.polish>=2?.55:gom.polish?.75:.95;potMat.needsUpdate=true};
@@ -2888,7 +2889,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       else if(s==='hoavan')h='<p>Khắc hoa văn bằng những dụng cụ mộc mạc.</p><div class="rm-row">'+GOM_TOOLS.map((t,i)=>'<button data-gt="'+i+'"'+(gom.pattern===i?' class="sel"':'')+'>'+t[0]+' · '+t[1]+'</button>').join('')+'</div><div class="rm-row">'+btn('carve','✍️ Khắc hoa văn',1)+'</div>';
       else if(s==='phoi')h='<p>Phơi gốm dưới nắng cho khô. <span class="rm-note">Thực tế ở Bàu Trúc gốm phơi nắng khoảng 4–6 giờ; trong Rừng Yên rút lại '+GOM_DRY_SEC+' giây.</span></p><div class="rm-row">'+(dryT?'<span class="rm-note">☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây</span>':btn('dry','☀️ Phơi nắng',1))+'</div>';
       else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
-      rmPanel.innerHTML=h+'<p class="rm-note">Kệ gốm giữ 9 chiếc gần nhất của mọi khách · hiện có '+gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).length+' chiếc.</p>'}
+      rmPanel.innerHTML=h+'<p class="rm-note">Kệ gốm 6 × 6 = 36 chỗ, giữ 36 chiếc gần nhất của mọi khách · hiện có '+Math.min(36,gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).length)+' chiếc.</p>'}
     render();
     rmPanel.onclick=e=>{const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
       const a=e.target.closest('[data-gm]')?.dataset.gm;if(!a||anim)return;
@@ -2913,15 +2914,15 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     for(let r=0;r<2;r++)for(let k=0;k<4-r;k++)P(GC(.12,.12,1.3,7),'#6b4a32',2.9,.12+r*.22,-1+k*.26+r*.13,{rz:Math.PI/2});
     for(let k=0;k<3;k++)P(GK(.45,.7,7),'#a8925a',-2.9,.35,-1+k*.95);/* straw and rice husk heaps */P(GC(.5,.55,.35,8),'#8a7a5a',-2.9,.17,1.9);
     // rack for the nine latest fired pots, behind the yard
-    const rx=0,rz=-3.1;for(const y of [.18,.86])P(GB(3.4,.07,.5),'#4e3a2a',rx,y,rz);for(const x of [-1.65,1.65])for(const z of [-.2,.2])P(GB(.08,1.3,.08),'#3a2a1e',rx+x,.65,rz+z);
+    const rx=0,rz=-3.1;for(let k=0;k<6;k++)P(GB(3.5,.06,.45),'#4e3a2a',rx,.12+k*.5,rz);for(const x of [-1.76,1.76])for(const z of [-.2,.2])P(GB(.08,2.95,.08),'#3a2a1e',rx+x,1.47,rz+z);P(GB(3.6,.08,.08),'#3a2a1e',rx,2.95,rz-.2);
     gomYard.add(new THREE.Mesh(mergeColored(parts),houseMat))}
   gomYard.add(gomFire,gomRack);gomFire.visible=false;
   {const mound=new THREE.Mesh(new THREE.ConeGeometry(1.45,1.05,12),new THREE.MeshStandardMaterial({color:'#8f7a4c',roughness:1,flatShading:true}));mound.position.y=.52;gomFire.add(mound);
     const glow=new THREE.Mesh(new THREE.CircleGeometry(1.7,20),new THREE.MeshBasicMaterial({color:'#ff7a2a',transparent:true,opacity:.35,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.05;gomFire.add(glow);
     for(let k=0;k<9;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(.2+(k%3)*.06,.9+(k%4)*.22,6),new THREE.MeshBasicMaterial({color:k%2?'#ffb347':'#ff7a2a',transparent:true,opacity:.85,depthWrite:false}));const a=k/9*Math.PI*2,r=.5+(k%3)*.35;f.position.set(Math.cos(a)*r,.75-r*.2,Math.sin(a)*r);f.userData={y:f.position.y,ph:k*1.7};gomFlames.push(f);gomFire.add(f)}
     for(let k=0;k<10;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),new THREE.MeshBasicMaterial({color:'#8f8a82',transparent:true,opacity:.25,depthWrite:false}));s.userData={k};gomSmoke.push(s);gomFire.add(s)}}
-  function drawRack(){while(gomRack.children.length)gomRack.remove(gomRack.children[0]);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,9).forEach((r,i)=>{const m=gomMesh(r,1.25);m.position.set(-1.3+(i%5)*.65,(i<5?.22:.9),-3.1);gomRack.add(m)})}
-  window.__gomHit=(x,z)=>Math.hypot(x-GOM_YARD[0],z-GOM_YARD[1])<2.4||Math.hypot(x-GOM_RACK[0],z-GOM_RACK[1])<1.9;
+  function drawRack(){while(gomRack.children.length)gomDispose(gomRack.children[0],gomRack);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,36).forEach((r,i)=>{const m=gomMesh(r,.8);m.position.set(-1.45+(i%6)*.58,.155+Math.floor(i/6)*.5,-3.1);gomRack.add(m)})}
+  window.__gomHit=(x,z)=>Math.hypot(x-GOM_YARD[0],z-GOM_YARD[1])<2.4||Math.hypot(x-GOM_RACK[0],z-GOM_RACK[1])<2;
   addFadeable(gomYard,GOM_YARD[0],GOM_YARD[1],2.2);
   // ---- carrying, firing and the spray of colour
   const gomPill=document.createElement('button');gomPill.type='button';gomPill.id='gomPill';gomPill.hidden=true;document.body.appendChild(gomPill);
@@ -2939,7 +2940,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(gom.phase==='fire'){clearInterval(gom.timer);gom.phase='spray';gomPanel.innerHTML='<div class="fl-head"><strong>🔥 Lửa đã tàn</strong></div><p class="fl-note">Khi gốm còn nóng, người thợ phun nước để tạo màu cho áo gốm.</p><div class="fl-row"><button type="button" class="fl-gold" data-gp="spray">💧 Phun nước tạo màu</button></div>';syncGomYard();return}}
   gomPanel.addEventListener('click',e=>{const a=e.target.closest('[data-gp]')?.dataset.gp;if(!a)return;
     if(a==='spray'){strike(1900,1.2,.02,[[1,1],[1.3,.5]]);const r=gom.row,cv=gomCanvas(r.shape,r.pattern,r.seed,'fired'),fired=GOM_FIRED[r.seed%GOM_FIRED.length][0];gom.phase='idle';gom.step='nhao';
-      gomPanel.innerHTML='<div class="fl-head"><strong>🏺 '+GOM_SHAPES[r.shape].name+' · áo gốm '+fired+'</strong><button type="button" data-gp="close">✕ Đóng</button></div><div class="gom-preview"></div><p class="fl-note">Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Gốm đã được đặt lên kệ cạnh bãi nung, mọi khách đều thấy. Kệ giữ 9 chiếc gần nhất.</p>';
+      gomPanel.innerHTML='<div class="fl-head"><strong>🏺 '+GOM_SHAPES[r.shape].name+' · áo gốm '+fired+'</strong><button type="button" data-gp="close">✕ Đóng</button></div><div class="gom-preview"></div><p class="fl-note">Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Gốm đã được đặt lên kệ cạnh bãi nung, mọi khách đều thấy. Kệ có 6 × 6 = 36 chỗ; khi đầy, chiếc cũ nhất nhường chỗ.</p>';
       const img=gomSnapshot(r);if(img)gomPanel.querySelector('.gom-preview').appendChild(img);drawRack();say('🏺 Gốm đã lên kệ cạnh bãi nung');return}
     if(a==='close')gomPanel.hidden=true});
   let gomSnapR=null;
@@ -2951,7 +2952,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const gomAge=r=>(Date.now()-new Date(r.created_at).getTime())/1000;
   let gomFiring=null;
   function syncGomYard(){const on=gomRows.some(r=>gomAge(r)<GOM_FIRE_SEC)||gom.phase==='fire';if(on!==gomFiring){gomFiring=on;gomFire.visible=on;drawRack()}}
-  async function loadPots(){if(!gomDb)return;try{const {data,error}=await gomDb.from('anyen_pottery').select('id,seq,shape,pattern,seed,name,created_at').order('seq',{ascending:false}).limit(9);
+  async function loadPots(){if(!gomDb)return;try{const {data,error}=await gomDb.from('anyen_pottery').select('id,seq,shape,pattern,seed,name,created_at').order('seq',{ascending:false}).limit(36);
       if(!error&&data){const local=gomRows.filter(r=>String(r.id).startsWith('local-')&&gomAge(r)<GOM_FIRE_SEC+20&&!data.some(d=>d.seed===r.seed&&d.name===r.name));gomRows=[...local,...data];gomFiring=null;syncGomYard();if(room&&room.onPots)room.onPots()}}catch(e){}}
   setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadPots()},12000);loadPots();
   let gomTick=0;
@@ -2978,7 +2979,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([...SENSE_HOUSES,TINH_THAT].find(h=>h.id===id)),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
+  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([...SENSE_HOUSES,TINH_THAT].find(h=>h.id===id)),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomFill:n=>{const old=new Date(Date.now()-3e5).toISOString();gomRows=Array.from({length:n},(_,i)=>({id:'t'+i,shape:i%4,pattern:i%3,seed:i*37+5,name:'t',created_at:old}));gomFiring=null;drawRack();return gomRack.children.length},gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
   window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;

@@ -1,5 +1,5 @@
 -- LÀNG YÊN · Rừng Yên: gốm nặn trong Nhà gốm (gốm Chăm Bàu Trúc: nặn tay, nung lộ thiên).
--- Phút đầu gốm nằm trong lửa ở bãi nung (mọi khách thấy lửa khói), sau đó lên kệ cạnh bãi nung. Giữ 9 chiếc gần nhất.
+-- Phút đầu gốm nằm trong lửa ở bãi nung (mọi khách thấy lửa khói), sau đó lên kệ cạnh bãi nung. Kệ 6 × 6: giữ 36 chiếc gần nhất.
 create table if not exists public.anyen_pottery (
   id uuid primary key default gen_random_uuid(),
   seq bigint generated always as identity,
@@ -24,7 +24,7 @@ create or replace function public.anyen_pottery_trim() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   delete from public.anyen_pottery
-  where seq < (select min(seq) from (select seq from public.anyen_pottery order by seq desc limit 9) t);
+  where seq < (select min(seq) from (select seq from public.anyen_pottery order by seq desc limit 36) t);
   return null;
 end $$;
 drop trigger if exists anyen_pottery_trim on public.anyen_pottery;
