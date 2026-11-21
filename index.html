@@ -2438,14 +2438,49 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     return flowerGeos[kind]=mergeColored(P)}
   // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
   const BOUQUET_LAYOUTS={tron:'🔵 Tròn',thap:'🔺 Tháp',quat:'🪭 Quạt'};
-  function bouquetSlots(n,layout){const out=[];for(let k=0;k<n;k++){
-      if(layout==='quat'){const a=(k===0?0:(k%2?1:-1)*Math.ceil(k/2))*.14;out.push({x:Math.sin(a)*.03,y:k===0?.04:.02-Math.abs(a)*.04,z:0,tx:0,tz:a,s:k===0?1.05:.95})}
-      else if(layout==='thap'){if(k===0)out.push({x:0,y:.12,z:0,tx:0,tz:0,s:1.05});else if(k<5){const a=(k-1)/4*Math.PI*2;out.push({x:Math.cos(a)*.05,y:.04,z:Math.sin(a)*.05,tx:Math.sin(a)*.14,tz:-Math.cos(a)*.14,s:.95})}else{const a=(k-5)/4*Math.PI*2+.785;out.push({x:Math.cos(a)*.08,y:-.05,z:Math.sin(a)*.08,tx:Math.sin(a)*.3,tz:-Math.cos(a)*.3,s:.9})}}
-      else{if(k===0)out.push({x:0,y:.03,z:0,tx:0,tz:0,s:1});else{const m=Math.max(1,n-1),a=(k-1)/m*Math.PI*2;out.push({x:Math.cos(a)*.05,y:0,z:Math.sin(a)*.05,tx:Math.sin(a)*.2,tz:-Math.cos(a)*.2,s:.95})}}}return out}
-  const wrapGeo=new THREE.CylinderGeometry(.1,.035,.32,10,1,true),ribbonGeo=new THREE.TorusGeometry(.045,.012,6,16),flowerMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,flatShading:true});
-  function buildBouquet(flowers,layout){const g=new THREE.Group();bouquetSlots(flowers.length,layout).forEach((s,k)=>{const m=new THREE.Mesh(flowerGeo(flowers[k]),flowerMat);m.position.set(s.x,s.y,s.z);m.rotation.set(s.tx,0,s.tz);m.scale.setScalar(s.s);g.add(m)});
-    const wrap=new THREE.Mesh(wrapGeo,new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.9,side:THREE.DoubleSide}));wrap.position.y=.16;g.add(wrap);
-    const rib=new THREE.Mesh(ribbonGeo,new THREE.MeshStandardMaterial({color:'#b8323f',roughness:.6}));rib.rotation.x=Math.PI/2;rib.position.y=.06;g.add(rib);return g}
+  const flowerMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,flatShading:true});
+  // Bó hoa theo ba kiểu tham khảo: Tròn (bó tay gói giấy kraft, hoa xếp thành vòm), Tháp (giỏ nan, hoa xếp hình tháp nhọn),
+  // Quạt (hộp gỗ, hoa xòe rộng). Đầu hoa đặt lên một khung hình định sẵn, cuống gom vào trong giấy / giỏ / hộp;
+  // khe trống giữa các bông được lấp bằng chùm hoa nhỏ hồng nhạt và lá xanh.
+  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.41,cuc:.455,lan:.48,sen:.6};
+  const fillerGeo=(()=>{const P=[],dot=new THREE.SphereGeometry(.016,5,3);P.push([part(new THREE.CylinderGeometry(.004,.005,.12,3),0,.06,0),'#5e7f4a']);
+    [[0,.125,0],[.02,.115,.012],[-.018,.118,-.01],[.008,.108,-.02],[-.01,.104,.02],[.024,.1,-.006]].forEach(([x,y,z],k)=>P.push([part(dot,x,y,z),k%2?'#f6c9d6':'#fbe0e8']));return mergeColored(P)})();
+  const leafGeo=mergeColored([[part(new THREE.SphereGeometry(.05,6,4),0,.09,0,.42,1.9,.14),'#4f7f45'],[part(new THREE.CylinderGeometry(.004,.005,.06,3),0,.02,0),'#4f7f45']]);
+  function headFrame(n,layout){const pts=[];
+    if(layout==='thap'){const rows=[[1,0,.78],[3,.085,.66],[5,.15,.52],[6,.2,.39]];let left=n;for(const [cap,r,y] of rows){const m=Math.min(cap,left);for(let k=0;k<m;k++){const a=k/m*Math.PI*2+(r?.4:0);pts.push([Math.sin(a)*r,y,Math.cos(a)*r])}left-=m;if(!left)break}}
+    else if(layout==='quat'){const rows=n<=4?[n]:n<=7?[n-3,3]:[5,n-5];rows.forEach((m,ri)=>{for(let k=0;k<m;k++){const a=m===1?0:(-1+2*k/(m-1))*(ri?.75:1.1);const R=ri?.17:.3;pts.push([Math.sin(a)*R,.3+Math.cos(a)*R*.85+(ri?.02:0),ri?.06:-.02])}})}
+    else{if(n===1)pts.push([0,.68,0]);else{pts.push([0,.72,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.11,.67,Math.cos(a)*.11])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.2,.6,Math.cos(a)*.2])}}}
+    return pts}
+  const BQ_BASE={tron:[0,.06,0],thap:[0,.05,0],quat:[0,.06,0]};
+  function placeStem(g,geo,mat_,head,headY,base,s){const P=new THREE.Vector3(...head),B=new THREE.Vector3(...base),d=P.clone().sub(B).normalize(),m=new THREE.Mesh(geo,mat_);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
+  const bqMats={kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
+    slat:new THREE.MeshStandardMaterial({color:'#c69a5e',roughness:.9}),slatDark:new THREE.MeshStandardMaterial({color:'#8f6a3c',roughness:.9}),bark:new THREE.MeshStandardMaterial({color:'#6a4a32',roughness:1,flatShading:true}),twine:new THREE.MeshStandardMaterial({color:'#b89a6a',roughness:1})};
+  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';const g=new THREE.Group(),base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
+    let seed=7;for(const f of flowers)seed=(seed*31+f.length*17+f.charCodeAt(0))|0;const rnd=seededRandom(seed+layout.length*101);
+    heads.forEach((h,k)=>placeStem(g,flowerGeo(flowers[k]),flowerMat,h,HEAD_Y[flowers[k]]||.5,base,s));
+    // fillers: pink sprays and leaves in the gaps around and between the heads
+    const fill=[],leaves=[];heads.forEach(([x,y,z],k)=>{const n=layout==='quat'?2:2;for(let j=0;j<n;j++){const a=rnd()*Math.PI*2,r=.07+rnd()*.05;fill.push([x+Math.sin(a)*r,y-.02-rnd()*.05,z+Math.cos(a)*r])}});
+    const rim=layout==='tron'?[.23,.52]:layout==='thap'?[.2,.27]:[.24,.2];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
+    for(const p of fill)placeStem(g,fillerGeo,flowerMat,p,.125,base,1);
+    for(const p of leaves)placeStem(g,leafGeo,flowerMat,p,.17,base,1);
+    if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon
+      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.34,12,1,true),bqMats.kraft);outer.position.y=.2;g.add(outer);
+      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.3,12,1,true),bqMats.paper);inner.position.y=.24;inner.rotation.y=.3;g.add(inner);
+      const collar=new THREE.Mesh(new THREE.CylinderGeometry(.27,.2,.13,14,1,true),bqMats.kraft);collar.position.y=.42;g.add(collar);const collarIn=new THREE.Mesh(new THREE.CylinderGeometry(.25,.19,.12,14,1,true),bqMats.paper);collarIn.position.y=.45;collarIn.rotation.y=.2;g.add(collarIn);
+      const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.08,10),bqMats.kraft);sleeve.position.y=.0;g.add(sleeve);
+      const band=new THREE.Mesh(new THREE.TorusGeometry(.058,.008,6,18),bqMats.ribbon);band.rotation.x=Math.PI/2;band.position.y=.05;g.add(band);
+      for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}}
+    else if(layout==='thap'){// woven slat basket
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(.19,.15,.24,16),bqMats.slat);body.position.y=.12;g.add(body);
+      for(let k=0;k<16;k++){const a=k/16*Math.PI*2,sl=new THREE.Mesh(new THREE.BoxGeometry(.008,.245,.012),bqMats.slatDark);sl.position.set(Math.sin(a)*.172,.12,Math.cos(a)*.172);sl.rotation.y=a;sl.rotation.x=Math.cos(a)*.08;sl.rotation.z=-Math.sin(a)*.08;g.add(sl)}
+      for(const y of [.03,.21]){const hoop=new THREE.Mesh(new THREE.TorusGeometry(y>.1?.188:.155,.009,5,24),bqMats.slatDark);hoop.rotation.x=Math.PI/2;hoop.position.y=y;g.add(hoop)}}
+    else{// rough wooden box with a twine tie
+      const box=new THREE.Mesh(new THREE.BoxGeometry(.4,.22,.18),bqMats.bark);box.position.y=.11;g.add(box);
+      for(let k=0;k<6;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.012,.22,.01),bqMats.slatDark);r.position.set(-.17+k*.068,.11,.091);g.add(r)}
+      const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.17,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.14,3),bqMats.twine);t.position.set(x,.1,.095);g.add(t)}}
+    return g}
+
   // Gardens at the five junctions of the Ngũ quan ring (where each branch leaves the ring), plus lotus picking at Bến sen.
   const FLOWER_GARDENS=[{kind:'hong',lake:'Sắc'},{kind:'cam_tu_cau',lake:'Thanh'},{kind:'nhai',lake:'Hương'},{kind:'cuc',lake:'Vị'},{kind:'lan',lake:'Chạm'}].map((g,i)=>{const pts=BRANCHES[i],c=pts[pts.length-8],phi=Math.atan2(c[0]-HILL.x,c[1]-HILL.z),l=wishLakes.find(v=>v.name===g.lake),th=Math.atan2(l.x-HILL.x,l.z-HILL.z),sg=Math.sign(Math.atan2(Math.sin(th-phi),Math.cos(th-phi)))||1;
     const u=[Math.sin(phi),Math.cos(phi)],w=[-sg*Math.cos(phi),sg*Math.sin(phi)];/* u: outward along the branch, w: along the ring away from the pond */
@@ -2498,7 +2533,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Preview: a small separate renderer that spins the bouquet slowly.
   let pv=null;
   function startPreview(){const cv=document.getElementById('bouquetCanvas');if(!pv){const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.setSize(320,320,false);r.outputColorSpace=THREE.SRGBColorSpace;
-      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4dc','#2d4a3a',2.4));const d=new THREE.DirectionalLight('#ffe6c0',1.6);d.position.set(1,2,1.5);sc.add(d);const cam=new THREE.PerspectiveCamera(32,1,.01,10);cam.position.set(0,.5,1.55);cam.lookAt(0,.34,0);pv={r,sc,cam,holder:new THREE.Group(),run:false};sc.add(pv.holder)}
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4dc','#2d4a3a',2.4));const d=new THREE.DirectionalLight('#ffe6c0',1.6);d.position.set(1,2,1.5);sc.add(d);const cam=new THREE.PerspectiveCamera(32,1,.01,10);cam.position.set(0,.62,1.75);cam.lookAt(0,.38,0);pv={r,sc,cam,holder:new THREE.Group(),run:false};sc.add(pv.holder)}
     pv.holder.clear();pv.holder.add(buildBouquet(flowerBasket,bouquetLayout));if(!pv.run){pv.run=true;const t0=performance.now(),spin=()=>{if(!pv||!pv.run)return;pv.holder.rotation.y=Math.sin((performance.now()-t0)/1600)*.9;pv.r.render(pv.sc,pv.cam);requestAnimationFrame(spin)};spin()}}
   function stopPreview(){if(pv)pv.run=false}
   function renderBouquet(){document.getElementById('bouquetLayouts').innerHTML=Object.entries(BOUQUET_LAYOUTS).map(([k,l])=>'<button type="button" class="fl-chip wide'+(k===bouquetLayout?' sel':'')+'" data-layout="'+k+'">'+l+'</button>').join('');
@@ -2513,14 +2548,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     else if(a==='ok'&&flowerBasket.length){carriedBouquet={flowers:flowerBasket.slice(),layout:bouquetLayout};flowerBasket=[];closeFlowerUi();attachCarried();refreshFlowerPill();hint('💐 Bó hoa đã xong · Mang lên đồi dâng tượng Phật')}});
   // carried bouquet in the avatar's hands
   let carriedMesh=null;
-  function attachCarried(){if(carriedMesh){me.remove(carriedMesh);carriedMesh=null}if(!carriedBouquet)return;carriedMesh=buildBouquet(carriedBouquet.flowers,carriedBouquet.layout);carriedMesh.scale.setScalar(.75);carriedMesh.position.set(0,.85,.36);carriedMesh.rotation.x=.35;me.add(carriedMesh)}
+  function attachCarried(){if(carriedMesh){me.remove(carriedMesh);carriedMesh=null}if(!carriedBouquet)return;carriedMesh=buildBouquet(carriedBouquet.flowers,carriedBouquet.layout);carriedMesh.scale.setScalar(.6);carriedMesh.position.set(0,.8,.38);carriedMesh.rotation.x=.35;me.add(carriedMesh)}
   // offering slots on the dais steps in front of the statue: centre on the upper step, then alternating left/right on the lower step
   const offerSlotPos=k=>{if(k===0)return {x:STATUE.x,z:STATUE.z+1.78,y:TERRACE_TOP+.36,a:0};const a=[0,18,-18,38,-38,58,-58,78,-78][k]*Math.PI/180;return {x:STATUE.x+Math.sin(a)*2.13,z:STATUE.z+Math.cos(a)*2.13,y:TERRACE_TOP+.18,a}};
   const OFFER_STAND=[STATUE.x,STATUE.z+4.1];
   const offeredShown=new Map();
   function showOfferings(rows){const keep=new Set();for(const r of rows){const key=String(r.id);keep.add(key);if(offeredShown.has(key))continue;const slot=(((Number(r.seq)-1)%OFFER_SLOTS)+OFFER_SLOTS)%OFFER_SLOTS,p=offerSlotPos(slot);
       for(const [k,o] of offeredShown)if(o.slot===slot){shrine.remove(o.g);offeredShown.delete(k)}
-      const g=buildBouquet((r.flowers||[]).filter(f=>FLOWER_KINDS[f]).slice(0,BOUQUET_MAX),BOUQUET_LAYOUTS[r.layout]?r.layout:'tron');g.scale.setScalar(1.6);g.position.set(p.x,p.y,p.z);g.rotation.set(-.22*Math.cos(p.a),p.a,.22*Math.sin(p.a));shrine.add(g);offeredShown.set(key,{g,slot})}
+      const g=buildBouquet((r.flowers||[]).filter(f=>FLOWER_KINDS[f]).slice(0,BOUQUET_MAX),BOUQUET_LAYOUTS[r.layout]?r.layout:'tron');g.scale.setScalar(1.3);g.position.set(p.x,p.y,p.z);g.rotation.set(-.22*Math.cos(p.a),p.a,.22*Math.sin(p.a));shrine.add(g);offeredShown.set(key,{g,slot})}
     for(const [k,o] of offeredShown)if(!keep.has(k)&&!String(k).startsWith('local-')){shrine.remove(o.g);offeredShown.delete(k)}}
   // Supabase: the newest 9 offerings are on the dais. If the database is not reachable the offering still shows on this device.
   const flowerDb=(()=>{const c=window.ANYEN_CONFIG||{};try{return window.supabase&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(c.supabaseUrl||'')?window.supabase.createClient(c.supabaseUrl,c.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'anyen-flowers'}}):null}catch(e){return null}})();
@@ -2571,7 +2606,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:()=>flowerBasket.slice(),carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
+  window.__forest={route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
   window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
   let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
