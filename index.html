@@ -2438,7 +2438,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       for(const [dx,dz,h] of [[0,0,.5],[.03,.02,.46],[-.03,.015,.44],[.012,-.03,.42]]){P.push([part(new THREE.CylinderGeometry(.004,.005,h,3),dx,h/2,dz),'#6f8a5a']);
         for(let k=0;k<11;k++){const y=h-.12+k*.012,a=k*2.4;P.push([part(sph(.009,4,3),dx+Math.cos(a)*.007,y,dz+Math.sin(a)*.007,1,1.4,1),k%3?'#8d6cc4':'#a585d8'])}}
       leaf(.08,0,.9);leaf(.1,2.5,.9)}
-    else{/* sen */stem(.55);for(let ring=0;ring<2;ring++)for(let k=0;k<7;k++){const a=k*.8976+ring*.45,t=ring?.25:.6;P.push([part(sph(.045,6,4),Math.cos(a)*.03*(ring?1:1.6),.58+ring*.02,Math.sin(a)*.03*(ring?1:1.6),.7,1.5,.4,-a+Math.PI/2,0),ring?'#f6b6c8':'#ef9fb9'])}P.push([part(new THREE.CylinderGeometry(.022,.016,.025,8),0,.6,0),'#e2cf62'])}
+    else{/* sen nở: three rings of pointed petals opening outward around a yellow seed pod */stem(.52);
+      const pet=(L,W,tilt,a,y,c)=>{const dx=Math.cos(a),dz=-Math.sin(a),r=Math.sin(tilt)*L*.5;P.push([part(sph(.5,7,5),dx*r,y+Math.cos(tilt)*L*.5,dz*r,W,L,W*.35,a,-tilt),c])};
+      for(let k=0;k<8;k++)pet(.13,.075,1.2,k*.785,.51,'#e98aac');
+      for(let k=0;k<8;k++)pet(.12,.07,.78,k*.785+.39,.515,'#f19fbd');
+      for(let k=0;k<6;k++)pet(.095,.055,.4,k*1.047+.2,.52,'#f8c4d4');
+      P.push([part(new THREE.CylinderGeometry(.03,.024,.03,10),0,.55,0),'#e2cf62']);for(let k=0;k<6;k++){const a=k*1.047;P.push([part(sph(.006,4,3),Math.cos(a)*.015,.566,Math.sin(a)*.015),'#9a8a3a'])}
+      for(let k=0;k<10;k++){const a=k*.628;P.push([part(new THREE.CylinderGeometry(.002,.002,.03,3),Math.cos(a)*.036,.55,Math.sin(a)*.036),'#f2d35a'])}}
     return flowerGeos[kind]=mergeColored(P)}
   // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
   const BOUQUET_LAYOUTS={tron:'🔵 Tròn',thap:'🔺 Tháp',quat:'🪭 Quạt'};
@@ -2446,7 +2452,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Bó hoa theo ba kiểu tham khảo: Tròn (bó tay gói giấy kraft, hoa xếp thành vòm), Tháp (giỏ nan, hoa xếp hình tháp nhọn),
   // Quạt (hộp gỗ, hoa xòe rộng). Đầu hoa đặt lên một khung hình định sẵn, cuống gom vào trong giấy / giỏ / hộp;
   // khe trống giữa các bông được lấp bằng chùm hoa nhỏ hồng nhạt và lá xanh.
-  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.5,cuc:.455,lan:.44,sen:.6};
+  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.5,cuc:.455,lan:.44,sen:.55};
   const fillerGeo=(()=>{const P=[],dot=new THREE.SphereGeometry(.016,5,3);P.push([part(new THREE.CylinderGeometry(.004,.005,.12,3),0,.06,0),'#5e7f4a']);
     [[0,.125,0],[.02,.115,.012],[-.018,.118,-.01],[.008,.108,-.02],[-.01,.104,.02],[.024,.1,-.006]].forEach(([x,y,z],k)=>P.push([part(dot,x,y,z),k%2?'#f6c9d6':'#fbe0e8']));return mergeColored(P)})();
   const leafGeo=mergeColored([[part(new THREE.SphereGeometry(.05,6,4),0,.09,0,.42,1.9,.14),'#4f7f45'],[part(new THREE.CylinderGeometry(.004,.005,.06,3),0,.02,0),'#4f7f45']]);
