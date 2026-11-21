@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quản trị · Làng Yên</title>
+<meta name="theme-color" content="#04201b">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#04201b;--surf:#0a302a;--line:rgba(200,169,106,.28);--ivory:#f4e7c6;--ivory2:#f8ebc9;--mut:#b9c7bd;--mut2:#9fb0a6;--gold:#d8b575;--cta:linear-gradient(135deg,#e0c183,#b8935a);--ink:#1a2a22;--serif:Georgia,"Times New Roman",serif;--err:#f0a8a0;--ok:#a9dcb8}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:radial-gradient(ellipse at 70% -10%,#124236 0%,#062a23 40%,#04201b 100%);background-color:#04201b;color:var(--ivory);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+a{color:inherit}button,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 56px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--mut);text-decoration:none;font-size:14px}
+.eyebrow{font-size:12px;letter-spacing:3.5px;color:var(--gold);text-transform:uppercase}
+h1,h2{font-family:var(--serif);font-weight:400;color:var(--ivory2);margin:0}
+h1{font-size:clamp(30px,8vw,38px);line-height:1.15;margin-top:10px}
+.sub{margin:12px 0 0;color:#c9d5cc;font-size:15px}
+.card{border:1px solid var(--line);background:rgba(10,48,42,.75);border-radius:22px;padding:22px;margin-top:20px}
+.tabs{display:flex;gap:6px;padding:5px;border-radius:999px;border:1px solid var(--line);background:rgba(10,48,42,.6);margin-top:22px}
+.tabs button{flex:1;min-height:44px;border:0;border-radius:999px;background:transparent;color:var(--mut);cursor:pointer;font-size:15px}
+.tabs button.on{background:var(--cta);color:var(--ink);font-weight:700}
+label.f{display:block;margin-top:16px;font-size:13px;color:var(--mut)}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;min-height:50px;margin-top:6px;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(4,32,27,.8);font-size:16px}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:22px;border:0;border-radius:999px;background:var(--cta);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ivory);border:1px solid rgba(216,181,117,.6);font-weight:500;margin-top:12px}
+.link{background:none;border:0;padding:0;min-height:44px;color:var(--gold);cursor:pointer;text-decoration:underline;font-size:14px}
+.kinds{display:flex;gap:10px;margin-top:6px}
+.kind{flex:1;min-width:0;cursor:pointer}
+.kind input{position:absolute;opacity:0}
+.kind span{display:block;height:100%;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(4,32,27,.6)}
+.kind b{display:block;font-size:15px}.kind small{display:block;margin-top:4px;color:var(--mut2);font-size:12.5px;line-height:1.4}
+.kind input:checked+span{border-color:rgba(216,181,117,.9);background:linear-gradient(160deg,#17493d,#0a2d25)}
+.kind input:focus-visible+span{outline:2px solid var(--gold)}
+.chk{display:flex;gap:12px;align-items:flex-start;margin-top:18px;font-size:13.5px;color:#d7e0d9;cursor:pointer}
+.chk input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:#d8b575}
+.msg{margin-top:16px;padding:12px 14px;border-radius:14px;font-size:14px;display:none}
+.msg.err{display:block;background:rgba(240,168,160,.12);border:1px solid rgba(240,168,160,.4);color:var(--err)}
+.msg.ok{display:block;background:rgba(169,220,184,.12);border:1px solid rgba(169,220,184,.4);color:var(--ok)}
+.code{letter-spacing:10px;text-align:center;font-size:26px}
+.view{display:none}.view.on{display:block}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;letter-spacing:1.5px;background:rgba(216,181,117,.18);color:#e6c88e}
+.note{margin-top:14px;font-size:12.5px;color:var(--mut2)}
+ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{border:1px solid var(--line);background:rgba(10,48,42,.75);border-radius:18px;padding:16px;margin-top:12px}
+.row h3{margin:0;font-size:16px;font-weight:600;color:var(--ivory2);word-break:break-word}
+.row .em{color:var(--mut2);font-size:13px;word-break:break-all}
+.row p{margin:8px 0 0;font-size:13.5px;color:#c9d5cc;white-space:pre-wrap;word-break:break-word}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sm{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(216,181,117,.6);background:transparent;cursor:pointer;font-size:14px}
+.sm.pri{background:var(--cta);color:var(--ink);font-weight:700;border:0}
+.sm.dan{border-color:rgba(240,168,160,.6);color:var(--err)}
+.tabs button{font-size:13.5px;padding:0 4px}
+.tabs{overflow-x:auto}
+.bd{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11.5px;margin:6px 6px 0 0;background:rgba(216,181,117,.18);color:#e6c88e}
+.bd.r{background:rgba(240,168,160,.14);color:var(--err)}.bd.g{background:rgba(169,220,184,.14);color:var(--ok)}
+.empty{margin-top:24px;text-align:center;color:var(--mut2)}
+.inline{display:flex;gap:8px;margin-top:16px}.inline input{margin-top:0}.inline .sm{flex:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="back" href="account.html">← Tài khoản</a><span class="eyebrow" style="font-size:11px">Quản trị</span></header>
+
+<div class="view on" id="v-load"><p class="sub">Đang kiểm tra quyền…</p></div>
+<div class="view" id="v-deny"><h1>Chỉ dành cho quản trị viên</h1><p class="sub" id="denyText">Bạn cần đăng nhập bằng email quản trị đã xác thực.</p><a class="btn" href="account.html?next=admin.html">Đăng nhập</a></div>
+
+<div class="view" id="v-main">
+<h1>Quản trị tài khoản</h1>
+<p class="sub">Duyệt nhà trị liệu, quản lý thành viên và quản trị viên. Bạn không xem được nhật ký hay dữ liệu riêng của ai.</p>
+<div class="tabs" role="tablist">
+<button class="on" data-t="pending" role="tab">Chờ duyệt</button>
+<button data-t="therapists" role="tab">Nhà trị liệu</button>
+<button data-t="members" role="tab">Thành viên</button>
+<button data-t="admins" role="tab">Admin</button>
+<button data-t="log" role="tab">Nhật ký</button>
+</div>
+<div class="inline" id="searchRow" hidden><input type="text" id="q" placeholder="Tìm theo tên hoặc email" aria-label="Tìm"><button class="sm" id="qBtn" type="button">Tìm</button></div>
+<div class="msg" id="aMsg" role="alert"></div>
+<div id="list"></div>
+<form class="card" id="addAdmin" hidden novalidate>
+<label class="f" style="margin-top:0">Cấp quyền admin cho email<input type="email" id="newAdmin" placeholder="email@vidu.com"></label>
+<button class="btn" type="submit">Thêm admin</button>
+<p class="note">Người đó cần đăng ký và xác thực email này thì quyền mới có hiệu lực.</p>
+</form>
+</div>
+</div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+var cfg=window.ANYEN_CONFIG||{},client=null,cur='pending',me=null;
+function show(id){$$('.view').forEach(function(v){v.classList.toggle('on',v.id==='v-'+id)})}
+function msg(type,text){var el=$('#aMsg');el.className='msg'+(type?' '+type:'');el.textContent=text||''}
+function err(e){return (e&&e.message)||String(e||'Có lỗi xảy ra')}
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function fmt(d){try{return new Date(d).toLocaleString('vi-VN')}catch(_){return ''}}
+async function rpc(name,args){var r=await client.rpc(name,args||{});if(r.error)throw r.error;return r.data}
+var TS={none:'Thành viên',pending:'Chờ duyệt',approved:'Nhà trị liệu',rejected:'Chưa được duyệt',suspended:'Tạm khoá trị liệu'};
+async function act(fn,okText){msg();try{await fn();msg('ok',okText||'Đã cập nhật.');await load()}catch(e){msg('err',err(e))}}
+function ask(text){var r=window.prompt(text,'');return r===null?null:r.trim()}
+function btn(label,cls,fn){var b=el('button','sm '+(cls||''),label);b.type='button';b.onclick=fn;return b}
+
+function card(p){
+ var d=el('div','row');
+ d.appendChild(el('h3','',p.display_name||'(chưa đặt tên)'));
+ d.appendChild(el('div','em',p.email||''));
+ var b=el('div');
+ b.appendChild(el('span','bd'+(p.therapist_status==='approved'?' g':p.therapist_status==='pending'?'':''),TS[p.therapist_status]||'Thành viên'));
+ if(p.member_status==='restricted')b.appendChild(el('span','bd r','Tạm khoá (chỉ đi dạo)'));
+ if(p.is_admin_email)b.appendChild(el('span','bd g','Admin'));
+ d.appendChild(b);
+ if(p.specialty)d.appendChild(el('p','','Chuyên môn: '+p.specialty));
+ if(p.bio&&cur!=='members')d.appendChild(el('p','',p.bio));
+ if(p.status_reason)d.appendChild(el('p','','Ghi chú: '+p.status_reason));
+ d.appendChild(el('div','em','Đăng ký: '+fmt(p.created_at)));
+ var a=el('div','acts');
+ var ts=p.therapist_status,id=p.id;
+ if(!p.is_admin_email){
+  if(ts==='pending'||ts==='rejected'||ts==='suspended')a.appendChild(btn('Duyệt nhà trị liệu','pri',function(){act(function(){return rpc('anyen_admin_set_therapist_status',{p_user:id,p_status:'approved',p_reason:null})},'Đã duyệt.')}));
+  if(ts==='pending')a.appendChild(btn('Từ chối','dan',function(){var r=ask('Lý do từ chối (người đó sẽ thấy):');if(r===null)return;act(function(){return rpc('anyen_admin_set_therapist_status',{p_user:id,p_status:'rejected',p_reason:r||null})},'Đã từ chối.')}));
+  if(ts==='approved')a.appendChild(btn('Tạm khoá trị liệu','dan',function(){var r=ask('Lý do tạm khoá:');if(r===null)return;act(function(){return rpc('anyen_admin_set_therapist_status',{p_user:id,p_status:'suspended',p_reason:r||null})},'Đã tạm khoá.')}));
+  if(p.member_status==='restricted')a.appendChild(btn('Mở lại tài khoản','pri',function(){act(function(){return rpc('anyen_admin_set_member_status',{p_user:id,p_status:'active',p_reason:null})},'Đã mở lại.')}));
+  else a.appendChild(btn('Tạm khoá tài khoản','dan',function(){var r=ask('Lý do tạm khoá (người đó vẫn đi dạo được nhưng không tham gia hoạt động):');if(r===null)return;act(function(){return rpc('anyen_admin_set_member_status',{p_user:id,p_status:'restricted',p_reason:r||null})},'Đã tạm khoá.')}));
+ }else a.appendChild(el('span','em','Tài khoản quản trị, không thể thay đổi tại đây.'));
+ d.appendChild(a);return d;
+}
+function emptyMsg(t){$('#list').appendChild(el('div','empty',t))}
+async function load(){
+ var L=$('#list');L.textContent='';$('#addAdmin').hidden=cur!=='admins';$('#searchRow').hidden=!(cur==='members'||cur==='therapists');
+ try{
+  if(cur==='admins'){
+   var ad=await rpc('anyen_admin_list_admins');
+   ad.forEach(function(a){var d=el('div','row');d.appendChild(el('h3','',a.email));d.appendChild(el('span','bd'+(a.is_root?' g':''),a.is_root?'Admin gốc (không thể gỡ)':'Admin'));
+    if(!a.is_root){var ac=el('div','acts');ac.appendChild(btn('Gỡ quyền admin','dan',function(){if(!confirm('Gỡ quyền admin của '+a.email+'?'))return;act(function(){return rpc('anyen_admin_remove_admin',{p_email:a.email})},'Đã gỡ.')}));d.appendChild(ac)}
+    L.appendChild(d)});return;
+  }
+  if(cur==='log'){
+   var lg=await rpc('anyen_admin_list_log',{p_limit:80});
+   if(!lg.length)return emptyMsg('Chưa có thao tác nào.');
+   lg.forEach(function(x){var d=el('div','row');d.appendChild(el('h3','',x.action+' · '+(x.target||'')));d.appendChild(el('div','em',(x.actor_email||'')+' · '+fmt(x.at)));
+    var dt=x.detail&&Object.keys(x.detail).length?JSON.stringify(x.detail):'';if(dt)d.appendChild(el('p','',dt));L.appendChild(d)});return;
+  }
+  var f=cur==='pending'?'pending':cur==='therapists'?'therapists':'all';
+  var data=await rpc('anyen_admin_list_profiles',{p_filter:f,p_search:$('#q').value.trim()||null});
+  if(!data.length)return emptyMsg(cur==='pending'?'Không có đơn nào đang chờ duyệt.':'Không có kết quả.');
+  data.forEach(function(p){L.appendChild(card(p))});
+ }catch(e){msg('err',err(e))}
+}
+$$('.tabs button').forEach(function(b){b.onclick=function(){$$('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});cur=b.dataset.t;msg();load()}});
+$('#qBtn').onclick=load;$('#q').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();load()}};
+$('#addAdmin').onsubmit=function(e){e.preventDefault();var v=$('#newAdmin').value.trim();if(!v)return;act(function(){return rpc('anyen_admin_add_admin',{p_email:v}).then(function(){$('#newAdmin').value=''})},'Đã thêm admin.')};
+(async function(){
+ var create=window.supabase&&window.supabase.createClient;
+ if(!cfg.supabaseUrl||!cfg.publishableKey||!create){$('#denyText').textContent='Chưa cấu hình kết nối.';show('deny');return}
+ client=create(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true}});
+ try{me=await rpc('anyen_get_my_profile')}catch(e){me=null}
+ if(!me||!me.is_admin){show('deny');return}
+ show('main');load();
+})();
+})();
+</script>
+</body>
+</html>
