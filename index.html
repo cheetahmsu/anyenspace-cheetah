@@ -628,7 +628,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.026,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),budMat);bud.scale.set(1,1.8,1);bud.position.y=h+.14;g.add(bud);const cap=new THREE.Mesh(new THREE.ConeGeometry(.09,.16,10),budMat);cap.position.y=h+.42;g.add(cap);return g;}
   function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
   function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
-  // Tuyến thuyền ngắm cảnh: vòng số 8 nhỏ (khoảng 130 m, 30 giây) đi giữa hai cánh hồ sen, chui gầm cầu vòm ở giữa lạch hai lần.
+  // Tuyến thuyền ngắm cảnh: vòng số 8 nhỏ (khoảng 130 m, 60 giây) đi giữa hai cánh hồ sen, chui gầm cầu vòm ở giữa lạch hai lần.
   const BEN_SEN={x:-9,z0:.6,z1:8.8,w:1.7};
   const BOAT_LOOP=(()=>{const pts=[[0,-4],[6,-7],[12,-10.5],[19,-11.5],[25.5,-8],[26.5,-1.5],[22,3],[15,3.5],[8,.5],[0,-4],[-8,-8.5],[-15,-11.5],[-22,-11],[-26.5,-6],[-25.5,0],[-19,3.5],[-12,3],[-6,-.5]].map(([x,z])=>new THREE.Vector3(x,0,z));
     return new THREE.CatmullRomCurve3(pts,true,'centripetal').getSpacedPoints(300).map(v=>[v.x,v.z])})();
@@ -646,7 +646,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // 3.15: Ba thuyền ngắm cảnh trên hồ sen. Thuyền neo ở Bến sen (cầu gỗ bờ nam, phía tây cầu vòm). Chạm thuyền để lên;
   // thuyền tự đi một vòng hình số 8 qua hai cánh hồ, chui gầm cầu vòm hai lần, rồi về đúng chỗ neo. Mỗi thuyền một người;
   // thuyền đang có người thì người khác thấy thuyền đi trên hồ và chờ chiếc khác.
-  const BOAT_SPEED=4.4,BOAT_STEP_MS=900;/* one loop in about 30 s */
+  const BOAT_SPEED=2.25,BOAT_STEP_MS=900;/* one loop (about 135 m from the pier and back) in about 60 s */
   function makeBoat(){const g=new THREE.Group(),hullMat=mat('#7a5634'),trim=mat('#a07448');
    const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
    const wall=outline(1);wall.holes.push(outline(.88));
@@ -693,7 +693,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1){r.phase='row';viewYaw=r.heading;r.heading0=r.heading;document.getElementById('zenHint').textContent='🚣 Thuyền rời Bến sen, dạo một vòng hồ sen…';refreshBoatHud()}}
     else if(r.phase==='row'){
       // Give way: another boat close ahead (or meeting us under the bridge) and we pause until it has passed.
-      {const fx=Math.sin(r.heading),fz=Math.cos(r.heading);let wait=false;for(const p of onlineAvatars.values()){if(!p.boat||!p.boat.group.visible)continue;const q=p.boat.group.position,ox=q.x-g.position.x,oz=q.z-g.position.z,d=Math.hypot(ox,oz);if(d>5.5||d<.01)continue;const ahead=(ox*fx+oz*fz)/d;if(ahead>.35&&!(ahead<.8&&r.b.i<p.boatIndex)){wait=true;break}}
+      {const fx=Math.sin(r.heading),fz=Math.cos(r.heading);let wait=false;for(const p of onlineAvatars.values()){if(!p.boat||!p.boat.group.visible)continue;const q=p.boat.group.position,ox=q.x-g.position.x,oz=q.z-g.position.z,d=Math.hypot(ox,oz);if(d>4.5||d<.01)continue;const ahead=(ox*fx+oz*fz)/d;if(ahead>.35&&!(ahead<.8&&r.b.i<p.boatIndex)){wait=true;break}}
         if(wait!==!!r.yielding){r.yielding=wait;document.getElementById('zenHint').textContent=wait?'🚣 Thuyền chờ một chút để thuyền khác đi qua…':'🚣 Thuyền đi tiếp…'}if(wait){mePosition.set(g.position.x,0,g.position.z);g.position.y=.02+Math.sin(now/700)*.025;return}}
       const hPrev=r.heading;let left=(r.home?BOAT_SPEED*2:BOAT_SPEED)*dt;/* Về bến: finish the loop four times faster, still on the water */
       while(left>0&&r.path.length){const [tx,tz]=r.path[0],dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
