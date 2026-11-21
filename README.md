@@ -55,7 +55,7 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - Máy quay: chụm hai ngón, cuộn chuột hoặc nút ＋/－ để thu phóng; tới nơi nào thì máy quay tự quay nhìn vào mặt tiền nơi đó. Giữa Sân đón và Sân chân đồi có **hòn non bộ** nhỏ.
 - **Rừng thông kiểu Đà Lạt**: khoảng 600 cây cao thấp ngẫu nhiên (thân cao, tán xếp tầng ở ngọn; thông non hình nón), sinh từ hạt giống cố định nên mọi khách thấy cùng một khu rừng. Dưới gốc là thảm lá thông, trảng trống là thảm cỏ xanh lốm đốm vàng, điểm vài cụm hoa dại nhỏ nhiều màu (cúc, chuông, chùm sao), khóm dã quỳ và đá rêu.
 - Mỗi loại cây/hoa/đá là một InstancedMesh (một lần vẽ). Không dùng bóng đổ. Cây, cổng, Nhà hoa lan và cây bồ đề che tầm nhìn thì **mờ đi** (không xoá).
-- **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới, chạm vào một nhà để đi tới trước cửa; chỗ đến luôn tránh khách khác; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
+- **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới, chạm vào một nhà để đi tới trước cửa; chỗ đến luôn tránh khách khác (đến ngay mà chỗ đã có người thì đứng sang ô trống bên cạnh, cách 1,3 m); khi đi bộ, nhân vật vòng qua khách đang đứng trên đường, lối hẹp như cầu thì lách qua sát bên; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
 - Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
 
 ## Lưu ý
