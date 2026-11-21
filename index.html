@@ -635,13 +635,32 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const leaf=mat('#47745c'),pink=mat('#e5a9aa'),petal=mat('#edc6b4');
   // Hồ Niệm lotus: floating notched pads, raised bowl-shaped leaves on stems, open flowers with layered pointed petals
   // around a yellow seed pod, and a few closed buds. Kept clear of the bridge.
-  const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalInner=mat('#f6b6c8'),seedPod=mat('#e2cf62'),budMat=mat('#e98aaa');
+  const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalInner=mat('#f6b6c8'),seedPod=mat('#e2cf62'),budMat=mat('#e3809f');
   const padGeo=new THREE.CircleGeometry(.5,20,.18,Math.PI*2-.36),bowlGeo=new THREE.LatheGeometry([new THREE.Vector2(0,0),new THREE.Vector2(.25,.05),new THREE.Vector2(.5,.15),new THREE.Vector2(.62,.24)],18),petalGeo=new THREE.SphereGeometry(.5,10,8);
   function lotusPetal(group,angle,tilt,len,wid,material,y){const pivot=new THREE.Group();pivot.position.y=y;pivot.rotation.y=angle;const tip=new THREE.Group();tip.rotation.x=tilt;const p=new THREE.Mesh(petalGeo,material);p.scale.set(wid,len,wid*.38);p.position.y=len*.5;tip.add(p);pivot.add(tip);group.add(pivot);}
-  function lotusFlower(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const head=new THREE.Group();head.position.y=h;g.add(head);
-    for(let k=0;k<9;k++)lotusPetal(head,k*Math.PI*2/9,1.0,.42,.2,petalOuter,0);for(let k=0;k<7;k++)lotusPetal(head,k*Math.PI*2/7+.3,.55,.38,.17,petalInner,.02);
-    const pod=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.09,12),seedPod);pod.position.y=.08;head.add(pod);return g;}
-  function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.026,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),budMat);bud.scale.set(1,1.8,1);bud.position.y=h+.14;g.add(bud);const cap=new THREE.Mesh(new THREE.ConeGeometry(.09,.16,10),budMat);cap.position.y=h+.42;g.add(cap);return g;}
+  // Flower head built once (about 25 cm across, like a real lotus) and shared by every flower: three rings of cupped,
+  // pointed petals shading from cream at the base to pink at the tip, a ring of yellow stamens and a flat-topped seed pod.
+  const LOTUS_HEAD=(()=>{const parts=[],pink=new THREE.Color('#e8829f'),mid=new THREE.Color('#f4bccb'),cream=new THREE.Color('#fbf1e8'),tmp=new THREE.Color();
+    const petal=(L,W,cup)=>{const sh=new THREE.Shape();sh.moveTo(0,0);sh.bezierCurveTo(W*.55,L*.08,W*.62,L*.62,W*.12,L*.93);sh.quadraticCurveTo(0,L*1.02,-W*.12,L*.93);sh.bezierCurveTo(-W*.62,L*.62,-W*.55,L*.08,0,0);
+      const g=new THREE.ShapeGeometry(sh,7),pos=g.attributes.position,col=[];for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),u=y/L;pos.setZ(i,-cup*W*Math.pow(x/(W*.5),2)-.22*L*u*u*u);
+        if(u<.55)tmp.copy(cream).lerp(mid,u/.55);else tmp.copy(mid).lerp(pink,(u-.55)/.45);col.push(tmp.r,tmp.g,tmp.b)}g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeVertexNormals();return g};
+    const up=new THREE.Vector3(0,1,0),nv=new THREE.Vector3();
+    const put=(g,tilt,ang,y)=>{g.rotateX(tilt);g.rotateY(ang);g.translate(0,y,0);const a=g.toNonIndexed(),nr=a.attributes.normal;
+      for(let i=0;i<nr.count;i++){nv.fromBufferAttribute(nr,i);if(nv.y<0)nv.negate();nv.multiplyScalar(.45).add(up).normalize();nr.setXYZ(i,nv.x,nv.y,nv.z)}
+      const b=a.clone(),bp=b.attributes.position,bc=b.attributes.color,bn=b.attributes.normal;for(let i=0;i<bp.count;i+=3)for(const at of [bp,bc,bn]){const t=[at.getX(i+1),at.getY(i+1),at.getZ(i+1)];at.setXYZ(i+1,at.getX(i+2),at.getY(i+2),at.getZ(i+2));at.setXYZ(i+2,...t)}
+      parts.push(a,b)};
+    for(let k=0;k<7;k++)put(petal(.12,.085,.42),1.0,k/7*Math.PI*2,0);for(let k=0;k<7;k++)put(petal(.11,.08,.5),.58,k/7*Math.PI*2+Math.PI/7,.006);for(let k=0;k<5;k++)put(petal(.09,.065,.6),.22,k/5*Math.PI*2+.3,.014);
+    const solid=(g,c)=>{const q=g.index?g.toNonIndexed():g,cc=new THREE.Color(c),col=[];for(let i=0;i<q.attributes.position.count;i++)col.push(cc.r,cc.g,cc.b);q.setAttribute('color',new THREE.Float32BufferAttribute(col,3));parts.push(q)};
+    solid(new THREE.CylinderGeometry(.026,.02,.03,14,1,true).translate(0,.05,0),'#f0c34a');
+    solid(new THREE.CylinderGeometry(.02,.012,.03,12).translate(0,.055,0),'#cfd078');
+    let n=0;const list=parts.map(g=>{const q=g.index?g.toNonIndexed():g;n+=q.attributes.position.count;return q});const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+    for(const q of list){if(!q.attributes.normal)q.computeVertexNormals();const k=q.attributes.position.count;pos.set(q.attributes.position.array,o*3);nor.set(q.attributes.normal.array,o*3);col.set(q.attributes.color.array,o*3);o+=k}
+    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(pos,3));out.setAttribute('normal',new THREE.BufferAttribute(nor,3));out.setAttribute('color',new THREE.BufferAttribute(col,3));return out})();
+  const lotusHeadMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75});
+  function lotusFlower(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.008,.011,h,5),lotusStem);stem.position.y=h/2;g.add(stem);
+    const head=new THREE.Mesh(LOTUS_HEAD,lotusHeadMat);head.position.y=h;head.rotation.set((Math.random()-.5)*.25,Math.random()*Math.PI*2,(Math.random()-.5)*.25);g.add(head);return g;}
+  function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.008,.01,h,5),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(LOTUS_BUD,budMat);bud.position.y=h;g.add(bud);return g;}
+  const LOTUS_BUD=GL([[0,0],[.022,.012],[.036,.04],[.038,.07],[.028,.1],[.012,.125],[0,.14]],12);
   function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
   function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
   // Tuyến thuyền ngắm cảnh: vòng số 8 nhỏ (khoảng 130 m, 60 giây) đi giữa hai cánh hồ sen, chui gầm cầu vòm ở giữa lạch hai lần.
@@ -2733,18 +2752,20 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.6,D/2+.12);g.add(board);
     g.position.set(TINH_THAT.x,terrainHeight(TINH_THAT.x,TINH_THAT.z),TINH_THAT.z);g.rotation.y=TINH_THAT.rot;g.userData.house=TINH_THAT;scene.add(g);TINH_THAT.group=g}
   // A folded robe on a wooden tray (used on the head, on the dais and on the shelves).
-  function robeTray(color,scale=1){const g=new THREE.Group(),c=new THREE.Color(color),dark=c.clone().multiplyScalar(.78);
+  const katHex=i=>(KAT_COLORS[+i]||KAT_COLORS[0])[1];
+  function robeTray(color,scale=1,pieces=''){const g=new THREE.Group(),c=new THREE.Color(color),dark=c.clone().multiplyScalar(.78),multi=new Set(String(pieces||'')).size>1;
     const tray=new THREE.Mesh(new THREE.BoxGeometry(.56,.04,.42),mat('#6b4a32'));g.add(tray);
-    for(let k=0;k<3;k++){const f=new THREE.Mesh(new THREE.BoxGeometry(.46-k*.02,.05,.34-k*.015),new THREE.MeshStandardMaterial({color:k%2?dark:c,roughness:.9}));f.position.y=.045+k*.05;g.add(f)}
+    for(let k=0;k<3;k++){const lc=multi?new THREE.Color(katHex(pieces[(k*5)%pieces.length])):k%2?dark:c;const f=new THREE.Mesh(new THREE.BoxGeometry(.46-k*.02,.05,.34-k*.015),new THREE.MeshStandardMaterial({color:lc,roughness:.9}));f.position.y=.045+k*.05;g.add(f)}
+    if(multi)for(let i=0;i<6;i++){/* the patchwork shows on the folded top: three columns by two rows */const t=new THREE.Mesh(new THREE.BoxGeometry(.13,.012,.14),new THREE.MeshStandardMaterial({color:katHex(pieces[i%pieces.length]),roughness:.9}));t.position.set(-.145+(i%3)*.145,.152,-.075+Math.floor(i/3)*.15);g.add(t)}
     const band=new THREE.Mesh(new THREE.BoxGeometry(.04,.16,.35),new THREE.MeshStandardMaterial({color:dark,roughness:.9}));band.position.set(.12,.1,0);g.add(band);g.scale.setScalar(scale);return g}
   // ---- state
-  const kat={phase:'idle',color:KAT_COLORS[0][1],dieu:5,robe:null,theta:0,t0:0,from:null,chantLeft:0,chantTimer:0};
+  const kat={phase:'idle',color:KAT_COLORS[0][1],pieces:'',dieu:5,robe:null,theta:0,t0:0,from:null,chantLeft:0,chantTimer:0};
   let pendingKathina=null;
   const katPill=document.createElement('button');katPill.type='button';katPill.id='katPill';katPill.hidden=true;document.body.appendChild(katPill);
   const katPanel=document.createElement('section');katPanel.id='katPanel';katPanel.hidden=true;document.body.appendChild(katPanel);
   const say=t=>{document.getElementById('zenHint').textContent=t};
   function refreshKatPill(){const p=kat.phase;katPill.hidden=!(p==='carry'||p==='round'||p==='offer');katPill.textContent=p==='carry'?'🟧 Rước y · nhiễu Phật 3 vòng':p==='round'?'🟧 Đang rước y · vòng '+Math.min(KAT_ROUNDS,1+Math.floor(-kat.theta/(Math.PI*2)))+'/'+KAT_ROUNDS:'🙏 Đang dâng y…';katPill.disabled=p!=='carry'}
-  function setCarry(on){if(kat.robe){me.remove(kat.robe);kat.robe=null}if(on){kat.robe=robeTray(kat.color,.9);kat.robe.position.set(0,2.12,0);me.add(kat.robe)}}
+  function setCarry(on){if(kat.robe){me.remove(kat.robe);kat.robe=null}if(on){kat.robe=robeTray(kat.color,.9,kat.pieces);kat.robe.position.set(0,2.12,0);me.add(kat.robe)}}
   // ---- 1. intro (Nghi thức → Dâng y)
   function openKathinaIntro(){if(bayMode||!document.body.classList.contains('immersive'))return;if(kat.phase!=='idle'&&kat.phase!=='done'){say('🟧 Bạn đang trong nghi thức dâng y');return}
     katPanel.innerHTML='<div class="fl-head"><strong>🟧 Nghi thức dâng y</strong><button type="button" data-kt="close">✕ Đóng</button></div>'
@@ -2760,24 +2781,26 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(a==='end'){endChant(true)}
     });
   // ---- 2. sewing room (opened like the other houses)
-  function roomTinhThat(st){rmHint('Chọn màu y và số điều, rồi khâu từng mảnh lên khung · Kéo để nhìn quanh');st.target.set(0,1.2,0);st.dist=3.6;st.pitch=.08;
+  function roomTinhThat(st){rmHint('Chọn số điều và màu chỉ, rồi khâu từng mảnh · Mỗi mảnh nhận màu đang chọn · Chạm mảnh đã khâu để đổi màu');st.target.set(0,1.2,0);st.dist=3.6;st.pitch=.08;
     const fr=new THREE.Group();fr.position.set(0,0,-.6);st.sc.add(fr);const wood=mat('#5b3d2a');for(const x of [-1.5,1.5]){const l=new THREE.Mesh(new THREE.BoxGeometry(.1,2.3,.1),wood);l.position.set(x,1.15,0);fr.add(l)}for(const y of [.45,2.05]){const b=new THREE.Mesh(new THREE.BoxGeometry(3.1,.09,.09),wood);b.position.set(0,y,0);fr.add(b)}
     const shelf=new THREE.Group();shelf.position.set(0,0,-3.2);st.sc.add(shelf);for(const y of [.6,1.3,2.0,2.7]){const b=new THREE.Mesh(new THREE.BoxGeometry(6,.07,.55),mat('#4e3a2a'));b.position.y=y;shelf.add(b)}
-    const drawKho=()=>{while(shelf.children.length>4)shelf.remove(shelf.children[4]);katRows.filter(r=>katAge(r)>KAT_CHANT_SEC).slice(0,9).forEach((r,i)=>{const t=robeTray(r.color,.8);t.position.set(-2+(i%5)*1,.64+Math.floor(i/5)*.7,0);shelf.add(t)})};drawKho();
+    const drawKho=()=>{while(shelf.children.length>4)shelf.remove(shelf.children[4]);katRows.filter(r=>katAge(r)>KAT_CHANT_SEC).slice(0,9).forEach((r,i)=>{const t=robeTray(r.color,.8,r.pieces);t.position.set(-2+(i%5)*1,.64+Math.floor(i/5)*.7,0);shelf.add(t)})};drawKho();
     const cloth=new THREE.Group();cloth.position.set(0,1.25,-.55);st.sc.add(cloth);let pieces=[],sewn=0;
-    function layout(){const oldP=new Set(pieces);st.picks=st.picks.filter(x=>!oldP.has(x.obj));cloth.clear();pieces=[];sewn=0;const cols=kat.dieu,W=2.7,H=1.45,gap=.045,cw=(W-gap*(cols+1))/cols,c=new THREE.Color(kat.color),dark=c.clone().multiplyScalar(.7);
+    function layout(){const oldP=new Set(pieces);st.picks=st.picks.filter(x=>!oldP.has(x.obj));cloth.clear();pieces=[];sewn=0;const cols=kat.dieu,W=2.7,H=1.45,gap=.045,cw=(W-gap*(cols+1))/cols,c=new THREE.Color(kat.color),dark=new THREE.Color('#4a2e1e');
       const back=new THREE.Mesh(new THREE.PlaneGeometry(W+.08,H+.08),new THREE.MeshStandardMaterial({color:dark,roughness:.95,side:THREE.DoubleSide}));back.position.z=-.005;cloth.add(back);
       for(let i=0;i<cols;i++){/* each strip: two long pieces and one short, alternating up/down like rice-field plots */const longH=(H-gap*4)*.4,shortH=(H-gap*4)*.2,seq=i%2?[shortH,longH,longH]:[longH,longH,shortH];let y=H/2-gap;
-        for(const h of seq){const m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:c,roughness:.9,transparent:true,opacity:.12,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);cloth.add(m);pieces.push(m);rTap(st,m,()=>sewNext());y-=h+gap}}
+        for(const h of seq){const m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:c,roughness:.9,transparent:true,opacity:.12,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);cloth.add(m);pieces.push(m);rTap(st,m,()=>{if(m.userData.ci!=null){m.userData.ci=curIdx();m.material.color.set(kat.color);strike(620,.4,.02,[[1,1]]);render()}else sewNext()});y-=h+gap}}
       render()}
-    function sewNext(){if(sewn>=pieces.length)return;const m=pieces[sewn++];m.material.opacity=1;m.material.transparent=false;strike(660,.6,.03,[[1,1]]);render();if(sewn>=pieces.length){rmHint('Tấm y đã may xong · Gấp y và đặt lên khay');strike(196,4,.08)}}
-    function render(){const done=sewn>=pieces.length;rmPanel.innerHTML='<p>Y được may từ nhiều mảnh ghép như ruộng lúa xứ Magadha, mỗi đường viền là một bờ ruộng. Mỗi mũi khâu là một hơi thở có mặt.</p>'
+    const curIdx=()=>Math.max(0,KAT_COLORS.findIndex(x=>x[1]===kat.color));
+    function tintUnsewn(){for(const m of pieces)if(m.userData.ci==null)m.material.color.set(kat.color)}
+    function sewNext(){if(sewn>=pieces.length)return;const m=pieces[sewn++];m.userData.ci=curIdx();m.material.color.set(kat.color);m.material.opacity=1;m.material.transparent=false;strike(660,.6,.03,[[1,1]]);render();if(sewn>=pieces.length){rmHint('Tấm y đã may xong · Gấp y và đặt lên khay');strike(196,4,.08)}}
+    function render(){const done=sewn>=pieces.length;rmPanel.innerHTML='<p>Y được may từ nhiều mảnh ghép như ruộng lúa xứ Magadha, mỗi đường viền là một bờ ruộng. Mỗi mũi khâu là một hơi thở có mặt.</p><p class="rm-note">Chọn màu rồi khâu: mỗi mảnh nhận màu đang chọn, có thể may nhiều màu. Chạm mảnh đã khâu để đổi sang màu đang chọn.</p>'
       +'<div class="rm-row">'+KAT_COLORS.map(([n,c])=>'<button data-kc="'+c+'"'+(kat.color===c?' class="sel"':'')+'><span class="rm-dot" style="background:'+c+'"></span>'+n+'</button>').join('')+'</div>'
       +'<div class="rm-row">'+KAT_DIEU.map(d=>'<button data-kd="'+d+'"'+(kat.dieu===d?' class="sel"':'')+'>'+d+' điều</button>').join('')+'<span class="rm-note">Đã khâu '+sewn+'/'+pieces.length+' mảnh</span></div>'
       +'<div class="rm-row">'+(done?'<button class="rm-gold" data-ks="fold">🙏 Gấp y, đặt lên khay và đội lên đầu</button>':'<button class="rm-gold" data-ks="sew">🪡 Khâu mảnh tiếp</button>')+'</div>'
       +'<p class="rm-note">Kho y giữ 9 tấm y gần nhất · hiện có '+katRows.filter(r=>katAge(r)>KAT_CHANT_SEC).length+' tấm.'+(katRows.length?' Gần nhất: '+katRows.slice(0,3).map(r=>r.name).join(', ')+'.':'')+'</p>'}
-    rmPanel.onclick=e=>{const c=e.target.closest('[data-kc]'),d=e.target.closest('[data-kd]'),s2=e.target.closest('[data-ks]');if(c){kat.color=c.dataset.kc;layout();return}if(d){kat.dieu=+d.dataset.kd;layout();return}
-      if(s2?.dataset.ks==='sew')sewNext();else if(s2?.dataset.ks==='fold'){kat.phase='carry';closeRoom();setCarry(true);refreshKatPill();say('🟧 Bạn đang đội y trên đầu · Bấm "Rước y" để nhiễu Phật ba vòng')}};
+    rmPanel.onclick=e=>{const c=e.target.closest('[data-kc]'),d=e.target.closest('[data-kd]'),s2=e.target.closest('[data-ks]');if(c){kat.color=c.dataset.kc;tintUnsewn();render();return}if(d){kat.dieu=+d.dataset.kd;layout();return}
+      if(s2?.dataset.ks==='sew')sewNext();else if(s2?.dataset.ks==='fold'){kat.pieces=pieces.map(m=>m.userData.ci).join('');const cnt=[0,0,0,0];for(const ch of kat.pieces)cnt[+ch]++;kat.color=KAT_COLORS[cnt.indexOf(Math.max(...cnt))][1];kat.phase='carry';closeRoom();setCarry(true);refreshKatPill();say('🟧 Bạn đang đội y trên đầu · Bấm "Rước y" để nhiễu Phật ba vòng')}};
     layout();st.onKho=drawKho}
   ROOM_BUILDERS.tinh_that=['#4a3a2a','#6b5238',roomTinhThat];
   // ---- 3. procession: walk to the front of the terrace, then three rounds clockwise (statue on the right)
@@ -2792,9 +2815,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function kathinaPose(){if(kat.phase==='round'||kat.phase==='carry'){me.rotation.y=walkYaw-Math.PI;}
     if(kat.phase==='offer'){const u=(performance.now()-kat.t0)/1000-2.5;me.rotation.y=0;me.rotation.x=u>0&&u<6.6?-Math.sin((u%2.2)/2.2*Math.PI)*.55:0}else me.rotation.x=0}
   // ---- 4. offer: robe from head to the tray at the Buddha's feet, saved for everyone
-  async function placeRobe(){setCarry(false);const row={id:'local-'+Date.now(),color:kat.color,dieu:kat.dieu,name:guestName(),created_at:new Date().toISOString()};katRows.unshift(row);drawDais();
+  async function placeRobe(){setCarry(false);const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,name:guestName(),created_at:new Date().toISOString()};katRows.unshift(row);drawDais();
     say('🙏 Đã dâng y dưới chân tượng Phật · Mời bạn ngồi niệm năm phút');
-    if(katDb){try{const {error}=await katDb.from('anyen_kathina_robes').insert({color:kat.color,dieu:kat.dieu,name:row.name});if(!error)loadRobes()}catch(e){}}
+    if(katDb){try{const base={color:kat.color,dieu:kat.dieu,name:row.name};let {error}=await katDb.from('anyen_kathina_robes').insert({...base,pieces:kat.pieces});if(error)({error}=await katDb.from('anyen_kathina_robes').insert(base));if(!error)loadRobes()}catch(e){}}
     kat.phase='chant';kat.placed=false;refreshKatPill();try{requestSeat(chooseSeat())}catch(e){}startChant()}
   const guestName=()=>{try{return String(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||'Khách Yên').slice(0,24)}catch(e){return 'Khách Yên'}};
   // ---- 5. five minutes of recitation and silence
@@ -2813,8 +2836,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const daisRobes=new Map();
   function drawDais(){const on=katRows.filter(r=>katAge(r)<KAT_CHANT_SEC).slice(0,3),keep=new Set(on.map(r=>String(r.id)));
     for(const [k,m] of daisRobes)if(!keep.has(k)){shrine.remove(m);daisRobes.delete(k)}
-    on.forEach((r,i)=>{const k=String(r.id);let m=daisRobes.get(k);if(!m){m=robeTray(r.color,1.05);shrine.add(m);daisRobes.set(k,m)}const x=[0,-.6,.6][i];m.position.set(STATUE.x+x,TERRACE_TOP+.56,STATUE.z+1.62)})}
-  async function loadRobes(){if(!katDb)return;try{const {data,error}=await katDb.from('anyen_kathina_robes').select('id,seq,color,dieu,name,created_at').order('seq',{ascending:false}).limit(9);if(!error&&data){const local=katRows.filter(r=>String(r.id).startsWith('local-')&&katAge(r)<20);katRows=[...local.filter(l=>!data.some(d=>d.name===l.name&&Math.abs(new Date(d.created_at)-new Date(l.created_at))<20000)),...data];drawDais();if(room&&room.onKho)room.onKho()}}catch(e){}}
+    on.forEach((r,i)=>{const k=String(r.id);let m=daisRobes.get(k);if(!m){m=robeTray(r.color,1.05,r.pieces);shrine.add(m);daisRobes.set(k,m)}const x=[0,-.6,.6][i];m.position.set(STATUE.x+x,TERRACE_TOP+.56,STATUE.z+1.62)})}
+  async function loadRobes(){if(!katDb)return;try{const q=cols=>katDb.from('anyen_kathina_robes').select(cols).order('seq',{ascending:false}).limit(9);let {data,error}=await q('id,seq,color,pieces,dieu,name,created_at');if(error)({data,error}=await q('id,seq,color,dieu,name,created_at'));if(!error&&data){const local=katRows.filter(r=>String(r.id).startsWith('local-')&&katAge(r)<20);katRows=[...local.filter(l=>!data.some(d=>d.name===l.name&&Math.abs(new Date(d.created_at)-new Date(l.created_at))<20000)),...data];drawDais();if(room&&room.onKho)room.onKho()}}catch(e){}}
   setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadRobes();else drawDais()},12000);loadRobes();
   window.addEventListener('anyen-kathina',openKathinaIntro);window.addEventListener('anyen-3d-exit',()=>{closeKatPanel();if(kat.phase==='chant'){clearInterval(kat.chantTimer);kat.phase='done';document.body.classList.remove('kat-chant');refreshKatPill()}});
   window.__ttHit=(x,z)=>rectHit(TINH_THAT.x,TINH_THAT.z,TINH_THAT.rot,TINH_THAT.W,TINH_THAT.D,x,z,.3);

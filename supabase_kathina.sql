@@ -29,3 +29,7 @@ drop trigger if exists anyen_kathina_trim on public.anyen_kathina_robes;
 create trigger anyen_kathina_trim after insert on public.anyen_kathina_robes
   for each statement execute function public.anyen_kathina_trim();
 revoke execute on function public.anyen_kathina_trim() from public, anon, authenticated;
+-- Y nhiều màu: mỗi ký tự là màu của một mảnh (0–3 theo bảng màu), tối đa 27 mảnh (9 điều × 3).
+alter table public.anyen_kathina_robes add column if not exists pieces text not null default '';
+alter table public.anyen_kathina_robes drop constraint if exists anyen_kathina_pieces;
+alter table public.anyen_kathina_robes add constraint anyen_kathina_pieces check (pieces ~ '^[0-3]{0,27}$');
