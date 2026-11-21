@@ -2603,9 +2603,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Stems must stay inside the wrap or the box: the part of each stem below its head is trimmed where it would show outside
   // (below the paper sleeve or through the side of the cone for Tròn, under the box for Quạt).
   function bqOutside(layout,p){if(layout==='quat')return p.y<.004;if(layout!=='tron')return false;const sc=BQ_WRAP,yl=p.y/sc,r=Math.hypot(p.x,p.z)/sc;
-    if(yl<-.035)return true;if(yl>.485)return false;const cone=yl<.03?.055:yl<.37?.055+(.21-.055)*(yl-.03)/.34:.21,coll=yl>=.355?.2+(.27-.2)*(yl-.355)/.13:0;return r>Math.max(cone,coll)-.006}
-  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.485)return;
-    const cone=yl<.03?.055:yl<.37?.055+(.21-.055)*(yl-.03)/.34:.21,coll=yl>=.355?.2+(.27-.2)*(yl-.355)/.13:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
+    if(yl<-.035)return true;if(yl>.425)return false;const cone=yl<.03?.055:yl<.29?.055+(.21-.055)*(yl-.03)/.26:.21,coll=yl>=.28?.2+(.36-.2)*(yl-.28)/.12:0;return r>Math.max(cone,coll)-.006}
+  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.425)return;
+    const cone=yl<.03?.055:yl<.29?.055+(.21-.055)*(yl-.03)/.26:.21,coll=yl>=.28?.2+(.36-.2)*(yl-.28)/.12:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
   function trimStems(g,layout,flowers){if(layout==='thap')return;let fi=0;const v=new THREE.Vector3(),inv=new THREE.Matrix4();
     for(const m of [...g.children]){if(!m.isMesh)continue;const geo=m.geometry,cutY=geo===fillerGeo?.07:geo===leafGeo?.05:(()=>{const k=flowers[fi++],h=HEAD_Y[k]||.5;return k==='lan'?h-.12:k==='nhai'?h-.24:h-.09})();
       m.updateMatrix();const src=geo.index?geo.toNonIndexed():geo,P=src.attributes.position,keep=[];
@@ -2626,9 +2626,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     trimStems(g,layout,flowers);
     if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon (built at full size, shown at half)
       const wrapG=g;g=new THREE.Group();g.scale.setScalar(BQ_WRAP);wrapG.add(g);
-      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.34,12,1,true),bqMats.kraft);outer.position.y=.2;g.add(outer);
-      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.3,12,1,true),bqMats.paper);inner.position.y=.24;inner.rotation.y=.3;g.add(inner);
-      const collar=new THREE.Mesh(new THREE.CylinderGeometry(.27,.2,.13,14,1,true),bqMats.kraft);collar.position.y=.42;g.add(collar);const collarIn=new THREE.Mesh(new THREE.CylinderGeometry(.25,.19,.12,14,1,true),bqMats.paper);collarIn.position.y=.45;collarIn.rotation.y=.2;g.add(collarIn);
+      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.26,12,1,true),bqMats.kraft);outer.position.y=.16;g.add(outer);
+      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.24,12,1,true),bqMats.paper);inner.position.y=.19;inner.rotation.y=.3;g.add(inner);
+      const upN=geo=>{const n=geo.attributes.normal,P=geo.attributes.position;for(let i=0;i<n.count;i++){const x=P.getX(i),z=P.getZ(i),r=Math.hypot(x,z)||1;n.setXYZ(i,x/r*.55,.85,z/r*.55)}return geo};const collar=new THREE.Mesh(upN(new THREE.CylinderGeometry(.36,.2,.12,16,1,true)),bqMats.kraft);collar.position.y=.34;g.add(collar);const collarIn=new THREE.Mesh(upN(new THREE.CylinderGeometry(.33,.19,.11,16,1,true)),bqMats.paper);collarIn.position.y=.37;collarIn.rotation.y=.2;g.add(collarIn);
       const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.08,10),bqMats.kraft);sleeve.position.y=.0;g.add(sleeve);
       const band=new THREE.Mesh(new THREE.TorusGeometry(.058,.008,6,18),bqMats.ribbon);band.rotation.x=Math.PI/2;band.position.y=.05;g.add(band);
       for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}
