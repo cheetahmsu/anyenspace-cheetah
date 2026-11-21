@@ -2597,9 +2597,20 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function headFrame(n,layout){const pts=[];
     if(layout==='thap'){const rows=[[1,0,.78],[3,.085,.66],[5,.15,.52],[6,.2,.39]];let left=n;for(const [cap,r,y] of rows){const m=Math.min(cap,left);for(let k=0;k<m;k++){const a=k/m*Math.PI*2+(r?.4:0);pts.push([Math.sin(a)*r,y,Math.cos(a)*r])}left-=m;if(!left)break}}
     else if(layout==='quat'){const rows=n<=4?[n]:n<=7?[n-3,3]:[5,n-5];rows.forEach((m,ri)=>{for(let k=0;k<m;k++){const a=m===1?0:(-1+2*k/(m-1))*(ri?.75:1.1);const R=ri?.17:.3;pts.push([Math.sin(a)*R,.19+Math.cos(a)*R*.85+(ri?.02:0),ri?.06:-.02])}})}
-    else{if(n===1)pts.push([0,.41,0]);else{pts.push([0,.45,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.11,.4,Math.cos(a)*.11])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.19,.33,Math.cos(a)*.19])}}}
+    else{if(n===1)pts.push([0,.41,0]);else{pts.push([0,.47,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.13,.42,Math.cos(a)*.13])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.25,.36,Math.cos(a)*.25])}}}
     return pts}
-  const BQ_BASE={tron:[0,.02,0],thap:[0,.05,0],quat:[0,.02,0]};
+  const BQ_BASE={tron:[0,.02,0],thap:[0,.05,0],quat:[0,.02,0]},BQ_WRAP=.75;
+  // Stems must stay inside the wrap or the box: the part of each stem below its head is trimmed where it would show outside
+  // (below the paper sleeve or through the side of the cone for Tròn, under the box for Quạt).
+  function bqOutside(layout,p){if(layout==='quat')return p.y<.004;if(layout!=='tron')return false;const sc=BQ_WRAP,yl=p.y/sc,r=Math.hypot(p.x,p.z)/sc;
+    if(yl<-.035)return true;if(yl>.485)return false;const cone=yl<.03?.055:yl<.37?.055+(.21-.055)*(yl-.03)/.34:.21,coll=yl>=.355?.2+(.27-.2)*(yl-.355)/.13:0;return r>Math.max(cone,coll)-.006}
+  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.485)return;
+    const cone=yl<.03?.055:yl<.37?.055+(.21-.055)*(yl-.03)/.34:.21,coll=yl>=.355?.2+(.27-.2)*(yl-.355)/.13:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
+  function trimStems(g,layout,flowers){if(layout==='thap')return;let fi=0;const v=new THREE.Vector3(),inv=new THREE.Matrix4();
+    for(const m of [...g.children]){if(!m.isMesh)continue;const geo=m.geometry,cutY=geo===fillerGeo?.07:geo===leafGeo?.05:(()=>{const k=flowers[fi++],h=HEAD_Y[k]||.5;return k==='lan'?h-.12:k==='nhai'?h-.24:h-.09})();
+      m.updateMatrix();const src=geo.index?geo.toNonIndexed():geo,P=src.attributes.position,keep=[];
+      for(let i=0;i<P.count;i+=3){let drop=false;for(let q=0;q<3&&!drop;q++){if(P.getY(i+q)>=cutY)continue;v.fromBufferAttribute(P,i+q).applyMatrix4(m.matrix);if(bqOutside(layout,v))drop=true}if(!drop)keep.push(i)}
+      if(keep.length*3===P.count)continue;const out=new THREE.BufferGeometry();for(const name of Object.keys(src.attributes)){const a=src.attributes[name],n=a.itemSize,arr=new Float32Array(keep.length*3*n);keep.forEach((i,t)=>{for(let q=0;q<3*n;q++)arr[t*3*n+q]=a.array[i*n+q]});out.setAttribute(name,new THREE.BufferAttribute(arr,n))}m.geometry=out}}
   function placeStem(g,geo,mat_,head,headY,base,s){const P=new THREE.Vector3(...head),B=new THREE.Vector3(...base),d=P.clone().sub(B).normalize(),m=new THREE.Mesh(geo,mat_);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
   const bqMats={kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
@@ -2609,11 +2620,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     heads.forEach((h,k)=>placeStem(g,flowerGeo(flowers[k],'hi'),flowerMat,h,HEAD_Y[flowers[k]]||.5,base,s));
     // fillers: pink sprays and leaves in the gaps around and between the heads
     const fill=[],leaves=[];heads.forEach(([x,y,z],k)=>{const n=layout==='quat'?2:2;for(let j=0;j<n;j++){const a=rnd()*Math.PI*2,r=.07+rnd()*.05;fill.push([x+Math.sin(a)*r,y-.02-rnd()*.05,z+Math.cos(a)*r])}});
-    const rim=layout==='tron'?[.15,.26]:layout==='thap'?[.2,.27]:[.24,.1];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
+    const rim=layout==='tron'?[.2,.3]:layout==='thap'?[.2,.27]:[.24,.1];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
     for(const p of fill)placeStem(g,fillerGeo,flowerMat,p,.125,base,1);
     for(const p of leaves)placeStem(g,leafGeo,flowerMat,p,.17,base,1);
+    trimStems(g,layout,flowers);
     if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon (built at full size, shown at half)
-      const wrapG=g;g=new THREE.Group();g.scale.setScalar(.5);wrapG.add(g);
+      const wrapG=g;g=new THREE.Group();g.scale.setScalar(BQ_WRAP);wrapG.add(g);
       const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.34,12,1,true),bqMats.kraft);outer.position.y=.2;g.add(outer);
       const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.3,12,1,true),bqMats.paper);inner.position.y=.24;inner.rotation.y=.3;g.add(inner);
       const collar=new THREE.Mesh(new THREE.CylinderGeometry(.27,.2,.13,14,1,true),bqMats.kraft);collar.position.y=.42;g.add(collar);const collarIn=new THREE.Mesh(new THREE.CylinderGeometry(.25,.19,.12,14,1,true),bqMats.paper);collarIn.position.y=.45;collarIn.rotation.y=.2;g.add(collarIn);
