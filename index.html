@@ -2381,7 +2381,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     // sense ponds and the orchid house
     for(const l of wishLakes){if(l.name==='Niệm')continue;c.fillStyle='#c1a676';c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(POND_R+.35),0,7);c.fill();c.fillStyle=l.color;c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(POND_R),0,7);c.fill()}
     c.save();c.translate(fmX(ORCHID.x),fmY(ORCHID.z));c.rotate(-ORCHID.rot);c.fillStyle='#f0b8d0';c.fillRect(-fmS(ORCHID.w/2),-fmS(ORCHID.d/2),fmS(ORCHID.w),fmS(ORCHID.d));c.restore();
-    for(const g of FLOWER_GARDENS){c.fillStyle={hong:'#d94a5e',cam_tu_cau:'#8fb0e8',nhai:'#f4f1e6',cuc:'#f2c230',lan:'#9a5bc4',sen:'#ef9fb9'}[g.kind];c.beginPath();c.arc(fmX(g.x),fmY(g.z),g.pier?3:5,0,7);c.fill()}
+    for(const g of FLOWER_GARDENS){c.fillStyle={hong:'#d94a5e',cam_tu_cau:'#8fb0e8',nhai:'#f4f1e6',cuc:'#f2c230',lan:'#9a78d0',sen:'#ef9fb9'}[g.kind];c.beginPath();c.arc(fmX(g.x),fmY(g.z),g.pier?3:5,0,7);c.fill()}
     for(const h of SENSE_HOUSES){c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e0b07a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
     c.fillStyle='#e8c46a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(1.6),0,7);c.fill();
     // labels
@@ -2418,9 +2418,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const FLOWER_KINDS={
     hong:{name:'Hoa hồng',icon:'🌹',garden:'Vườn hồng'},
     cam_tu_cau:{name:'Cẩm tú cầu',icon:'💠',garden:'Vườn cẩm tú cầu'},
-    nhai:{name:'Hoa nhài',icon:'🤍',garden:'Vườn hoa nhài'},
+    nhai:{name:'Hoa huệ',icon:'🤍',garden:'Vườn hoa huệ'},
     cuc:{name:'Cúc vàng',icon:'🌼',garden:'Vườn cúc vàng'},
-    lan:{name:'Lan tím',icon:'🪻',garden:'Vườn lan tím'},
+    lan:{name:'Oải hương',icon:'🪻',garden:'Vườn oải hương'},
     sen:{name:'Hoa sen',icon:'🪷',garden:'Bến sen'}};
   const BOUQUET_MAX=9,OFFER_SLOTS=9;
   // One merged, vertex-coloured stem per kind (about 0.6 m tall), shared by the gardens (instanced) and the bouquets.
@@ -2430,10 +2430,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const leaf=(y,a,s=1)=>P.push([part(sph(.05,6,4),Math.cos(a)*.045*s,y,Math.sin(a)*.045*s,.5*s,.14*s,1*s,-a),Sd]);
     if(kind==='hong'){stem(.5);leaf(.22,0);leaf(.33,2.6);P.push([part(sph(.04),0,.53,0,1,1.2,1),'#b0283c']);for(let k=0;k<6;k++){const a=k*1.047;P.push([part(sph(.036),Math.cos(a)*.032,.52,Math.sin(a)*.032,1,1.15,.7,-a),k%2?'#cc3b52':'#d94a5e'])}for(let k=0;k<4;k++){const a=k*1.57+.4;P.push([part(new THREE.ConeGeometry(.012,.04,3),Math.cos(a)*.03,.48,Math.sin(a)*.03,1,1,1,0,Math.PI),Sd])}}
     else if(kind==='cam_tu_cau'){stem(.46);leaf(.2,0,1.4);leaf(.28,3,1.4);const cols=['#7f9fe0','#9bb3ec','#a99ae0','#8fb0e8'];for(let k=0;k<22;k++){const u=k/22,th=Math.acos(1-1.4*u),ph=k*2.4,r=.075;P.push([part(sph(.026,5,4),Math.sin(th)*Math.cos(ph)*r,.5+Math.cos(th)*r*.8,Math.sin(th)*Math.sin(ph)*r),cols[k%4]])}}
-    else if(kind==='nhai'){stem(.4);leaf(.15,0);leaf(.25,2.2);leaf(.33,4.1);for(const [x,y,z] of [[0,.43,0],[.05,.4,.02],[-.04,.39,-.03],[.01,.37,.05]]){for(let k=0;k<5;k++){const a=k*1.2566;P.push([part(sph(.016,5,3),x+Math.cos(a)*.017,y,z+Math.sin(a)*.017,1.2,.4,.7,-a),'#fbfaf3'])}P.push([part(sph(.008,4,3),x,y+.005,z),'#efe2a2'])}}
+    else if(kind==='nhai'){/* hoa huệ (tuberose): tall stem, a spike of white six-petal stars, buds at the tip */stem(.56);leaf(.12,0,1.3);leaf(.2,2.4,1.2);
+      for(let k=0;k<7;k++){const y=.34+k*.035,a=k*2.2,r=.028;const cx=Math.cos(a)*r,cz=Math.sin(a)*r;for(let j=0;j<6;j++){const b=j*1.047;P.push([part(sph(.014,5,3),cx+Math.cos(b)*.016,y,cz+Math.sin(b)*.016,1.4,.45,.7,-b),j%2?'#fbf8ee':'#f3efe2'])}P.push([part(sph(.007,4,3),cx,y+.004,cz),'#e8dfb0'])}
+      for(let k=0;k<3;k++)P.push([part(sph(.012,5,4),Math.cos(k*2)*.01,.6+k*.025,Math.sin(k*2)*.01,.8,1.6,.8),'#e6efd8'])}
     else if(kind==='cuc'){stem(.42);leaf(.18,0,1.1);leaf(.27,3,1.1);for(let k=0;k<14;k++){const a=k*.4488;P.push([part(sph(.03,5,3),Math.cos(a)*.045,.45,Math.sin(a)*.045,1.6,.25,.6,-a),k%2?'#f2c230':'#f6d24a'])}P.push([part(new THREE.CylinderGeometry(.025,.028,.02,10),0,.455,0),'#a8661e'])}
-    else if(kind==='lan'){P.push([part(new THREE.CylinderGeometry(.006,.008,.36,4),0,.18,0),S]);P.push([part(new THREE.CylinderGeometry(.005,.006,.22,4),.05,.43,0,1,1,1,0,-.55),S]);P.push([part(sph(.07,6,4),0,.05,0,.5,.12,1.4),Sd]);P.push([part(sph(.07,6,4),0,.05,0,1.4,.12,.5),Sd]);
-      for(const [x,y] of [[.02,.42],[.07,.48],[.12,.51]]){for(let k=0;k<5;k++){const a=k*1.2566;P.push([part(sph(.022,5,3),x+Math.cos(a)*.022,y+Math.sin(a)*.022,.01,1,1,.35),k===0?'#7b3fa8':'#9a5bc4'])}P.push([part(sph(.014,5,3),x,y-.006,.02,1,.8,.8),'#e9d36a'])}}
+    else if(kind==='lan'){/* oải hương (lavender): a few thin stems, each with a long spike of tiny purple buds */
+      for(const [dx,dz,h] of [[0,0,.5],[.03,.02,.46],[-.03,.015,.44],[.012,-.03,.42]]){P.push([part(new THREE.CylinderGeometry(.004,.005,h,3),dx,h/2,dz),'#6f8a5a']);
+        for(let k=0;k<11;k++){const y=h-.12+k*.012,a=k*2.4;P.push([part(sph(.009,4,3),dx+Math.cos(a)*.007,y,dz+Math.sin(a)*.007,1,1.4,1),k%3?'#8d6cc4':'#a585d8'])}}
+      leaf(.08,0,.9);leaf(.1,2.5,.9)}
     else{/* sen */stem(.55);for(let ring=0;ring<2;ring++)for(let k=0;k<7;k++){const a=k*.8976+ring*.45,t=ring?.25:.6;P.push([part(sph(.045,6,4),Math.cos(a)*.03*(ring?1:1.6),.58+ring*.02,Math.sin(a)*.03*(ring?1:1.6),.7,1.5,.4,-a+Math.PI/2,0),ring?'#f6b6c8':'#ef9fb9'])}P.push([part(new THREE.CylinderGeometry(.022,.016,.025,8),0,.6,0),'#e2cf62'])}
     return flowerGeos[kind]=mergeColored(P)}
   // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
@@ -2442,7 +2446,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Bó hoa theo ba kiểu tham khảo: Tròn (bó tay gói giấy kraft, hoa xếp thành vòm), Tháp (giỏ nan, hoa xếp hình tháp nhọn),
   // Quạt (hộp gỗ, hoa xòe rộng). Đầu hoa đặt lên một khung hình định sẵn, cuống gom vào trong giấy / giỏ / hộp;
   // khe trống giữa các bông được lấp bằng chùm hoa nhỏ hồng nhạt và lá xanh.
-  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.41,cuc:.455,lan:.48,sen:.6};
+  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.5,cuc:.455,lan:.44,sen:.6};
   const fillerGeo=(()=>{const P=[],dot=new THREE.SphereGeometry(.016,5,3);P.push([part(new THREE.CylinderGeometry(.004,.005,.12,3),0,.06,0),'#5e7f4a']);
     [[0,.125,0],[.02,.115,.012],[-.018,.118,-.01],[.008,.108,-.02],[-.01,.104,.02],[.024,.1,-.006]].forEach(([x,y,z],k)=>P.push([part(dot,x,y,z),k%2?'#f6c9d6':'#fbe0e8']));return mergeColored(P)})();
   const leafGeo=mergeColored([[part(new THREE.SphereGeometry(.05,6,4),0,.09,0,.42,1.9,.14),'#4f7f45'],[part(new THREE.CylinderGeometry(.004,.005,.06,3),0,.02,0),'#4f7f45']]);
