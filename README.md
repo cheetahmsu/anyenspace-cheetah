@@ -46,6 +46,18 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - Phông tranh 360° (`nature` kind `backdrop`) và chất liệu đá vôi, tán cây đều được vẽ bằng code khi mở cảnh, không cần tải ảnh.
 - Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
 
+## Rừng Yên 3.8 · Bản đồ mở rộng (beta)
+
+- Bản đồ rộng khoảng 120 m, dài khoảng 140 m: **Cổng Yên** (phía nam) → **Sân đón** → lối đá giữa hai cánh **hồ sen** → **cầu vòm** bắc qua lạch → **Sân chân đồi** → **bậc đá zíc zắc** lên **đồi tượng Phật** (đỉnh cao 8 m, z = -62).
+- **Hồ sen hai cánh** (hồ Niệm mở rộng): hai cánh 30 × 26 m nối bằng lạch nước dưới cầu. Thuyền chung đi từ bến tây, qua gầm cầu, sang bến đông.
+- **Vòng Ngũ quan** quanh chân đồi: năm hồ giác quan đường kính 11 m, mỗi hồ có một kiến trúc 11 × 11 m (bằng đường kính hồ) cách mép hồ 9 m, cửa quay ra hồ: Sắc · **Nhà hoa lan** (mở cảnh Viverse), Thanh · **Nhà chuông gió** (chạm để nghe chuông), Hương · **Nhà xông hương** (vườn thảo mộc, khói xông), Vị · **Quán trà** (sàn gỗ, bàn trà cho hai người), Chạm · **Xưởng gốm** (bàn xoay, kệ gốm, lò nung). Không gian bên trong của bốn nhà sau sẽ mở sau.
+- Lối đi lát đá phiến lún vào nền đất, không có đèn. **Đường Ngũ quan**: vòng đá quanh chân đồi, nhánh tới từng nhà. Nhân vật ưu tiên đi trên đường đá (cỏ tính chi phí gấp 3), chỉ bước lên cỏ đoạn cuối.
+- Máy quay: chụm hai ngón, cuộn chuột hoặc nút ＋/－ để thu phóng; tới nơi nào thì máy quay tự quay nhìn vào mặt tiền nơi đó. Giữa Sân đón và Sân chân đồi có **hòn non bộ** nhỏ.
+- **Rừng thông kiểu Đà Lạt**: khoảng 600 cây cao thấp ngẫu nhiên (thân cao, tán xếp tầng ở ngọn; thông non hình nón), sinh từ hạt giống cố định nên mọi khách thấy cùng một khu rừng. Dưới gốc là thảm lá thông, trảng trống là thảm cỏ xanh lốm đốm vàng, điểm vài cụm hoa dại nhỏ nhiều màu (cúc, chuông, chùm sao), khóm dã quỳ và đá rêu.
+- Mỗi loại cây/hoa/đá là một InstancedMesh (một lần vẽ). Không dùng bóng đổ. Cây, cổng, Nhà hoa lan và cây bồ đề che tầm nhìn thì **mờ đi** (không xoá).
+- **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới, chạm vào một nhà để đi tới trước cửa; chỗ đến luôn tránh khách khác (đến ngay mà chỗ đã có người thì đứng sang ô trống bên cạnh, cách 1,3 m); khi đi bộ, nhân vật vòng qua khách đang đứng trên đường, lối hẹp như cầu thì lách qua sát bên; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
+- Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
+
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
 - Thiền đường cộng hưởng vẫn sử dụng SQL của phiên bản 3.4. Không chạy lại SQL nếu đã cấu hình.
