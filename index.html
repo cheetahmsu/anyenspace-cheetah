@@ -2550,22 +2550,20 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       g.add(new THREE.Mesh(solid(new THREE.TubeGeometry(curve,40,.022,10,false),'#8fb45c'),mat));
       return g}
     // ---- Hồng (theo bản phác thảo): bông hé nở nghiêng; lõi là các cánh cuộn chặt, vòng ngoài mở ra, mép cánh lật ngược
-    function rose(){const g=new THREE.Group(),head=new THREE.Group();head.rotation.z=0;head.scale.setScalar(1.35);g.add(head);const red=[[0,C('#a3182a')],[.55,C('#dd3a44')],[1,C('#f2585c')]],rnd=(()=>{let s=7;return()=>(s=(s*16807)%2147483647)/2147483647})();
-      const prof=u=>u<.45?Math.max(.55,Math.pow(Math.sin(u/.45*Math.PI/2),.45)):1-.15*Math.pow((u-.45)/.55,2);
-      const P=(o,pl)=>{const Rr=pl.r+.08,hw=o.Wd/2,depth=Math.min(hw*.95,hw*hw/(2*Rr)*1.1);return put(head,petal({prof,stops:red,edge:C('#6e0716'),curl:-.01,...o,cup:depth/o.Wd}),pl)};
-      for(let k=0;k<4;k++)P({L:.3,Wd:.2,roll:.06,edgeRoll:.03},{tilt:.06,ang:k*1.6+.3,r:.04,y:.1});
-      for(let k=0;k<3;k++)P({L:.4,Wd:.34,roll:.1,edgeRoll:.04},{tilt:-.04,ang:k*2.09+1.0,r:.1,y:.0});
-      for(let k=0;k<3;k++)P({L:.42,Wd:.44,roll:.08,edgeRoll:.02},{tilt:-.02,ang:k*2.09,r:.14,y:-.04});
-      for(let k=0;k<5;k++)P({L:.16,Wd:.24,roll:.25,edgeRoll:.08},{tilt:.55,ang:k*1.257+.6,r:.08,y:.27});
-      {const pts=[];for(let i=0;i<=90;i++){const t=i/90,a=t*Math.PI*4.5,r=.01+.085*t;pts.push(new THREE.Vector3(Math.cos(a)*r,.4-.01*t,Math.sin(a)*r))}head.add(new THREE.Mesh(solid(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),REAL_HI?140:40,.009,REAL_HI?6:3,false),'#8c0b1c'),mat));
-       const cap=new THREE.Mesh(solid(new THREE.CylinderGeometry(.1,.1,.02,28),'#cf1a2e'),mat);cap.position.y=.385;head.add(cap)}
-      for(let k=0;k<5;k++)put(head,petal({L:.2,Wd:.06,prof:u=>Math.max(.05,1-u),cup:.3,curl:-.35,stops:[[0,C('#3f7e33')],[1,C('#6aa64a')]]}),{tilt:1.9,ang:k/5*Math.PI*2+.4,y:-.01,r:.03});
-      const hip=new THREE.Mesh(solid(new THREE.SphereGeometry(.05,16,10).scale(1,1.2,1),'#4f8a3c'),mat);hip.position.y=-.03;head.add(hip);
-      const st=new THREE.Mesh(solid(new THREE.CylinderGeometry(.018,.022,.9,10),'#4f8a3c'),mat);st.position.y=-.5;g.add(st);
-      const leafCol=[[0,C('#2f6a2c')],[1,C('#5b9a45')]],leaf=(L)=>{const q=petal({L,Wd:L*.55,prof:u=>Math.max(.04,Math.sin(Math.min(1,u*1.05)*Math.PI)*(1+.05*Math.sin(u*60))),cup:.15,curl:.1,stops:leafCol,vein:.25});q.userData.leaf=true;return q};
-      const sprig=(y,ang,sc)=>{const s=new THREE.Group();s.position.y=y;s.rotation.y=ang;g.add(s);const pet=new THREE.Mesh(solid(new THREE.CylinderGeometry(.008,.01,.28*sc,6),'#4f8a3c'),mat);pet.rotation.z=-1.0;pet.position.set(.12*sc,.07*sc,0);s.add(pet);
-        for(const [dx,dy,rz,l] of [[.24,.15,-1.15,.2],[.15,.08,-2.3,.15],[.14,.13,.15,.15]]){const m=new THREE.Mesh(leaf(l*sc),mat);m.position.set(dx*sc,dy*sc,0);m.rotation.set(-.4,0,rz);s.add(m)}};
-      for(const [y,a] of [[-.42,0],[-.56,Math.PI]]){if(a===0){sprig(y,0,1.5);continue}const sg=new THREE.Group();sg.position.y=y;sg.rotation.y=a;g.add(sg);const pt2=new THREE.Mesh(solid(new THREE.CylinderGeometry(.007,.008,.08,6),'#4f8a3c'),mat);pt2.rotation.z=-1.0;pt2.position.set(.03,.02,0);sg.add(pt2);const m=new THREE.Mesh(leaf(.22),mat);m.position.set(.06,.04,0);m.rotation.set(-.3,0,-1.05);sg.add(m)}return g}
+    function rose(){const g=new THREE.Group(),head=new THREE.Group();head.scale.set(1.3,1.6,1.3);g.add(head);
+      // a closed red bud: tall petals wrapped round each other, one broad front petal crossing over, the upper rims just turning out; a star of green sepals below
+      const red=[[0,C('#b0101e')],[.6,C('#de1f2c')],[1,C('#f0444a')]],redD=[[0,C('#8e0b18')],[.6,C('#c8182a')],[1,C('#e33a42')]];
+      const prof=u=>u<.3?Math.max(.45,Math.pow(Math.sin(u/.3*Math.PI/2),.5)):(u<.6?1:Math.sqrt(Math.max(0,1-Math.pow((u-.6)/.4,2)))*.85+.15);
+      const P=(o,pl,st=red)=>{const Rr=pl.r+.06,hw=o.Wd/2,depth=Math.min(hw*.98,hw*hw/(2*Rr)*1.15);return put(head,petal({prof,stops:st,edge:C('#7e0915'),curl:-.01,...o,cup:depth/o.Wd}),pl)};
+      for(let k=0;k<3;k++)P({L:.3,Wd:.16,roll:.18,edgeRoll:.08},{tilt:-.04,ang:k*2.09+.5,r:.03,y:.06},redD);
+      for(let k=0;k<3;k++)P({L:.35,Wd:.27,roll:.3,edgeRoll:.14},{tilt:.1,ang:k*2.09+1.55,r:.07,y:.0});
+      for(let k=0;k<3;k++)P({L:.35,Wd:.36,roll:.36,edgeRoll:.18},{tilt:.16,ang:k*2.09+.4,r:.1,y:-.03});
+      P({L:.31,Wd:.44,roll:.34,edgeRoll:.16},{tilt:.06,ang:.05,r:.13,y:-.06});/* the broad front petal */
+      const cap=new THREE.Mesh(solid(new THREE.SphereGeometry(.07,20,10,0,Math.PI*2,0,Math.PI/2).scale(1,.4,1),'#a10f1d'),mat);cap.position.y=.3;head.add(cap);
+      for(let k=0;k<5;k++)put(head,petal({L:.27,Wd:.11,prof:u=>Math.max(.05,Math.sin(Math.min(1,u*1.3)*Math.PI/1.3)*(1-u*.6)),cup:.35,curl:.12,stops:[[0,C('#3f8d32')],[1,C('#79c04e')]]}),{tilt:1.62,ang:k/5*Math.PI*2+.3,y:-.09,r:.05});
+      const hip=new THREE.Mesh(solid(new THREE.SphereGeometry(.05,16,10).scale(1,1.1,1),'#4f9a3a'),mat);hip.position.y=-.06;head.add(hip);
+      const st=new THREE.Mesh(solid(new THREE.CylinderGeometry(.02,.024,.6,10),'#4f9a3a'),mat);st.position.y=-.38;g.add(st);
+      return g}
     // ---- Cúc vàng: 12 cánh rộng đầu tròn, có rãnh dọc, xòe phẳng quanh nhụy cam vồng có hạt
     function daisy(){const g=new THREE.Group(),yel=[[0,C('#e8a816')],[.35,C('#f6c832')],[1,C('#fbdc63')]];
       for(let k=0;k<14;k++)put(g,petal({L:.36,Wd:.115,prof:u=>u<.2?Math.max(.3,Math.sin(u/.2*Math.PI/2)):(u<.85?1:Math.sqrt(Math.max(0,1-Math.pow((u-.85)/.15,2)))*.85+.15),cup:-.08,curl:.05,stops:yel,vein:.18}),{tilt:1.5,ang:k/14*Math.PI*2,r:.04});
@@ -2574,12 +2572,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const st=new THREE.Mesh(solid(new THREE.CylinderGeometry(.018,.022,.6,10),'#4f8a3c'),mat);st.position.y=-.3;g.add(st);return g}
     return {sen:lotus,hong:rose,cuc:daisy}})();
   function bakeReal(kind,hi){REAL_HI=hi;REAL_Q=hi?[12,8]:[5,3];const grp=REAL3[kind]();grp.updateMatrixWorld(true);const B=flBuilder(),nm=new THREE.Matrix3();
-    grp.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone();g.applyMatrix4(o.matrixWorld);g.computeBoundingBox();if(g.boundingBox.max.y<.02||o.geometry.userData.leaf)return;/* the head only: stems and leaves come from the shared stem below */const q=g.index?g.toNonIndexed():g;q.computeVertexNormals();
+    grp.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.clone();g.applyMatrix4(o.matrixWorld);g.computeBoundingBox();if(g.boundingBox.min.y<-.25||o.geometry.userData.leaf)return;/* the head only: stems and leaves come from the shared stem below */const q=g.index?g.toNonIndexed():g;q.computeVertexNormals();
       if(o.geometry.userData.petal){{const nr=q.attributes.normal;for(let i=0;i<nr.count;i++){FL.nv.fromBufferAttribute(nr,i);if(FL.nv.y<0)FL.nv.negate();FL.nv.multiplyScalar(.6).add(FL.up).normalize();nr.setXYZ(i,FL.nv.x,FL.nv.y,FL.nv.z)}}B.solid(q,null);const bk=q.clone();for(const at of [bk.attributes.position,bk.attributes.color,bk.attributes.normal])for(let i=0;i<at.count;i+=3){const t=[at.getX(i+1),at.getY(i+1),at.getZ(i+1)];at.setXYZ(i+1,at.getX(i+2),at.getY(i+2),at.getZ(i+2));at.setXYZ(i+2,...t)}B.solid(bk,null)}
       else B.solid(q,null)});
     return B.geo()}
   // Scale each model into the old flower's frame: heads sit at HEAD_Y on a thin stem; huệ and oải hương are whole plants.
-  const FLOWER_FIT={sen:{d:.18,y:.55},hong:{d:.13,y:.53},cam_tu_cau:{d:.16,y:.5},cuc:{d:.17,y:.47},nhai:{h:.64},lan:{h:.5}};
+  const FLOWER_FIT={sen:{d:.18,y:.55},hong:{d:.15,y:.53},cam_tu_cau:{d:.16,y:.5},cuc:{d:.17,y:.47},nhai:{h:.64},lan:{h:.5}};
   function flowerGeo(kind,lod='lo'){const key=kind+':'+lod;if(flowerGeos[key])return flowerGeos[key];const hi=lod==='hi';let g;if(REAL3[kind])g=bakeReal(kind,hi);else{const B=flBuilder();(FLOWER_BUILD[kind]||FLOWER_BUILD.sen)(B,hi);g=B.geo()}g.computeBoundingBox();const bb=g.boundingBox,f=FLOWER_FIT[kind]||FLOWER_FIT.sen,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
     if(f.h){const s=f.h/sz.y;g.translate(-c.x,-bb.min.y,-c.z);g.scale(s,s,s);return flowerGeos[key]=g}
     const s=f.d/Math.max(sz.x,sz.z);g.translate(-c.x,-c.y,-c.z);g.scale(s,s,s);g.translate(0,f.y,0);
