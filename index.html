@@ -758,6 +758,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.flat+2.5)return true;if(hr<HILL.foot&&z>HILL.z&&Math.abs(x)<15)return true;/* keep the statue visible from the gate */
     if(stairsDistance(x,z)<3.2+pad)return true;
     if(branchDistance(x,z)<2.8+pad)return true;
+    if(BRANCHES.some(b=>{const c=b[b.length-8];return Math.hypot(x-c[0],z-c[1])<7.5+pad}))return true;/* flower gardens at the junctions */
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+4.5+pad))return true;
     if(houseHit(x,z,3.5+pad)||inFrontStrip(x,z))return true;
     if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<5+pad))return true;
@@ -2450,15 +2451,21 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   FLOWER_GARDENS.push({kind:'sen',x:BEN_SEN.x,z:BEN_SEN.z1+1.6,pier:true});
   {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
     for(const gd of FLOWER_GARDENS){
-      if(!gd.pier){const pts=[];for(let tries=0;pts.length<90&&tries<3000;tries++){const a=rnd()*Math.PI*2,r=1.8+Math.sqrt(rnd())*3.4,x=gd.x+Math.cos(a)*r,z=gd.z+Math.sin(a)*r;
-          if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+.7)||houseHit(x,z,.6)||treeBlocked(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.32))continue;pts.push([x,z])}
-        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,pts.length);pts.forEach(([x,z],i)=>{const s=1.1+rnd()*.6;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.02,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
+      if(!gd.pier){const pts=[];for(let tries=0;pts.length<260&&tries<9000;tries++){const a=rnd()*Math.PI*2,r=1.7+Math.sqrt(rnd())*4,x=gd.x+Math.cos(a)*r,z=gd.z+Math.sin(a)*r;
+          if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+.7)||houseHit(x,z,.6)||treeBlocked(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.26))continue;pts.push([x,z])}
+        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,pts.length);pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.8;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.02,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
         mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
         // a low leafy border under the flowers
-        const bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.18,0),mat('#2f5a3a'),pts.length);pts.forEach(([x,z],i)=>{e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.04,z+(rnd()-.5)*.2);sc.set(1.3,.55,1.3);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)});bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush)}
+        const bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),mat('#2f5a3a'),pts.length);pts.forEach(([x,z],i)=>{e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.05,z+(rnd()-.5)*.2);sc.set(1.5,.6,1.5);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)});bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
+        // a ring of low edging stones around the bed (open where the path runs) and a stone bench to rest on
+        const ring=[];for(let k=0;k<64;k++){const a=k/64*Math.PI*2,x=gd.x+Math.cos(a)*6,z=gd.z+Math.sin(a)*6;if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||houseHit(x,z,.3)||wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+.4))continue;ring.push([x,z,a])}
+        const edge=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.22,0),mat('#6c695d'),Math.max(1,ring.length));ring.forEach(([x,z,a],i)=>{e.set(0,a,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.06,z);sc.set(1.4,.6,1);m4.compose(v,q,sc);edge.setMatrixAt(i,m4)});edge.count=ring.length;edge.instanceMatrix.needsUpdate=true;scene.add(edge);
+        {const out=[gd.x-HILL.x,gd.z-HILL.z],on=Math.hypot(...out)||1,ux=out[0]/on,uz=out[1]/on;let bx=gd.x+ux*2.2,bz=gd.z+uz*2.2;for(let t=0;t<8&&onPaved(bx,bz);t++){bx+=ux*.5;bz+=uz*.5}
+          const bench=new THREE.Group();bench.position.set(bx,terrainHeight(bx,bz),bz);bench.rotation.y=Math.atan2(-ux,-uz);const st=mat('#7a776a');
+          const seat=new THREE.Mesh(new THREE.BoxGeometry(1.6,.14,.5),st);seat.position.y=.45;bench.add(seat);for(const sx of [-.6,.6]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.18,.42,.42),st);leg.position.set(sx,.21,0);bench.add(leg)}scene.add(bench);gd.bench=[bx,bz]}}
       // a floating flower sign above each garden: tap it to go and pick
       const cv=document.createElement('canvas');cv.width=256;cv.height=256;const cx=cv.getContext('2d');cx.fillStyle='rgba(11,45,40,.82)';cx.beginPath();cx.arc(128,128,112,0,7);cx.fill();cx.strokeStyle='#c8a96a';cx.lineWidth=8;cx.stroke();cx.font='120px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(FLOWER_KINDS[gd.kind].icon,128,138);
-      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(.9,.9,1);sp.position.set(gd.x,terrainHeight(gd.x,gd.z)+(gd.pier?2.6:2.2),gd.z);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);sp.position.set(gd.x,terrainHeight(gd.x,gd.z)+(gd.pier?2.6:2.6),gd.z);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
   // ---- basket, picking, arranging, carrying, offering
   let flowerBasket=[],bouquetLayout='tron',carriedBouquet=null,pendingGarden=null,pendingOffer=false,swapPick=-1;
   const flowerUi=document.createElement('div');flowerUi.innerHTML=`
