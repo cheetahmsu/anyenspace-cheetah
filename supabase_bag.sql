@@ -8,7 +8,7 @@ create table if not exists public.anyen_bag_items (
   source text not null default 'self',
   from_name text not null default '',
   added_at timestamptz not null default now(),
-  constraint anyen_bag_kind check (kind in ('thinh','robe','flower','pot')),
+  constraint anyen_bag_kind check (kind in ('thinh','robe','flower','pot','aroma')),
   constraint anyen_bag_source check (source in ('self','own','store','gift')),
   constraint anyen_bag_item_size check (pg_column_size(item) < 4000),
   constraint anyen_bag_from check (char_length(from_name) <= 24)
