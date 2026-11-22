@@ -2603,9 +2603,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Stems must stay inside the wrap or the box: the part of each stem below its head is trimmed where it would show outside
   // (below the paper sleeve or through the side of the cone for Tròn, under the box for Quạt).
   function bqOutside(layout,p){if(layout==='quat')return p.y<.004;if(layout!=='tron')return false;const sc=BQ_WRAP,yl=p.y/sc,r=Math.hypot(p.x,p.z)/sc;
-    if(yl<-.035)return true;if(yl>.425)return false;const cone=yl<.03?.055:yl<.29?.055+(.21-.055)*(yl-.03)/.26:.21,coll=yl>=.28?.2+(.36-.2)*(yl-.28)/.12:0;return r>Math.max(cone,coll)-.006}
-  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.425)return;
-    const cone=yl<.03?.055:yl<.29?.055+(.21-.055)*(yl-.03)/.26:.21,coll=yl>=.28?.2+(.36-.2)*(yl-.28)/.12:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
+    if(yl<-.035)return true;if(yl>.255)return false;const cone=yl<.03?.055:yl<.16?.055+(.2-.055)*(yl-.03)/.13:.2,coll=yl>=.15?.19+(.42-.19)*(yl-.15)/.1:0;return r>Math.max(cone,coll)-.006}
+  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.255)return;
+    const cone=yl<.03?.055:yl<.16?.055+(.2-.055)*(yl-.03)/.13:.2,coll=yl>=.15?.19+(.42-.19)*(yl-.15)/.1:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
   function trimStems(g,layout,flowers){if(layout==='thap')return;let fi=0;const v=new THREE.Vector3(),inv=new THREE.Matrix4();
     for(const m of [...g.children]){if(!m.isMesh)continue;const geo=m.geometry,cutY=geo===fillerGeo?.07:geo===leafGeo?.05:(()=>{const k=flowers[fi++],h=HEAD_Y[k]||.5;return k==='lan'?h-.12:k==='nhai'?h-.24:h-.09})();
       m.updateMatrix();const src=geo.index?geo.toNonIndexed():geo,P=src.attributes.position,keep=[];
@@ -2613,7 +2613,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(keep.length*3===P.count)continue;const out=new THREE.BufferGeometry();for(const name of Object.keys(src.attributes)){const a=src.attributes[name],n=a.itemSize,arr=new Float32Array(keep.length*3*n);keep.forEach((i,t)=>{for(let q=0;q<3*n;q++)arr[t*3*n+q]=a.array[i*n+q]});out.setAttribute(name,new THREE.BufferAttribute(arr,n))}m.geometry=out}}
   function placeStem(g,geo,mat_,head,headY,base,s){const P=new THREE.Vector3(...head),B=new THREE.Vector3(...base),d=P.clone().sub(B).normalize(),m=new THREE.Mesh(geo,mat_);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
-  const bqMats={kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
+  const bqMats={kraftOut:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.FrontSide}),paperIn:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.BackSide}),kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
     slat:new THREE.MeshStandardMaterial({color:'#c69a5e',roughness:.9}),slatDark:new THREE.MeshStandardMaterial({color:'#8f6a3c',roughness:.9}),bark:new THREE.MeshStandardMaterial({color:'#6a4a32',roughness:1,flatShading:true}),twine:new THREE.MeshStandardMaterial({color:'#b89a6a',roughness:1})};
   // Oải hương ưu tiên vào giữa bó, xen kẽ với hoa khác: lavender takes every other slot of the inner positions (not the very centre).
   function arrangeLavender(flowers,layout){const n=flowers.length,lav=flowers.filter(f=>f==='lan'),rest=flowers.filter(f=>f!=='lan');if(!lav.length||lav.length===n)return flowers.slice();
@@ -2631,9 +2631,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     trimStems(g,layout,flowers);
     if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon (built at full size, shown at half)
       const wrapG=g;g=new THREE.Group();g.scale.setScalar(BQ_WRAP);wrapG.add(g);
-      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.21,.055,.26,12,1,true),bqMats.kraft);outer.position.y=.16;g.add(outer);
-      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.2,.05,.24,12,1,true),bqMats.paper);inner.position.y=.19;inner.rotation.y=.3;g.add(inner);
-      const upN=geo=>{const n=geo.attributes.normal,P=geo.attributes.position;for(let i=0;i<n.count;i++){const x=P.getX(i),z=P.getZ(i),r=Math.hypot(x,z)||1;n.setXYZ(i,x/r*.55,.85,z/r*.55)}return geo};const collar=new THREE.Mesh(upN(new THREE.CylinderGeometry(.36,.2,.12,16,1,true)),bqMats.kraft);collar.position.y=.34;g.add(collar);const collarIn=new THREE.Mesh(upN(new THREE.CylinderGeometry(.33,.19,.11,16,1,true)),bqMats.paper);collarIn.position.y=.37;collarIn.rotation.y=.2;g.add(collarIn);
+      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.2,.055,.13,12,1,true),bqMats.kraft);outer.position.y=.095;g.add(outer);
+      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.19,.05,.12,12,1,true),bqMats.paper);inner.position.y=.11;inner.rotation.y=.3;g.add(inner);
+      const upN=(geo,inside)=>{const n=geo.attributes.normal,P=geo.attributes.position;for(let i=0;i<n.count;i++){const x=P.getX(i),z=P.getZ(i),r=Math.hypot(x,z)||1;inside?n.setXYZ(i,x/r*.45,-.9,z/r*.45):n.setXYZ(i,x/r*.55,.85,z/r*.55)}return geo};/* inside faces are drawn as back faces, whose normal three.js flips, so they get a downward normal that turns upward */const collar=new THREE.Mesh(upN(new THREE.CylinderGeometry(.42,.19,.1,18,1,true)),bqMats.kraftOut);collar.position.y=.2;g.add(collar);const collarIn=new THREE.Mesh(upN(new THREE.CylinderGeometry(.41,.185,.1,18,1,true),true),bqMats.paperIn);collarIn.position.y=.2;collarIn.rotation.y=.2;g.add(collarIn);
       const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.08,10),bqMats.kraft);sleeve.position.y=.0;g.add(sleeve);
       const band=new THREE.Mesh(new THREE.TorusGeometry(.058,.008,6,18),bqMats.ribbon);band.rotation.x=Math.PI/2;band.position.y=.05;g.add(band);
       for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}
@@ -2736,7 +2736,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const flowerDb=(()=>{const c=window.ANYEN_CONFIG||{};try{return window.supabase&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(c.supabaseUrl||'')?window.supabase.createClient(c.supabaseUrl,c.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'anyen-flowers'}}):null}catch(e){return null}})();
   let localSeq=1;
   async function loadOfferings(){if(!flowerDb)return;try{const q=c=>flowerDb.from('anyen_flower_offerings').select(c).order('seq',{ascending:false}).limit(OFFER_SLOTS);let {data,error}=await q('id,seq,flowers,layout,yaw,name');if(error)({data,error}=await q('id,seq,flowers,layout,name'));if(!error&&data){for(const [k,o] of offeredShown)if(String(k).startsWith('local-')){shrine.remove(o.g);offeredShown.delete(k)}showOfferings(data.slice().reverse())}}catch(e){}}
-  async function offerBouquet(){const b=carriedBouquet;if(!b)return;carriedBouquet=null;attachCarried();refreshFlowerPill();viewYaw=walkYaw=Math.PI;lookOffset=0;
+  async function offerBouquet(){const b=carriedBouquet;if(!b)return;carriedBouquet=null;window.__bagTake&&window.__bagTake('flowers',{flowers:b.flowers,layout:b.layout},true);attachCarried();refreshFlowerPill();viewYaw=walkYaw=Math.PI;lookOffset=0;
     window.dispatchEvent(new CustomEvent('anyen-gesture',{detail:{kind:'namaste'}}));hint('🙏 Đã dâng hoa lên Đức Phật · Nguyện an lành');
     let name='Khách Yên';try{name=String(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||name).slice(0,24)}catch(e){}
     let saved=false;if(flowerDb){try{const yawDeg=Math.round((b.yaw||0)*180/Math.PI)%360;let {error}=await flowerDb.from('anyen_flower_offerings').insert({flowers:b.flowers,layout:b.layout,yaw:yawDeg,name});if(error)({error}=await flowerDb.from('anyen_flower_offerings').insert({flowers:b.flowers,layout:b.layout,name}));saved=!error}catch(e){}}
@@ -2992,7 +2992,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function kathinaPose(){if(kat.phase==='round'||kat.phase==='carry'||kat.phase==='follow'||kat.phase==='return'){me.rotation.y=walkYaw-Math.PI;}
     if(kat.phase==='offer'){const T=offerTimes(),u=(performance.now()-kat.t0)/1000-T.c;me.rotation.y=0;me.rotation.x=u>0&&u<3*OFFER_T.bow?-Math.sin((u%OFFER_T.bow)/OFFER_T.bow*Math.PI)*.55:0}else me.rotation.x=0}
   // ---- 4. offer: the robe rests at the Buddha's feet, saved for everyone; then step back to a cushion
-  async function placeRobe(){if(kat.robe){scene.remove(kat.robe);kat.robe=null}const now=new Date();const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,wish:kat.wish,name:guestName(),created_at:now.toISOString()};kat.mine={name:row.name,t:now.getTime()};katRows.unshift(row);drawDais();
+  async function placeRobe(){if(kat.robe){scene.remove(kat.robe);kat.robe=null}const now=new Date();const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,wish:kat.wish,name:guestName(),created_at:now.toISOString()};kat.mine={name:row.name,t:now.getTime()};katRows.unshift(row);window.__bagTake&&window.__bagTake('robes',row,true);drawDais();
     say('🙏 Đã dâng y dưới chân tượng Phật · Mời bạn ngồi niệm năm phút');
     kat.phase='chant';kat.placed=false;refreshKatPill();try{requestSeat(chooseSeat())}catch(e){}startChant();
     if(katDb){try{const base={color:kat.color,dieu:kat.dieu,name:row.name},tries=[{...base,pieces:kat.pieces,wish:kat.wish},{...base,pieces:kat.pieces},base];for(const t of tries){const {error}=await katDb.from('anyen_kathina_robes').insert(t);if(!error){loadRobes();break}}}catch(e){}}}
@@ -3167,7 +3167,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(gom.phase==='fire'&&left>0){gomPanel.innerHTML='<div class="fl-head"><strong>🔥 Nung lộ thiên · 0:'+String(left).padStart(2,'0')+'</strong></div><p class="fl-note">Gốm mộc được xếp trên lớp củi, phủ rơm và trấu cho kín rồi châm lửa. Ở làng Bàu Trúc, mẻ nung lộ thiên kéo dài khoảng 4–6 giờ; trong Rừng Yên rút lại một phút.</p><p class="fl-note">Lửa và khói không đều tạo nên hỏa biến trên áo gốm: đỏ hồng, vàng đỏ, những vệt đen xám. Ngồi yên, nhìn lửa, theo dõi hơi thở.</p>';return}
     if(gom.phase==='fire'){clearInterval(gom.timer);gom.phase='spray';gomPanel.innerHTML='<div class="fl-head"><strong>🔥 Lửa đã tàn</strong></div><p class="fl-note">Khi gốm còn nóng, người thợ phun nước để tạo màu cho áo gốm.</p><div class="fl-row"><button type="button" class="fl-gold" data-gp="spray">💧 Phun nước tạo màu</button></div>';syncGomYard();return}}
   gomPanel.addEventListener('click',e=>{const a=e.target.closest('[data-gp]')?.dataset.gp;if(!a)return;
-    if(a==='spray'){strike(1900,1.2,.02,[[1,1],[1.3,.5]]);const r=gom.row,fired=GOM_FIRED[r.seed%GOM_FIRED.length][0];gom.phase='toRack';gom.step='nhao';gom.hold=r.seed+'|'+r.name;setGomCarry('fired');refreshGomPill();
+    if(a==='spray'){strike(1900,1.2,.02,[[1,1],[1.3,.5]]);window.__bagTake&&window.__bagTake('pots',gom.row,true);const r=gom.row,fired=GOM_FIRED[r.seed%GOM_FIRED.length][0];gom.phase='toRack';gom.step='nhao';gom.hold=r.seed+'|'+r.name;setGomCarry('fired');refreshGomPill();
       gomPanel.innerHTML='<div class="fl-head"><strong>🏺 '+GOM_SHAPES[r.shape].name+' · áo gốm '+fired+'</strong><button type="button" data-gp="close">✕ Đóng</button></div><div class="gom-preview"></div><p class="fl-note">Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Đội gốm lên đầu, mang tới kệ cạnh bãi nung (kệ 6 × 6 = 36 chỗ; khi đầy, chiếc cũ nhất nhường chỗ).</p><div class="fl-row"><button type="button" class="fl-gold" data-gp="rack">🏺 Đội gốm lên kệ</button></div>';
       const img=gomSnapshot(r);if(img)gomPanel.querySelector('.gom-preview').appendChild(img);drawRack();say('🏺 Gốm nung xong · Đội gốm lên kệ');return}
     if(a==='rack'){gomPanel.hidden=true;gomPill.click();return}
@@ -3195,23 +3195,34 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.addEventListener('anyen-3d-exit',()=>{gomPanel.hidden=true;if(gom.phase==='carry'){setGomCarry(false);gom.phase='room';gom.step='xong';refreshGomPill()}if(gom.phase==='toRack'){setGomCarry(false);gom.hold=null;gom.phase='idle';drawRack();refreshGomPill()}});
   // 3.22: Sổ lưu niệm. Kệ, bệ và kho chỉ bày tượng trưng những món gần nhất; chạm vào thì mở danh sách đầy đủ.
   // Mỗi kho trên Supabase giữ 66 món gần nhất, đầy thì xoá dần từ món cũ nhất.
-  const ARCH_MAX=66;
+  const ARCH_MAX=69;
   const archPanel=document.createElement('section');archPanel.id='archPanel';archPanel.hidden=true;document.body.appendChild(archPanel);
   const archDate=t=>{try{const d=new Date(t);return d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
   const archEsc=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const ARCH={robes:{title:'🟧 Kho y',table:'anyen_kathina_robes',cols:['id,seq,color,pieces,wish,dieu,name,created_at','id,seq,color,pieces,dieu,name,created_at','id,seq,color,dieu,name,created_at'],local:()=>katRows,unit:'tấm y',
+  const ARCH={robes:{title:'🟧 Kho y',table:'anyen_kathina_robes',cols:['id,seq,color,pieces,wish,dieu,name,picks,created_at','id,seq,color,pieces,wish,dieu,name,created_at','id,seq,color,pieces,dieu,name,created_at','id,seq,color,dieu,name,created_at'],local:()=>katRows,unit:'tấm y',
       row:r=>{const ps=String(r.pieces||'');const sw=ps.length>1?ps.split('').map(i=>'<i style="background:'+katHex(i)+'"></i>').join(''):'<i style="background:'+archEsc(r.color)+'"></i>';return '<span class="ar-sw">'+sw+'</span><span>'+(Number(r.dieu)||5)+' điều'+(ps&&new Set(ps).size>1?' · nhiều màu':' · '+((KAT_COLORS.find(c=>c[1]===r.color)||[''])[0]))+'</span>'+(r.wish?'<em class="ar-wish">“'+archEsc(r.wish)+'”</em>':'')}},
-    flowers:{title:'💐 Hoa đã dâng',table:'anyen_flower_offerings',cols:['id,seq,flowers,layout,name,created_at'],local:()=>[],unit:'bó hoa',
+    flowers:{title:'💐 Hoa đã dâng',table:'anyen_flower_offerings',cols:['id,seq,flowers,layout,yaw,name,picks,created_at','id,seq,flowers,layout,name,created_at'],local:()=>[],unit:'bó hoa',
       row:r=>'<span class="ar-ic">'+(r.flowers||[]).map(f=>(FLOWER_KINDS[f]||{}).icon||'').join('')+'</span><span>'+((BOUQUET_LAYOUTS[r.layout]||'').replace(/^\S+\s/,'Bó '))+' · '+(r.flowers||[]).length+' bông</span>'},
-    pots:{title:'🏺 Kho gốm',table:'anyen_pottery',cols:['id,seq,shape,pattern,seed,name,created_at'],local:()=>gomRows,unit:'món gốm',
+    pots:{title:'🏺 Kho gốm',table:'anyen_pottery',cols:['id,seq,shape,pattern,seed,name,picks,created_at','id,seq,shape,pattern,seed,name,created_at'],local:()=>gomRows,unit:'món gốm',
       row:r=>'<span class="ar-sw"><i style="background:'+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][1]+';border-radius:50%"></i></span><span>'+(GOM_SHAPES[r.shape]||GOM_SHAPES[0]).name+' · '+(GOM_TOOLS[r.pattern]||GOM_TOOLS[0])[1]+' · áo gốm '+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][0]+'</span>'}};
   async function openArchive(kind){const A=ARCH[kind];if(!A)return;archPanel.hidden=false;archPanel.innerHTML='<div class="fl-head"><strong>'+A.title+'</strong><button type="button" data-ar="close">✕ Đóng</button></div><p class="fl-note">Đang mở sổ…</p>';
     let rows=null;if(flowerDb){for(const c of A.cols){try{const {data,error}=await Promise.race([flowerDb.from(A.table).select(c).order('seq',{ascending:false}).limit(ARCH_MAX),new Promise(r=>setTimeout(()=>r({error:'timeout'}),5000))]);if(!error&&data){rows=data;break}if(error==='timeout')break}catch(e){}}}
-    if(!rows)rows=A.local().slice(0,ARCH_MAX);
+    if(!rows)rows=A.local().slice(0,ARCH_MAX);archRows={kind,rows};
     archPanel.innerHTML='<div class="fl-head"><strong>'+A.title+' · '+rows.length+' '+A.unit+'</strong><button type="button" data-ar="close">✕ Đóng</button></div>'
-      +'<p class="fl-note">Trong rừng chỉ bày tượng trưng những món gần nhất. Sổ lưu '+ARCH_MAX+' món gần nhất; khi đầy, món cũ nhất được xoá dần.</p>'
-      +(rows.length?'<ol class="ar-list">'+rows.map(r=>'<li>'+A.row(r)+'<b>'+archEsc(r.name||'Khách Yên')+'</b><small>'+archDate(r.created_at)+'</small></li>').join('')+'</ol>':'<p class="fl-note">Chưa có món nào.</p>')}
-  archPanel.addEventListener('click',e=>{if(e.target.closest('[data-ar="close"]'))archPanel.hidden=true});
+      +'<p class="fl-note">Trong rừng chỉ bày tượng trưng những món gần nhất. Kho giữ '+ARCH_MAX+' món: 9 món mới nhất luôn được giữ, còn lại món được mang về nhiều sẽ ở lâu hơn, món ít được chọn nhất rời kho trước. Chạm 🎒 để mang một món về Túi An Yên.</p>'
+      +(rows.length?'<ol class="ar-list">'+rows.map((r,i)=>{const src=kind+':'+r.id,has=window.anyenBagHas&&window.anyenBagHas(src);return '<li>'+A.row(r)+'<b>'+archEsc(r.name||'Khách Yên')+'</b><small>'+archDate(r.created_at)+(Number(r.picks)?' · 🎒 '+Number(r.picks):'')+'</small><button type="button" data-take="'+i+'"'+(has?' disabled':'')+'>'+(has?'✓ Đã có trong túi':'🎒 Mang về túi')+'</button></li>'}).join('')+'</ol>':'<p class="fl-note">Chưa có món nào.</p>')}
+  let archRows=null;
+  archPanel.addEventListener('click',e=>{if(e.target.closest('[data-ar="close"]')){archPanel.hidden=true;return}const t=e.target.closest('[data-take]');if(!t||!archRows)return;const r=archRows.rows[+t.dataset.take];if(!r)return;
+    const kind=archRows.kind;bagTake(kind,r,false);t.disabled=true;t.textContent='✓ Đã có trong túi';
+    if(flowerDb&&!String(r.id).startsWith('local-')&&!String(r.id).startsWith('t'))flowerDb.rpc('anyen_take',{kind,item:r.id}).then(()=>{},()=>{})});
+  window.addEventListener('anyen-bag-note',e=>{const h=document.getElementById('zenHint');if(h)h.textContent=String(e.detail||'')});
+  // Put a made item into the Túi An Yên (own = made by this guest, straight after finishing it).
+  function bagTake(kind,r,own){const mk=kind==='robes'?'robe':kind==='flowers'?'flower':'pot';let label='',data={};
+    if(mk==='robe'){label=(Number(r.dieu)||5)+' điều';data={color:r.color,pieces:r.pieces||'',dieu:r.dieu}}
+    else if(mk==='flower'){label=(r.flowers||[]).length+' bông · '+String(BOUQUET_LAYOUTS[r.layout]||'').replace(/^\S+\s/,'');data={flowers:r.flowers,layout:r.layout}}
+    else{label=(GOM_SHAPES[r.shape]||GOM_SHAPES[0]).name+' · áo gốm '+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][0];data={shape:r.shape,pattern:r.pattern,seed:r.seed}}
+    window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:mk,src:own?'':kind+':'+r.id,label,maker:r.name||'',data,own}}))}
+  window.__bagTake=bagTake;
   window.addEventListener('anyen-3d-exit',()=>{archPanel.hidden=true});
   // taps in the forest: the bouquets before the statue, the robes at its feet, the pottery rack and firing yard
   window.__archTap=ray=>{const hit=(objs)=>objs.length&&ray.intersectObjects(objs,true).length;
@@ -3374,7 +3385,8 @@ document.querySelector('#openRooms').onclick=()=>go('community');{const wl=docum
  // Local-first bag: each gift has a unique ID; the recipient can keep it after refresh.
  const bagKey='anyen-items-v2',legacyKey='anyen-items-v1';let bag=[],onlinePeople={};const sendingGifts=new Set();
  try{bag=JSON.parse(localStorage.getItem(bagKey)||'[]');if(!Array.isArray(bag))bag=[];if(!bag.length){const legacy=JSON.parse(localStorage.getItem(legacyKey)||'[]');if(Array.isArray(legacy))bag=legacy.filter(x=>itemData.some(it=>it[0]===x.id)).map(x=>({...x,uuid:crypto.randomUUID(),source:'self'}));}}catch{bag=[];}
- function saveBag(){try{localStorage.setItem(bagKey,JSON.stringify(bag.slice(-250)));}catch(e){console.warn('Không lưu được Túi An Yên',e)}}
+ const BAG_MAX=36;/* Túi An Yên giữ tối đa 36 vật phẩm; đầy thì món cũ nhất tự rời túi */
+ function saveBag(){if(bag.length>BAG_MAX)bag=bag.slice(-BAG_MAX);try{localStorage.setItem(bagKey,JSON.stringify(bag));}catch(e){console.warn('Không lưu được Túi An Yên',e)}}
  saveBag();
  // Private local journal of wishes and received guidance.
  const journalKey='anyen_wish_journal_v1';
@@ -3388,15 +3400,23 @@ document.querySelector('#openRooms').onclick=()=>go('community');{const wl=docum
  renderJournal();
  const bagSheet=document.createElement('section');bagSheet.id='zenBagSheet';bagSheet.innerHTML='<div class="zen-menu-heading"><strong>🎒 Túi An Yên</strong><button type="button" data-close>✕ Đóng</button></div><p style="font-size:12px;color:#e2cda0">Vật phẩm biểu tượng. Túi được lưu trên thiết bị này. Có thể tặng cho người đang cùng phòng.</p><div id="zenBagContents"></div><p id="zenBagMessage" role="status" style="font-size:12px;color:#e2cda0"></p>';document.body.append(bagSheet);
  function addBagItem(id,source,from,uuid){const item=itemData.find(it=>it[0]===id);if(!item)return false;if(uuid&&bag.some(x=>x.uuid===uuid))return false;bag.push({uuid:uuid||(globalThis.crypto?.randomUUID?.()||('gift-'+Date.now()+'-'+Math.random().toString(36).slice(2))),id:item[0],name:item[1],source,from:from||'',time:Date.now()});saveBag();renderBag();window.dispatchEvent(new CustomEvent('anyen-item-receive',{detail:{id:item[0],name:item[1],emoji:item[3],source,from:from||''}}));return true;}
- function renderBag(){const host=document.getElementById('zenBagContents');if(!host)return;host.replaceChildren();if(!bag.length){const p=document.createElement('p');p.textContent='Túi đang trống. Hãy thỉnh vật phẩm đầu tiên!';host.append(p);return;}
- for(const entry of [...bag].reverse()){const item=itemData.find(it=>it[0]===entry.id);if(!item)continue;const row=document.createElement('div');row.className='anyen-bag-row';const title=document.createElement('div');title.textContent=item[3]+' '+item[1]+' · '+(entry.source==='gift'?'🎁 '+(entry.from||'Quà tặng'):'Tự thỉnh');row.append(title);
+ // Made items (tấm y, bó hoa, món gốm) from the forest stores: kept as a small snapshot, shown with their own icon; not giftable for now.
+ const MADE={robe:['🟧','Tấm y'],flower:['💐','Bó hoa dâng'],pot:['🏺','Món gốm']};
+ window.anyenBagHas=src=>bag.some(x=>x.src===src);
+ window.addEventListener('anyen-bag-add',e=>{const d=e.detail||{};if(!MADE[d.kind])return;if(d.src&&bag.some(x=>x.src===d.src)){document.getElementById('zenBagMessage').textContent='Vật phẩm này đã có trong túi.';return}
+   const full=bag.length>=BAG_MAX;bag.push({uuid:globalThis.crypto?.randomUUID?.()||('made-'+Date.now()),made:d.kind,src:d.src||'',label:String(d.label||'').slice(0,80),maker:String(d.maker||'').slice(0,24),data:d.data||null,source:d.own?'own':'store',time:Date.now()});saveBag();renderBag();
+   const t=MADE[d.kind][0]+' '+(d.own?'Đã cất vào Túi An Yên':'Đã mang về Túi An Yên')+(full?' · túi đầy, món cũ nhất đã rời túi':'');window.dispatchEvent(new CustomEvent('anyen-bag-note',{detail:t}))});
+ function renderBag(){const host=document.getElementById('zenBagContents');if(!host)return;host.replaceChildren();{const c=document.createElement('p');c.style.cssText='font-size:12px;color:#e2cda0;margin:4px 0';c.textContent='Túi đang có '+bag.length+'/'+BAG_MAX+' vật phẩm · đầy thì món cũ nhất tự rời túi; có thể bỏ bớt món không cần.';host.append(c)}if(!bag.length){const p=document.createElement('p');p.textContent='Túi đang trống. Hãy thỉnh vật phẩm đầu tiên!';host.append(p);return;}
+ const delBtn=entry=>{const b=document.createElement('button');b.type='button';b.textContent='🗑 Bỏ';b.title='Bỏ khỏi túi';b.style.cssText='width:auto;align-self:flex-end;padding:4px 12px;font-size:12px';b.onclick=()=>{bag=bag.filter(x=>x.uuid!==entry.uuid);saveBag();renderBag()};return b};
+ for(const entry of [...bag].reverse()){if(entry.made&&MADE[entry.made]){const row=document.createElement('div');row.className='anyen-bag-row';const title=document.createElement('div');title.textContent=MADE[entry.made][0]+' '+MADE[entry.made][1]+(entry.label?' · '+entry.label:'')+' · '+(entry.source==='own'?'Tự làm':'của '+(entry.maker||'Khách Yên'));row.append(title,delBtn(entry));host.append(row);continue}
+ const item=itemData.find(it=>it[0]===entry.id);if(!item)continue;const row=document.createElement('div');row.className='anyen-bag-row';const title=document.createElement('div');title.textContent=item[3]+' '+item[1]+' · '+(entry.source==='gift'?'🎁 '+(entry.from||'Quà tặng'):'Tự thỉnh');row.append(title);
  const select=document.createElement('select');select.setAttribute('aria-label','Chọn người nhận '+item[1]);const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Tặng cho người trong phòng…';select.append(placeholder);
  const nameCount={};for(const p of Object.values(onlinePeople)){const n=p.name||'Khách Yên';nameCount[n]=(nameCount[n]||0)+1}
  for(const [id,p] of Object.entries(onlinePeople)){const option=document.createElement('option');option.value=id;const n=p.name||'Khách Yên';option.textContent=nameCount[n]>1?n+' · #'+id.replace(/[^0-9a-z]/gi,'').slice(0,4):n;select.append(option);}
  const send=document.createElement('button');send.type='button';const sending=sendingGifts.has(entry.uuid);send.textContent=sending?'⏳ Đang gửi…':'🎁 Tặng';send.disabled=sending||!Object.keys(onlinePeople).length;select.disabled=sending;if(!Object.keys(onlinePeople).length)placeholder.textContent='Chưa có ai cùng phòng để tặng';
  send.onclick=()=>{if(!select.value)return document.getElementById('zenBagMessage').textContent='Hãy chọn người nhận.';const to=select.value;const recipient=onlinePeople[to];if(!recipient)return;if(sendingGifts.has(entry.uuid))return;const gift={uuid:entry.uuid,id:entry.id,to,toName:recipient.name||'Khách Yên'};
  sendingGifts.add(entry.uuid);renderBag();window.dispatchEvent(new CustomEvent('anyen-gift-send',{detail:gift}));document.getElementById('zenBagMessage').textContent='Đang gửi '+item[1]+' đến '+gift.toName+'…';};
- row.append(select,send);host.append(row);}
+ row.append(select,send,delBtn(entry));host.append(row);}
  }
  // Peers' positions arrive several times a second; only rebuild the bag when the list of people changes,
   // otherwise the recipient picker resets (and closes on iPhone) before the gift can be sent.
