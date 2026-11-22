@@ -88,7 +88,7 @@ footer{padding:26px 0 44px;border-top:1px solid rgba(200,169,106,.2);display:fle
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0a302a;border:1px solid var(--line);padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-</style>
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--gold);text-decoration:underline;cursor:pointer}</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -293,7 +293,7 @@ document.addEventListener('click',function(e){
 });
 function refreshHome(){
  var a=$('#again');
- if(store.result){a.hidden=false;a.innerHTML='Bạn đã có kết quả: <b>'+BODY[store.result.body].n+' · '+STATE[store.result.state].n+'</b>. <a href="#" id="seeRes" style="color:var(--gold)">Xem lại</a> · <a href="#" id="redo" style="color:var(--gold)">Làm lại</a>';
+ if(store.result){a.hidden=false;a.innerHTML='Bạn đã có kết quả: <b>'+BODY[store.result.body].n+' · '+STATE[store.result.state].n+'</b>. <button type="button" id="seeRes" class="linkbtn">Xem lại</button> · <button type="button" id="redo" class="linkbtn">Làm lại</button>';
   $('#seeRes').onclick=function(e){e.preventDefault();renderResult();show('result')};
   $('#redo').onclick=function(e){e.preventDefault();startConsent()};
   $('#startBtn').textContent='Xem kết quả của tôi →';
