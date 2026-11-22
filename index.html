@@ -2941,6 +2941,61 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   async function loadAromas(){if(typeof flowerDb==='undefined'||!flowerDb)return;try{const {data,error}=await flowerDb.from('anyen_aroma_gifts').select('id,seq,form,aromas,drops,title,wish,name,picks,created_at').order('seq',{ascending:false}).limit(9);if(!error&&data){const local=aromaRows.filter(r=>String(r.id).startsWith('local-')&&!data.some(d=>d.title===r.title&&d.name===r.name));aromaRows=[...local,...data].slice(0,9);if(room&&room.onAromas)room.onAromas()}}catch(e){}}
   setTimeout(loadAromas,3000);
   // ---- the room
+  // ---- Haromy: phong cách spa mộc — tường vữa kem, sàn sồi sáng, gỗ mật ong, rèm lanh, nắng qua cửa sổ, đèn mây, cây xanh, thảm cói, nến
+  function haromyTex(kind){const cv=document.createElement('canvas');cv.width=cv.height=512;const c=cv.getContext('2d');
+    if(kind==='plaster'){c.fillStyle='#ebe0cb';c.fillRect(0,0,512,512);for(let k=0;k<900;k++){const x=Math.random()*512,y=Math.random()*512,r=8+Math.random()*40;const g=c.createRadialGradient(x,y,0,x,y,r);const a=Math.random()*.05;g.addColorStop(0,Math.random()<.5?`rgba(255,250,238,${a})`:`rgba(190,165,130,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,2*r,2*r)}}
+    else{const base=kind==='ceil'?[150,112,78]:[192,150,106];for(let i=0;i<8;i++){const off=(i*173)%512;for(let s=-1;s<2;s++){const k=.9+((i*31+s*7)%9)/45;c.fillStyle=`rgb(${base[0]*k|0},${base[1]*k|0},${base[2]*k|0})`;c.fillRect(i*64,off+s*512,64,512);c.strokeStyle='rgba(90,60,35,.12)';for(let g=0;g<7;g++){c.beginPath();c.moveTo(i*64+5+g*8,off+s*512);c.bezierCurveTo(i*64+9+g*8,off+s*512+170,i*64+1+g*8,off+s*512+340,i*64+6+g*8,off+s*512+512);c.stroke()}c.fillStyle='rgba(70,45,25,.5)';c.fillRect(i*64,off+s*512,64,2)}c.fillStyle='rgba(70,45,25,.45)';c.fillRect(i*64,0,2,512)}}
+    const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
+  function haromyDecor(st){const W=st.sc,M=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.85,...o});
+    W.background=new THREE.Color('#2c241d');
+    // đổi bảng màu: nâu sẫm → gỗ mật ong sáng; tatami ẩn để thay bằng thảm cói tròn
+    const REMAP={'4e3a2a':'8f6d4e','6b4a32':'a67d54','5a3d2a':'9a6c43','4a3222':'7f5838','5b3d2a':'8c6646','7a5438':'b48d64','6a4630':'a07b55','5a3b24':'9c7450','6a7a5a':'9fae8f','3a2a1e':'8c6a4a'};
+    const plaster=haromyTex('plaster'),oak=haromyTex('floor');
+    W.traverse(o=>{if(!o.isMesh||!o.material||!o.material.color)return;const hx=o.material.color.getHexString();
+      if(hx==='4a3a2c'){o.material=M('#ffffff',{map:plaster.clone(),roughness:.95});o.material.map.repeat.set(2,1);o.material.map.needsUpdate=true}
+      else if(hx==='5e4a36'&&o.geometry?.parameters?.width===8){o.material=M('#ffffff',{map:oak,roughness:.7});oak.repeat.set(4,3)}
+      else if(hx==='b9a77a')o.visible=false;
+      else if(REMAP[hx]){o.material=o.material.clone();o.material.color.set('#'+REMAP[hx])}});
+    // ánh sáng: nắng chiều ấm từ cửa sổ, ánh sáng dịu toàn phòng
+    W.add(new THREE.HemisphereLight('#fff4e0','#7a5a3c',.9));const sun=new THREE.DirectionalLight('#ffe2b0',1.6);sun.position.set(-.6,3.2,-6);sun.target.position.set(.4,0,-.6);W.add(sun,sun.target);
+    // ốp gỗ chân tường + trần gỗ có xà
+    const wain=M('#b48a5e',{roughness:.7});for(const [x,z,w,d] of [[0,-3.42,7.9,.05],[-3.92,0,.05,6.9],[3.92,0,.05,6.9]]){const p=new THREE.Mesh(new THREE.BoxGeometry(w,.85,d),wain);p.position.set(x,.43,z);W.add(p);const cap=new THREE.Mesh(new THREE.BoxGeometry(w+.02,.05,d+.06),M('#8f6d4e'));cap.position.set(x,.87,z);W.add(cap)}
+    {const ct=haromyTex('ceil');ct.repeat.set(3,3);const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,7),M('#ffffff',{map:ct}));ceil.rotation.x=Math.PI/2;ceil.position.y=3.62;W.add(ceil);for(const z of [-2.4,-.8,.8]){const b=new THREE.Mesh(new THREE.BoxGeometry(8,.16,.18),M('#7d5a3c'));b.position.set(0,3.52,z);W.add(b)}}
+    // vệt nắng xiên qua cửa sổ xuống sàn
+    {const cv=document.createElement('canvas');cv.width=64;cv.height=256;const c=cv.getContext('2d'),g=c.createLinearGradient(0,0,0,256);g.addColorStop(0,'rgba(255,236,190,.55)');g.addColorStop(1,'rgba(255,236,190,0)');c.fillStyle=g;c.fillRect(0,0,64,256);const tx=new THREE.CanvasTexture(cv);
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute([-1.05,2.85,-3.35, 1.05,2.85,-3.35, -1.35,.03,-.9, 1.35,.03,-.9],3));geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,0,1,1,1],2));geo.setIndex([0,2,1,1,2,3]);
+      const shaft=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,opacity:.22}));W.add(shaft);
+      const pool=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.6),new THREE.MeshBasicMaterial({color:'#ffe9b8',transparent:true,opacity:.07,depthWrite:false,blending:THREE.AdditiveBlending}));pool.rotation.x=-Math.PI/2;pool.position.set(0,.025,-1.2);W.add(pool);
+      st.tick.push(t=>{shaft.material.opacity=.2+Math.sin(t*.4)*.04})}
+    // rèm lanh mỏng hai bên cửa sổ, thanh treo gỗ
+    {const rod=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,4.4,8),M('#7d5a3c'));rod.rotation.z=Math.PI/2;rod.position.set(0,3.15,-3.3);W.add(rod);
+      for(const sx of [-1,1]){const g=new THREE.PlaneGeometry(.8,2.7,16,1),p=g.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,Math.sin(p.getX(i)*18)*.05);g.computeVertexNormals();
+        const cur=new THREE.Mesh(g,M('#f4eddf',{transparent:true,opacity:.78,side:THREE.DoubleSide,roughness:1}));cur.position.set(sx*1.85,1.78,-3.26);W.add(cur);st.tick.push(t=>{cur.rotation.y=Math.sin(t*.6+sx)*.03})}}
+    // thảm cói tròn dưới bàn
+    {const rug=new THREE.Mesh(new THREE.CircleGeometry(1.75,48),M('#d6c49c',{roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.set(0,.012,-1.25);W.add(rug);
+      for(const r of [1.62,1.3,.9]){const ring=new THREE.Mesh(new THREE.RingGeometry(r-.035,r,64),M('#b39a6c',{roughness:1}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.014,-1.25);W.add(ring)}}
+    // hai đèn mây treo trên bàn xông
+    for(const x of [-.6,.6]){const g=new THREE.Group();g.position.set(x,2.45,-1.6);W.add(g);const cord=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.1,4),M('#3a2a1e'));cord.position.y=.62;g.add(cord);
+      const shade=new THREE.Mesh(new THREE.SphereGeometry(.26,18,10,0,Math.PI*2,0,Math.PI*.55),M('#c9a46c',{side:THREE.DoubleSide,roughness:1,emissive:'#5a3a14',emissiveIntensity:.35}));g.add(shade);
+      for(let k=0;k<5;k++){const band=new THREE.Mesh(new THREE.TorusGeometry(.262*Math.sin(Math.PI*(.12+k*.09)),.006,4,24),M('#9b7848'));band.rotation.x=Math.PI/2;band.position.y=.262*Math.cos(Math.PI*(.12+k*.09));g.add(band)}
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),new THREE.MeshBasicMaterial({color:'#ffe2a8'}));bulb.position.y=.02;g.add(bulb);const pl=new THREE.PointLight('#ffcf8a',2.2,4.5,1.6);pl.position.y=-.05;g.add(pl)}
+    // cây xanh: chậu lá lớn ở góc, dây trầu bà trên tủ, chậu nhỏ trên bệ cửa sổ
+    const leafMat=M('#4f7a4a',{side:THREE.DoubleSide,roughness:.7}),leafMat2=M('#6b9258',{side:THREE.DoubleSide,roughness:.7});
+    const plant=(x,z,s,n)=>{const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);W.add(g);const pot=new THREE.Mesh(new THREE.CylinderGeometry(.26,.2,.48,16),M('#e9e1d2',{roughness:.6}));pot.position.y=.24;g.add(pot);const soil=new THREE.Mesh(new THREE.CircleGeometry(.24,14),M('#4a3626'));soil.rotation.x=-Math.PI/2;soil.position.y=.47;g.add(soil);
+      for(let k=0;k<n;k++){const a=k*2.4,hgt=.9+(k%4)*.22,stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.016,hgt,5),M('#5d7a44'));stem.position.set(Math.cos(a)*.08,.48+hgt/2,Math.sin(a)*.08);stem.rotation.set(Math.sin(a)*.25,0,Math.cos(a)*.25);g.add(stem);
+        const leaf=new THREE.Mesh(new THREE.CircleGeometry(.22,14),k%2?leafMat:leafMat2);leaf.scale.set(.75,1.25,1);leaf.position.set(Math.cos(a)*(.12+hgt*.25),.48+hgt+.05,Math.sin(a)*(.12+hgt*.25));leaf.rotation.set(-1.1+(k%3)*.25,a,0);g.add(leaf)}
+      st.tick.push(t=>{g.rotation.y=Math.sin(t*.3+x)*.03});return g};
+    plant(-2.65,-2.95,1.15,11);plant(3.2,-2.95,.72,8);plant(.95,-3.05,.45,6).position.y=1.1;
+    for(const side of [-1,1])for(let k=0;k<7;k++){const lf=new THREE.Mesh(new THREE.CircleGeometry(.07,8),k%2?leafMat:leafMat2);lf.scale.set(.8,1.1,1);lf.position.set(side*3.5,3.02-k*.17-(k%2)*.04,-2.95+k*.42);lf.rotation.y=side*Math.PI/2;W.add(lf)}
+    // vòng hoa khô treo tường cạnh cửa sổ
+    {const wr=new THREE.Group();wr.position.set(-2.35,2.35,-3.38);W.add(wr);wr.add(new THREE.Mesh(new THREE.TorusGeometry(.28,.025,6,28),M('#b08a5a')));const cs=['#c9a1b8','#e8d9b0','#a8b88e','#d7b58a','#b7a0c9'];for(let k=0;k<16;k++){const a=k/16*Math.PI*2,f=new THREE.Mesh(new THREE.SphereGeometry(.045,6,5),M(cs[k%5]));f.position.set(Math.cos(a)*.28,Math.sin(a)*.28,.02);wr.add(f)}}
+    // cụm nến sáp ong trên sàn cạnh kệ, lửa nến lung linh
+    {const cg=new THREE.Group();cg.position.set(1.35,0,-3.0);W.add(cg);const flames=[];[[0,0,.38],[.18,.08,.26],[-.16,.1,.2],[.05,.2,.16]].forEach(([x,z,hh])=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,hh,14),M('#f3e6c6',{roughness:.6}));c.position.set(x,hh/2,z);cg.add(c);const fl=new THREE.Mesh(new THREE.SphereGeometry(.02,8,6),new THREE.MeshBasicMaterial({color:'#ffcf6a'}));fl.scale.y=1.8;fl.position.set(x,hh+.04,z);cg.add(fl);flames.push(fl)});
+      const cl=new THREE.PointLight('#ffb866',1.2,2.4,2);cl.position.set(0,.5,.1);cg.add(cl);st.tick.push(t=>{cl.intensity=1.1+Math.sin(t*9)*.12+Math.sin(t*13.7)*.08;flames.forEach((f,i)=>f.scale.y=1.6+Math.sin(t*10+i*2)*.25)})}
+    // biển tên Haromy trên cửa sổ
+    {const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c=cv.getContext('2d');c.fillStyle='#8c6646';c.fillRect(0,0,512,96);c.fillStyle='#f6ead0';c.font='italic 600 52px Georgia, serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Haromy',256,50);const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;
+      const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.22),new THREE.MeshBasicMaterial({map:tx}));sign.position.set(0,3.32,-3.36);W.add(sign)}
+  }
   function roomXongHuong(st){
     const W=st.sc,amb=new THREE.PointLight('#ffcf8a',4,7,1.6);amb.position.set(0,2.2,-1.4);W.add(amb);
     // window onto Hồ Hương: a painted view of the pond and pines, with open shutters
@@ -3000,6 +3055,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const shelfItems=new THREE.Group();shelf.add(shelfItems);
     const drawShelf2=()=>{while(shelfItems.children.length)shelfItems.remove(shelfItems.children[0]);aromaRows.slice(0,9).forEach((r,i)=>{const m=makeAromaGift(r,.8);m.position.set(-.4+(i%3)*.4,[1.775,1.175,.575][Math.floor(i/3)],0);shelfItems.add(m)})};
     drawShelf2();st.onAromas=drawShelf2;rTap(st,shelf,()=>openArchive('aromas'));loadAromas();
+    haromyDecor(st);
     // ---- camera views (own drag handling so a view can face any wall)
     const VIEWS={home:{t:[0,1.35,-1.2],yaw:0,pitch:.14,dist:4.4},left:{t:[-3.4,1.75,-1.45],yaw:Math.PI/2,pitch:.05,dist:2.6},right:{t:[3.4,1.75,-1.45],yaw:-Math.PI/2,pitch:.05,dist:2.6},
       drip:{t:[-.5,.85,-1.6],yaw:.15,pitch:.42,dist:1.35},burn:{t:[.5,.75,-1.6],yaw:-.15,pitch:.42,dist:1.35},seat:{t:[0,1.6,-3.2],yaw:0,pitch:-.08,dist:3.9},shelf:{t:[2.35,1.6,-3.2],yaw:-.25,pitch:.05,dist:2.4}};
