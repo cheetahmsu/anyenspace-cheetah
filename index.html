@@ -649,64 +649,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     document.getElementById('zenHint').textContent=kind==='flower'?'🪷 Đã dâng hoa sen':kind==='incense'?'🪔 Đã dâng hương':'🕯️ Đã dâng nến';
   });
   const leaf=mat('#47745c'),pink=mat('#e5a9aa'),petal=mat('#edc6b4');
-  // Hồ Niệm: sen vẽ lại theo tranh sen hồng — cánh nhọn dài, gốc trắng kem chuyển hồng, mép và chóp hồng đậm; nhụy vàng có gương sen chấm hạt;
-  // nụ búp hình giọt nước; lá to gợn sóng có gân toả, xanh vàng ở giữa sẫm dần ra mép, nhiều lá vươn cao nghiêng để lộ mặt dưới xanh xám.
-  // Mọi bụi sen được gộp thành 2 khối hình (mỗi cánh hồ 1 khối) để điện thoại vẽ nhẹ.
-  const ls_LC=h=>new THREE.Color(h),ls_lcTmp=new THREE.Color();
-  const lotusMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.78,side:THREE.DoubleSide});
-  lotusMat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n if(!gl_FrontFacing&&vColor.g>vColor.r+.04){diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.5,.64,.6)*(.6+.6*length(vColor)),.5);}')
-    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n { float pk=step(.06,vColor.r-vColor.g), yl=step(.35,vColor.r)*step(.25,vColor.g)*step(vColor.b,.18)*(1.-pk); totalEmissiveRadiance+=vColor*(pk*.42+yl*.3); if(!gl_FrontFacing&&vColor.g>vColor.r+.04)totalEmissiveRadiance+=diffuseColor.rgb*.35; }')};
-  // ghép nhiều mảnh (có position + color, có index) thành 1 hình
-  function LotusBatch(){this.P=[];this.C=[];this.I=[];this.n=0}
-  LotusBatch.prototype.add=function(geo,m){const p=geo.attributes.position,c=geo.attributes.color,v=new THREE.Vector3(),o=this.n;
-    for(let k=0;k<p.count;k++){v.fromBufferAttribute(p,k).applyMatrix4(m);this.P.push(v.x,v.y,v.z);this.C.push(c.getX(k),c.getY(k),c.getZ(k))}
-    const idx=geo.index;if(idx){for(let k=0;k<idx.count;k++)this.I.push(idx.getX(k)+o)}else{for(let k=0;k<p.count;k++)this.I.push(k+o)}this.n+=p.count};
-  LotusBatch.prototype.mesh=function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(this.P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(this.C,3));g.setIndex(this.I);g.computeVertexNormals();g.computeBoundingSphere();return new THREE.Mesh(g,lotusMat)};
-  const ls_paint=(geo,fn)=>{const p=geo.attributes.position,a=new Float32Array(p.count*3),v=new THREE.Vector3();for(let k=0;k<p.count;k++){v.fromBufferAttribute(p,k);fn(v,ls_lcTmp,k);a[k*3]=ls_lcTmp.r;a[k*3+1]=ls_lcTmp.g;a[k*3+2]=ls_lcTmp.b}geo.setAttribute('color',new THREE.BufferAttribute(a,3));return geo};
-  const ls_sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
-  // cánh sen: mọc theo +y, lòng cánh quay vào tâm (-z), chóp hơi cong ra ngoài
-  function ls_petalGeo(len,wid,cup,bend,pal){const nu=7,nv=7,P=[],C=[],I=[];
-    for(let i=0;i<=nu;i++){const u=i/nu,w=wid*Math.pow(Math.sin(Math.PI*Math.pow(u,.62)),.62);
-      for(let j=0;j<nv;j++){const v=-1+2*j/(nv-1);P.push(v*w,u*len,-cup*w*v*v+bend*len*u*u);
-        ls_lcTmp.copy(pal.base).lerp(pal.mid,ls_sm(.05,.55,u)).lerp(pal.tip,ls_sm(.55,1,u)*.9).lerp(pal.edge,Math.pow(Math.abs(v),2.4)*ls_sm(.12,.85,u)*.75);C.push(ls_lcTmp.r,ls_lcTmp.g,ls_lcTmp.b)}}
-    for(let i=0;i<nu;i++)for(let j=0;j<nv-1;j++){const a=i*nv+j,b=a+nv;I.push(a,b,a+1,a+1,b,b+1)}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setIndex(I);return g}
-  const ls_PAL_OUT={base:ls_LC('#fff6f2'),mid:ls_LC('#f8d2e2'),tip:ls_LC('#f07aab'),edge:ls_LC('#ea5d9f')},ls_PAL_IN={base:ls_LC('#fffaf4'),mid:ls_LC('#fbe0ea'),tip:ls_LC('#f38db7'),edge:ls_LC('#ee6fa9')};
-  const lotusM=new THREE.Matrix4(),lotusQ=new THREE.Quaternion(),lotusE=new THREE.Euler(),lotusS=new THREE.Vector3(),lotusV=new THREE.Vector3();
-  const ls_mat4=(x,y,z,rx,ry,rz,sx=1,sy=1,sz=1,order='YXZ')=>new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz,order)),new THREE.Vector3(sx,sy,sz));
-  // hoa nở: 3 tầng cánh + gương sen + nhị vàng, dựng sẵn 3 mẫu rồi dùng lại
-  function ls_flowerHeadGeo(seed){let s=seed;const r=()=>{s=(s*16807)%2147483647;return s/2147483647};const b=new LotusBatch();
-    const layers=[{n:8,len:.5,wid:.19,tilt:1.08,rad:.08,cup:.95,bend:.1,pal:ls_PAL_OUT,off:0},{n:8,len:.46,wid:.18,tilt:.72,rad:.08,cup:1,bend:.06,pal:ls_PAL_OUT,off:.5},{n:6,len:.34,wid:.15,tilt:.46,rad:.09,cup:1.05,bend:.03,pal:ls_PAL_IN,off:.25}];
-    for(const L of layers)for(let k=0;k<L.n;k++){const a=(k+L.off)*Math.PI*2/L.n+(r()-.5)*.18,t=L.tilt+(r()-.5)*.22,len=L.len*(.9+r()*.2);
-      const geo=ls_petalGeo(len,L.wid*(.9+r()*.2),L.cup,L.bend,L.pal);
-      const m=new THREE.Matrix4().makeRotationY(a).multiply(new THREE.Matrix4().makeTranslation(0,0,L.rad)).multiply(new THREE.Matrix4().makeRotationX(t));b.add(geo,m)}
-    // nhị vàng quanh gương sen
-    const st=ls_paint(new THREE.ConeGeometry(.012,.11,3,1),(v,c)=>c.copy(ls_LC('#f3c844')).lerp(ls_LC('#e89a1c'),ls_sm(-.05,.05,v.y)));
-    for(let k=0;k<22;k++){const a=k*Math.PI*2/22+(r()-.5)*.1;b.add(st,new THREE.Matrix4().makeRotationY(a).multiply(new THREE.Matrix4().makeTranslation(0,.1,.11+r()*.02)).multiply(new THREE.Matrix4().makeRotationX(.55+r()*.35)))}
-    // gương sen vàng có chấm hạt
-    b.add(ls_paint(new THREE.CylinderGeometry(.11,.075,.12,16,1),(v,c)=>c.copy(v.y>.05?ls_LC('#f2d64c'):ls_LC('#d8b23a'))),new THREE.Matrix4().makeTranslation(0,.1,0));
-    const dot=ls_paint(new THREE.CircleGeometry(.015,6).rotateX(-Math.PI/2),(v,c)=>c.set('#6f6a22'));
-    for(let k=0;k<7;k++){const a=k*Math.PI*2/6,rr=k===6?0:.062;b.add(dot,new THREE.Matrix4().makeTranslation(Math.cos(a)*rr,.161,Math.sin(a)*rr))}
-    return b}
-  // nụ búp hình giọt nước: gốc xanh vàng, thân hồng phấn, chóp hồng đậm, có gân cánh
-  const ls_budGeo=(()=>{const pts=[];for(let i=0;i<=12;i++){const t=i/12;pts.push(new THREE.Vector2(.13*Math.pow(Math.sin(Math.PI*Math.pow(t,.78)),.9)+.001,t*.44))}
-    return ls_paint(new THREE.LatheGeometry(pts,14),(v,c)=>{const t=v.y/.44,ang=Math.atan2(v.z,v.x);c.copy(ls_LC('#cfdc9a')).lerp(ls_LC('#f4cfdc'),ls_sm(.05,.35,t)).lerp(ls_LC('#e2508c'),ls_sm(.55,1,t));c.multiplyScalar(.86+.14*Math.cos(5*ang))})})();
-  // lá sen: tròn, gợn sóng mép, gân toả từ cuống; cup>0 là lá vươn cao hình chén, cup≈0 là lá nổi trên mặt nước (có khe)
-  function ls_leafGeo(cup,wave,notch,pal,seed){const nr=7,ns=36,P=[],C=[],I=[],t0=notch/2,span=Math.PI*2-notch,closed=notch===0;
-    const col=(rr,th)=>{ls_lcTmp.copy(pal.c).lerp(pal.m,ls_sm(.02,.3,rr)).lerp(pal.e,ls_sm(.5,1,rr));const vein=Math.pow(Math.abs(Math.cos(7*th)),36)*ls_sm(.08,.3,rr)*(1-ls_sm(.85,1,rr));ls_lcTmp.lerp(pal.v,vein*.2);return ls_lcTmp};
-    P.push(0,cup*.02,0);col(0,0);C.push(ls_lcTmp.r,ls_lcTmp.g,ls_lcTmp.b);
-    const cols=closed?ns:ns+1;
-    for(let i=1;i<=nr;i++){const rr=i/nr;for(let j=0;j<cols;j++){const th=t0+span*j/ns;const y=cup*rr*rr*.42+wave*rr*rr*rr*(Math.sin(4*th+seed)*.65+Math.sin(7*th+seed*1.7)*.35)*.07;
-      P.push(Math.cos(th)*rr,y,Math.sin(th)*rr);col(rr,th);C.push(ls_lcTmp.r,ls_lcTmp.g,ls_lcTmp.b)}}
-    const at=(i,j)=>1+(i-1)*cols+(closed?j%ns:j);
-    for(let j=0;j<ns;j++)I.push(0,at(1,j+1),at(1,j));
-    for(let i=1;i<nr;i++)for(let j=0;j<ns;j++){I.push(at(i,j),at(i,j+1),at(i+1,j),at(i,j+1),at(i+1,j+1),at(i+1,j))}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setIndex(I);return g}
-  const ls_LEAF_PALS=[{c:ls_LC('#c3d27a'),m:ls_LC('#8dbb57'),e:ls_LC('#4f8d45'),v:ls_LC('#cfe08f')},{c:ls_LC('#a9c46c'),m:ls_LC('#64a050'),e:ls_LC('#2e6c48'),v:ls_LC('#bcd68a')},{c:ls_LC('#b6cc72'),m:ls_LC('#76ab55'),e:ls_LC('#3a7a4a'),v:ls_LC('#c8dc90')}];
-  const ls_RAISED=[0,1,2,3].map(k=>ls_leafGeo(.8+k*.15,1.2+k*.3,0,ls_LEAF_PALS[k%3],k*1.9));
-  const ls_PADS=[0,1,2].map(k=>ls_leafGeo(.02,.25,.34,ls_LEAF_PALS[(k+1)%3],k*2.3+.7));
-  const ls_stemGeo=ls_paint(new THREE.CylinderGeometry(.022,.026,1,5,1),(v,c)=>c.copy(ls_LC('#5f9248')).lerp(ls_LC('#7fa356'),ls_sm(0,.5,v.y)));
-  const ls_HEADS=[11,29,47].map(ls_flowerHeadGeo).map(b=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(b.P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(b.C,3));g.setIndex(b.I);return g});
+  // Hồ Niệm lotus: floating notched pads, raised bowl-shaped leaves on stems, open flowers with layered pointed petals
+  // around a yellow seed pod, and a few closed buds. Kept clear of the bridge.
+  const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalInner=mat('#f6b6c8'),seedPod=mat('#e2cf62'),budMat=mat('#e98aaa');
+  const padGeo=new THREE.CircleGeometry(.5,20,.18,Math.PI*2-.36),bowlGeo=new THREE.LatheGeometry([new THREE.Vector2(0,0),new THREE.Vector2(.25,.05),new THREE.Vector2(.5,.15),new THREE.Vector2(.62,.24)],18),petalGeo=new THREE.SphereGeometry(.5,10,8);
+  function lotusPetal(group,angle,tilt,len,wid,material,y){const pivot=new THREE.Group();pivot.position.y=y;pivot.rotation.y=angle;const tip=new THREE.Group();tip.rotation.x=tilt;const p=new THREE.Mesh(petalGeo,material);p.scale.set(wid,len,wid*.38);p.position.y=len*.5;tip.add(p);pivot.add(tip);group.add(pivot);}
+  function lotusFlower(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const head=new THREE.Group();head.position.y=h;g.add(head);
+    for(let k=0;k<9;k++)lotusPetal(head,k*Math.PI*2/9,1.0,.42,.2,petalOuter,0);for(let k=0;k<7;k++)lotusPetal(head,k*Math.PI*2/7+.3,.55,.38,.17,petalInner,.02);
+    const pod=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.09,12),seedPod);pod.position.y=.08;head.add(pod);return g;}
+  function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.026,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),budMat);bud.scale.set(1,1.8,1);bud.position.y=h+.14;g.add(bud);const cap=new THREE.Mesh(new THREE.ConeGeometry(.09,.16,10),budMat);cap.position.y=h+.42;g.add(cap);return g;}
+  function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
+  function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
   // Tuyến thuyền ngắm cảnh: vòng số 8 nhỏ (khoảng 130 m, 60 giây) đi giữa hai cánh hồ sen, chui gầm cầu vòm ở giữa lạch hai lần.
   const BEN_SEN={x:-9,z0:.6,z1:8.8,w:1.7};
   const BOAT_LOOP=(()=>{const pts=[[0,-4],[6,-7],[12,-10.5],[19,-11.5],[25.5,-8],[26.5,-1.5],[22,3],[15,3.5],[8,.5],[0,-4],[-8,-8.5],[-15,-11.5],[-22,-11],[-26.5,-6],[-25.5,0],[-19,3.5],[-12,3],[-6,-.5]].map(([x,z])=>new THREE.Vector3(x,0,z));
@@ -714,24 +667,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function loopDistance(x,z){let best=Infinity;for(let i=0;i<BOAT_LOOP.length;i++){const [ax,az]=BOAT_LOOP[i],[bx,bz]=BOAT_LOOP[(i+1)%BOAT_LOOP.length],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz||1)));best=Math.min(best,Math.hypot(ax+vx*u-x,az+vz*u-z))}return best}
   const flowers=[];
   const lotusRand=(()=>{let a=0x5e17;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}})();
-  const lotusBatches=[new LotusBatch(),new LotusBatch()],R=lotusRand;
-  for(let i=0,tries=0;i<120&&tries<6000;tries++){const x=(R()*2-1)*32,z=-4+(R()*2-1)*12;
+  for(let i=0,tries=0;i<120&&tries<6000;tries++){const x=(lotusRand()*2-1)*32,z=-4+(lotusRand()*2-1)*12;
     if(lakeSDF(x,z)>-1.4||Math.abs(x)<3.2||loopDistance(x,z)<2.1||Math.hypot(x-BEN_SEN.x,z-3.5)<4.2)continue;/* inside a lobe, clear of the bridge channel and the boat lane */
-    if(flowers.some(f=>Math.hypot(f.position.x-x,f.position.z-z)<2.05))continue;i++;
-    const B=lotusBatches[x<0?0:1],base=new THREE.Matrix4().compose(new THREE.Vector3(x,-.03,z),new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),R()*6.28),new THREE.Vector3(1,1,1));
-    const put=(geo,m)=>B.add(geo,base.clone().multiply(m));
-    // lá nổi trên mặt nước
-    const nPads=2+(R()<.6?1:0);for(let k=0;k<nPads;k++){const sc=.38+R()*.32;put(ls_PADS[(i+k)%3],ls_mat4((R()-.5)*1.5,.01+k*.004,(R()-.5)*1.5,0,R()*6.28,0,sc,sc,sc))}
-    // lá vươn cao, nghiêng (vài lá nghiêng mạnh lộ mặt dưới)
-    const nLeaf=1+(R()<.55?1:0);for(let k=0;k<nLeaf;k++){const h=.35+R()*.6,lx=(R()-.5)*1.2,lz=(R()-.5)*1.2,sc=.42+R()*.34,steep=R()<.2,tx=(R()-.5)*(steep?2.2:.7),tz=(R()-.5)*(steep?2.2:.7);
-      put(ls_stemGeo,ls_mat4(lx,h/2,lz,0,0,0,1,h,1));put(ls_RAISED[(i+k)%4],ls_mat4(lx,h,lz,tx,R()*6.28,tz,sc,sc,sc,'XYZ'))}
-    // hoa nở và nụ (cao hơn lá, nghiêng nhẹ)
-    const fl=i%3!==2,h=fl?.6+R()*.55:.55+R()*.5,fx=(R()-.5)*.5,fz=(R()-.5)*.5,lean=(R()-.5)*.3,yaw=R()*6.28;
-    put(ls_stemGeo,ls_mat4(fx,h/2,fz,0,0,0,1,h,1));
-    if(fl){const sc=.85+R()*.3;put(ls_HEADS[i%3],ls_mat4(fx,h,fz,lean,yaw,lean*.6,sc,sc,sc));if(R()<.35){const h2=.5+R()*.4,bx=fx+.35,bz=fz-.2;put(ls_stemGeo,ls_mat4(bx,h2/2,bz,0,0,0,1,h2,1));put(ls_budGeo,ls_mat4(bx,h2,bz,.15,0,0))}}
-    else{const sc=.95+R()*.25;put(ls_budGeo,ls_mat4(fx,h,fz,lean,yaw,0,sc,sc,sc))}
-    const marker=new THREE.Object3D();marker.position.set(x,-.03,z);flowers.push(marker)}
-  for(const B of lotusBatches)if(B.n){const m=B.mesh();m.name='lotusField';scene.add(m)}
+    if(flowers.some(f=>Math.hypot(f.position.x-x,f.position.z-z)<2.05))continue;i++;const a=lotusRand()*6.28;
+    const clump=new THREE.Group();clump.position.set(x,-.03,z);clump.rotation.y=a;clump.userData.y0=-.03;
+    for(let k=0;k<3;k++){const pad=lotusPad(.7+Math.random()*.6);pad.position.set((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4);clump.add(pad)}
+    if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
+    if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
+    scene.add(clump);flowers.push(clump)}
   // 3.15: Ba thuyền ngắm cảnh trên hồ sen. Thuyền neo ở Bến sen (cầu gỗ bờ nam, phía tây cầu vòm). Chạm thuyền để lên;
   // thuyền tự đi một vòng hình số 8 qua hai cánh hồ, chui gầm cầu vòm hai lần, rồi về đúng chỗ neo. Mỗi thuyền một người;
   // thuyền đang có người thì người khác thấy thuyền đi trên hồ và chờ chiếc khác.
