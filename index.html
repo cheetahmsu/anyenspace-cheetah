@@ -599,13 +599,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const POST_STEP=4;for(let k=0;k<=N;k+=POST_STEP){const z=zAt(k),y=Y(z);for(const x of [-HW,HW]){P(GB(.17,1.08,.17),red,x,y+.54,z);P(GB(.21,.06,.21),redD,x,y+1.1,z)}
       if(k<N){const za=zAt(k),zb=zAt(Math.min(N,k+POST_STEP)),ya=Y(za),yb=Y(zb),mz=(za+zb)/2,my=(ya+yb)/2,L=Math.hypot(zb-za,yb-ya),t=-Math.atan2(yb-ya,zb-za),d=Math.hypot(L,.36);
         for(const x of [-HW,HW])for(const sg of [-1,1]){const g=GB(.05,.05,d);P(g,redD,x,my+.3,mz,{rx:t+sg*Math.atan2(.36,L)})}}}
-    // mố đá hai đầu có bậc lên cầu
+    // mố đá hai đầu có bậc lên cầu (không còn trụ đèn)
     for(const [z,dir] of [[BRIDGE_ARCH[0],-1],[BRIDGE_ARCH[1],1]]){P(GB(4.2,.55,1.4),stoneC,0,.03,z+dir*.35);P(GB(4,.18,.6),'#8a8476',0,.36,z+dir*.95);
-      for(const x of [-HW-.55,HW+.55]){P(GB(.5,.7,.5),'#6c6759',x,.35,z+dir*.9);P(GB(.36,.36,.36),'#8a8476',x,.88,z+dir*.9);P(GB(.6,.1,.6),'#5f5a4e',x,1.11,z+dir*.9);P(GK(.42,.38,4),'#5f5a4e',x,1.35,z+dir*.9,{ry:Math.PI/4})}}
+    }
     const bridgeMesh=new THREE.Mesh(mergeColored(parts),houseMat);scene.add(bridgeMesh);
-    // ánh đèn trong bốn cột đèn đá
-    const glowM=new THREE.MeshStandardMaterial({color:'#ffe2a8',emissive:'#ffb860',emissiveIntensity:1.1});
-    for(const z of [BRIDGE_ARCH[0]-.9,BRIDGE_ARCH[1]+.9])for(const x of [-HW-.55,HW+.55]){const l=new THREE.Mesh(new THREE.BoxGeometry(.22,.2,.22),glowM);l.position.set(x,.88,z);scene.add(l)}}}
+    }}
 
   // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
   // Flagstones laid loosely over packed earth, a ring of larger dark stones at the edge.
@@ -716,19 +714,19 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // thuyền tự đi một vòng hình số 8 qua hai cánh hồ, chui gầm cầu vòm hai lần, rồi về đúng chỗ neo. Mỗi thuyền một người;
   // thuyền đang có người thì người khác thấy thuyền đi trên hồ và chờ chiếc khác.
   const BOAT_SPEED=2.25,BOAT_STEP_MS=900;/* one loop (about 135 m from the pier and back) in about 60 s */
-  function makeBoat(){const g=new THREE.Group(),hullMat=mat('#7a5634'),trim=mat('#a07448');
+  function makeBoat(){const g=new THREE.Group(),hullMat=mat('#6d4d2f'),trim=mat('#684a31');
    const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
    const wall=outline(1);wall.holes.push(outline(.88));
    const hullWall=new THREE.Mesh(new THREE.ExtrudeGeometry(wall,{depth:.36,bevelEnabled:false,curveSegments:10}),hullMat);hullWall.rotation.x=-Math.PI/2;g.add(hullWall);
-   const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#5e4128'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
+   const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#624a33'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
    const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
    const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
    return {group:g};}
   // Bến sen: a wooden pier from the south shore into the west lobe; three moorings, two on its west side, one on the east.
   const BOAT_SLOTS=[{x:-10.75,z:4.7,land:[-9.4,4.7]},{x:-10.75,z:1.9,land:[-9.4,1.9]},{x:-7.25,z:3.2,land:[-8.6,3.2]}];
-  {const deckM=mat('#8a6a48'),postM=mat('#5b3d2a'),len=BEN_SEN.z1-BEN_SEN.z0;
+  {const deckM=mat('#684a31'),postM=mat('#5a3a2a'),len=BEN_SEN.z1-BEN_SEN.z0;
     const deck=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w,.14,len),deckM);deck.position.set(BEN_SEN.x,.18,(BEN_SEN.z0+BEN_SEN.z1)/2);scene.add(deck);
-    for(let z=BEN_SEN.z0+.25;z<BEN_SEN.z1;z+=.45){const plank=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w+.04,.02,.05),mat('#6e5238'));plank.position.set(BEN_SEN.x,.26,z);scene.add(plank)}
+    for(let z=BEN_SEN.z0+.25;z<BEN_SEN.z1;z+=.45){const plank=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w+.04,.02,.05),mat('#624a33'));plank.position.set(BEN_SEN.x,.26,z);scene.add(plank)}
     for(let z=BEN_SEN.z0+.2;z<BEN_SEN.z1-1.5;z+=1.5)for(const s of [-1,1]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.09,1.4,6),postM);p.position.set(BEN_SEN.x+s*(BEN_SEN.w/2+.05),-.2,z);scene.add(p)}
     for(const s of BOAT_SLOTS){const bol=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,8),postM);bol.position.set(s.land[0]+(s.x<BEN_SEN.x?-.6:.6),.4,s.z);scene.add(bol)}
     const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 54px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🚣 BẾN SEN',256,66);
