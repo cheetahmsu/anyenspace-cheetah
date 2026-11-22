@@ -78,7 +78,7 @@ async function join(){if(!valid){state('Chưa cấu hình Supabase trong config.
  // A gift re-sent after a lost ack is acknowledged again but never added to the bag twice.
  if(!receivedGiftIds.has(giftId)){receivedGiftIds.add(giftId);if(receivedGiftIds.size>500)receivedGiftIds.delete(receivedGiftIds.values().next().value);window.dispatchEvent(new CustomEvent('anyen-gift-received',{detail:{id:p.itemId,giftId,fromName:cleanName(peers[p.id]?.name||'Người bạn An Yên')}}));}
  c.send({type:'broadcast',event:'gift-ack',payload:{id:uid,to:p.id,giftId}}).then(r=>{if(r!=='ok')console.warn('An Yên gift-ack',r)}).catch(()=>{});
- }).on('broadcast',{event:'gift-ack'},({payload:p})=>{
+ }).on('broadcast',{event:'bag-gift'},({payload:p})=>{if(c!==channel||!p||p.to!==uid||p.id===uid)return;window.dispatchEvent(new CustomEvent('anyen-bag-gift-in',{detail:{fromName:cleanName(peers[p.id]?.name||'Người bạn An Yên'),label:String(p.label||'').slice(0,80)}}))}).on('broadcast',{event:'gift-ack'},({payload:p})=>{
  if(c!==channel||!joined||!p||p.to!==uid)return;
  const giftId=String(p.giftId||'');if(!/^(?:[0-9a-f-]{36}|gift-[0-9]+-[a-z0-9]+)$/i.test(giftId))return;
  if(!pendingGifts.has(giftId)||pendingGifts.get(giftId)!==p.id)return;
@@ -167,3 +167,9 @@ window.addEventListener('anyen-session',async e=>{
 window.addEventListener('pagehide',()=>{clearInterval(sessionPoll);clearTimeout(retryTimer);if(channel)channel.untrack().catch(()=>{})});
 window.addEventListener('online',()=>{if(!joined&&!manualLeave&&roomName)join()});
 state(valid?'Sẵn sàng · Chọn phòng và bấm Kết nối':'Chưa kết nối Supabase · Cần cấu hình config.js');
+
+/* Túi An Yên trên cơ sở dữ liệu: dùng chung phiên đăng nhập (ẩn danh hoặc tài khoản) với phòng cộng đồng. */
+window.anyenAuthClient=async()=>{if(!valid)return null;await auth();return client};
+window.anyenUidNow=()=>uid;
+window.addEventListener('anyen-bag-gift-notify',e=>{const d=e.detail||{};if(!joined||!channel||!d.to)return;channel.send({type:'broadcast',event:'bag-gift',payload:{id:uid,to:String(d.to),label:String(d.label||'').slice(0,80)}}).catch(()=>{})});
+window.dispatchEvent(new Event('anyen-auth-ready'));
