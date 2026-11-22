@@ -47,3 +47,8 @@ PROD_DB_URL='...' TEST_DB_URL='...' bash tools/supabase-test-sync.sh
 1. Merge code vào `koikoi369/anyenspace`.
 2. Chạy `supabase_phase1.sql` trên Supabase CHÍNH (SQL Editor › dán nội dung › Run). File chạy lại nhiều lần vẫn an toàn.
 3. Bỏ `supabase_phase1.sql` khỏi danh sách mặc định trong `tools/supabase-test-sync.sh` (vì Supabase chính đã có).
+
+## Trạng thái (22/11/2026)
+- Dự án thử **Langyen-chaythu** (`cxytckciflwcmyrvgqyc`) đã dựng xong: 24 bảng, 47 hàm, 19 policy, 7 trigger, 2 admin gốc, cấu hình Rừng Yên, Giai đoạn 1.
+- `config.js` đã điền URL + publishable key thử → trang `cheetahmsu.github.io` tự dùng bản thử; `anyen.space` vẫn dùng bản chính.
+- Mỗi lần chạy thử: Claude đọc lại lược đồ bản chính (chỉ đọc) và cập nhật bản thử qua MCP. Ảnh chụp: `tools/prod_schema_snapshot.sql`.
