@@ -599,9 +599,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const POST_STEP=4;for(let k=0;k<=N;k+=POST_STEP){const z=zAt(k),y=Y(z);for(const x of [-HW,HW]){P(GB(.17,1.08,.17),red,x,y+.54,z);P(GB(.21,.06,.21),redD,x,y+1.1,z)}
       if(k<N){const za=zAt(k),zb=zAt(Math.min(N,k+POST_STEP)),ya=Y(za),yb=Y(zb),mz=(za+zb)/2,my=(ya+yb)/2,L=Math.hypot(zb-za,yb-ya),t=-Math.atan2(yb-ya,zb-za),d=Math.hypot(L,.36);
         for(const x of [-HW,HW])for(const sg of [-1,1]){const g=GB(.05,.05,d);P(g,redD,x,my+.3,mz,{rx:t+sg*Math.atan2(.36,L)})}}}
-    // mố đá hai đầu có bậc lên cầu (không còn trụ đèn)
-    for(const [z,dir] of [[BRIDGE_ARCH[0],-1],[BRIDGE_ARCH[1],1]]){P(GB(4.2,.55,1.4),stoneC,0,.03,z+dir*.35);P(GB(4,.18,.6),'#8a8476',0,.36,z+dir*.95);
-    }
+    // mố đá hai đầu có bậc lên cầu: lát đá phiến cùng kiểu đường đi (đá đa giác dẹt, xám rêu, viền sẫm)
+    {const fc=['#5c5a4f','#646155','#56544a','#6a665b','#5f6156'],edgeC='#4b4941',rnd=seededRandom(311),stone=new THREE.DodecahedronGeometry(1,0);
+     const lay=(cx,cz,w,d,top)=>{for(let zz=cz-d/2+.22;zz<cz+d/2-.1;zz+=.46)for(let xx=cx-w/2+.24;xx<cx+w/2-.1;xx+=.5){const sw=.2+rnd()*.06,sd=.18+rnd()*.05;P(stone,fc[Math.floor(rnd()*fc.length)],xx+(rnd()-.5)*.08,top,zz+(rnd()-.5)*.06,{s:[sw,.05,sd],ry:rnd()*Math.PI})}};
+     for(const [z,dir] of [[BRIDGE_ARCH[0],-1],[BRIDGE_ARCH[1],1]]){P(GB(4.2,.55,1.4),edgeC,0,.03,z+dir*.35);lay(0,z+dir*.35,4.1,1.3,.3);P(GB(4,.18,.6),edgeC,0,.36,z+dir*.95);lay(0,z+dir*.95,3.9,.55,.45)}}
     const bridgeMesh=new THREE.Mesh(mergeColored(parts),houseMat);scene.add(bridgeMesh);
     }}
 
