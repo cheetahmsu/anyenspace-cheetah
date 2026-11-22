@@ -1921,7 +1921,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       for(const p of ps){const w=document.createElement('span');w.className='bay-place';const btn=document.createElement('button');btn.type='button';btn.textContent=(LM_ICON[p.params?.shape]||'🪨')+' '+p.name;btn.title='Đến ngay '+p.name;btn.onclick=()=>{warpToLandmark(p);closeMapBox()};
         const ck=document.createElement('button');ck.type='button';ck.className='bay-ck';ck.textContent='📸';ck.title='Check-in chụp ảnh tại '+p.name;ck.setAttribute('aria-label','Check-in chụp ảnh tại '+p.name);ck.onclick=()=>checkinLandmark(p);
         w.append(btn,ck);places.appendChild(w)}}}
-  function checkinLandmark(p){if(!bayBuilt)return;closeMapBox();closeSheet();warpToLandmark(p,true);setTimeout(()=>{openPhoto();if(bayPhoto){bayPhoto.pose=PHOTO_POSES.find(q=>q.id==='scene')||PHOTO_POSES[0];bayPhoto.cam=camera.aspect<1?{orb:-bayPhoto.side*.3,zoom:1.55,h:.15,px:.3}:{orb:0,zoom:1.15,h:-.3,px:1.5};renderPhotoBar()}bayCaption('📸 Check-in '+p.name+' · chỉnh camera rồi bấm chụp',4200)},350)}
+  function checkinLandmark(p){if(!bayBuilt)return;closeMapBox();closeSheet();warpToLandmark(p,true);setTimeout(()=>{openPhoto();if(bayPhoto){bayPhoto.pose=PHOTO_POSES.find(q=>q.id==='scene')||PHOTO_POSES[0];bayPhoto.cam={...CAM0};renderPhotoBar()}bayCaption('📸 Check-in '+p.name+' · chỉnh camera rồi bấm chụp',4200)},350)}
   function drawBayMap(){
     if(!bayBuilt||!bayMapBox.classList.contains('open'))return;const cv=document.getElementById('bayMapCanvas'),ctx=cv.getContext('2d'),b=regionBounds(),W=cv.width,H=cv.height;
     mapView.s=Math.min(W/(b.x_max-b.x_min),H/(b.z_max-b.z_min));mapView.ox=(W-(b.x_max-b.x_min)*mapView.s)/2-b.x_min*mapView.s;mapView.oz=(H-(b.z_max-b.z_min)*mapView.s)/2-b.z_min*mapView.s;
@@ -2214,7 +2214,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const chip=(attr,id,label,on)=>'<button type="button" class="bo-chip" '+attr+'="'+id+'" aria-pressed="'+on+'">'+label+'</button>';
     const pi=PHOTO_POSES.indexOf(bayPhoto.pose);
     photoBox.innerHTML='<div class="bp-touch" aria-hidden="true"></div><div class="bp-count" id="bpCount" aria-live="assertive"></div><div class="bp-col" role="toolbar" aria-label="Điều khiển chụp ảnh">'+
-      '<button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp ngay">📷</button>'+cb('zin','🔍＋','Zoom gần')+cb('zout','🔍－','Zoom xa')+cb('u','▲','Camera lên cao')+cb('d','▼','Camera xuống thấp')+cb('l','◀','Camera sang trái')+cb('r','▶','Camera sang phải')+cb('ol','⟲','Xoay vòng quanh sang trái')+cb('or','⟳','Xoay vòng quanh sang phải')+
+      '<button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp ngay">📷</button>'+cb('zin','🔍＋','Zoom gần (phóng to)')+cb('zout','🔍－','Zoom xa (thu nhỏ)')+cb('u','▲','Hướng camera lên')+cb('d','▼','Hướng camera xuống')+cb('l','◀','Hướng camera sang trái')+cb('r','▶','Hướng camera sang phải')+
       '<button type="button" class="bp-cb" data-bp="pose" title="Đổi dáng: '+bayPhoto.pose.label+'" aria-label="Đổi dáng, đang là '+bayPhoto.pose.label+'">🧍<small>'+(pi+1)+'/'+PHOTO_POSES.length+'</small></button>'+
       '<button type="button" class="bp-cb" data-bp="flip" title="Đổi bên" aria-label="Đổi bên">↔</button><button type="button" class="bp-cb" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button><button type="button" class="bp-cb bp-x" data-bp="cancel" title="Thoát chụp ảnh" aria-label="Thoát chụp ảnh">✕</button></div><div class="bp-bar" hidden><div class="bp-cam">'+
       cb('zin','🔍＋','Zoom gần')+cb('zout','🔍－','Zoom xa')+'<i></i>'+cb('l','◀','Camera sang trái')+cb('u','▲','Camera lên cao')+cb('d','▼','Camera xuống thấp')+cb('r','▶','Camera sang phải')+'<i></i>'+cb('ol','⟲','Xoay vòng quanh sang trái')+cb('or','⟳','Xoay vòng quanh sang phải')+'<button type="button" class="bp-cb bp-reset" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button></div><p class="bp-tip">Kéo màn hình để xoay quanh · chụm 2 ngón hoặc lăn chuột để zoom</p><div class="bo-row">'+PHOTO_POSES.map(p=>'<button type="button" class="bo-chip" data-pose="'+p.id+'" aria-pressed="'+(bayPhoto.pose.id===p.id)+'">'+p.label+'</button>').join('')+
@@ -2231,9 +2231,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     photoRay.set(photoFrom,photoDir);photoRay.far=L;const hit=photoRay.intersectObjects(photoBlockers,false)[0];
     if(hit&&hit.distance>.3)cam.copy(photoFrom).addScaledVector(photoDir,Math.max(.6,hit.distance-.35));
   }
-  const camClamp=(v,a,b)=>Math.max(a,Math.min(b,v)),CAM0={orb:0,zoom:1,h:0,px:0};
-  const CAM_RATE={zin:['zoom',-.9],zout:['zoom',.9],l:['px',-1.6],r:['px',1.6],u:['h',1.6],d:['h',-1.6],ol:['orb',.9],or:['orb',-.9]};
-  function camStep(C,k,v){if(k==='zoom')C.zoom=camClamp(C.zoom*Math.exp(v),.4,3.2);else if(k==='h')C.h=camClamp(C.h+v,-1.1,4);else if(k==='px')C.px=camClamp(C.px+v,-2.5,2.5);else C.orb+=v}
+  const camClamp=(v,a,b)=>Math.max(a,Math.min(b,v)),CAM0={zoom:1,yaw:0,pitch:0};
+  const CAM_RATE={zin:['zoom',.9],zout:['zoom',-.9],l:['yaw',.55],r:['yaw',-.55],u:['pitch',.4],d:['pitch',-.4]};
+  function camStep(C,k,v){if(k==='zoom')C.zoom=camClamp(C.zoom*Math.exp(v),1,4);else if(k==='pitch')C.pitch=camClamp(C.pitch+v,-.7,.7);else if(k==='yaw')C.yaw=camClamp(C.yaw+v,-1.4,1.4)}
   function bindPhotoCam(){
     for(const b of photoBox.querySelectorAll('[data-cam]')){
       b.addEventListener('pointerdown',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();bayPhoto.hold=CAM_RATE[b.dataset.cam];try{b.setPointerCapture(e.pointerId)}catch(_){}});
@@ -2242,17 +2242,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     el.addEventListener('pointerdown',e=>{if(!bayPhoto||bayPhoto.shooting)return;try{el.setPointerCapture(e.pointerId)}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
       if(pts.size===2){const [p,q]=[...pts.values()];pinch0=Math.hypot(p.x-q.x,p.y-q.y);zoom0=bayPhoto.cam.zoom}});
     el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p||!bayPhoto||bayPhoto.shooting)return;const C=bayPhoto.cam;
-      if(pts.size===1){C.orb-=(e.clientX-p.x)/Math.max(320,innerWidth)*3.2;C.h=camClamp(C.h+(e.clientY-p.y)*.012,-1.1,4)}
+      if(pts.size===1){const f=(camera.fov/57);C.yaw=camClamp(C.yaw+(e.clientX-p.x)/Math.max(320,innerWidth)*1.6*f,-1.4,1.4);C.pitch=camClamp(C.pitch+(e.clientY-p.y)/Math.max(320,innerHeight)*1.2*f,-.7,.7)}
       p.x=e.clientX;p.y=e.clientY;
-      if(pts.size===2&&pinch0>0){const [a,c]=[...pts.values()];C.zoom=camClamp(zoom0*pinch0/Math.max(20,Math.hypot(a.x-c.x,a.y-c.y)),.4,3.2)}});
+      if(pts.size===2&&pinch0>0){const [a,c]=[...pts.values()];C.zoom=camClamp(zoom0*Math.hypot(a.x-c.x,a.y-c.y)/Math.max(20,pinch0),1,4)}});
     for(const ev of ['pointerup','pointercancel'])el.addEventListener(ev,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0});
-    el.addEventListener('wheel',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();bayPhoto.cam.zoom=camClamp(bayPhoto.cam.zoom*Math.exp(e.deltaY*.0012),.4,3.2)},{passive:false});
+    el.addEventListener('wheel',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();bayPhoto.cam.zoom=camClamp(bayPhoto.cam.zoom*Math.exp(-e.deltaY*.0012),1,4)},{passive:false});
   }
   function openPhoto(){if(!bayMode||!bayBuilt)return;closeSheet();closeMapBox();if(bayOutfitOpen)closeBayOutfit(false);
-    const autoPaused=!bayPause&&(bayShip.path.length>0||(typeof bayTour!=='undefined'&&!!bayTour));if(autoPaused)pauseShip();
-    bayPhoto={pose:PHOTO_POSES[0],side:1,shooting:false,cam:{...CAM0},hold:null,autoPaused};meTag.visible=false;viewYaw=0;renderPhotoBar();photoBox.classList.add('open');document.body.classList.add('bay-photo-open');
+    bayShip.group.updateMatrixWorld(true);const base={fov:camera.fov,lp:bayShip.group.worldToLocal(camera.position.clone()),ld:camera.getWorldDirection(new THREE.Vector3()).applyQuaternion(bayShip.group.getWorldQuaternion(new THREE.Quaternion()).invert())};
+    const autoPaused=!bayPause&&(bayShip.path.length>0||(typeof bayTour!=='undefined'&&!!bayTour));if(autoPaused){const vy=viewYaw;pauseShip();viewYaw=vy}
+    bayPhoto={pose:PHOTO_POSES[0],side:1,shooting:false,cam:{...CAM0},hold:null,autoPaused,base};meTag.visible=false;renderPhotoBar();photoBox.classList.add('open');document.body.classList.add('bay-photo-open');
     bayCaption('📷 Chỉnh góc ở cột bên phải rồi bấm chụp'+(autoPaused?' · tàu tạm dừng':''),3000)}
-  function closePhoto(){if(!bayPhoto)return;clearInterval(photoTick);document.getElementById('bpCount')?.classList.remove('show');const ap=bayPhoto.autoPaused;bayPhoto=null;if(ap&&bayPause)resumeShip();photoBox.classList.remove('open');document.body.classList.remove('bay-photo-open');meTag.visible=true;meHead.rotation.set(0,0,0);me.rotation.z=0}
+  function closePhoto(){if(!bayPhoto)return;clearInterval(photoTick);document.getElementById('bpCount')?.classList.remove('show');const ap=bayPhoto.autoPaused,fv=bayPhoto.base?.fov;bayPhoto=null;if(fv&&camera.fov!==fv){camera.fov=fv;camera.updateProjectionMatrix()}if(ap&&bayPause)resumeShip();photoBox.classList.remove('open');document.body.classList.remove('bay-photo-open');meTag.visible=true;meHead.rotation.set(0,0,0);me.rotation.z=0}
   photoBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!bayPhoto||bayPhoto.shooting)return;
     if(b.dataset.pose){bayPhoto.pose=PHOTO_POSES.find(p=>p.id===b.dataset.pose)||PHOTO_POSES[0];renderPhotoBar()}
     else if(b.dataset.fmt){photoFmt=b.dataset.fmt;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none';savePhotoOpts();renderPhotoBar()}
@@ -2332,7 +2333,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // ---- Mỗi khung hình ----
   const BAY_WATER={lanha:['#18786a','#3fb594'],btl:['#1f7686','#4fb3b0']};let bayWaterRegion='halong',bayWaterBase=null;const bayTmpC1=new THREE.Color(),bayTmpC2=new THREE.Color();
-  let bayCamYaw=null;
+  let bayCamYaw=null;const bayTmpQ=new THREE.Quaternion(),bayTmpD=new THREE.Vector3();
   const bayAvatar={pos:new THREE.Vector3(),yaw:0};const bayTmp=new THREE.Vector3(),bayLook=new THREE.Vector3(),bayCam=new THREE.Vector3();let bayLastNear=null,bayMapTimer=0;
   function updateBay(dt){
     const t=performance.now()/1000;bayU.time.value=t;const S=bayShip;
@@ -2367,9 +2368,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(bayPause&&view!=='photo'){if(bayPause.turn)viewYaw+=bayPause.turn*dt*1.1;else if(bayPause.auto)viewYaw+=dt*.22;else if(bayPause.snap){const d=Math.atan2(Math.sin(-viewYaw),Math.cos(-viewYaw));viewYaw+=d*Math.min(1,dt*4);if(Math.abs(d)<.01){viewYaw=0;bayPause.snap=false}}}
     // chụp ảnh: máy đặt trên boong trước mặt người (người quay lưng về phía biển), khung lấy cả vịnh phía sau
     if(view==='photo'){const C=bayPhoto.cam||(bayPhoto.cam={...CAM0});if(bayPhoto.hold&&!bayPhoto.shooting)camStep(C,bayPhoto.hold[0],bayPhoto.hold[1]*dt);
-      const fx=Math.sin(S.heading),fz=Math.cos(S.heading),side=bayPhoto.side,a=S.heading+Math.PI+side*.3+C.orb,d=(camera.aspect<1?4.6:4.2)*C.zoom,rx=Math.cos(a),rz=-Math.sin(a),lift=Math.max(0,C.zoom-1)*.55;
-      bayCam.set(bayTmp.x+Math.sin(a)*d+rx*C.px,bayTmp.y+1.3+C.h+lift,bayTmp.z+Math.cos(a)*d+rz*C.px);camera.position.lerp(bayCam,Math.min(1,dt*(bayPhoto.hold?8:4)));
-      bayLook.set(bayTmp.x+fx*.4*Math.cos(C.orb)+rx*C.px,bayTmp.y+(camera.aspect<1?.75:1.05)+C.h*.35,bayTmp.z+fz*.4*Math.cos(C.orb)+rz*C.px);camera.lookAt(bayLook)}
+      const B=bayPhoto.base;if(B){S.group.updateMatrixWorld(true);bayCam.copy(B.lp);S.group.localToWorld(bayCam);
+        const q=S.group.getWorldQuaternion(bayTmpQ),dir=bayTmpD.copy(B.ld).applyQuaternion(q),yaw=Math.atan2(dir.x,dir.z)+C.yaw,pitch=camClamp(Math.asin(Math.max(-1,Math.min(1,dir.y)))+C.pitch,-1.2,1.2);
+        camera.position.copy(bayCam);bayLook.set(bayCam.x+Math.sin(yaw)*Math.cos(pitch)*30,bayCam.y+Math.sin(pitch)*30,bayCam.z+Math.cos(yaw)*Math.cos(pitch)*30);camera.lookAt(bayLook);
+        const fv=B.fov/C.zoom;if(Math.abs(camera.fov-fv)>.01){camera.fov=fv;camera.updateProjectionMatrix()}}}
     else 
     // Góc nhìn: mũi tàu / boong thượng / tự xoay (sau lưng người) · ngắm tàu từ xa (vòng quanh tàu) · trang phục (trước mặt người)
     if(view==='far'){const c=bayShip.group.position,cx=c.x+BAY.x,cz=c.z+BAY.z,yaw=S.heading+viewYaw+Math.PI*.78+t*.03,d=82*wide;
