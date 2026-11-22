@@ -424,6 +424,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const HOUSE_GAP=9;
   const ORCHID={...besidePond('Sắc',HOUSE_GAP,2*POND_R),w:2*POND_R,d:2*POND_R,url:'https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=',title:'ORCHID hoa lan | Dong Lan | Redmoon'};
   const ORCHID_DOOR=[ORCHID.x+Math.sin(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2),ORCHID.z+Math.cos(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2)];
+  // Cổng Viverse: dời ra bên hông Nhà Hoa Lan, phía lối vào chính (đứng ở cửa nhà nhìn ra Hồ Sắc thì ở bên phải), mặt cổng cùng hướng mặt nhà.
+  const VIV={rot:ORCHID.rot,W:6.2,D:1.6};{const ex=-Math.cos(ORCHID.rot),ez=Math.sin(ORCHID.rot),fx=Math.sin(ORCHID.rot),fz=Math.cos(ORCHID.rot);VIV.x=ORCHID.x+ex*(ORCHID.w/2+5)+fx*3;VIV.z=ORCHID.z+ez*(ORCHID.w/2+5)+fz*3;VIV.door=[VIV.x+fx*2.4,VIV.z+fz*2.4]}
+  // Tư Gia: bờ đông Hồ Niệm, nhìn qua hồ sen và cầu vòm lên tượng Phật. Cùng một toạ độ cho mọi người, mỗi người thấy nhà của mình.
+  const TU_GIA={id:'tu_gia_me',name:'Tư Gia của bạn',icon:'🏡',x:39,z:-5,W:7,D:6,note:'Không gian riêng · bàn trà 6 chỗ, Kệ Lưu Hương 9 ô, Góc Gieo Hạt',rot:-Math.PI/2};
+  TU_GIA.door=[TU_GIA.x+Math.sin(TU_GIA.rot)*(TU_GIA.D/2+1.4),TU_GIA.z+Math.cos(TU_GIA.rot)*(TU_GIA.D/2+1.4)];TU_GIA.garden=[TU_GIA.x-.5,TU_GIA.z+5.6];
   let pendingOrchid=false,orchidOpen=false;
   const orchidHouse=new THREE.Group();orchidHouse.position.set(ORCHID.x,terrainHeight(ORCHID.x,ORCHID.z),ORCHID.z);orchidHouse.rotation.y=ORCHID.rot;scene.add(orchidHouse);
   {const W=ORCHID.w,D=ORCHID.d,H=3.8,RISE=2.4,base=.25,solid=[],glassP=[],P=(...a)=>solid.push(HP(...a)),G=(...a)=>glassP.push(HP(...a)),iron='#2f3a33',woodC='#654c33';
@@ -455,7 +460,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.65),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,base+3.25,D/2+.12);orchidHouse.add(board);
   }
   // Soft pulsing ring on the ground in front of the door.
-  const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(ORCHID_DOOR[0],.03,ORCHID_DOOR[1]);scene.add(orchidRing);
+  const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(VIV.door[0],terrainHeight(VIV.door[0],VIV.door[1])+.03,VIV.door[1]);scene.add(orchidRing);
   // 3.12: Kiến trúc giác quan rộng bằng đường kính hồ (11 × 11 m), mỗi nhà đặt ở bờ ngoài của hồ,
   // cửa quay ra mặt nước. Phần tĩnh của mỗi nhà gộp thành một khối tô màu theo đỉnh (một lần vẽ); chỉ chuông, khói,
   // hơi trà và bàn xoay là vật thể riêng để chuyển động. Bên trong sẽ mở sau (lớp 2 của khung thiết kế).
@@ -797,6 +802,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const TT_SPOT=[27,-95];/* Tịnh thất may y: the empty north-east corner (nothing but the statue on the hill) */
   function forestClear(x,z,pad){
     if(Math.hypot(x-TT_SPOT[0],z-TT_SPOT[1])<9+pad)return true;
+    if(Math.hypot(x-VIV.x,z-VIV.z)<7+pad||Math.hypot(x-TU_GIA.x,z-TU_GIA.z-1.5)<10+pad)return true;/* Cổng Viverse, Tư Gia + Góc Gieo Hạt */
     if(lakeSDF(x,z)<2.4+pad)return true;
     if(Math.abs(x)<4.6+pad&&z>-37&&z<40)return true;
     if(Math.hypot(x-GATHER.x,z-GATHER.z)<11+pad||Math.hypot(x-FOOT.x,z-FOOT.z)<9+pad)return true;
@@ -990,6 +996,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const peerBoats=[...onlineAvatars.values()].filter(p=>p.boat&&p.boat.group.visible).map(p=>p.boat.group);if(peerBoats.length&&raycaster.intersectObjects(peerBoats,true).length){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người dạo hồ, mời bạn chọn chiếc khác ở Bến sen';return;}
     {const fh=raycaster.intersectObjects(FLOWER_GARDENS.flatMap(g=>[g.sign,g.mesh].filter(Boolean)),false);if(fh.length){goToGarden(fh[0].object.userData.garden);return;}}
     if(window.__archTap&&window.__archTap(raycaster))return;
+    if(window.__vivGroup&&raycaster.intersectObjects([window.__vivGroup],true).length){goToOrchid();return;}
+    if(window.__homeGroup&&raycaster.intersectObjects([window.__homeGroup],true).length){goHome(false);return;}
     if(raycaster.intersectObjects([orchidHouse,orchidRing],true).length){goToOrchid();return;}
     {const hh=raycaster.intersectObjects([...SENSE_HOUSES.map(h=>h.group),TINH_THAT.group],true);if(hh.length){let o=hh[0].object;while(o&&!o.userData.house)o=o.parent;if(o){goToHouse(o.userData.house);return;}}}
     // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
@@ -1056,6 +1064,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(wishLakes.some(l=>l.name!=='Niệm'&&Math.hypot(x-l.x,z-l.z)<POND_R+.6))return false;
     if(houseHit(x,z,.25))return false;
     if(window.__ttHit&&window.__ttHit(x,z))return false;
+    if(window.__homeHit&&window.__homeHit(x,z))return false;
     if(window.__gomHit&&window.__gomHit(x,z))return false;
     if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.7))return false;
     if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
@@ -2464,17 +2473,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const orchidBox=document.createElement('div');orchidBox.id='orchidPortal';orchidBox.setAttribute('role','dialog');orchidBox.setAttribute('aria-label','Nhà hoa lan');orchidBox.hidden=true;
   orchidBox.innerHTML='<div class="orchid-top"><span>🌸 Nhà hoa lan · ORCHID</span><button type="button" id="orchidBack">← Trở về Rừng Yên</button></div><div class="orchid-frame"></div>';
   document.body.appendChild(orchidBox);
-  function goToOrchid(){if(bayMode||boatRide)return;if(Math.hypot(mePosition.x-ORCHID_DOOR[0],mePosition.z-ORCHID_DOOR[1])<1.6){openOrchid();return;}
-    if(navigateTo(...(nearestWalkable(...ORCHID_DOOR,ORCHID.rot+Math.PI)||ORCHID_DOOR))){pendingOrchid=true;document.getElementById('zenHint').textContent='🌸 Đang đến Nhà hoa lan…';}}
+  function goToOrchid(){if(bayMode||boatRide)return;if(Math.hypot(mePosition.x-VIV.door[0],mePosition.z-VIV.door[1])<1.6){openOrchid();return;}
+    if(navigateTo(...(nearestWalkable(...VIV.door,VIV.rot+Math.PI)||VIV.door))){pendingOrchid=true;document.getElementById('zenHint').textContent='🌀 Đang đến Cổng Viverse…';}}
   function openOrchid(){if(orchidOpen||bayMode)return;if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openOrchid());return}orchidOpen=true;walkRoute.length=0;walkingKeys.clear();
     window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
     const f=document.createElement('iframe');f.src=ORCHID.url;f.title=ORCHID.title;f.allow='clipboard-write; fullscreen; autoplay; xr-spatial-tracking; gyroscope; accelerometer';f.allowFullscreen=true;
     orchidBox.querySelector('.orchid-frame').replaceChildren(f);orchidBox.hidden=false;document.body.classList.add('orchid-open');}
   function closeOrchid(){if(!orchidOpen)return;orchidOpen=false;orchidBox.hidden=true;orchidBox.querySelector('.orchid-frame').replaceChildren();document.body.classList.remove('orchid-open');
     // Step out of the door facing Hồ Sắc.
-    mePosition.set(ORCHID_DOOR[0]+Math.sin(ORCHID.rot)*.4,0,ORCHID_DOOR[1]+Math.cos(ORCHID.rot)*.4);viewYaw=walkYaw=ORCHID.rot;lastWalkFrame=performance.now();
+    mePosition.set(VIV.door[0]+Math.sin(VIV.rot)*.4,0,VIV.door[1]+Math.cos(VIV.rot)*.4);viewYaw=walkYaw=VIV.rot;lastWalkFrame=performance.now();
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
-    document.getElementById('zenHint').textContent='Đã trở về Rừng Yên · Chạm Nhà hoa lan để vào lại';}
+    document.getElementById('zenHint').textContent='Đã trở về Rừng Yên · Chạm Cổng Viverse để vào lại';}
   document.getElementById('orchidBack').addEventListener('click',closeOrchid);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&orchidOpen)closeOrchid()});
   window.addEventListener('anyen-3d-exit',()=>closeOrchid());
@@ -2489,7 +2498,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function quickPlaces(){const out=[['⛩','Cổng Yên',0,31,Math.PI],['🌿','Sân đón',0,20.5,Math.PI],['🪷','Hồ sen · bờ nam',8,11.5,Math.PI],
       ['🚣','Bến sen · thuyền ngắm cảnh',BEN_SEN.x,BEN_SEN.z1+1.2,Math.PI],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
       ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🪜','Bậc đá lên đồi',STAIRS[STAIRS.length-1][0],STAIRS[STAIRS.length-1][1]+.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
-      ['🌸','Nhà hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'orchid'],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id]),['🟧','Tịnh thất may y',TINH_THAT.door[0],TINH_THAT.door[1],TINH_THAT.rot+Math.PI,'tinh_that'],...FLOWER_GARDENS.map((g,i)=>[FLOWER_KINDS[g.kind].icon,g.pier?'Hái sen ở Bến sen':FLOWER_KINDS[g.kind].garden,g.x,g.pier?g.z-.6:g.z,null,'garden:'+i])];
+      ['🏡','Tư Gia của bạn',TU_GIA.door[0],TU_GIA.door[1],TU_GIA.rot+Math.PI,'tu_gia'],['🌀','Cổng Viverse · ORCHID hoa lan',VIV.door[0],VIV.door[1],VIV.rot+Math.PI,'orchid'],['🌸','Nhà hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id]),['🟧','Tịnh thất may y',TINH_THAT.door[0],TINH_THAT.door[1],TINH_THAT.rot+Math.PI,'tinh_that'],...FLOWER_GARDENS.map((g,i)=>[FLOWER_KINDS[g.kind].icon,g.pier?'Hái sen ở Bến sen':FLOWER_KINDS[g.kind].garden,g.x,g.pier?g.z-.6:g.z,null,'garden:'+i])];
     for(const l of wishLakes){if(l.name==='Niệm')continue;const [x,z,yaw]=lakeApproach(l);out.push(['💧','Hồ '+l.name+' · '+l.theme,x,z,yaw])}
     return out}
   // A free spot: walkable and at least 1.2 m from any other guest, so arrivals never land on top of someone.
@@ -2509,7 +2518,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function teleportTo(x,z,yaw){if(bayMode||boatRide)return false;const p=nearestWalkable(x,z,yaw);if(!p)return false;standUpForTravel();
     walkRoute.length=0;clearPendingActions();wishDestination=null;walkingKeys.clear();tapTarget=null;
     mePosition.set(p[0],0,p[1]);if(yaw!=null){viewYaw=walkYaw=yaw}lookOffset=0;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:p[0],z:p[1]}}));return true}
-  function walkToPlace(x,z,kind,yaw){if(String(kind).startsWith('garden:')){standUpForTravel();goToGarden(FLOWER_GARDENS[Number(kind.slice(7))]);return true}if(kind==='orchid'){standUpForTravel();goToOrchid();return true}{const h=[...SENSE_HOUSES,TINH_THAT].find(v=>v.id===kind);if(h){standUpForTravel();goToHouse(h);return true}}const p=nearestWalkable(x,z,yaw);if(!p)return false;standUpForTravel();const ok=navigateTo(...p);if(ok&&yaw!=null)arriveYaw=yaw;return ok}
+  function walkToPlace(x,z,kind,yaw){if(String(kind).startsWith('garden:')){standUpForTravel();goToGarden(FLOWER_GARDENS[Number(kind.slice(7))]);return true}if(kind==='orchid'){standUpForTravel();goToOrchid();return true}if(kind==='tu_gia'){standUpForTravel();goHome(false);return true}{const h=[...SENSE_HOUSES,TINH_THAT].find(v=>v.id===kind);if(h){standUpForTravel();goToHouse(h);return true}}const p=nearestWalkable(x,z,yaw);if(!p)return false;standUpForTravel();const ok=navigateTo(...p);if(ok&&yaw!=null)arriveYaw=yaw;return ok}
   function drawForestMap(){const c=fmCtx;c.clearRect(0,0,FM.w,FM.h);c.fillStyle='#163428';c.fillRect(0,0,FM.w,FM.h);
     c.fillStyle='#24503e';c.beginPath();c.roundRect(fmX(-72),fmY(-124),fmS(144),fmY(36)-fmY(-124),18);c.fill();
     // hill: foot, slope, flat top with the stone terrace
@@ -2535,6 +2544,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     for(const g of FLOWER_GARDENS){c.fillStyle={hong:'#d94a5e',cam_tu_cau:'#8fb0e8',nhai:'#f4f1e6',cuc:'#f2c230',lan:'#9a78d0',sen:'#ef9fb9'}[g.kind];c.beginPath();c.arc(fmX(g.x),fmY(g.z),g.pier?3:5,0,7);c.fill()}
     for(const h of SENSE_HOUSES){c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e0b07a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
     {const h=TINH_THAT;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#c98a1c';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
+    {const h=TU_GIA;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e7b97a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore();c.fillStyle='#7fbf5a';c.beginPath();c.arc(fmX(h.garden[0]),fmY(h.garden[1]),fmS(1.6),0,7);c.fill();c.font='16px sans-serif';c.textAlign='center';c.fillText('🏡',fmX(h.x),fmY(h.z)-fmS(5));c.fillText('🌀',fmX(VIV.x),fmY(VIV.z)-fmS(4));c.fillStyle='#9a7fd0';c.beginPath();c.arc(fmX(VIV.x),fmY(VIV.z),fmS(2.2),0,7);c.fill()}
     c.fillStyle='#e8c46a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(1.6),0,7);c.fill();
     // labels
     c.font='600 13px system-ui,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(8,30,24,.85)';c.fillStyle='#f6ead0';
@@ -3221,6 +3231,74 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('TỊNH THẤT · MAY Y',256,66);
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.6,D/2+.12);g.add(board);
     g.position.set(TINH_THAT.x,terrainHeight(TINH_THAT.x,TINH_THAT.z),TINH_THAT.z);g.rotation.y=TINH_THAT.rot;g.userData.house=TINH_THAT;scene.add(g);TINH_THAT.group=g}
+  // ===== Cổng Viverse (bên hông Nhà Hoa Lan, phía lối vào chính): vòm đá + màn cổng xoáy sáng; bước vào là mở thế giới ORCHID hoa lan
+  const vivU={t:{value:0}};
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),stoneC='#7a7466',stoneD='#5f5a4e',goldC='#c8a96a',R=2.25,PH=4.6;
+    P(GB(VIV.W,.3,VIV.D+.6),stoneD,0,.15,0);P(GB(VIV.W-.6,.12,VIV.D),stoneC,0,.36,0);
+    for(const s of [-1,1]){P(GB(.7,PH,.8),stoneC,s*(R+.35),.42+PH/2,0);P(GB(.9,.3,1),stoneD,s*(R+.35),.57,0);P(GB(.86,.22,.96),stoneD,s*(R+.35),.42+PH+.11,0);
+      for(let k=0;k<3;k++)P(GB(.74,.05,.84),goldC,s*(R+.35),1.3+k*1.25,0)}
+    {const arch=new THREE.TorusGeometry(R+.35,.36,8,28,Math.PI);P(arch,stoneC,0,.42+PH+.22,0);const trim=new THREE.TorusGeometry(R+.35,.06,6,28,Math.PI);P(trim,goldC,0,.42+PH+.22,.37)}
+    P(new THREE.OctahedronGeometry(.32,0),goldC,0,.42+PH+.22+R+.35+.5,0);
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    // màn cổng: xoáy ánh sáng xanh ngọc – tím, chuyển động chậm
+    const sh=new THREE.Shape();sh.moveTo(-R,0);sh.lineTo(-R,PH+.22);sh.absarc(0,PH+.22,R,Math.PI,0,true);sh.lineTo(R,0);sh.lineTo(-R,0);
+    const pm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{t:vivU.t,R:{value:R},H:{value:PH+.22+R}},
+      vertexShader:'varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:'uniform float t,R,H;varying vec2 vP;void main(){vec2 c=vec2(0.,H*.48);vec2 d=vP-c;float r=length(d)/(H*.55),a=atan(d.y,d.x);'+
+        'float sw=sin(a*3.+r*9.-t*1.6)*.5+.5,ring=sin(r*18.-t*2.4)*.5+.5;vec3 c1=vec3(.22,.78,.78),c2=vec3(.55,.36,.86),c3=vec3(1.,.93,.78);'+
+        'vec3 col=mix(c1,c2,sw);col=mix(col,c3,smoothstep(.35,0.,r)*.85+ring*.12);float al=.55+.35*smoothstep(1.,.2,r);gl_FragColor=vec4(col,al);}'});
+    const portal=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),pm);portal.position.set(0,.42,0);g.add(portal);
+    const cv=document.createElement('canvas');cv.width=512;cv.height=160;const cx=cv.getContext('2d');cx.fillStyle='#2c2238';cx.fillRect(0,0,512,160);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,148);
+    cx.fillStyle='#f4e2b9';cx.textAlign='center';cx.textBaseline='middle';cx.font='bold 54px sans-serif';cx.fillText('CỔNG VIVERSE',256,62);cx.font='30px sans-serif';cx.fillStyle='#d9c6ea';cx.fillText('🌸 ORCHID hoa lan · thế giới 3D',256,118);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.81),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));board.position.set(0,.42+PH+.22+R+.35+.05,.45);board.position.y=.42+PH-.7;board.position.z=.05;
+    board.position.set(0,.42+PH+.22+R*.58,.42);g.add(board);
+    g.position.set(VIV.x,terrainHeight(VIV.x,VIV.z),VIV.z);g.rotation.y=VIV.rot;g.userData.house=null;scene.add(g);window.__vivGroup=g;addFadeable(g,VIV.x,VIV.z,3.4)}
+  // ===== Tư Gia (bờ đông Hồ Niệm): nhà gỗ mái ngói, hiên trước nhìn ra hồ sen; Góc Gieo Hạt ngay cạnh nhà
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),W=TU_GIA.W,D=TU_GIA.D,woodW='#8a6a48',woodD='#5b3d2a',roofC='#7b3f2e',cream='#e9dcc2';
+    P(GB(W+.6,.9,D+2.2),'#6c695d',0,-.3,.8);P(GB(W+.4,.16,D+2),'#8a7e68',0,.2,.8);/* nền đá + hiên */
+    P(GB(W,2.8,.16),cream,0,1.68,-D/2);for(const s of [-1,1])P(GB(.16,2.8,D),cream,s*W/2,1.68,0);for(const s of [-1,1])P(GB(W/2-.75,2.8,.16),cream,s*(W/4+.38),1.68,D/2);P(GB(1.5,.7,.16),cream,0,2.73,D/2);
+    for(const s of [-1,1])P(GB(1.1,.9,.06),'#9fc2c4',s*2.1,1.8,D/2+.06);/* cửa sổ */P(GB(1.4,2.3,.05),'#6b4a32',0,1.4,D/2+.05);
+    for(const x of [-W/2,W/2])for(const z of [-D/2,D/2])P(GC(.13,.15,3,8),woodD,x,1.6,z);for(const x of [-W/2+.3,W/2-.3])P(GC(.1,.12,2.9,8),woodD,x,1.55,D/2+1.7);
+    P(GB(W+.2,.14,1.9),woodW,0,3.05,D/2+.9);/* mái hiên */P(GK(W*.86,2.2,4),roofC,0,4.15,0,{ry:Math.PI/4,s:[1,1,D/W*1.05]});P(GB(W+1,.14,D+1),woodD,0,3.1,0);
+    P(GB(1.6,.4,.7),woodW,-2.2,.48,D/2+1.3);/* ghế hiên */P(GL([[0,0],[.18,.04],[.22,.3],[.16,.42]],10),'#b0754f',2.3,.28,D/2+1.4);P(new THREE.IcosahedronGeometry(.42,0),'#4f7f4c',2.3,.95,D/2+1.4);
+    // Góc Gieo Hạt: luống đất viền gỗ, mầm non, bình tưới, rào thấp
+    const gx=TU_GIA.garden[0]-TU_GIA.x,gz=TU_GIA.garden[1]-TU_GIA.z,lc=Math.cos(-TU_GIA.rot),ls=Math.sin(-TU_GIA.rot),lx=gx*lc-gz*ls,lz=gx*ls+gz*lc;
+    P(GB(3.2,.3,2),woodD,lx,.15,lz);P(GB(3,.08,1.8),'#4a3526',lx,.32,lz);
+    for(let i=0;i<5;i++)for(let j=0;j<3;j++){const sx=lx-1.2+i*.6,sz=lz-.6+j*.6;P(GC(.015,.02,.22,4),'#5f8f45',sx,.45,sz);P(new THREE.SphereGeometry(.07,6,4),'#7fbf5a',sx+.04,.58,sz,{s:[1.4,.5,1]});P(new THREE.SphereGeometry(.06,6,4),'#8fcc62',sx-.04,.56,sz,{s:[1.4,.5,1]})}
+    P(GC(.16,.2,.34,10),'#5a7f8c',lx+2,.17,lz+.6);P(GC(.03,.03,.4,5),'#5a7f8c',lx+2.25,.34,lz+.6,{rz:-.8});
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 54px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🏡 TƯ GIA',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2,.5),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.4,D/2+1.86);g.add(board);
+    const gcv=document.createElement('canvas');gcv.width=256;gcv.height=64;const gc=gcv.getContext('2d');gc.fillStyle='#3a2b1f';gc.fillRect(0,0,256,64);gc.fillStyle='#e6f0c8';gc.font='bold 26px sans-serif';gc.textAlign='center';gc.textBaseline='middle';gc.fillText('🌱 Góc Gieo Hạt',128,33);
+    const gt=new THREE.CanvasTexture(gcv);gt.colorSpace=THREE.SRGBColorSpace;const gb=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.3),new THREE.MeshBasicMaterial({map:gt,side:THREE.DoubleSide}));gb.position.set(lx-1.9,.75,lz);gb.rotation.y=Math.PI/2;g.add(gb);
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.6,5),mat('#5b3d2a'));post.position.set(lx-1.9,.3,lz);g.add(post);
+    g.position.set(TU_GIA.x,terrainHeight(TU_GIA.x,TU_GIA.z),TU_GIA.z);g.rotation.y=TU_GIA.rot;g.userData.house=TU_GIA;scene.add(g);TU_GIA.group=g;window.__homeGroup=g;addFadeable(g,TU_GIA.x,TU_GIA.z,4.5)}
+  window.__homeHit=(x,z)=>rectHit(TU_GIA.x,TU_GIA.z,TU_GIA.rot,TU_GIA.W,TU_GIA.D,x,z,.3)||rectHit(VIV.x,VIV.z,VIV.rot,VIV.W,VIV.D,x,z,.1)||Math.hypot(x-TU_GIA.garden[0],z-TU_GIA.garden[1])<1.9;
+  function goHome(instant){if(bayMode||boatRide)return;if(instant){if(teleportTo(...TU_GIA.door,TU_GIA.rot+Math.PI))setTimeout(()=>openRoom(TU_GIA),300);return}standUpForTravel();goToHouse(TU_GIA)}
+  // Bên trong Tư Gia: bàn trà thấp 6 chỗ ngồi, Kệ Lưu Hương 9 ô trên tường, cửa sổ nhìn ra hồ sen; 3 phong cách đổi ngay
+  const HOME_STYLES={gian_di:{label:'Giản Dị',wall:'#d8cbb0',floor:'#8a6a48',acc:'#6b4a32'},sang_chanh:{label:'Sang Chảnh',wall:'#2f3a3a',floor:'#5a3a2a',acc:'#c8a96a'},hanh_phuc:{label:'Hạnh Phúc',wall:'#f1d6c8',floor:'#b98a5e',acc:'#e58aa6'}};
+  function roomTuGia(st){let sty='gian_di';try{const v=localStorage.getItem('yen_home_style');if(HOME_STYLES[v])sty=v}catch(e){}
+    rmHint('Tư Gia của bạn · Chỉ bạn thấy nhà mình · Kéo để nhìn quanh');st.target.set(0,.8,-.4);st.dist=4.4;st.pitch=.16;
+    const tint=[];const T=(m,k)=>{tint.push([m,k]);return m};
+    const table=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.75,.8,.08,24),T(mat('#6e4a33'),'acc')),0,.32,.3);rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,.28,10),mat('#4e3a2a')),0,.14,.3);
+    for(let k=0;k<6;k++){const a=k*Math.PI/3;rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.24,.26,.1,14),T(mat('#c9b38a'),'cush')),Math.sin(a)*1.25,.05,.3+Math.cos(a)*1.25)}
+    const pot=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.11,12,8),mat('#6a3e2a')),0,.44,.3);pot.scale.y=.8;
+    for(let k=0;k<6;k++){const a=k*Math.PI/3;rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.045,.035,.06,10),mat('#ece4d0')),Math.sin(a)*.5,.39,.3+Math.cos(a)*.5)}
+    // Kệ Lưu Hương 9 ô (3 × 3) trên tường sau
+    const shelf=new THREE.Group();shelf.position.set(-1.9,1.1,-3.38);st.sc.add(shelf);const sm=T(mat('#5b3d2a'),'acc');
+    for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.9,.05,.32),sm);b.position.set(0,i*.6,0);shelf.add(b);const v=new THREE.Mesh(new THREE.BoxGeometry(.05,1.85,.32),sm);v.position.set(-.95+i*.633,.9,0);shelf.add(v)}
+    const glowM=new THREE.MeshBasicMaterial({color:'#ffe7b8',transparent:true,opacity:.18});for(let r=0;r<3;r++)for(let c=0;c<3;c++){const q=new THREE.Mesh(new THREE.PlaneGeometry(.55,.5),glowM);q.position.set(-.633+c*.633,.3+r*.6,-.12);shelf.add(q)}
+    // cửa sổ lớn nhìn ra hồ sen
+    const win=rAdd(st,new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.4),new THREE.MeshBasicMaterial({color:'#9fd0c4'})),1.6,1.7,-3.42);const fr=rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(2.36,1.56,.06),T(mat('#5b3d2a'),'acc')),1.6,1.7,-3.46);
+    for(let k=0;k<4;k++){const lo=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),mat('#ef9fb9')),.8+k*.5,1.25+(k%2)*.12,-3.4);lo.scale.y=.6}
+    const plant=rAdd(st,new THREE.Mesh(new THREE.IcosahedronGeometry(.32,0),mat('#4f7f4c')),3.2,.55,-2.8);rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.2,.16,.36,10),mat('#b0754f')),3.2,.18,-2.8);
+    function apply(k){sty=k;try{localStorage.setItem('yen_home_style',k)}catch(e){}const S=HOME_STYLES[k];
+      st.sc.traverse(o=>{if(!o.isMesh||!o.material||!o.material.color)return;const p=o.position;if(o.geometry.type==='BoxGeometry'){const g=o.geometry.parameters;if(g.width===8&&g.height===.1)o.material.color.set(S.floor);else if((g.width===8&&g.height===4)||(g.width===.12&&g.height===4))o.material.color.set(S.wall)}});
+      for(const [m,t] of tint)m.color.set(t==='acc'?S.acc:k==='sang_chanh'?'#c8a96a':k==='hanh_phuc'?'#f3c3cf':'#c9b38a');render()}
+    function render(){rmPanel.innerHTML='<p>🏡 <b>Tư Gia của bạn</b> · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'</div>'+
+      '<p class="rm-note">Bàn trà 6 chỗ · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà. Bày đồ từ Túi An Yên, gieo hạt và mời tối đa 5 khách sẽ mở ở bước tiếp theo.</p>'}
+    rmPanel.onclick=e=>{const b=e.target.closest('[data-hs]');if(b)apply(b.dataset.hs)};apply(sty)}
+  ROOM_BUILDERS.tu_gia_me=['#d8cbb0','#8a6a48',roomTuGia];
   // A folded robe on a wooden tray (used on the head, on the dais and on the shelves).
   const katHex=i=>(KAT_COLORS[+i]||KAT_COLORS[0])[1];
   function robeTray(color,scale=1,pieces=''){const g=new THREE.Group(),c=new THREE.Color(color),dark=c.clone().multiplyScalar(.78),multi=new Set(String(pieces||'')).size>1;
@@ -3644,9 +3722,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.addEventListener('pagehide',dropActivity);window.addEventListener('offline',dropActivity);
   try{localStorage.removeItem('yen_kat_pending')}catch(e){}
   window.anyenActivityBusy=activityBusy;
-  window.__forest={katCarry:()=>{kat.phase='carry';kat.pieces='0123';setCarry(true);refreshKatPill();return kat.phase},katPhase:()=>kat.phase,robeOn:()=>!!kat.robe,dbg:()=>({act:meActivity,route:walkRoute.length,boat:!!boatRide,kat:kat.phase,n:onlineAvatars.size,gd:guestDist(mePosition.x,mePosition.z)}),katFill:n=>{const old=new Date(Date.now()-6e5).toISOString(),d=[5,7,9];katRows=Array.from({length:n},(_,i)=>{const dd=d[i%3];return {id:'t'+i,color:KAT_COLORS[i%4][1],dieu:dd,pieces:i%2?Array.from({length:dd*3},(_,k)=>(k+i)%4).join(''):'',name:'t'+i,created_at:old}});return katRows.length},route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([...SENSE_HOUSES,TINH_THAT].find(h=>h.id===id)),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomFill:n=>{const old=new Date(Date.now()-3e5).toISOString();gomRows=Array.from({length:n},(_,i)=>({id:'t'+i,shape:i%4,pattern:i%3,seed:i*37+5,name:'t',created_at:old}));gomFiring=null;drawRack();return gomRack.children.length},gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
+  // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Tư Đảo
+  {const hb=document.createElement('button');hb.type='button';hb.id='homeBtn';document.body.appendChild(hb);
+    const st=document.createElement('style');st.textContent='#homeBtn{display:none;position:fixed;z-index:72;left:calc(env(safe-area-inset-left,0px) + 12px);top:calc(env(safe-area-inset-top,0px) + 58px);border:1px solid #c8a96a;border-radius:999px;background:#19483bee;color:#f5e6c9;font-size:13px;padding:7px 12px;cursor:pointer}body.immersive #homeBtn{display:block}body.room-open #homeBtn,body.orchid-open #homeBtn,body.forest-map-open #homeBtn,body.bay-clean #homeBtn,body.bay-photo-open #homeBtn,body.bay-outfit-open #homeBtn,body.bay-map-open #homeBtn,body.kat-chant #homeBtn{display:none!important}body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 160px)}@media(max-width:800px){body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 150px)}}';document.head.appendChild(st);
+    const label=()=>{hb.textContent=bayMode?'🏝 Tư Đảo':'🏡 Tư Gia';hb.title=bayMode?'Đến Tư Đảo của bạn ngay':'Về Tư Gia của bạn ngay'};label();setInterval(label,800);
+    hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(true);return}askFinish(()=>goHome(true))})}
+  window.__forest={tp:(x,z,y)=>teleportTo(x,z,y),viv:()=>VIV,home:()=>TU_GIA,katCarry:()=>{kat.phase='carry';kat.pieces='0123';setCarry(true);refreshKatPill();return kat.phase},katPhase:()=>kat.phase,robeOn:()=>!!kat.robe,dbg:()=>({act:meActivity,route:walkRoute.length,boat:!!boatRide,kat:kat.phase,n:onlineAvatars.size,gd:guestDist(mePosition.x,mePosition.z)}),katFill:n=>{const old=new Date(Date.now()-6e5).toISOString(),d=[5,7,9];katRows=Array.from({length:n},(_,i)=>{const dd=d[i%3];return {id:'t'+i,color:KAT_COLORS[i%4][1],dieu:dd,pieces:i%2?Array.from({length:dd*3},(_,k)=>(k+i)%4).join(''):'',name:'t'+i,created_at:old}});return katRows.length},route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([...SENSE_HOUSES,TINH_THAT].find(h=>h.id===id)),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomFill:n=>{const old=new Date(Date.now()-3e5).toISOString();gomRows=Array.from({length:n},(_,i)=>({id:'t'+i,shape:i%4,pattern:i%3,seed:i*37+5,name:'t',created_at:old}));gomFiring=null;drawRack();return gomRack.children.length},gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
   window.__bay={vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),zoom:f=>{if(f)bayZoomBy(f);return {view:bayView,z:bayZoom,far:bayFarZoom,lift:+bayLift.toFixed(2),want:bayLiftWant}},camY:()=>+camera.position.y.toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
-  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
+  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);vivU.t.value=performance.now()/1000;if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
       if(!bayMode)updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
@@ -3659,7 +3742,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(walkRoute.length){
         if(meActivity!=='idle')meActivity='idle';
         const goal=walkRoute[0],dx=goal[0]-mePosition.x,dz=goal[1]-mePosition.z,dist=Math.hypot(dx,dz);
-        if(dist<.16){walkRoute.shift();if(!walkRoute.length&&!pendingSeat&&!pendingBoat&&guestNear(mePosition.x,mePosition.z,GUEST_AVOID)){const q=nearestWalkable(mePosition.x,mePosition.z);if(q)mePosition.set(q[0],0,q[1]);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));}if(!walkRoute.length){const arrivedLake=wishDestination;if(wishDestination){wishDestination=null;}if(!boatRide)document.getElementById('zenHint').textContent=arrivedLake?'Đã đến Hồ '+arrivedLake+' · Bấm Ném xu để nguyện ước':'Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';if(pendingBoat){boardBoat();}else if(pendingOrchid){pendingOrchid=false;viewYaw=walkYaw=ORCHID.rot+Math.PI;lookOffset=0;openOrchid();}else if(pendingHouse){const h=pendingHouse;pendingHouse=null;viewYaw=walkYaw=h.rot+Math.PI;lookOffset=0;arriveHouse(h);}else if(pendingKathina){const pk=pendingKathina;pendingKathina=null;if(pk==='kiln')startKiln();else if(pk==='rack')placeOnRack();else if(pk==='follow')startFollow();else if(pk==='kho')arriveKho();else startRounds();}else if(pendingGarden){const gd=pendingGarden;pendingGarden=null;openGardenSheet(gd);}else if(pendingOffer){pendingOffer=false;offerBouquet();}else if(arriveYaw!=null){viewYaw=walkYaw=arriveYaw;lookOffset=0;arriveYaw=null;}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}}}
+        if(dist<.16){walkRoute.shift();if(!walkRoute.length&&!pendingSeat&&!pendingBoat&&guestNear(mePosition.x,mePosition.z,GUEST_AVOID)){const q=nearestWalkable(mePosition.x,mePosition.z);if(q)mePosition.set(q[0],0,q[1]);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));}if(!walkRoute.length){const arrivedLake=wishDestination;if(wishDestination){wishDestination=null;}if(!boatRide)document.getElementById('zenHint').textContent=arrivedLake?'Đã đến Hồ '+arrivedLake+' · Bấm Ném xu để nguyện ước':'Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';if(pendingBoat){boardBoat();}else if(pendingOrchid){pendingOrchid=false;viewYaw=walkYaw=VIV.rot+Math.PI;lookOffset=0;openOrchid();}else if(pendingHouse){const h=pendingHouse;pendingHouse=null;viewYaw=walkYaw=h.rot+Math.PI;lookOffset=0;arriveHouse(h);}else if(pendingKathina){const pk=pendingKathina;pendingKathina=null;if(pk==='kiln')startKiln();else if(pk==='rack')placeOnRack();else if(pk==='follow')startFollow();else if(pk==='kho')arriveKho();else startRounds();}else if(pendingGarden){const gd=pendingGarden;pendingGarden=null;openGardenSheet(gd);}else if(pendingOffer){pendingOffer=false;offerBouquet();}else if(arriveYaw!=null){viewYaw=walkYaw=arriveYaw;lookOffset=0;arriveYaw=null;}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}}}
         else{const step=Math.min(dist,dt*3.2);const ux=dx/dist,uz=dz/dist;
           // A guest standing in the way: insert a detour point beside them (the side that is walkable), once per guest.
           // If neither side is open (bridge, narrow path), just squeeze past at close range.
