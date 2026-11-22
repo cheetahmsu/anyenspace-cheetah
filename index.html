@@ -3344,10 +3344,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function kathinaPose(){if(kat.phase==='round'||kat.phase==='carry'||kat.phase==='follow'||kat.phase==='return'){me.rotation.y=walkYaw-Math.PI;}
     if(kat.phase==='offer'){const T=offerTimes(),u=(performance.now()-kat.t0)/1000-T.c;me.rotation.y=0;me.rotation.x=u>0&&u<3*OFFER_T.bow?-Math.sin((u%OFFER_T.bow)/OFFER_T.bow*Math.PI)*.55:0}else me.rotation.x=0}
   // ---- 4. offer: the robe rests at the Buddha's feet, saved for everyone; then step back to a cushion
-  async function placeRobe(){if(kat.robe){scene.remove(kat.robe);kat.robe=null}const now=new Date();const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,wish:kat.wish,name:guestName(),created_at:now.toISOString()};kat.mine={name:row.name,t:now.getTime()};katRows.unshift(row);window.__bagTake&&window.__bagTake('robes',row,true);drawDais();
+  async function placeRobe(){if(kat.robe){scene.remove(kat.robe);kat.robe=null}const now=new Date();const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,wish:kat.wish,name:guestName(),created_at:now.toISOString(),pendingKho:true};kat.mine={name:row.name,t:now.getTime()};kat.pendingRow=row;katRows.unshift(row);drawDais();/* chỉ lưu khi y đã vào kho (saveRobeToKho) */
     say('🙏 Đã dâng y dưới chân tượng Phật · Mời bạn ngồi niệm năm phút');
     kat.phase='chant';kat.placed=false;refreshKatPill();try{requestSeat(chooseSeat())}catch(e){}startChant();
-    if(katDb){try{const base={color:kat.color,dieu:kat.dieu,name:row.name},tries=[{...base,pieces:kat.pieces,wish:kat.wish},{...base,pieces:kat.pieces},base];for(const t of tries){const {error}=await katDb.from('anyen_kathina_robes').insert(t);if(!error){loadRobes();break}}}catch(e){}}}
+  }
+  // Y vào kho mới lưu (Túi An Yên + kho chung). Chưa vào kho mà tắt trang / mất kết nối thì tấm y bị bỏ.
+  async function saveRobeToKho(){const row=kat.pendingRow;if(!row)return;kat.pendingRow=null;row.pendingKho=false;katRows=katRows.filter(r=>r!==row);katKho.push({name:row.name,t:Date.now()});drawDais();
+    window.__bagTake&&window.__bagTake('robes',row,true);
+    if(katDb){try{const base={color:row.color,dieu:row.dieu,name:row.name},tries=[{...base,pieces:row.pieces,wish:row.wish},{...base,pieces:row.pieces},base];for(const t of tries){const {error}=await katDb.from('anyen_kathina_robes').insert(t);if(!error){loadRobes();break}}}catch(e){}}}
   const guestName=()=>{try{return String(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||'Khách Yên').slice(0,24)}catch(e){return 'Khách Yên'}};
   // ---- 5. five minutes of recitation and silence
   const RECITE={pali:['Namo tassa Bhagavato Arahato Sammāsambuddhassa','Namo tassa Bhagavato Arahato Sammāsambuddhassa','Namo tassa Bhagavato Arahato Sammāsambuddhassa','Kính lễ Đức Thế Tôn, bậc A-la-hán, đấng Chánh Biến Tri.']};
@@ -3364,7 +3368,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const katKho=[];const katInKho=r=>katKho.some(q=>q.name===r.name&&Math.abs(new Date(r.created_at).getTime()-q.t)<20000);
   function fetchRobe(){if(kat.phase!=='fetch')return;standUpForTravel();kat.phase='return';if(kat.mine)katKho.push({...kat.mine});drawDais();setCarry(true);refreshKatPill();strike(196,4,.08);
     if(navigateTo(...TINH_THAT.door)){pendingKathina='kho';say('🟧 Đội y về kho trong Tịnh thất…')}else arriveKho()}
-  function arriveKho(){if(kat.phase!=='return')return;setCarry(false);kat.phase='done';refreshKatPill();strike(98,9,.12,[[1,1],[1.48,.5]]);say('🟧 Tấm y đã vào kho y · Nghi thức dâng y viên mãn');closeKatPanel();walkYaw=viewYaw=TINH_THAT.rot+Math.PI;setTimeout(()=>openRoom(TINH_THAT),500)}
+  function arriveKho(){if(kat.phase!=='return')return;setCarry(false);saveRobeToKho();kat.phase='done';refreshKatPill();strike(98,9,.12,[[1,1],[1.48,.5]]);say('🟧 Tấm y đã vào kho y · Nghi thức dâng y viên mãn');closeKatPanel();walkYaw=viewYaw=TINH_THAT.rot+Math.PI;setTimeout(()=>openRoom(TINH_THAT),500)}
   // ---- 7. walking together: guests who see a procession can join it; each follower keeps a place behind the leader
   const myUid=()=>window.anyenUid||'me';
   function katLeaders(){return Object.entries(katPeers).filter(([id,p])=>p&&p.kr>0&&Date.now()-p.kr<KAT_ROUND_SEC*1000+30000)}
@@ -3394,7 +3398,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function drawDais(){const on=katRows.filter(r=>katAge(r)<KAT_CHANT_SEC&&!katInKho(r)).slice(0,3),keep=new Set(on.map(r=>String(r.id)));
     for(const [k,m] of daisRobes)if(!keep.has(k)){shrine.remove(m);daisRobes.delete(k)}
     on.forEach((r,i)=>{const k=String(r.id);let m=daisRobes.get(k);if(!m){m=robeTray(r.color,1.05,r.pieces);shrine.add(m);daisRobes.set(k,m)}const x=[0,-.6,.6][i];m.position.set(STATUE.x+x,TERRACE_TOP+.56,STATUE.z+1.62)})}
-  async function loadRobes(){if(!katDb)return;try{const q=cols=>katDb.from('anyen_kathina_robes').select(cols).order('seq',{ascending:false}).limit(9);let {data,error}=await q('id,seq,color,pieces,dieu,name,created_at');if(error)({data,error}=await q('id,seq,color,dieu,name,created_at'));if(!error&&data){const local=katRows.filter(r=>String(r.id).startsWith('local-')&&katAge(r)<20);katRows=[...local.filter(l=>!data.some(d=>d.name===l.name&&Math.abs(new Date(d.created_at)-new Date(l.created_at))<20000)),...data];drawDais();if(room&&room.onKho)room.onKho()}}catch(e){}}
+  async function loadRobes(){if(!katDb)return;try{const q=cols=>katDb.from('anyen_kathina_robes').select(cols).order('seq',{ascending:false}).limit(9);let {data,error}=await q('id,seq,color,pieces,dieu,name,created_at');if(error)({data,error}=await q('id,seq,color,dieu,name,created_at'));if(!error&&data){const local=katRows.filter(r=>String(r.id).startsWith('local-')&&(r.pendingKho||katAge(r)<20));katRows=[...local.filter(l=>!data.some(d=>d.name===l.name&&Math.abs(new Date(d.created_at)-new Date(l.created_at))<20000)),...data];drawDais();if(room&&room.onKho)room.onKho()}}catch(e){}}
   setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadRobes();else drawDais()},12000);loadRobes();
   window.addEventListener('anyen-kathina',openKathinaIntro);window.addEventListener('anyen-3d-exit',()=>{closeKatPanel();katJoin.hidden=true;if(kat.phase==='chant'){clearInterval(kat.chantTimer);document.body.classList.remove('kat-chant')}if(['chant','fetch','return','follow','join'].includes(kat.phase)){setCarry(false);kat.phase='done';kat.leader='';refreshKatPill()}});
   window.__ttHit=(x,z)=>rectHit(TINH_THAT.x,TINH_THAT.z,TINH_THAT.rot,TINH_THAT.W,TINH_THAT.D,x,z,.3);
@@ -3617,7 +3621,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(p==='carry'||p==='round'||p==='offer'){me.rotation.x=0;kat.placed=true;if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}placeRobe()}/* dâng y ngay: lưu tấm y như khi đặt dưới chân tượng */
     clearInterval(kat.chantTimer);if(kat.mine&&!katKho.some(q=>q.name===kat.mine.name&&q.t===kat.mine.t))katKho.push({...kat.mine});
     setCarry(false);kat.phase='done';document.body.classList.remove('kat-chant');walkRoute.length=0;pendingSeat=null;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));
-    drawDais();refreshKatPill();closeKatPanel();say('🟧 Nghi thức dâng y đã hoàn tất · tấm y đã vào kho')}
+    saveRobeToKho();drawDais();refreshKatPill();closeKatPanel();say('🟧 Nghi thức dâng y đã hoàn tất · tấm y đã vào kho')}
   function finishActivityNow(){const k=activityBusy();if(k==='boat')boatFinishNow();else if(k)katFinishNow()}
   const busyBox=document.createElement('div');busyBox.id='busyBox';busyBox.hidden=true;
   busyBox.innerHTML='<div class="bb-card" role="dialog" aria-modal="true"><p class="bb-msg"></p><div class="bb-row"><button type="button" data-bb="stay">Ở lại tiếp tục</button><button type="button" class="bb-end" data-bb="end">⏹ Kết thúc ngay</button></div></div>';
@@ -3633,8 +3637,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(!e.isTrusted){finishActivityNow();return}
     e.preventDefault();e.stopImmediatePropagation();askFinish(()=>el.click())},true);
   document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!activityBusy()||!document.body.classList.contains('immersive'))return;e.preventDefault();e.stopImmediatePropagation();if(busyBox.hidden)askFinish(()=>document.getElementById('exit3D')?.click());else busyBox.hidden=true},true);
-  // Tắt trang / mất kết nối giữa chừng: coi như đã xong — thuyền về bến; nghi thức dâng y kết thúc và tấm y đang làm dở bị bỏ (không lưu).
-  function katDiscard(){clearInterval(kat.chantTimer);if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}me.rotation.x=0;kat.phase='done';kat.leader='';pendingKathina=null;walkRoute.length=0;pendingSeat=null;
+  // Tắt trang / mất kết nối giữa chừng: coi như đã xong — thuyền về bến; nghi thức dâng y kết thúc, tấm y chưa vào kho bị xoá (kể cả y đã đặt dưới chân tượng).
+  function katDiscard(){clearInterval(kat.chantTimer);if(kat.pendingRow){const pr=kat.pendingRow;kat.pendingRow=null;katRows=katRows.filter(r=>r!==pr);drawDais()}if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}me.rotation.x=0;kat.phase='done';kat.leader='';pendingKathina=null;walkRoute.length=0;pendingSeat=null;
     document.body.classList.remove('kat-chant');refreshKatPill();closeKatPanel()}
   function dropActivity(){const k=activityBusy();if(k==='boat')boatFinishNow();else if(k){katDiscard();say('🟧 Mất kết nối · nghi thức dâng y đã kết thúc')}}
   window.addEventListener('pagehide',dropActivity);window.addEventListener('offline',dropActivity);
