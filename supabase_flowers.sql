@@ -36,3 +36,7 @@ create trigger anyen_flower_trim after insert on public.anyen_flower_offerings
 
 -- Hàm dọn bảng chỉ chạy qua trigger, không gọi được từ ngoài.
 revoke execute on function public.anyen_flower_trim() from public, anon, authenticated;
+-- Góc xoay bó hoa người dâng chọn (độ, 0–359): bó hoa trên bệ quay đúng mặt này ra trước.
+alter table public.anyen_flower_offerings add column if not exists yaw smallint not null default 0;
+alter table public.anyen_flower_offerings drop constraint if exists anyen_flower_yaw;
+alter table public.anyen_flower_offerings add constraint anyen_flower_yaw check (yaw between 0 and 359);
