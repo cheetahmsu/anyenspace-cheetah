@@ -135,7 +135,7 @@
   },
   {
    "id": "nha_hoa_lan",
-   "name": "Nhà hoa lan",
+   "name": "Nhà Sắc",
    "kind": "portal",
    "x": -43.1,
    "z": -23.2,
@@ -155,7 +155,7 @@
   },
   {
    "id": "chuong_gio",
-   "name": "Nhà chuông gió",
+   "name": "Nhà Thanh",
    "kind": "sense_house",
    "x": -57.8,
    "z": -67.0,
@@ -171,7 +171,7 @@
   },
   {
    "id": "xong_huong",
-   "name": "Nhà xông hương",
+   "name": "Nhà Hương",
    "kind": "sense_house",
    "x": 57.8,
    "z": -67.0,
@@ -187,7 +187,7 @@
   },
   {
    "id": "quan_tra",
-   "name": "Quán trà",
+   "name": "Nhà Vị",
    "kind": "sense_house",
    "x": 43.1,
    "z": -23.2,
@@ -203,7 +203,7 @@
   },
   {
    "id": "xuong_gom",
-   "name": "Xưởng gốm",
+   "name": "Nhà Chạm",
    "kind": "sense_house",
    "x": -35.7,
    "z": -107.7,

@@ -72,7 +72,7 @@
     beat=setInterval(async()=>{if(g!==gen)return;const b=await c.rpc('anyen_space_beat',{p_venue:id});if(g===gen&&b.data===false)enter(id)},BEAT_MS);
     render();
   }
-  function spaceName(id){const m={xong_huong:'Haromy',nha_hoa_lan:'Nhà Hoa Lan',xuong_gom:'Nhà Gốm',quan_tra:'Nhà Ngũ Thiền Trà',chuong_gio:'Nhà Chuông Xoay',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Tư Đảo',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
+  function spaceName(id){const m={xong_huong:'Nhà Hương · Haromy',nha_hoa_lan:'Nhà Sắc',xuong_gom:'Nhà Chạm',quan_tra:'Nhà Vị',chuong_gio:'Nhà Thanh',nha_niem:'Nhà Niệm',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Tư Đảo',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
 
   // Không gian đang ở (phát từ index.html): 'forest' | 'bay' | 'room:<id>' | 'space:<id>' | 'out'
   window.addEventListener('anyen-space',e=>{const sp=String(e.detail?.space||'');const m=/^(?:room|space):([a-z0-9_]{1,40})$/.exec(sp);
