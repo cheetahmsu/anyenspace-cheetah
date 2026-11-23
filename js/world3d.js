@@ -197,7 +197,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   TU_GIA.door=[TU_GIA.x+Math.sin(TU_GIA.rot)*(TU_GIA.D/2+1.4),TU_GIA.z+Math.cos(TU_GIA.rot)*(TU_GIA.D/2+1.4)];TU_GIA.garden=[TU_GIA.x-1,TU_GIA.z+TU_GIA.D/2+3.2];
   const TT_SPOT=[11,-110.5];/* Tịnh thất may y (bản đồ v3.6): phía Tây Nhà Niệm, phía Bắc Đồi Tượng Phật */
   // Nhà Văn Hóa (bản đồ v3.6): 16 × 11 m, phía Tây Nam cạnh Sân đón, cửa quay Bắc ra đường lát đá từ trục chính (z = 16).
-  const VAN_HOA={id:'van_hoa',name:'Nhà Văn Hóa',icon:'🏛️',x:-28,z:28.5,W:16,D:11,rot:Math.PI,note:'Community Hall · 36 người · bên trong sẽ mở sau'};
+  const VAN_HOA={id:'van_hoa',name:'Nhà Văn Hóa',icon:'🏛️',x:-28,z:28.5,W:16,D:11,rot:Math.PI,note:'Community Hall · 36 người · Ca Múa Nhạc, hòa tấu ngũ cung, thả đèn hoa'};
   VAN_HOA.door=[VAN_HOA.x,VAN_HOA.z-(VAN_HOA.D/2+1.9)];const VH_ROAD_Z=16,VH_ROAD_X1=-39;
   let pendingOrchid=false,orchidOpen=false;
   const orchidHouse=new THREE.Group();orchidHouse.position.set(ORCHID.x,terrainHeight(ORCHID.x,ORCHID.z),ORCHID.z);orchidHouse.rotation.y=ORCHID.rot;scene.add(orchidHouse);
@@ -1536,9 +1536,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // ---- shared room: wooden floor, three walls, warm light, slow orbit by dragging
   let roomRenderer=null;
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
-  let roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomsReady=false,roomsP=null;
-  function __roomsExport(o){roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=71657ecc').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  let roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomsReady=false,roomsP=null;
+  function __roomsExport(o){roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomsReady=true}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=5a0606b6').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   function makeRoom(wall,floor,opt){const bare=!!(opt&&opt.bare);const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}
@@ -1673,11 +1673,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // ---------------------------------------------------------------- Quán trà
   const TEA_WORDS=['Uống trà là uống cái tĩnh lặng của lá.','Chén trà ấm nhất là chén trà được mời bằng cả tấm lòng.','Hãy uống trà chậm rãi, như thể trái đất đang xoay quanh chén trà của bạn.','Nước sôi rồi lặng, trà mới thơm. Lòng lặng rồi, lời mới hiền.','Một chén trà, một người bạn, đủ cho một buổi chiều an.','Rót trà cho người khác trước, lòng mình cũng ấm theo.'];
-  const ROOM_BUILDERS={chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#6a5040','#5a4636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}]};
+  const ROOM_BUILDERS={chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#6a5040','#5a4636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}],van_hoa:['#42362A','#4a3826',st=>roomNhaVanHoa(st),{bare:true,venue:'nha_van_hoa'}]};
   function openRoom(h){const b=ROOM_BUILDERS[h.id];if(!b||roomOpen||bayMode)return Promise.resolve();
     if(!roomsReady){if(openRoom.waiting)return openRoom.waiting;const hint=document.getElementById('zenHint');if(hint)hint.textContent='Đang mở '+(h.name||'phòng')+'…';
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
-   if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:(b[3]&&b[3].solo?'solo:':'room:')+h.id}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
+   if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:b[3]&&b[3].solo?'solo:'+h.id:'room:'+((b[3]&&b[3].venue)||h.id)}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
     roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);room.resize();}
   function closeRoom(){if(!roomOpen)return;roomOpen=false;{const bk=roomBox.querySelector('[data-rm="back"]');if(bk)bk.textContent='← Trở về Rừng Yên'}if(roomFromIsland){roomFromIsland=false;if(document.body.classList.contains('immersive'))setTimeout(()=>{if(!bayMode&&!roomOpen)enterBay()},60)}if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));if(room){room.run=false;room.cleanup&&room.cleanup();room.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()});room=null}roomBox.hidden=true;document.body.classList.remove('room-open');rmPanel.innerHTML='';lastWalkFrame=performance.now();document.getElementById('zenHint').textContent='Đã trở về Rừng Yên'}
   roomBox.querySelector('[data-rm="back"]').addEventListener('click',closeRoom);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&roomOpen)closeRoom()});window.addEventListener('anyen-3d-exit',closeRoom);window.addEventListener('resize',()=>{if(room)room.resize()});
@@ -2125,7 +2125,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(true);return}askFinish(()=>goHome(true))})}
   // Lịch trị liệu: vào thẳng Nhà đã đăng ký (Healer đến giờ phiên, khách đã được nhận). Nhà có phòng bên trong thì mở phòng;
   // Nhà chưa có phòng (Nhà Sắc, Nhà Niệm) thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.
-  function goSchedHouse(id){if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id);let door,yaw;
+  function goSchedHouse(id){if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id)||(id==='nha_van_hoa'?VAN_HOA:null);let door,yaw;
     if(h){door=h.door;yaw=h.rot+Math.PI}else if(id==='nha_hoa_lan'){door=ORCHID_DOOR;yaw=ORCHID.rot+Math.PI}else return false;
     if(!teleportTo(door[0],door[1],yaw))return false;
     if(h&&ROOM_BUILDERS[h.id]){window.__anyenSchedHouse=h.id;setTimeout(()=>arriveHouse(h),300)}

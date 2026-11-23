@@ -76,6 +76,18 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **04 · Bát Buông Bỏ & Kệ 9 thẻ** (tường phải): nỗi lo ≤ 80 ký tự được vẽ lên mặt nước rồi tan trong khoảng 5 giây; chữ chỉ nằm trong bộ nhớ tạm của trang, **không lưu, không gửi Supabase, không gửi vào kênh phiên**. Kệ thẻ rút 1 thẻ mỗi ngày (lưu số thẻ và ngày trên máy), ưu tiên thẻ khớp trạng thái AnSense.
 - Không tạo kho vật phẩm mới. Giai đoạn 2 (3 phong cách trong nhà) chưa làm.
 
+## Nhà Văn Hóa · 36 người · Ca Múa Nhạc và 5 hoạt động tập thể
+
+- Đi tới cửa Nhà Văn Hóa (hoặc mở `index.html?vao=nha_van_hoa`) là vào gian 16 × 11 × 6,8 m gỗ trầm `#42362A`, 6 cột `#2A1F15`, mái hai dốc có khe sáng cổ diêm dọc nóc. Sân khấu gỗ 6,4 × 2,8 m phía Nam, màn chiếu 16:9, 6 cụm bàn × 6 ghế = 36 chỗ, Tường Tây triển lãm 9 ô, Tường Đông 18 lời chúc và Quầy trà.
+- Giới hạn kỹ thuật: **1 PointLight**, nội thất **1.374 tam giác** (1.404 khi 3 NPC đang múa và đủ 36 đèn; < 2.250, kiểm bằng `window.__vanhoa.tris()` khi phòng đang mở). 36 ghế là 1 InstancedMesh, **36 đèn hoa là 1 InstancedMesh**, sóng sáng trên sàn là 1 InstancedMesh, cổ vũ là 1 `Points`; chữ trên màn chiếu, tường chúc và triển lãm vẽ bằng texture canvas.
+- **Đồng bộ 36 người**: dùng lại kênh cộng đồng sẵn có `anyen:sp:nha_van_hoa` (space-chat.js, `anyen_space_enter` tầng community, tối đa 36) và khung chat ẩn/hiện chung. Không cần chạy thêm SQL. Khách chưa đăng nhập vẫn chơi được một mình.
+- **Người dẫn chương trình**: Healer/Admin có mặt sớm nhất (vai trò lấy từ `anyen_my_role`); vắng Healer/Admin thì người vào phòng sớm nhất dẫn tạm. Mọi máy chỉ nhận lệnh sân khấu, câu đố, thả đèn đồng loạt, hái lộc từ người dẫn.
+- **01 · Sân khấu Ca Múa Nhạc**: Múa Sen · Múa Quạt Lụa · Hòa tấu Đàn Tranh, Sáo Trúc, Đàn Bầu do 3 NPC low-poly diễn, nhạc ngũ cung tạo ngay trên máy theo mốc giây `sync_ts` (mỗi máy tự trừ độ lệch đồng hồ so với người dẫn, khách vào trễ được đồng bộ lại); hoặc người dẫn dán đường dẫn video https (mp4/webm cho phép CORS) để chiếu VideoTexture 16:9. Khán giả bấm 🌸 Cánh sen · 🎗️ Lụa vàng · 👏 Vỗ tay êm, hạt sáng bay từ cụm bàn quanh sân khấu.
+- **02 · Hòa tấu 36 nhịp gõ ngũ cung**: phím 1–5 (C–D–E–G–A) hoặc 5 nút lớn; cụm C1/C4 Đàn Tranh, C2 Chuông Xoay, C5 Mõ & Chuông, C3 Sáo Trúc, C6 Đàn T'rưng. Chạm một bàn để đổi cụm (còn chỗ thì vào đúng cụm đó). Mỗi nốt tạo sóng ánh sáng trên sàn; nốt gửi theo lô 200 ms (`{k:'n',n:[[nốt,ms]]}`, vài byte mỗi nốt, tối đa 5 gói/giây/người).
+- **03 · Thả 36 đèn hoa An Yên**: viết lời chúc ≤ 60 ký tự, bấm Thả đèn hoa; người dẫn có nút “Cả phòng cùng thả sau 10 giây” (đếm ngược trên màn chiếu). Đèn bay từ cụm bàn lên lơ lửng dưới vòm mái; chạm đèn để đọc lời chúc. Lời chúc chỉ gửi cho người đang trong phòng, không lưu.
+- **04 · Đố vui văn hóa · Ghép câu đối · Đàm đạo**: người dẫn mở câu, cả phòng bấm chọn, tỷ lệ chọn hiện trực tiếp trên màn chiếu (người dẫn đếm phiếu), không chấm điểm; Hiện đáp án kèm một dòng giải thích. 🧧 Hái lộc: mỗi người nhận một lá lộc riêng, ghi vào Nhật ký An Yên.
+- **05 · Tiệc trà**: rót trà ở Quầy Đông (cả phòng thấy), treo lời chúc lên Tường 18 thẻ, ngắm 9 tác phẩm đọc từ 4 kho 69/9 sẵn có (3 gốm · 2 hoa · 2 y · 2 Lọ Ước/Túi thơm, chỉ đọc, **không tạo kho thứ 5**), 🎁 Tặng quà mở Túi An Yên để tặng người cùng phòng.
+
 ## Lịch trị liệu · Healer tự mở lịch (Quy hoạch v3.3, Phần V)
 
 - Trang `lich.html` (nút **🗓 Lịch trị liệu** trên thanh trên cùng và trong trang Tài khoản). Cần đăng nhập thành viên.

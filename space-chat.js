@@ -4,12 +4,12 @@
 // Vào không gian → xin chỗ trên Supabase (anyen_space_enter: kiểm tra vai trò, phiên trị liệu đang diễn ra, sức chứa),
 // được chỗ mới vào kênh anyen:sp:<id>. Không được chỗ thì vẫn trải nghiệm riêng, có lời báo nhẹ.
 // Kết quả xin chỗ phát ra sự kiện anyen-space-result (phòng Nhà Niệm dùng để biết có phiên 1+5 và ai là Healer);
-// anyen-space-people báo ai đang có mặt; anyenSpaceChat.send() và anyen-space-room chuyển tín hiệu phòng (chuông, nhịp thở) trong kênh phiên.
+// anyen-space-people báo ai đang có mặt (kèm danh sách id · tên · giờ vào · cờ host/cụm bàn do anyenSpaceChat.meta() đặt); anyenSpaceChat.send() và anyen-space-room chuyển tín hiệu phòng (chuông, nhịp thở) trong kênh phiên.
 // Khung chat: tự hiện khi có từ 2 người và có tin mới; bấm Ẩn để yên tĩnh (chỉ còn nút 💬 kèm số tin chưa đọc). Tin nhắn không lưu.
 (function(){
   'use strict';
   const MAX_LEN=300,BEAT_MS=20000,QUIET_KEY='yen_chat_quiet';
-  let client=null,uid=null,channel=null,venue=null,info=null,want=null,beat=null,gen=0,people={},unread=0,lastSend=0,name='Khách Làng Yên';
+  let client=null,uid=null,channel=null,venue=null,info=null,want=null,beat=null,gen=0,people={},unread=0,lastSend=0,name='Khách Làng Yên',meta={},joinT=0,lastResult=null;
   let quiet=false;try{quiet=localStorage.getItem(QUIET_KEY)==='1'}catch(e){}
   const NOTE={guest:'Bạn đang trải nghiệm riêng · đăng nhập thành viên để gặp mọi người và trò chuyện',session:'Đang có phiên trị liệu riêng ở đây · bạn trải nghiệm riêng, không làm phiền phiên',full:'Không gian đã đủ người · bạn đang trải nghiệm riêng'};
 
@@ -51,7 +51,7 @@
   function profileName(){try{const p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}');return String(p.name||'Khách Làng Yên').replace(/[<>]/g,'').slice(0,24)||'Khách Làng Yên'}catch(e){return 'Khách Làng Yên'}}
   async function getClient(){if(client)return client;if(typeof window.anyenAuthClient!=='function')return null;client=await window.anyenAuthClient();if(!client)return null;const {data}=await client.auth.getSession();uid=data?.session?.user?.id||null;return client}
   const emit=(n,d)=>window.dispatchEvent(new CustomEvent(n,{detail:d}));
-  async function leave(){gen++;info=null;clearInterval(beat);beat=null;const c=channel;channel=null;people={};unread=0;log.replaceChildren();render();
+  async function leave(){gen++;info=null;lastResult=null;clearInterval(beat);beat=null;const c=channel;channel=null;people={};unread=0;log.replaceChildren();render();
     if(c){try{await c.untrack()}catch(e){}try{await client.removeChannel(c)}catch(e){}}
     if(venue&&client){venue=null;try{await client.rpc('anyen_space_leave')}catch(e){}}venue=null}
   async function enter(id){
@@ -67,24 +67,29 @@
     ch.on('presence',{event:'sync'},()=>{if(ch!==channel)return;const st=ch.presenceState()||{},next={};for(const [k,arr] of Object.entries(st)){if(arr&&arr[0])next[k]=arr[0]}
       for(const k of Object.keys(next))if(!people[k]&&k!==uid&&Object.keys(people).length)line('',(next[k].name||'Một người bạn')+' vừa vào','sys');
       for(const k of Object.keys(people))if(!next[k]&&k!==uid)line('',(people[k].name||'Một người bạn')+' đã rời đi','sys');
-      people=next;render();emit('anyen-space-people',{id,n:count(),healer:!!(info&&info.therapist&&people[info.therapist])})});
+      people=next;render();emitPeople()});
     ch.on('broadcast',{event:'room'},({payload:m})=>{if(ch!==channel||!m||m.from===uid||typeof m.k!=='string')return;emit('anyen-space-room',Object.assign({},m,{fromHealer:!!(info&&info.therapist&&m.from===info.therapist)}))});
     ch.on('broadcast',{event:'chat'},({payload:m})=>{if(ch!==channel||!m||m.from===uid)return;const text=String(m.text||'').slice(0,MAX_LEN);if(!text)return;
       line(String(m.name||'Khách').replace(/[<>]/g,'').slice(0,24),text);if(quiet)unread++;render()});
-    ch.subscribe(async s=>{if(ch!==channel)return;if(s==='SUBSCRIBED'){try{await ch.track({name,t:Date.now()})}catch(e){}
-        say('Đã vào '+venue.name+' · '+d.count+'/'+d.capacity+' người'+(d.session?' · phiên trị liệu đang diễn ra':''),3500);emit('anyen-space-result',Object.assign({ok:true,count:d.count,capacity:d.capacity},info))}
+    joinT=Date.now();ch.subscribe(async s=>{if(ch!==channel)return;if(s==='SUBSCRIBED'){try{await ch.track(Object.assign({},meta,{name,t:joinT}))}catch(e){}
+        say('Đã vào '+venue.name+' · '+d.count+'/'+d.capacity+' người'+(d.session?' · phiên trị liệu đang diễn ra':''),3500);lastResult=Object.assign({ok:true,count:d.count,capacity:d.capacity},info);emit('anyen-space-result',lastResult)}
       else if(s==='CHANNEL_ERROR'||s==='TIMED_OUT'){/* hết chỗ hoặc mất quyền: thử lại một lần */if(g===gen)setTimeout(()=>{if(g===gen&&want===id)enter(id)},4000)}});
     beat=setInterval(async()=>{if(g!==gen)return;const b=await c.rpc('anyen_space_beat',{p_venue:id});if(g===gen&&b.data===false)enter(id)},BEAT_MS);
     render();
   }
+  // Danh sách người có mặt (id, tên, giờ vào, cờ tự báo như host/cụm bàn) cho các phòng cộng đồng như Nhà Văn Hóa xếp chỗ và chọn người dẫn.
+  function emitPeople(){if(!channel||!venue)return;emit('anyen-space-people',{id:venue.id,n:count(),me:uid,healer:!!(info&&info.therapist&&people[info.therapist]),
+    list:Object.entries(people).map(([id,p])=>({id,name:String(p.name||'').replace(/[<>]/g,'').slice(0,24),t:+p.t||0,host:p.host===true,c:Number.isInteger(p.c)&&p.c>=0&&p.c<6?p.c:null}))})}
+  window.addEventListener('anyen-space-ask',()=>{if(!channel)return;if(lastResult)emit('anyen-space-result',lastResult);emitPeople()});
   function spaceName(id){const m={xong_huong:'Nhà Hương · Haromy',nha_hoa_lan:'Nhà Sắc',xuong_gom:'Nhà Chạm',quan_tra:'Nhà Vị',chuong_gio:'Nhà Thanh',nha_niem:'Nhà Niệm',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Tư Đảo',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
 
   // Không gian đang ở (phát từ index.html): 'forest' | 'bay' | 'room:<id>' | 'space:<id>' | 'out'
   window.addEventListener('anyen-space',e=>{const sp=String(e.detail?.space||'');const m=/^(?:room|space):([a-z0-9_]{1,40})$/.exec(sp);
-    if(m){if(m[1]!==want||!channel)enter(m[1])}else{want=null;leave()}});
+    if(m){if(m[1]!==want){meta={};enter(m[1])}else if(!channel)enter(m[1])}else{want=null;meta={};leave()}});
   window.addEventListener('anyen-lock-paused',()=>{const w=want;leave();want=w});
   window.addEventListener('anyen-lock-resumed',()=>{if(want)enter(want)});
   window.addEventListener('pagehide',()=>{if(venue&&client){try{client.rpc('anyen_space_leave')}catch(e){}}});
   window.anyenSpaceChat={state:()=>({venue:venue?.id||null,want,people:count(),quiet,unread,joined:!!channel}),session:()=>info&&channel?Object.assign({},info):null,
+    meta:o=>{const m={};if(o&&o.host===true)m.host=true;if(o&&Number.isInteger(o.c)&&o.c>=0&&o.c<6)m.c=o.c;meta=Object.assign({},meta,m);if(channel){try{channel.track(Object.assign({},meta,{name,t:joinT}))}catch(e){}}return true},
     send:p=>{if(!channel||!p||typeof p.k!=='string')return false;channel.send({type:'broadcast',event:'room',payload:Object.assign({},p,{from:uid,t:Date.now()})});return true}};
 })();

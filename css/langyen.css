@@ -241,3 +241,7 @@ body.immersive.zen-sheet-journal #zenJournalSheet,body.immersive.zen-sheet-wishe
 #roomBox.niem .rm-orb{display:none}#roomBox.niem .rm-breath{justify-content:flex-end;padding-bottom:16px}.nm-mode{font-size:13px;color:#f2dca8}.nm-mode button{margin-left:6px;padding:4px 10px!important;font-size:12px!important}.nm-tabs button{padding:7px 10px}
 #roomBox.niem .rm-top,#roomBox.niem .rm-panel,#roomBox.niem .rm-hint{transition:opacity 1.6s}#roomBox.niem-quiet:not(.peek) .rm-top,#roomBox.niem-quiet:not(.peek) .rm-panel,#roomBox.niem-quiet:not(.peek) .rm-hint{opacity:0;pointer-events:none}
 body.niem-quiet #yenChat,body.niem-quiet #yenChatPill,body.niem-quiet #yenSession,body.niem-quiet #yenSpaceNote{opacity:0!important;pointer-events:none!important}
+/* Nhà Văn Hóa: bàn phím ngũ cung lớn cho điện thoại, ô nhập, túi An Yên nổi trên phòng khi bấm Tặng quà */
+.vh-mode{font-size:13px;color:#f2dca8}.vh-tabs button{padding:7px 10px}.vh-keys button{min-width:54px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:18px!important}.vh-keys small{font-size:11px;opacity:.8}
+.vh-in{flex:1;min-width:0;border:1px solid #a18a5e;border-radius:10px;background:#0b2d28;color:#f6e3b4;padding:8px 10px;font-size:16px}.vh-opts button{flex:1 1 40%;text-align:left}.vh-arch{display:flex;gap:8px;align-items:center;font-size:13px}.vh-arch .ar-sw i{display:inline-block;width:14px;height:14px;margin-right:2px;border-radius:3px}
+body.room-open.zen-sheet-bag #zenBagSheet{z-index:97}
