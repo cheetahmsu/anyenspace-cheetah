@@ -1,0 +1,3695 @@
+// LÀNG YÊN · thế giới 3D (Rừng Yên, Vịnh Yên, các nhà và phòng). Tách khỏi index.html để trang chủ tải nhẹ hơn trên 4G
+// và được trình duyệt lưu đệm riêng. Nạp bằng <script defer> sau activity-lock.js và space-chat.js, chạy khi trang đã dựng xong.
+// Dùng chung các hàm toàn cục khai báo trong index.html ($, toast, go, anyenLoadThree, ...).
+window.anyenRetry3D=async function initialize3D(){
+ window.anyen3DLoading=true;document.body.classList.remove('yen-3d-error');document.querySelector('#sceneMode').textContent='Đang tải không gian 3D…';
+ try{
+  const THREE=await anyenLoadThree();
+  if(!anyenWebGLAvailable()){const err=new Error('Trình duyệt hoặc thiết bị này chưa bật WebGL nên chưa mở được 3D. Trên iPhone, hãy tắt Chế độ Phong tỏa (Lockdown Mode) cho trang này hoặc thử trình duyệt khác.');err.kind='webgl';throw err}
+  const softwareGL=anyenSoftwareGL();window.anyenIsSoftwareGL=softwareGL;
+  const renderer=new THREE.WebGLRenderer({antialias:!softwareGL,alpha:false,powerPreference:'low-power'});
+  renderer.setPixelRatio(softwareGL?1:Math.min(window.devicePixelRatio||1,matchMedia('(pointer:coarse)').matches?1.5:1.7));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.domElement.className='webgl';renderer.domElement.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block;';
+  const holder=document.querySelector('.scene');holder.append(renderer.domElement);window.anyenRetry3D=null;
+  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();console.warn('LÀNG YÊN 3D: WebGL context lost');document.getElementById('zenHint').textContent='Đang khôi phục không gian 3D… Nếu màn hình vẫn đứng, hãy tải lại trang.'},false);
+  renderer.domElement.addEventListener('webglcontextrestored',()=>{console.info('LÀNG YÊN 3D: WebGL context restored');document.getElementById('zenHint').textContent='Đã khôi phục không gian 3D.'},false);
+  const scene=new THREE.Scene();scene.background=new THREE.Color('#173c35');scene.fog=new THREE.FogExp2('#264b42',.016);
+  const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,320);camera.position.set(0,7,21);
+  const hemiLight=new THREE.HemisphereLight('#f6dfaf','#1b4234',2.1);scene.add(hemiLight);const sun=new THREE.DirectionalLight('#f5c78c',2.4);sun.position.set(-8,19,-8);scene.add(sun);
+  const mat=(color,roughness=1)=>new THREE.MeshStandardMaterial({color,roughness,side:THREE.DoubleSide});
+  let bayMode=false;
+  // 3.8: Bản đồ mở rộng. Phía nam là hồ sen hai cánh, phía bắc là đồi tượng Phật; vành ngoài nâng thành triền thông.
+  // terrainHeight() là nguồn duy nhất cho cao độ: lưới mặt đất, người đi, cây và tọa cụ đều đọc từ đây.
+  const HILL={x:0,z:-62,top:8,flat:11,foot:26};
+  const LOTUS_LAKE={z:-4,lobes:[[-18,15,13],[18,15,13]],channel:[7,4]};
+  function lakeSDF(x,z){let d=Infinity;for(const [cx,rx,rz] of LOTUS_LAKE.lobes){const dx=(x-cx)/rx,dz=(z-LOTUS_LAKE.z)/rz;d=Math.min(d,(Math.hypot(dx,dz)-1)*Math.min(rx,rz))}const qx=Math.abs(x)-LOTUS_LAKE.channel[0],qz=Math.abs(z-LOTUS_LAKE.z)-LOTUS_LAKE.channel[1];return Math.min(d,Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0))}
+  const smoothstep=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t)};
+  function terrainHeight(x,z){
+    const lk=lakeSDF(x,z);if(lk<0)return Math.max(-1.1,lk*.35)-.12;
+    const hr=Math.hypot(x-HILL.x,z-HILL.z),slope=smoothstep(HILL.foot,HILL.flat,hr);
+    let y=HILL.top*slope+.5*Math.sin(Math.atan2(z-HILL.z,x-HILL.x)*3+.7)*slope*(1-slope)*4;
+    const e=Math.max((Math.abs(x)-70)/14,(z-37)/12,(-z-125)/10);
+    if(e>0)y+=9*smoothstep(0,1,e)+Math.sin(x*.21+z*.13)*.8*smoothstep(0,.5,e);
+    return y;
+  }
+  const ground=(()=>{const g=new THREE.PlaneGeometry(226,222,226,222);g.rotateX(-Math.PI/2);g.translate(0,0,-45);const p=g.attributes.position;
+    for(let i=0;i<p.count;i++)p.setY(i,terrainHeight(p.getX(i),p.getZ(i)));g.computeVertexNormals();
+    g.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(p.count*3).fill(.25),3));
+    return new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}))})();scene.add(ground);
+  const water=new THREE.Mesh(new THREE.PlaneGeometry(78,38),new THREE.MeshStandardMaterial({color:'#306c68',metalness:.35,roughness:.24,transparent:true,opacity:.91}));water.rotation.x=-Math.PI/2;water.position.set(0,-.05,-4);scene.add(water);
+
+// Bản đồ v3.6: Hồ Sen (hồ sen hai cánh) và sáu hồ Lục Căn (r 5.5 m) đối xứng quanh đồi, cách đỉnh đồi 38 m.
+// Tây (Bắc→Nam): Chạm, Thanh, Sắc · Đông: Niệm, Hương, Vị.
+const POND_R=5.5;
+const wishLakes=[
+ {name:'Sắc',x:-28.2,z:-36.6,color:'#547d81',theme:'thịnh vượng'},
+ {name:'Thanh',x:-37.9,z:-65.3,color:'#57758b',theme:'công việc'},
+ {name:'Hương',x:37.9,z:-65.3,color:'#688b78',theme:'sức khỏe'},
+ {name:'Vị',x:28.2,z:-36.6,color:'#947a67',theme:'tình duyên'},
+ {name:'Chạm',x:-23.4,z:-91.9,color:'#8c7188',theme:'kết nối'},
+ {name:'Niệm',x:23.4,z:-91.9,color:'#6a9c98',theme:'chánh niệm'},/* bản đồ v3.6: hồ mới Đông-Bắc, đối xứng Hồ Chạm, sen trắng */
+ {name:'Sen',x:0,z:-4,color:'#5a9b91',theme:'an yên',lotus:true}/* hồ sen hai cánh (trước gọi là Hồ Niệm) */
+];
+const lakeVisuals=new Map();let wishDestination=null;let selectedWishLake='Sen';window.anyenSelectedWishLake='Sen';
+for(const l of wishLakes){
+ const group=new THREE.Group();group.position.set(l.x,.035,l.z);scene.add(group);
+ if(!l.lotus){
+   const rim=new THREE.Mesh(new THREE.TorusGeometry(POND_R+.12,.2,8,72),mat('#9a8662'));rim.rotation.x=-Math.PI/2;group.add(rim);
+   const pool=new THREE.Mesh(new THREE.CircleGeometry(POND_R,72),new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:.88,metalness:.3,roughness:.23,side:THREE.DoubleSide}));pool.rotation.x=-Math.PI/2;group.add(pool);l.pool=pool;
+ }
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');const drawLakeLabel=()=>{ctx.clearRect(0,0,512,128);ctx.fillStyle='#f1d69f';ctx.font='bold 48px serif';ctx.textAlign='center';ctx.fillText('HỒ '+l.name.toUpperCase(),256,62);ctx.font='28px sans-serif';ctx.fillText(l.theme,256,103)};drawLakeLabel();
+ const tex=new THREE.CanvasTexture(labelCanvas);l.redrawLabel=()=>{drawLakeLabel();tex.needsUpdate=true};const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,l.lotus?5.4:1.5,0);label.scale.set(5,1.25,1);group.add(label);/* Hồ Sen's sign floats above the arched bridge */
+ if(!l.lotus){const colors={'Sắc':'#f2c96b','Thanh':'#a9c5ed','Hương':'#f4e8d2','Vị':'#e89baa','Chạm':'#bca4dd','Niệm':'#fbfbf6'};if(l.name==='Niệm'){/* Hồ Niệm: lá sen nổi và sen trắng (Bạch Liên) nhụy vàng, cảnh tĩnh */const padM=mat('#5d8c6e'),whiteM=new THREE.MeshStandardMaterial({color:'#fbfaf3',roughness:.6,emissive:'#ffffff',emissiveIntensity:.08,side:THREE.DoubleSide}),coreM=mat('#d8a73a');
+   for(let j=0;j<14;j++){const a=j*2.39996,r=.9+(j%5)*.95,pad=new THREE.Mesh(new THREE.CircleGeometry(.42+(j%3)*.1,14,.3,Math.PI*2-.3),padM);pad.rotation.x=-Math.PI/2;pad.rotation.z=a;pad.position.set(Math.cos(a)*r,.07,Math.sin(a)*r);group.add(pad)}
+   const petal=new THREE.SphereGeometry(.16,10,8);petal.scale(.55,.28,1.25);petal.translate(0,0,.17);
+   for(let j=0;j<6;j++){const a=j*2.1+.4,r=1.3+(j%3)*1.1,f=new THREE.Group();f.position.set(Math.cos(a)*r,.12,Math.sin(a)*r);f.scale.setScalar(1.35);group.add(f);
+     for(const [n,tilt,y,s] of [[8,.55,0,1],[6,.95,.04,.8]])for(let k=0;k<n;k++){const p=new THREE.Mesh(petal,whiteM);p.rotation.order='YXZ';p.rotation.y=k*Math.PI*2/n+y*9;p.rotation.x=-tilt;p.position.y=y;p.scale.setScalar(s);f.add(p)}
+     const c=new THREE.Mesh(new THREE.CylinderGeometry(.07,.05,.06,10),coreM);c.position.y=.09;f.add(c)}}
+ else for(let j=0;j<12;j++){const a=j*2.39996,r=1.1+(j%4)*1.25;const plant=new THREE.Group();plant.position.set(Math.cos(a)*r,.09,Math.sin(a)*r);plant.scale.setScalar(1.45);group.add(plant);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),mat('#56845e'));leaf.scale.set(1,.13,.6);plant.add(leaf);for(let p=0;p<5;p++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.19,8,6),mat(colors[l.name]));petal.position.set(Math.cos(p*1.256)*.2,.15,Math.sin(p*1.256)*.2);plant.add(petal)}}}lakeVisuals.set(l.name,group);
+}
+function animateCoin(lake,remote){const l=wishLakes.find(v=>v.name===lake);if(!l)return;const coin=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,24),new THREE.MeshStandardMaterial({color:'#e5c178',metalness:.8,roughness:.2}));const from=remote?new THREE.Vector3(l.x+5,1.7,l.z+5):mePosition.clone().add(new THREE.Vector3(0,1.7,0));scene.add(coin);const start=performance.now();function frame(now){const t=Math.min(1,(now-start)/1400);coin.position.set(from.x+(l.x-from.x)*t,from.y+(.12-from.y)*t+Math.sin(Math.PI*t)*2.8,from.z+(l.z-from.z)*t);coin.rotation.z=t*15;if(t<1)requestAnimationFrame(frame);else{scene.remove(coin);coin.geometry.dispose();coin.material.dispose()}}requestAnimationFrame(frame)}
+const wishQuotes={"Sắc":["Thịnh vượng là biết điều gì thật sự đủ.","Giá trị hôm nay tạo nên cơ hội ngày mai.","Kiên nhẫn cũng là một hình thức đầu tư.","Hãy chăm sóc nền móng trước khi xây thêm tầng.","Một quyết định sáng suốt cần ít vội vàng hơn.","Tài sản quý nhất là khả năng bắt đầu lại.","Đừng so tốc độ của mình với người khác.","Dành chỗ cho cả tích lũy và tận hưởng.","Điều bền vững thường lớn lên trong im lặng.","Thành công có ý nghĩa khi bạn vẫn là chính mình.","Hôm nay, hãy tạo ra một giá trị thật.","Không phải cánh cửa nào mở ra cũng cần bước vào."],"Thanh":["Làm việc quan trọng trước khi làm việc khẩn cấp.","Bạn không cần giỏi mọi thứ để tạo khác biệt.","Một lời nói rõ ràng có thể tháo gỡ hiểu lầm.","Đừng nhầm bận rộn với tiến bộ.","Có những bước lùi giúp nhìn rõ đường đi.","Tài năng nở rộ trong đúng môi trường.","Hãy xin giúp đỡ trước khi kiệt sức.","Tập trung là món quà dành cho mục tiêu.","Một ngày làm việc tốt vẫn cần điểm dừng.","Bạn được phép học trong lúc đang làm.","Lắng nghe đồng đội là một năng lực lãnh đạo.","Cơ hội đôi khi đến từ cuộc trò chuyện chân thành."],"Hương":["Cơ thể không phải cỗ máy chạy hết công suất.","Một giấc ngủ đủ là quyết định khôn ngoan.","Chăm sóc bản thân không cần đợi lúc mệt.","Hãy uống nước và trở về với hiện tại.","Nghỉ ngơi cũng là một phần của phát triển.","Mỗi hơi thở chậm là một lời nhắc dịu dàng.","Đừng dùng một ngày khó để đánh giá cả đời.","Đi bộ vài phút cũng giúp tâm trí rộng mở.","Lắng nghe cơ thể trước khi nó lên tiếng lớn.","Một bữa ăn thong thả đáng được trân trọng.","Sức khỏe đến từ điều nhỏ được lặp lại.","Cân bằng là điều được điều chỉnh mỗi ngày."],"Vị":["Tình yêu đẹp không khiến bạn đánh mất mình.","Một câu hỏi chân thành hơn mười lời đoán.","Hãy yêu bằng sự hiện diện, không chỉ lời hứa.","Bền lâu cần cả gần gũi lẫn khoảng riêng.","Đừng mong người khác đọc điều bạn chưa nói.","Sự dịu dàng có sức mạnh riêng.","Yêu thương không phải cuộc thi hy sinh.","Một lời xin lỗi đúng lúc có thể mở cửa.","Lắng nghe là cách ôm nhau bằng tâm trí.","Bạn xứng đáng với sự tôn trọng.","Đừng kết luận khi trái tim còn đang nóng.","Tình cảm cần được tưới bằng hành động."],"Chạm":["Kết nối thật bắt đầu khi ta hiện diện thật.","Một lời hỏi thăm có thể thay đổi một ngày.","Hãy tìm người để cùng đi, không chỉ cùng đến.","Không phải cuộc gặp nào cũng cần mục đích.","Được lắng nghe là một dạng được yêu thương.","Tình bạn lớn lên từ những lần có mặt.","Bạn có thể chủ động mở lời trước.","Khác biệt không nhất thiết là khoảng cách.","Hãy giữ lời hứa nhỏ để nuôi niềm tin.","Mỗi người mang theo câu chuyện chưa kể.","Hãy tập hiểu người trước khi mong được hiểu.","Chân thành là chiếc cầu không cần trang trí."],"Niệm":["Mỗi hơi thở tỉnh thức là một lần trở về nhà.","Làm chậm một việc nhỏ, bạn sẽ thấy nó trọn vẹn.","Chánh niệm là biết mình đang làm gì khi đang làm điều đó.","Hãy để tâm nghỉ một chút như mặt hồ lặng.","Sen trắng nở giữa bùn mà không nhiễm bùn.","Một ngọn đèn nhỏ đủ soi một bước chân.","Lắng nghe hơi thở vào, mỉm cười với hơi thở ra.","Điều đang có mặt bây giờ là đủ để bắt đầu."],"Sen":["Bạn không cần giải quyết cả tương lai hôm nay.","Trở về với hơi thở, trở về với chính mình.","Bình an không đợi mọi việc hoàn tất.","Một khoảnh khắc tỉnh thức cũng đáng quý.","Hãy để suy nghĩ đi qua mà không chạy theo.","Bạn có thể bắt đầu lại từ phút này.","Im lặng là khoảng trống để lắng nghe.","Chậm một nhịp để nhìn rõ điều đang xảy ra.","Có câu trả lời đến khi ta ngừng ép tìm.","Một ngày bình thường vẫn chứa điều kỳ diệu.","Bạn được phép chưa biết bước tiếp theo.","Hãy đối xử với mình bằng sự tử tế."]};
+function wishQuote(lake){const arr=wishQuotes[lake]||wishQuotes.Sen;window.anyenLastQuote=window.anyenLastQuote||{};let index=Math.floor(Math.random()*arr.length);if(arr.length>1&&index===window.anyenLastQuote[lake])index=(index+1)%arr.length;window.anyenLastQuote[lake]=index;
+ let toast=document.getElementById('anyenWishQuoteToast');if(!toast){toast=document.createElement('div');toast.id='anyenWishQuoteToast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.append(toast);}toast.textContent='✧ Hồ '+lake+' · '+arr[index];toast.classList.add('show');window.dispatchEvent(new CustomEvent('anyen-journal-add',{detail:{lake,quote:arr[index],at:Date.now()}}));clearTimeout(window.anyenQuoteTimer);window.anyenQuoteTimer=setTimeout(()=>toast.classList.remove('show'),6500);}
+window.addEventListener('anyen-item-receive',e=>{const {id,emoji,name,source,from}=e.detail||{};if(!id)return;
+ // Screen-space animation stays visible on mobile even when the camera is turned.
+ const el=document.createElement('div');el.className='anyen-flying-item';el.textContent=emoji||'🎁';document.body.append(el);
+ requestAnimationFrame(()=>{el.classList.add('arrive')});
+ setTimeout(()=>{el.remove();const toast=document.getElementById('anyenWishQuoteToast');if(toast){toast.textContent=source==='gift'?'🎁 '+(from||'Một người bạn')+' tặng bạn '+(name||'vật phẩm')+' · đã cất vào Túi An Yên':'🎒 Đã cất '+(name||'vật phẩm')+' vào Túi An Yên';toast.classList.add('show');clearTimeout(window.anyenQuoteTimer);window.anyenQuoteTimer=setTimeout(()=>toast.classList.remove('show'),2600)}},1450);
+});
+
+window.addEventListener('anyen-wish-select',e=>{const l=wishLakes.find(v=>v.name===e.detail?.lake);if(!l)return;selectedWishLake=l.name;window.anyenSelectedWishLake=l.name;const selector=document.getElementById('anyenWishLake');if(selector)selector.value=l.name;
+ const candidates=[];for(let k=0;k<24;k++){const a=k*Math.PI/12;if(l.lotus){for(const s of [-1,1])candidates.push([s*18+Math.cos(a)*16.6,-4+Math.sin(a)*14.6]);}else candidates.push([l.x+Math.cos(a)*(POND_R+1.4),l.z+Math.sin(a)*(POND_R+1.4)]);}
+ candidates.sort((a,b)=>Math.hypot(a[0]-mePosition.x,a[1]-mePosition.z)-Math.hypot(b[0]-mePosition.x,b[1]-mePosition.z));
+ let ok=false;for(const p of candidates){if(!walkable(...p))continue;if(navigateTo(...p)){ok=true;break;}}
+ wishDestination=ok?l.name:null;if(!ok)document.getElementById('zenHint').textContent='Chưa tìm được đường đến Hồ '+l.name+'. Hãy thử đến gần hơn.';});
+// Measure to the shore, not the centre: Hồ Sen is the large two-lobed lotus lake, the others are sense ponds (r POND_R).
+function lakeShoreDistance(l){return l.lotus?lakeSDF(mePosition.x,mePosition.z):Math.hypot(mePosition.x-l.x,mePosition.z-l.z)-POND_R}
+function nearestWishLake(){let best=wishLakes[0],distance=Infinity;for(const l of wishLakes){const d=lakeShoreDistance(l);if(d<distance){distance=d;best=l}}return best.name}
+function isNearWishLake(){return wishLakes.some(l=>lakeShoreDistance(l)<=7)}
+function updateWishLake(){const name=nearestWishLake();if(name===selectedWishLake)return;selectedWishLake=name;window.anyenSelectedWishLake=name;const el=document.getElementById('anyenCurrentLake');if(el)el.textContent='🪷 Hồ '+name;const selector=document.getElementById('anyenWishLake');if(selector)selector.value=name}
+window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()){const near=nearestWishLake();let toast=document.getElementById('anyenWishQuoteToast');if(!toast){toast=document.createElement('div');toast.id='anyenWishQuoteToast';toast.setAttribute('role','status');document.body.append(toast)}toast.textContent='🪙 Hãy đi đến gần một hồ rồi ném xu. Hồ gần nhất: Hồ '+near+'.';toast.classList.add('show');clearTimeout(window.anyenQuoteTimer);window.anyenQuoteTimer=setTimeout(()=>toast.classList.remove('show'),3200);return}
+ const lake=e.detail?.remote?e.detail?.lake:nearestWishLake();if(!wishLakes.some(v=>v.name===lake))return;animateCoin(lake,!!e.detail?.remote);if(!e.detail?.remote){wishQuote(lake);window.dispatchEvent(new CustomEvent('anyen-coin-thrown',{detail:{lake}}))}});
+  const box=(w,h,d,m,x,y,z)=>{let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o};
+  const wood=mat('#654c33'),roof=mat('#23332f'),gold=mat('#c8a96a'),stone=mat('#6f7166');
+  // 3.8: The meditation terrace sits on the flat top of the hill at the north end. A seated Buddha under a wide roof,
+  // facing the lake and the gate, with rings of meditation cushions in front. Everything here is in the shrine group,
+  // which is lifted to the hilltop; x/z stay in world coordinates.
+  const STATUE={x:HILL.x,z:HILL.z},TERRACE_TOP=.3;
+  const shrine=new THREE.Group();shrine.position.y=HILL.top;scene.add(shrine);
+  const sbox=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);shrine.add(o);return o};
+  const FOOT={x:0,z:-31,r:6},GATHER={x:0,z:24,r:6.5};
+  const STAIRS=[[0,-36.6],[5,-41.4],[-5,-46.4],[0,-51.4]];
+  function stairsDistance(x,z){let best=Infinity;for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz)));best=Math.min(best,Math.hypot(ax+vx*u-x,az+vz*u-z))}return best}
+  const terraceMat=mat('#77735f'),terraceEdge=mat('#5f5c4d'),tile=mat('#4b3a31'),eave=mat('#6b4a32');
+  const TERRACE_R=8.2;
+  // Arched footbridge over Hồ Sen: walkers follow this height while on the bridge.
+  const BRIDGE_ARCH=[-10.5,2.5],BRIDGE_RISE=2.6;
+  function bridgeHeight(z){if(z<=BRIDGE_ARCH[0]||z>=BRIDGE_ARCH[1])return 0;const u=(z-BRIDGE_ARCH[0])/(BRIDGE_ARCH[1]-BRIDGE_ARCH[0]);return .18+BRIDGE_RISE*Math.sin(Math.PI*u);}
+  // Mặt bậc đá lên tượng Phật: mỗi phiến đá phẳng (bậc thang), không trượt theo dốc đất nên chân không chìm vào phiến đá.
+  function stairStepY(x,z){let y=null;for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),dx=(bx-ax)/len,dz=(bz-az)/len,t=(x-ax)*dx+(z-az)*dz,d=Math.abs((x-ax)*dz-(z-az)*dx);
+    if(d>1.45||t<-.32||t>len+.32)continue;const k=Math.max(0,Math.min(Math.floor(len/.62),Math.round(t/.62))),cx=ax+dx*k*.62,cz=az+dz*k*.62,h=terrainHeight(cx,cz)+.14;y=y==null?h:Math.max(y,h)}return y}
+  // Bến sen (cầu tàu gỗ, x -9 ± .85, z .6 → 8.8): đứng trên mặt ván, không lọt xuống nước
+  const PIER_TOP=.27,onPier=(x,z)=>Math.abs(x+9)<.95&&z>.5&&z<8.9;
+  const groundHeight=(x,z)=>{if(Math.abs(x)<=1.8&&z>BRIDGE_ARCH[0]&&z<BRIDGE_ARCH[1])return bridgeHeight(z);const t=terrainHeight(x,z);if(onPier(x,z))return Math.max(PIER_TOP,t);const st=stairStepY(x,z);return st==null?t:Math.max(t,st)};const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);shrine.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);shrine.add(kerb);
+  // Round three-step dais for the statue.
+  [[2.3,.18],[1.95,.18],[1.6,.18]].forEach(([r,h],k)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.06,h,32),k%2?terraceEdge:terraceMat);d.position.set(STATUE.x,TERRACE_TOP+h/2+k*h,STATUE.z);shrine.add(d)});
+  const DAIS_TOP=TERRACE_TOP+.54;
+  // Wide pyramid roof that only shelters the statue.
+  for(const x of [-1.9,1.9])for(const z of [STATUE.z-1.9,STATUE.z+1.9]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.17,.2,5.2,10),wood);post.position.set(x,TERRACE_TOP+2.6,z);shrine.add(post);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.3,.34,.22,10),terraceEdge);foot.position.set(x,TERRACE_TOP+.11,z);shrine.add(foot)}
+  const beamY=TERRACE_TOP+5.2;sbox(4.2,.28,.32,eave,0,beamY,STATUE.z-1.9);sbox(4.2,.28,.32,eave,0,beamY,STATUE.z+1.9);sbox(.32,.28,4.2,eave,-1.9,beamY,STATUE.z);sbox(.32,.28,4.2,eave,1.9,beamY,STATUE.z);
+  const eaveSlab=sbox(7.6,.14,7.6,eave,0,beamY+.22,STATUE.z);
+  const roofCone=new THREE.Mesh(new THREE.ConeGeometry(6.3,2.3,4,1),tile);roofCone.rotation.y=Math.PI/4;roofCone.position.set(0,beamY+1.45,STATUE.z);shrine.add(roofCone);
+  const finial=new THREE.Mesh(new THREE.SphereGeometry(.22,12,10),gold);finial.position.set(0,beamY+2.7,STATUE.z);shrine.add(finial);
+  // 3.14: Seated Buddha in full lotus (kiết già), dhyana mudra: crossed shins with upturned soles, hands resting in the lap,
+  // robe over the left shoulder with the right shoulder bare, curled hair and ushnisha, long earlobes, eyes lowered.
+  const buddha=new THREE.Group();const skin=mat('#c9a35f',.55),robeGold=mat('#b88d45',.6),robeFold=mat('#a87d3b',.6),hairM=mat('#5e4a2e',.7),lineM=mat('#7a5a2e',.6);
+  const lotusBase=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.2,.28,24),gold);lotusBase.position.y=.14;buddha.add(lotusBase);
+  for(let ring=0;ring<2;ring++)for(let k=0;k<12;k++){const a=k*Math.PI/6+ring*Math.PI/12,r=ring?.95:1.12;const pet=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),ring?robeGold:gold);pet.scale.set(.55,.42,1.1);pet.position.set(Math.cos(a)*r,.34+ring*.1,Math.sin(a)*r);pet.rotation.y=-a+Math.PI/2;pet.rotation.x=ring?-.5:-.25;buddha.add(pet)}
+  const bAdd=(geo,m,x,y,z,sx=1,sy=1,sz=1)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);buddha.add(o);return o};
+  const limb=(r,a,b,m)=>{const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),o=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,d.length()),5,12),m);o.position.copy(A).add(B).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());buddha.add(o);return o};
+  // lap and crossed legs
+  bAdd(new THREE.SphereGeometry(1,24,14),robeGold,0,.6,.12,1.02,.27,.66);
+  limb(.19,[-.82,.62,.12],[.36,.66,.46],robeGold);limb(.19,[.82,.66,.18],[-.34,.74,.4],robeFold);
+  bAdd(new THREE.SphereGeometry(.22,14,10),robeGold,-.84,.6,.14);bAdd(new THREE.SphereGeometry(.22,14,10),robeFold,.84,.64,.18);
+  for(const [x,z,s] of [[.44,.44,1],[-.42,.38,-1]]){const sole=bAdd(new THREE.SphereGeometry(.14,12,8),skin,x,.82,z,1.5,.5,.85);sole.rotation.z=s*.35;for(let t=0;t<5;t++)bAdd(new THREE.SphereGeometry(.032,6,5),skin,x+s*.2,.86+t*.012,z-.09+t*.045)}
+  // robe hem pooling over the lotus
+  bAdd(new THREE.CylinderGeometry(1.02,1.08,.12,28),robeFold,0,.46,.1,1,1,.68);
+  // torso from a lathe profile, slightly flattened front to back
+  const torsoG=new THREE.LatheGeometry([[0,.82],[.44,.84],[.42,1.05],[.46,1.35],[.53,1.62],[.6,1.84],[.5,1.98],[.2,2.07],[0,2.08]].map(([r,y])=>new THREE.Vector2(r,y)),24);
+  bAdd(torsoG,robeGold,0,0,.02,1,1,.7);
+  // bare right shoulder and chest, robe edge falling diagonally from the left shoulder
+  bAdd(new THREE.SphereGeometry(.34,16,12),skin,.28,1.72,.06,1,.95,.72);bAdd(new THREE.SphereGeometry(.24,14,10),skin,.56,1.84,.0,1,.8,.85);
+  limb(.06,[-.42,1.98,.3],[.4,1.1,.34],robeFold);limb(.05,[-.5,1.95,-.05],[-.55,1.2,-.2],robeFold);
+  // arms: upper arms down the sides, forearms in toward the lap
+  limb(.15,[-.6,1.82,.02],[-.66,1.22,.12],robeGold);limb(.14,[.6,1.82,.02],[.66,1.22,.12],skin);
+  limb(.13,[-.66,1.22,.12],[-.22,.92,.48],robeGold);limb(.12,[.66,1.22,.12],[.22,.94,.5],skin);
+  bAdd(new THREE.SphereGeometry(.15,14,10),robeFold,-.66,1.22,.12);bAdd(new THREE.SphereGeometry(.14,14,10),skin,.66,1.22,.12);
+  // dhyana mudra: right hand resting on the left, palms up, thumb tips touching
+  bAdd(new THREE.SphereGeometry(.2,14,10),skin,0,.9,.5,1.25,.32,.78);bAdd(new THREE.SphereGeometry(.19,14,10),skin,0,.95,.52,1.2,.3,.74);
+  limb(.035,[-.13,.98,.6],[0,1.05,.6],skin);limb(.035,[.13,.98,.6],[0,1.05,.6],skin);
+  // neck with the three beauty folds
+  bAdd(new THREE.CylinderGeometry(.15,.18,.24,14),skin,0,2.14,0);for(const y of [2.08,2.14,2.2]){const f=bAdd(new THREE.TorusGeometry(.16,.008,4,20),lineM,0,y,0);f.rotation.x=Math.PI/2}
+  // head
+  const hy=2.48;bAdd(new THREE.SphereGeometry(.34,24,18),skin,0,hy,.02,1,1.14,1.02);
+  bAdd(new THREE.SphereGeometry(.355,24,14,0,Math.PI*2,0,Math.PI*.45),hairM,0,hy+.02,-.01,1,1.12,1.04);
+  bAdd(new THREE.SphereGeometry(.17,16,12),hairM,0,hy+.42,-.02,1,1.05,1);
+  for(let ring=0;ring<4;ring++){const n=[14,12,9,5][ring],el=.25+ring*.22;for(let k=0;k<n;k++){const a=k/n*Math.PI*2+ring*.2;const r=.36*Math.sin(Math.PI/2-el)*1.02;bAdd(new THREE.SphereGeometry(.04,6,5),hairM,Math.sin(a)*r,hy+.02+.38*Math.cos(Math.PI/2-el)*1.1,Math.cos(a)*r*1.02)}}
+  for(let k=0;k<7;k++){const a=k/7*Math.PI*2;bAdd(new THREE.SphereGeometry(.035,6,5),hairM,Math.sin(a)*.12,hy+.47,Math.cos(a)*.12-.02)}
+  for(const s of [-1,1]){bAdd(new THREE.CapsuleGeometry(.05,.3,3,8),skin,s*.34,hy-.1,0);
+    const lid=bAdd(new THREE.TorusGeometry(.065,.009,4,12,Math.PI),lineM,s*.12,hy+.02,.33);lid.rotation.z=Math.PI;
+    const brow=bAdd(new THREE.TorusGeometry(.1,.008,4,14,Math.PI*.8),lineM,s*.12,hy+.06,.32);brow.rotation.z=Math.PI*.1}
+  bAdd(new THREE.ConeGeometry(.035,.14,8),skin,0,hy-.06,.37).rotation.x=.2;bAdd(new THREE.SphereGeometry(.018,6,5),gold,0,hy+.1,.36);
+  const mouth=bAdd(new THREE.TorusGeometry(.05,.008,4,10,Math.PI),lineM,0,hy-.16,.33);mouth.rotation.z=Math.PI;
+  // halo behind the head and a soft aura behind the body
+  const glow=c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.36,side:THREE.DoubleSide,depthWrite:false});
+  bAdd(new THREE.RingGeometry(.55,.9,48),glow('#f0cf86'),0,hy+.04,-.36);bAdd(new THREE.RingGeometry(.92,.97,48),glow('#f4dca0'),0,hy+.04,-.37);
+  const aura=bAdd(new THREE.RingGeometry(1.25,1.33,56),glow('#e9c77a'),0,1.45,-.42,1,1.25,1);
+  buddha.scale.setScalar(1.2);buddha.position.set(STATUE.x,DAIS_TOP,STATUE.z);shrine.add(buddha);
+  // Bodhi tree behind the shrine.
+  const bodhiTree=new THREE.Group();{const bodhi=bodhiTree;bodhi.position.set(0,0,STATUE.z-11.7);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.45,.75,5,10),wood);trunk.position.y=2.5;bodhi.add(trunk);const bodhiLeaf=mat('#3f6b4c');[[0,7,0,3.2],[-2.4,6.2,.6,2.4],[2.4,6.3,.4,2.5],[0,8.6,-.4,2.3],[-1.2,5.6,1.6,1.9],[1.4,5.7,1.5,1.9]].forEach(([x,y,z,r])=>{const c=new THREE.Mesh(new THREE.IcosahedronGeometry(r,1),bodhiLeaf);c.position.set(x,y,z);c.scale.y=.8;bodhi.add(c)});shrine.add(bodhi)}
+  // Shared helpers for the sense houses: oriented footprint test, placement beside a pond, merged vertex-coloured parts.
+  function rectHit(cx,cz,rot,W,D,x,z,pad){const dx=x-cx,dz=z-cz,c=Math.cos(rot),s=Math.sin(rot),lx=dx*c-dz*s,lz=dx*s+dz*c;return Math.abs(lx)<W/2+pad&&Math.abs(lz)<D/2+pad}
+  function besidePond(lakeName,gap,D){const l=wishLakes.find(v=>v.name===lakeName),ux=l.x-HILL.x,uz=l.z-HILL.z,un=Math.hypot(ux,uz),d=POND_R+gap+D/2,x=l.x+ux/un*d,z=l.z+uz/un*d;return {x,z,rot:Math.atan2(l.x-x,l.z-z)}}
+  const HP=(geo,c,x,y,z,o={})=>{const g=geo.clone();if(o.s)g.scale(...o.s);if(o.rx)g.rotateX(o.rx);if(o.rz)g.rotateZ(o.rz);if(o.ry)g.rotateY(o.ry);g.translate(x,y,z);return [g,c]};
+  const GB=(w,h,d)=>new THREE.BoxGeometry(w,h,d),GC=(rt,rb,h,seg=8)=>new THREE.CylinderGeometry(rt,rb,h,seg),GK=(r,h,seg=4)=>new THREE.ConeGeometry(r,h,seg,1);
+  const GL=(pts,seg=12)=>new THREE.LatheGeometry(pts.map(([a,b])=>new THREE.Vector2(a,b)),seg);
+  const houseMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
+  // Bảng màu chung cho mọi ngôi nhà trong rừng: mái xanh lá thông, tường nâu thân thông, đều trầm hơn cây thật một tông.
+  const HOUSE_WALL='#5a3826',HOUSE_WALL_D='#472c1e',HOUSE_ROOF='#244a30',HOUSE_ROOF_D='#1b3a25';
+  // Mái dốc bốn phía (mái chồng diêm, mái hông): khối cụt chữ nhật, đáy (bx × bz) nửa cạnh, đỉnh (tx × tz), cao h; tx hoặc tz ≈ 0 thành đường nóc.
+  function frustumGeo(bx,bz,tx,tz,h,cap=true){const B=[[-bx,0,-bz],[bx,0,-bz],[bx,0,bz],[-bx,0,bz]],T=[[-tx,h,-tz],[tx,h,-tz],[tx,h,tz],[-tx,h,tz]],v=[];
+    const q=(a,b,c,d)=>v.push(...a,...b,...c,...a,...c,...d);for(let i=0;i<4;i++){const j=(i+1)%4;q(B[i],T[i],T[j],B[j])}
+    if(cap){q(T[3],T[2],T[1],T[0]);}q(B[0],B[1],B[2],B[3]);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();return g}
+  // Biển tên gỗ sẫm viền vàng gắn lên tường (chữ to, căn giữa).
+  function plaqueMesh(text,w,h,pc=['#46321e','#c9a86b','#f6e6bc']){const cv=document.createElement('canvas');cv.width=1024;cv.height=Math.round(1024*h/w);const c=cv.getContext('2d');c.fillStyle=pc[0];c.fillRect(0,0,cv.width,cv.height);c.strokeStyle=pc[1];c.lineWidth=10;c.strokeRect(8,8,cv.width-16,cv.height-16);
+    c.fillStyle=pc[2];c.textAlign='center';c.textBaseline='middle';let fs=Math.floor(cv.height*.56);c.font='bold '+fs+'px Georgia,serif';const tw=c.measureText(text).width;if(tw>cv.width*.88){fs=Math.floor(fs*cv.width*.88/tw);c.font='bold '+fs+'px Georgia,serif'}c.fillText(text,cv.width/2,cv.height/2+2);
+    const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t}))}
+  // 3.7/3.12: Nhà hoa lan, a large glasshouse beside Hồ Sắc, as wide as the pond (11 × 11 m), its door turned toward the pond.
+  // Its door opens the Viverse scene "ORCHID hoa lan" full screen; the forest stops rendering while it is open.
+  const HOUSE_GAP=9;
+  const ORCHID={...besidePond('Sắc',HOUSE_GAP,2*POND_R),w:2*POND_R,d:2*POND_R,url:'https://www.viverse.com/YCAbhnT?full3d=&no-cookie=&control_bar=',title:'ORCHID hoa lan | Dong Lan | Redmoon'};
+  const ORCHID_DOOR=[ORCHID.x+Math.sin(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2),ORCHID.z+Math.cos(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2)];
+  // Cổng Viverse: dời ra bên hông Nhà Hoa Lan, phía lối vào chính (đứng ở cửa nhà nhìn ra Hồ Sắc thì ở bên phải), mặt cổng cùng hướng mặt nhà.
+  const VIV={rot:ORCHID.rot,W:6.2,D:1.6};{const ex=-Math.cos(ORCHID.rot),ez=Math.sin(ORCHID.rot),fx=Math.sin(ORCHID.rot),fz=Math.cos(ORCHID.rot);VIV.x=ORCHID.x+ex*(ORCHID.w/2+5)+fx*3;VIV.z=ORCHID.z+ez*(ORCHID.w/2+5)+fz*3;VIV.door=[VIV.x+fx*2.4,VIV.z+fz*2.4]}
+  // Tư Gia: bờ đông Hồ Sen, nhìn qua hồ sen và cầu vòm lên tượng Phật. Cùng một toạ độ cho mọi người, mỗi người thấy nhà của mình.
+  /* rộng bằng nhà trị liệu (11 × 11 m); mặt nhà cách mép Hồ Sen 16 m, cách Nhà Vị 11 m */const TU_GIA={id:'tu_gia_me',name:'Tư Gia của bạn',icon:'🏡',x:31+16+POND_R,z:.5,W:2*POND_R,D:2*POND_R,note:'Không gian riêng · bàn trà 6 chỗ, Kệ Lưu Hương 9 ô, Góc Gieo Hạt',rot:-Math.PI/2};
+  TU_GIA.door=[TU_GIA.x+Math.sin(TU_GIA.rot)*(TU_GIA.D/2+1.4),TU_GIA.z+Math.cos(TU_GIA.rot)*(TU_GIA.D/2+1.4)];TU_GIA.garden=[TU_GIA.x-1,TU_GIA.z+TU_GIA.D/2+3.2];
+  const TT_SPOT=[11,-110.5];/* Tịnh thất may y (bản đồ v3.6): phía Tây Nhà Niệm, phía Bắc Đồi Tượng Phật */
+  // Nhà Văn Hóa (bản đồ v3.6): 16 × 11 m, phía Tây Nam cạnh Sân đón, cửa quay Bắc ra đường lát đá từ trục chính (z = 16).
+  const VAN_HOA={id:'van_hoa',name:'Nhà Văn Hóa',icon:'🏛️',x:-28,z:28.5,W:16,D:11,rot:Math.PI,note:'Community Hall · 36 người · bên trong sẽ mở sau'};
+  VAN_HOA.door=[VAN_HOA.x,VAN_HOA.z-(VAN_HOA.D/2+1.9)];const VH_ROAD_Z=16,VH_ROAD_X1=-39;
+  let pendingOrchid=false,orchidOpen=false;
+  const orchidHouse=new THREE.Group();orchidHouse.position.set(ORCHID.x,terrainHeight(ORCHID.x,ORCHID.z),ORCHID.z);orchidHouse.rotation.y=ORCHID.rot;scene.add(orchidHouse);
+  {const W=ORCHID.w,D=ORCHID.d,H=3.8,RISE=2.4,base=.25,solid=[],glassP=[],P=(...a)=>solid.push(HP(...a)),G=(...a)=>glassP.push(HP(...a)),iron=HOUSE_WALL_D,woodC=HOUSE_WALL;
+    P(GB(W+.6,base,D+.6),'#5f5c4d',0,base/2,0);P(GB(2,.03,D),'#7a7262',0,base+.015,.2);
+    for(let i=0;i<=4;i++)for(const z of [-D/2,D/2])P(GB(.1,H,.1),iron,-W/2+i*W/4,base+H/2,z);for(let i=1;i<4;i++)for(const x of [-W/2,W/2])P(GB(.1,H,.1),iron,x,base+H/2,-D/2+i*D/4);
+    for(const z of [-D/2,D/2])P(GB(W,.1,.1),iron,0,base+H,z);for(const x of [-W/2,W/2])P(GB(.1,.1,D),iron,x,base+H,0);
+    const slope=Math.hypot(W/2,RISE),ang=Math.atan2(RISE,W/2);for(let i=0;i<=4;i++)for(const s of [-1,1])P(GB(slope,.08,.08),iron,s*W/4,base+H+RISE/2,-D/2+i*D/4,{rz:-s*ang});P(GB(.12,.12,D+.2),iron,0,base+H+RISE,0);
+    G(new THREE.PlaneGeometry(W,H),'#ffffff',0,base+H/2,-D/2);for(const s of [-1,1]){G(new THREE.PlaneGeometry(D,H),'#ffffff',s*W/2,base+H/2,0,{ry:Math.PI/2});G(new THREE.PlaneGeometry(W/2-1.1,H),'#ffffff',s*(W/4+.55),base+H/2,D/2)}
+    G(new THREE.PlaneGeometry(2.2,H-2.7),'#ffffff',0,base+2.7+(H-2.7)/2,D/2);
+    for(const s of [-1,1])G(new THREE.PlaneGeometry(slope,D+.2),'#4f8f62',s*W/4,base+H+RISE/2,0,{rx:-Math.PI/2,rz:-s*ang});
+    const gab=new THREE.Shape();gab.moveTo(-W/2,0);gab.lineTo(0,RISE);gab.lineTo(W/2,0);gab.lineTo(-W/2,0);for(const z of [-D/2,D/2])G(new THREE.ShapeGeometry(gab),'#ffffff',0,base+H,z);
+    for(const s of [-1,1])P(GB(.16,2.7,.16),woodC,s*1.1,base+1.35,D/2+.03);P(GB(2.4,.18,.18),woodC,0,base+2.7,D/2+.03);
+    // three long benches (two along the walls, one island in the middle) and hanging baskets along the ridge
+    const benches=[[-W/2+.85,0,1.2,D-1.4],[W/2-.85,0,1.2,D-1.4],[0,-1.2,1.6,D/2]];
+    for(const [bx,bz,bw,bd] of benches){P(GB(bw,.08,bd),'#6e5a43',bx,base+.85,bz);for(const sx of [-1,1])for(const sz of [-1,1])P(GB(.08,.85,.08),'#5a4836',bx+sx*(bw/2-.1),base+.42,bz+sz*(bd/2-.1))}
+    for(let k=0;k<4;k++){const z=-D/2+1.6+k*(D-3.2)/3;P(GC(.04,.04,.7,4),iron,0,base+H+RISE-.5,z);P(GL([[0,0],[.25,.05],[.32,.25]],10),'#6b5238',0,base+H+RISE-1,z);P(new THREE.IcosahedronGeometry(.32,0),'#3f6b48',0,base+H+RISE-.85,z,{s:[1.2,.7,1.2]})}
+    P(GB(1,.06,.16),woodC,1.8,base+2.95,D/2+.12);
+    orchidHouse.add(new THREE.Mesh(mergeColored(solid),houseMat));
+    orchidHouse.add(new THREE.Mesh(mergeColored(glassP),new THREE.MeshStandardMaterial({color:'#d8efe6',vertexColors:true,roughness:.1,metalness:.1,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide})));
+    orchidHouse.add(new THREE.Mesh(new THREE.PlaneGeometry(2.1,2.6),new THREE.MeshBasicMaterial({color:'#ffd9a8',transparent:true,opacity:.22,depthWrite:false})).translateY(base+1.3).translateZ(D/2-.05));
+    // potted orchids on the benches, instanced: pots, stems, and five blooms per spray in white, pink and violet
+    const spots=[];for(const [bx,bz,bw,bd] of benches)for(let ix=0;ix<(bw>1.4?3:2);ix++)for(let iz=0;iz<Math.floor(bd/.62);iz++)spots.push([bx-bw/2+.3+ix*(bw-.6)/((bw>1.4?3:2)-1),bz-bd/2+.35+iz*.62]);
+    const potM=new THREE.InstancedMesh(GC(.15,.11,.24,10),mat('#c99b72'),spots.length),stemM=new THREE.InstancedMesh(GC(.012,.015,.6,5),mat('#3c6b45'),spots.length),bloomM=new THREE.InstancedMesh(new THREE.SphereGeometry(.075,8,6),new THREE.MeshStandardMaterial({roughness:.5}),spots.length*5);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),v=new THREE.Vector3(),sc=new THREE.Vector3(1,1,1),cols=['#f7f1f4','#e8a6c4','#a77cc4','#f3d3e2','#f0c6d8'].map(c=>new THREE.Color(c));
+    spots.forEach(([x,z],i)=>{m4.compose(v.set(x,base+1.01,z),q,sc.set(1,1,1));potM.setMatrixAt(i,m4);m4.compose(v.set(x,base+1.42,z),q,sc);stemM.setMatrixAt(i,m4);const c=cols[i%cols.length],lean=(i%2?1:-1)*.05;
+      for(let f=0;f<5;f++){m4.compose(v.set(x+lean*f,base+1.6+f*.075,z+.05*Math.sin(f+i)),q,sc.set(1.3,.7,1));bloomM.setMatrixAt(i*5+f,m4);bloomM.setColorAt(i*5+f,c)}});
+    for(const m of [potM,stemM,bloomM]){m.instanceMatrix.needsUpdate=true;orchidHouse.add(m)}bloomM.instanceColor.needsUpdate=true;
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 58px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🌸 NHÀ SẮC',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.65),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,base+3.25,D/2+.12);orchidHouse.add(board);
+  }
+  // Soft pulsing ring on the ground in front of the door.
+  const orchidRing=new THREE.Mesh(new THREE.RingGeometry(.45,.6,40),new THREE.MeshBasicMaterial({color:'#f0cf86',transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}));orchidRing.rotation.x=-Math.PI/2;orchidRing.position.set(VIV.door[0],terrainHeight(VIV.door[0],VIV.door[1])+.03,VIV.door[1]);scene.add(orchidRing);
+  // 3.12: Kiến trúc giác quan rộng bằng đường kính hồ (11 × 11 m), mỗi nhà đặt ở bờ ngoài của hồ,
+  // cửa quay ra mặt nước. Phần tĩnh của mỗi nhà gộp thành một khối tô màu theo đỉnh (một lần vẽ); chỉ chuông, khói,
+  // hơi trà và bàn xoay là vật thể riêng để chuyển động. Bên trong sẽ mở sau (lớp 2 của khung thiết kế).
+  const SENSE_HOUSES=[
+    {id:'chuong_gio',lake:'Thanh',name:'Nhà Thanh',short:'Nhà Thanh',board:'NHÀ THANH',icon:'🎐',W:2*POND_R,D:2*POND_R,note:'House of Sound · lắng nghe chuông gió, chuông xoay và chiêng'},
+    {id:'xong_huong',lake:'Hương',name:'Nhà Hương · Haromy',board:'NHÀ HƯƠNG · HAROMY',short:'Nhà Hương',icon:'🌿',W:2*POND_R,D:2*POND_R,note:'House of Aroma · Haromy, ngôi nhà của mùi thơm Hạnh phúc · 18 tinh dầu & thảo mộc · Lọ Ước, Túi thơm'},
+    {id:'quan_tra',lake:'Vị',name:'Nhà Vị',short:'Nhà Vị',board:'NHÀ VỊ',icon:'🍵',W:2*POND_R,D:2*POND_R,note:'House of Taste · Ngũ Thiền Trà · chén trà cho cuộc trò chuyện một kèm một'},
+    {id:'xuong_gom',lake:'Chạm',name:'Nhà Chạm',short:'Nhà Chạm',board:'NHÀ CHẠM',icon:'🏺',W:2*POND_R,D:2*POND_R,note:'House of Touch · Gốm Bàu Trúc · nặn gốm đi lùi quanh đôn, nung lộ thiên'},
+    {id:'nha_niem',lake:'Niệm',name:'Nhà Niệm',short:'Nhà Niệm',icon:'🕯️',W:2*POND_R,D:2*POND_R,noBoard:true,note:'House of Mindfulness · cửa vòm Trăng nhìn vào Đèn Thở, giếng trời tròn · bên trong sẽ mở sau'}];
+  for(const h of SENSE_HOUSES){Object.assign(h,besidePond(h.lake,HOUSE_GAP,h.D));h.r=Math.hypot(h.W,h.D)/2;h.door=[h.x+Math.sin(h.rot)*(h.D/2+HOUSE_GAP/2),h.z+Math.cos(h.rot)*(h.D/2+HOUSE_GAP/2)]}
+  // The 1 m strip between a house front and its pond is walkable, so guests can stand at the door.
+  const inFrontStrip=(x,z)=>[ORCHID,...SENSE_HOUSES].some(h=>{const W=h.W||h.w,D=h.D||h.d,dx=x-h.x,dz=z-h.z,c=Math.cos(h.rot),s=Math.sin(h.rot),lx=dx*c-dz*s,lz=dx*s+dz*c;return Math.abs(lx)<W/2-.3&&lz>D/2+.05&&lz<D/2+HOUSE_GAP+.4});
+  const houseHit=(x,z,pad)=>SENSE_HOUSES.some(h=>rectHit(h.x,h.z,h.rot,h.W,h.D,x,z,pad))||rectHit(ORCHID.x,ORCHID.z,ORCHID.rot,ORCHID.w,ORCHID.d,x,z,pad);
+  const houseAnim=[];
+  function nameBoard(g,label,x,z){const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 50px sans-serif';const fs=Math.min(42,Math.floor(50*380/cx.measureText(label).width));cx.font='bold '+fs+'px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(label,256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const b=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));b.position.set(x,1.9,z);g.add(b);
+    const posts=[];for(const s of [-1,1])posts.push(HP(GC(.06,.07,2.2,6),'#4e3a2a',x+s*1.05,1.1,z-.02));return posts}
+  function smokeColumn(g,x,y,z,n,small){const m=new THREE.MeshBasicMaterial({color:small?'#efe9dc':'#d9d4c5',transparent:true,opacity:.22,depthWrite:false});for(let k=0;k<n;k++){const p=new THREE.Mesh(new THREE.SphereGeometry(small?.07+k*.02:.14+k*.04,8,6),m.clone());p.position.set(x,y,z);g.add(p);houseAnim.push({kind:'smoke',obj:p,x,y,z,k,small})}}
+  function buildSenseHouse(h){const g=new THREE.Group(),parts=[],W=h.W,D=h.D,P=(...a)=>parts.push(HP(...a));
+    const stoneC='#5f5b4e',dark=HOUSE_WALL_D,warm=HOUSE_WALL;
+    if(h.id==='chuong_gio'){// large bamboo pavilion: thatched pyramid roof, split-bamboo back screen, wind chimes all round the eaves,
+      // singing bowls on a low table, a hanging gong, and a half ring of cushions for sound meditation
+      const base=.35,PH=3.7,top=base+PH,bam=HOUSE_WALL,node=HOUSE_WALL_D;
+      P(GB(W+.4,base,D+.4),stoneC,0,base/2,0);for(let i=0;i<9;i++)P(GB(W-.2,.04,.92),i%2?'#6b5238':'#73583c',0,base+.02,-D/2+.55+i*.99);
+      const posts=[];for(const x of [-W/2+.3,-W/6,W/6,W/2-.3])for(const z of [-D/2+.3,D/2-.3])posts.push([x,z]);for(const z of [-D/6,D/6])for(const x of [-W/2+.3,W/2-.3])posts.push([x,z]);
+      for(const [x,z] of posts){P(GC(.13,.15,PH,7),bam,x,base+PH/2,z);for(const y of [1.1,2.2,3.2])P(GC(.155,.155,.06,7),node,x,base+y,z)}
+      for(const z of [-D/2+.3,D/2-.3])P(GC(.1,.1,W-.4,6),bam,0,top,z,{rz:Math.PI/2});for(const x of [-W/2+.3,W/2-.3])P(GC(.1,.1,D-.4,6),bam,x,top,0,{rx:Math.PI/2});
+      P(GK(W*.84,.3,4),HOUSE_ROOF_D,0,top+.15,0,{ry:Math.PI/4});P(GK(W*.8,3.4,4),HOUSE_ROOF,0,top+1.95,0,{ry:Math.PI/4});P(GC(.08,.16,.7,6),HOUSE_ROOF_D,0,top+3.9,0);
+      for(let i=0;i<38;i++)P(GC(.06,.06,PH-.2,5),i%2?bam:node,-W/2+.5+i*((W-1)/37),base+(PH-.2)/2,-D/2+.32);
+      for(const s of [-1,1])for(const y of [.6,1])P(GC(.05,.05,D-.8,5),bam,s*(W/2-.3),base+y,0,{rx:Math.PI/2});
+      P(GB(2.6,.4,1.2),dark,0,base+.2,-1.8);[[-.85,.22],[0,.3],[.85,.25]].forEach(([x,r])=>P(GL([[0,0],[r*.6,.02],[r,.13],[r*1.05,.19]],14),'#b88d45',x,base+.4,-1.8));
+      P(GB(.14,2.4,.14),dark,-3.6,base+1.2,-3.3);P(GB(.14,2.4,.14),dark,-1.8,base+1.2,-3.3);P(GB(2,.14,.14),dark,-2.7,base+2.4,-3.3);P(GC(.65,.65,.07,20),'#a8823e',-2.7,base+1.45,-3.3,{rx:Math.PI/2});P(GC(.18,.18,.09,12),'#7a5c2a',-2.7,base+1.45,-3.25,{rx:Math.PI/2});
+      for(let k=0;k<7;k++){const a=-1.05+k*.35,x=Math.sin(a)*2.9,z=-1.8+Math.cos(a)*2.7;P(GC(.32,.34,.15,12),'#6e4a33',x,base+.08,z)}
+      const metal=new THREE.MeshStandardMaterial({color:'#c2b38a',metalness:.6,roughness:.35}),chimeParts=[[GC(.16,.16,.04,10),'#6b4a32',0,0,0]];
+      for(let k=0;k<6;k++){const a=k*1.047,len=.45+k*.1;chimeParts.push([GC(.022,.022,len,6),'#ffffff',Math.cos(a)*.11,-.06-len/2,Math.sin(a)*.11])}chimeParts.push([GC(.07,.07,.025,8),'#6b4a32',0,-.75,0]);
+      const chimeGeo=mergeColored(chimeParts.map(([geo,c,x,y,z])=>HP(geo,c,x,y,z)));
+      const spots=[];for(let i=0;i<5;i++)spots.push([-W/2+1+i*(W-2)/4,D/2+.35]);for(const s of [-1,1])for(const z of [-D/4,D/4])spots.push([s*(W/2+.35),z]);for(const x of [-W/4,W/4])spots.push([x,-D/2-.35]);
+      spots.forEach(([x,z])=>{const c=new THREE.Mesh(chimeGeo,metal);c.position.set(x,top-.05,z);g.add(c);houseAnim.push({kind:'chime',obj:c,phase:x*1.7+z})});
+    }else if(h.id==='xong_huong'){// wooden house with a veranda and gable roof, drying racks of herbs, six herb beds in front, a large clay censer
+      const base=.3,body=[W*.62,3.6,D*.46],bz=-D/2+body[2]/2+.5,front=bz+body[2]/2;
+      P(GB(W,base,D),stoneC,0,base/2,0);P(GB(...body),warm,0,base+body[1]/2,bz);
+      for(const x of [-body[0]/2,body[0]/2])for(const z of [bz-body[2]/2,front])P(GB(.24,body[1]+.1,.24),dark,x,base+body[1]/2,z);
+      P(GB(1.3,2.3,.08),'#2e2219',0,base+1.15,front+.03);for(const x of [-body[0]*.32,body[0]*.32]){P(GB(1,.8,.08),'#2e2219',x,base+1.8,front+.03);for(const k of [-.25,0,.25])P(GB(.04,.8,.1),dark,x+k,base+1.8,front+.05)}
+      const rise=1.5,half=body[0]/2+.5,slope=Math.hypot(half,rise),ang=Math.atan2(rise,half);for(const s of [-1,1])P(GB(slope+.2,.18,body[2]+1.8),HOUSE_ROOF,s*half/2,base+body[1]+rise/2+.1,bz+.4,{rz:-s*ang});
+      P(GB(.2,.2,body[2]+1.9),HOUSE_ROOF_D,0,base+body[1]+rise+.15,bz+.4);
+      const gab=new THREE.Shape();gab.moveTo(-body[0]/2,0);gab.lineTo(0,rise);gab.lineTo(body[0]/2,0);gab.lineTo(-body[0]/2,0);for(const z of [bz-body[2]/2,front])P(new THREE.ShapeGeometry(gab),warm,0,base+body[1],z);
+      P(GB(body[0],.14,1.4),'#73583c',0,base+.07,front+.7);for(const x of [-body[0]/2+.2,body[0]/2-.2])P(GB(.16,body[1],.16),dark,x,base+body[1]/2,front+1.3);
+      const herbs=['#7c62a8','#4f8a4c','#8fa94a','#5f9a62','#9a7fc0','#6b9a48','#b9a4d8'];
+      [[-4.6,2.2],[-2.8,2.2],[2.8,2.2],[4.6,2.2],[-4.6,3.5],[-2.8,3.5],[2.8,3.5],[4.6,3.5],[-4.6,4.8],[4.6,4.8]].map(([x,z])=>[x,front+z]).forEach(([x,z],bi)=>{P(GB(1.3,.25,.95),'#4a3c2c',x,base+.12,z);for(let k=0;k<6;k++){const c=herbs[(bi+k)%herbs.length],hh=.35+((bi*3+k)%4)*.12;P(GK(.16+(k%3)*.04,hh,5),c,x-.45+(k%3)*.45,base+.25+hh/2,z+(k<3?-.2:.2))}});
+      for(const s of [-1,1]){const rx=s*(W/2-.5);P(GB(.12,2,.12),dark,rx,base+1,bz-1.2);P(GB(.12,2,.12),dark,rx,base+1,bz+1.2);P(GB(.1,.1,2.6),dark,rx,base+1.95,bz);for(let k=0;k<5;k++)P(GK(.12,.5,5),k%2?'#6b8a48':'#8a7a4a',rx,base+1.62,bz-1+k*.5,{rx:Math.PI})}
+      P(GL([[0,0],[.35,.05],[.5,.3],[.42,.55],[.48,.62]],12),'#7a4e34',1.4,base,front+5);P(GC(.5,.55,.08,12),'#5a3a28',1.4,base+.04,front+5);smokeColumn(g,1.4,base+.75,front+5,7,false);
+    }else if(h.id==='quan_tra'){// raised open tea pavilion: two tea tables (one-to-one sessions), a back counter with tea jars, low railings, tea bushes
+      const deck=.5,PH=3.3,top=deck+PH;
+      P(GB(W,deck,D),warm,0,deck/2,0);for(let i=-5;i<=5;i++)P(GB(.04,.02,D),dark,i*.9,deck+.01,0);P(GB(2.6,.25,.7),stoneC,0,.125,D/2+.35);
+      for(const x of [-W/2+.25,0,W/2-.25])for(const z of [-D/2+.25,D/2-.25])P(GC(.16,.18,PH,8),dark,x,deck+PH/2,z);for(const x of [-W/2+.25,W/2-.25])P(GC(.16,.18,PH,8),dark,x,deck+PH/2,0);
+      for(const s of [-1,1]){P(GB(.1,.1,D-.5),dark,s*(W/2-.25),deck+.7,0);for(let k=0;k<9;k++)P(GB(.06,.7,.06),dark,s*(W/2-.25),deck+.35,-D/2+.8+k*(D-1.6)/8)}
+      P(GB(W-.5,.1,.1),dark,0,deck+.7,-D/2+.25);for(const s of [-1,1])P(GB(W/2-1.6,.1,.1),dark,s*(W/4+.65),deck+.7,D/2-.25);
+      P(GB(W+.4,.2,D+.4),dark,0,top+.1,0);P(GK(W*.86,.3,4),HOUSE_ROOF_D,0,top+.3,0,{ry:Math.PI/4});P(GK(W*.82,2.9,4),HOUSE_ROOF,0,top+1.85,0,{ry:Math.PI/4});P(GC(.06,.14,.6,6),'#c8a96a',0,top+3.5,0);
+      P(GB(4.4,1,.7),dark,0,deck+.5,-D/2+.8);for(let k=0;k<6;k++)P(GL([[0,0],[.14,.02],[.17,.18],[.1,.32],[.11,.36]],10),['#5d4636','#8a6a48','#3f5f52'][k%3],-1.8+k*.72,deck+1,-D/2+.8);
+      const teaSets=[[-W*.26,.4],[W*.26,.4],[0,2.9]];
+      for(const [tx,tz] of teaSets){P(GB(1.5,.34,.85),'#3e2c20',tx,deck+.17,tz);P(GC(.14,.16,.24,10),'#5d4636',tx,deck+.46,tz);P(GC(.02,.035,.2,6),'#5d4636',tx+.16,deck+.48,tz,{rz:-1});for(const dz of [-.22,.22])P(GC(.055,.045,.07,10),'#e8e0cc',tx+.42,deck+.375,tz+dz);
+        for(const dz of [-1.05,1.05])P(GC(.34,.36,.15,12),'#6e4a33',tx,deck+.08,tz+dz);smokeColumn(g,tx+.05,deck+.65,tz,4,true)}
+      for(let k=0;k<6;k++)P(new THREE.IcosahedronGeometry(.5,0),'#2f5a3a',-W/2-1.1,.35,-D/2+1+k*1.6,{s:[1,.7,1]});for(let k=0;k<6;k++)P(new THREE.IcosahedronGeometry(.5,0),'#34603e',W/2+1.1,.35,-D/2+1+k*1.6,{s:[1,.7,1]});
+    }else if(h.id==='nha_niem'){// Nhà Niệm (bản vẽ ngoại thất v3.6): bệ đá 0,45 m, tường vôi, hai mảng lam gỗ dọc, cửa vòm Trăng ở giữa
+      // nhìn thẳng vào Đèn Thở, 4 cột gỗ mặt tiền, bồn đá Gột bụi bên trái, chuông gió tre bên phải, mái bốn dốc xanh rêu mở giếng trời tròn.
+      const pb=.45,WH=3.4,top=pb+WH,lime=HOUSE_WALL,timber=HOUSE_WALL_D,slat='#7a5a3e',roofC=HOUSE_ROOF,roofD=HOUSE_ROOF_D,wt=.26,fz=D/2-.3;
+      P(GB(W+.9,.2,D+.9),'#45433d',0,.1,0);P(GB(W+.4,pb,D+.4),'#59564e',0,pb/2,0);P(GB(3,.2,.9),'#6e6a60',0,.1,D/2+.62);/* bậc đá thấp trước cửa */
+      // tường: sau và hai bên là khối đặc, mặt tiền là tấm có lỗ tròn
+      P(GB(W-.6,WH,wt),lime,0,pb+WH/2,-D/2+.3+wt/2);for(const sx of [-1,1])P(GB(wt,WH,D-.6),lime,sx*(W/2-.3-wt/2),pb+WH/2,0);
+      const MR=1.5,MY=1.64;{const sh=new THREE.Shape();sh.moveTo(-(W-.6)/2,0);sh.lineTo((W-.6)/2,0);sh.lineTo((W-.6)/2,WH);sh.lineTo(-(W-.6)/2,WH);sh.lineTo(-(W-.6)/2,0);
+        const hole=new THREE.Path();hole.absarc(0,MY,MR,0,Math.PI*2,true);sh.holes.push(hole);const eg=new THREE.ExtrudeGeometry(sh,{depth:wt,bevelEnabled:false,curveSegments:36});P(eg,lime,0,pb,fz-wt)}
+      P(new THREE.TorusGeometry(MR+.06,.12,8,44),'#24190f',0,pb+MY,fz+.03);P(new THREE.TorusGeometry(MR-.04,.025,4,44),'#a6824b',0,pb+MY,fz+.1);
+      for(const y of [.95,1.85,2.75]){P(GB(W-.62,.03,.02),'#2c2218',0,pb+y,-D/2+.3-.01);for(const sx of [-1,1])P(GB(.02,.03,D-.62),'#2c2218',sx*(W/2-.3+.01),pb+y,0)}/* đường ván gỗ */
+      P(GB(3.5,.16,wt+.3),'#2f2216',0,pb+.08,fz-wt/2);/* ngưỡng gỗ */
+      P(GB(W-1.2,.04,D-1.2),'#5a452f',0,pb+.02,0);/* sàn gỗ trong nhà */
+      // hai mảng lam gỗ dọc lọc nắng ở mặt tiền và giữa mỗi vách bên
+      const louver=(cx,cz,ry,w)=>{const c=Math.cos(ry),sn=Math.sin(ry),at=(lx,lz)=>[cx+lx*c+lz*sn,cz-lx*sn+lz*c];{const [x,z]=at(0,0);P(GB(w,2.75,.05),'#2a2118',x,pb+1.68,z,{ry})}
+        P(GB(w+.12,.1,.12),slat,...[at(0,.04)].map(([x,z])=>[x,pb+.3,z])[0],{ry});P(GB(w+.12,.1,.12),slat,...[at(0,.04)].map(([x,z])=>[x,pb+3.06,z])[0],{ry});
+        for(let k=0;k<7;k++){const [x,z]=at(-w/2+.12+k*(w-.24)/6,.06);P(GB(.08,2.7,.1),slat,x,pb+1.68,z,{ry})}};
+      louver(-3.4,fz+.04,0,2.4);louver(3.4,fz+.04,0,2.4);for(const sx of [-1,1])louver(sx*(W/2-.3+.04),0,sx*Math.PI/2,3.2);louver(0,-D/2+.3-.04,Math.PI,3.2);
+      // 4 cột gỗ mặt tiền + 2 cột góc sau
+      for(const x of [-(W/2-.25),-2.05,2.05,W/2-.25])P(GB(.36,WH,.36),timber,x,pb+WH/2,fz+.12);for(const x of [-(W/2-.25),W/2-.25])P(GB(.36,WH,.36),timber,x,pb+WH/2,-D/2+.35);
+      // xà diềm mái, biển tên
+      P(GB(W+.9,.38,D+.9),'#261c13',0,top+.19,0);
+      // mái bốn dốc xanh rêu, đỉnh cụt mở giếng trời tròn (Oculus R 1,8 m) viền đồng
+      P(frustumGeo(W/2+1.15,D/2+1.15,2.55,2.55,1.75),roofC,0,top+.38,0);P(frustumGeo(W/2+1.2,D/2+1.2,W/2+1.15,D/2+1.15,.12),roofD,0,top+.3,0);
+      const ry0=top+.38+1.75;P(GC(2.45,2.55,.22,32),HOUSE_ROOF_D,0,ry0+.11,0);P(new THREE.TorusGeometry(2.05,.16,8,40),'#8c6a34',0,ry0+.26,0,{rx:Math.PI/2});
+      // bồn đá Gột bụi bên trái hiên, chuông gió tre treo ở diềm phải
+      P(GB(.42,.62,.42),'#4d4a43',-3.6,.31,D/2+1.05);P(GC(.36,.28,.16,12),'#3e3c36',-3.6,.7,D/2+1.05);P(GC(.27,.27,.02,12),'#638e94',-3.6,.785,D/2+1.05);
+      {const ch=new THREE.Group();ch.position.set(3.4,top-.02,fz+.45);const cp=[];cp.push(HP(GC(.015,.015,.3,4),'#8b6e46',0,-.15,0),HP(GB(.4,.04,.04),'#8b6e46',0,-.31,0));
+        [[-.14,.62],[-.05,.8],[.05,.7],[.14,.55]].forEach(([x,l])=>cp.push(HP(GC(.025,.025,l,6),'#b89a5e',x,-.33-l/2,0)));ch.add(new THREE.Mesh(mergeColored(cp),houseMat));g.add(ch);houseAnim.push({kind:'chime',obj:ch,phase:1.3})}
+      // ánh sáng ấm bên trong: vách sau phát sáng, mặt kính giếng trời, Đèn Thở thở theo nhịp 4-4
+      {const cv=document.createElement('canvas');cv.width=cv.height=128;const c=cv.getContext('2d'),gr=c.createRadialGradient(64,70,4,64,70,70);gr.addColorStop(0,'#fff0bc');gr.addColorStop(.48,'#d9a34e');gr.addColorStop(1,'#2b2014');c.fillStyle=gr;c.fillRect(0,0,128,128);
+        const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const back=new THREE.Mesh(new THREE.PlaneGeometry(W-1.2,WH-.1),new THREE.MeshBasicMaterial({map:t}));back.position.set(0,pb+WH/2,-D/2+.3+wt+.02);g.add(back);
+        const glass=new THREE.Mesh(new THREE.CircleGeometry(1.92,40),new THREE.MeshBasicMaterial({color:'#f2e4c2',side:THREE.DoubleSide}));glass.rotation.x=-Math.PI/2;glass.position.y=ry0+.24;g.add(glass);
+        const lamp=new THREE.Mesh(new THREE.SphereGeometry(.42,24,16),new THREE.MeshBasicMaterial({color:'#fff7d9',transparent:true,opacity:.9}));lamp.position.set(0,pb+1.15,-.6);g.add(lamp);
+        const halo=new THREE.Mesh(new THREE.SphereGeometry(.75,24,16),new THREE.MeshBasicMaterial({color:'#f0cc7a',transparent:true,opacity:.25,depthWrite:false}));lamp.add(halo);
+        P(GC(.06,.12,.75,8),'#2f2216',0,pb+.38,-.6);houseAnim.push({kind:'breath',obj:lamp,halo});
+        const pl=plaqueMesh('NHÀ NIỆM',2.3,.48,['#231911','#a6824b','#ebd39d']);pl.position.set(0,top-.32,fz+.12);g.add(pl)}
+    }else{// nhà gốm: rammed-earth workshop open to the pond, mono-pitch roof, two đôn gỗ (no wheel), shelves of pots, a work table, firewood outside; the open firing yard is built with the pottery code
+      const base=.25,WH=3.4,earthC=HOUSE_WALL,clay='#a8704f',clayD='#8a5a40',glazeC='#6f8a86',glazeB='#4f6a78';
+      P(GB(W,base,D),stoneC,0,base/2,0);P(GB(W-.4,WH,.45),earthC,0,base+WH/2,-D/2+.22);for(const s of [-1,1]){P(GB(.45,WH,D-.5),earthC,s*(W/2-.22),base+WH/2,-.25);P(GB(.6,WH+.1,.6),HOUSE_WALL_D,s*(W/2-.3),base+WH/2,D/2-.3)}
+      for(let k=0;k<4;k++)P(GB(W-.4,.06,.47),'#6a4e3a',0,base+.6+k*.8,-D/2+.22);
+      P(GB(W+1,.18,D+1.2),HOUSE_ROOF,0,base+WH+.45,.1,{rx:.12});for(const x of [-W/4,0,W/4])P(GB(.18,.18,D),dark,x,base+WH+.2,0,{rx:.12});
+      for(const y of [.85,1.6,2.35]){P(GB(W-1.6,.08,.55),dark,0,base+y,-D/2+.75);for(let k=0;k<11;k++){const x=-W/2+1.4+k*(W-2.8)/10,sc=.85+((k*7+y*10)%3)*.18;P(GL([[0,0],[.1*sc,.01],[.14*sc,.12*sc],[.08*sc,.24*sc],[.095*sc,.28*sc]],10),[clay,clayD,glazeC,glazeB][(k+Math.round(y*3))%4],x,base+y+.04,-D/2+.75)}}
+      for(const [wx,wz] of [[-2.2,.8],[.8,.8]]){P(GC(.32,.38,.55,10),'#6b4a32',wx,base+.275,wz);P(GC(.36,.36,.03,14),'#d8cba8',wx,base+.565,wz);P(GL([[0,0],[.16,.01],[.2,.12],[.15,.26],[.13,.3]],10),'#8d6e5a',wx,base+.58,wz)}
+      P(GB(2.4,.08,1.1),dark,3.1,base+.9,-.6);for(const x of [2.1,4.1])for(const z of [-1.05,-.15])P(GB(.1,.86,.1),dark,x,base+.45,z);for(let k=0;k<4;k++)P(GL([[0,0],[.12,.01],[.16,.14],[.09,.27]],10),[clay,glazeC][k%2],2.4+k*.45,base+.94,-.6);
+      for(let r=0;r<3;r++)for(let k=0;k<4-r;k++)P(GC(.13,.13,1.4,7),'#6b4a32',-W/2-1.2,.13+r*.24,-1.6+k*.27+r*.13,{rz:Math.PI/2});
+      for(let k=0;k<6;k++)P(GL([[0,0],[.2,.02],[.28,.25],[.16,.5],[.18,.56]],10),[clay,clayD][k%2],-W/2-1.1+(k%3)*.6,0,1.4+Math.floor(k/3)*.6);
+    }
+    if(!h.noBoard)parts.push(...nameBoard(g,h.icon+' '+(h.board||h.name.toUpperCase()),W*.3+1.1,D/2+1.1));
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    g.position.set(h.x,terrainHeight(h.x,h.z),h.z);g.rotation.y=h.rot;g.userData.house=h;scene.add(g);h.group=g;return g}
+  SENSE_HOUSES.forEach(buildSenseHouse);
+  function updateSenseHouses(t){FOUNTAIN_TEX.offset.y=t*.9;for(const a of houseAnim){if(a.kind==='chime'){a.obj.rotation.z=Math.sin(t*1.3+a.phase)*.12;a.obj.rotation.x=Math.sin(t*.9+a.phase*.7)*.08}
+    else if(a.kind==='spin')a.obj.rotation.y=t*2.4;
+    else if(a.kind==='breath'){const k=.5-.5*Math.cos(t*Math.PI/4);a.obj.scale.setScalar(.82+.3*k);a.obj.material.opacity=.5+.45*k;if(a.halo)a.halo.material.opacity=.12+.25*k}/* Đèn Thở: hít 4 giây, thở 4 giây */
+    else{const u=((t*.35+a.k*.17)%1),rise=a.small?.7:2.2;a.obj.position.y=a.y+u*rise;a.obj.position.x=a.x+Math.sin(t+a.k)*.12*u;a.obj.material.opacity=(a.small?.22:.26)*(1-u);a.obj.scale.setScalar(1+u*1.5)}}}
+  // Nhà chuông gió: a soft synthesized chime, started from the tap (iOS needs a user gesture to unlock audio).
+  let chimeCtx=null;
+  function unlockChime(){try{chimeCtx=chimeCtx||new (window.AudioContext||window.webkitAudioContext)();if(chimeCtx.state==='suspended')chimeCtx.resume()}catch(e){chimeCtx=null}}
+  function playChime(){if(!chimeCtx)return;const now=chimeCtx.currentTime,notes=[1046.5,1174.7,1318.5,1568,1760,2093];for(let i=0;i<7;i++){const o=chimeCtx.createOscillator(),gn=chimeCtx.createGain(),t0=now+i*.18+Math.random()*.08;o.type='sine';o.frequency.value=notes[Math.floor(Math.random()*notes.length)];gn.gain.setValueAtTime(0,t0);gn.gain.linearRampToValueAtTime(.05,t0+.01);gn.gain.exponentialRampToValueAtTime(.0005,t0+2.6);o.connect(gn).connect(chimeCtx.destination);o.start(t0);o.stop(t0+2.7)}}
+  let pendingHouse=null,arriveYaw=null;
+  function arriveHouse(h){if(h.id==='chuong_gio')playChime();document.getElementById('zenHint').textContent=h.icon+' '+h.name+' · '+h.note;setTimeout(()=>openRoom(h),350);}
+  function goToHouse(h){if(bayMode||boatRide)return;unlockChime();if(Math.hypot(mePosition.x-h.door[0],mePosition.z-h.door[1])<1.6){viewYaw=walkYaw=h.rot+Math.PI;arriveHouse(h);return}
+    if(navigateTo(...(nearestWalkable(...h.door,h.rot+Math.PI)||h.door))){pendingHouse=h;document.getElementById('zenHint').textContent=h.icon+' Đang đến '+h.name+'…'}}
+  // 3.13: Đường Ngũ quan. A flagstone ring around the hill (r 30) from the foot plaza, with a spoke beside each sense pond
+  // that curves round the pond toward its house; the last few metres to the door are on grass.
+  const RING_R=30,BRANCHES=[];
+  {const hillAng=(x,z)=>Math.atan2(x-HILL.x,z-HILL.z),onRing=a=>[HILL.x+Math.sin(a)*RING_R,HILL.z+Math.cos(a)*RING_R],delta=2*Math.asin((POND_R+2.2)/(2*38));
+    const targets=[{lake:'Sắc',door:ORCHID_DOOR},...SENSE_HOUSES.map(h=>({lake:h.lake,door:h.door}))];
+    for(const t of targets){const l=wishLakes.find(v=>v.name===t.lake),th=hillAng(l.x,l.z),sg=Math.sign(th)||1,phi=th-sg*delta,pts=[];
+      for(let a=0;Math.abs(a)<Math.abs(phi);a+=sg*.08)pts.push(onRing(a));pts.push(onRing(phi));
+      const out=[HILL.x+Math.sin(phi)*38,HILL.z+Math.cos(phi)*38];pts.push(out);
+      const u=Math.atan2(t.door[0]-l.x,t.door[1]-l.z),a0=Math.atan2(out[0]-l.x,out[1]-l.z);let d=Math.atan2(Math.sin(u-a0),Math.cos(u-a0));const end=d,rr=Math.hypot(out[0]-l.x,out[1]-l.z);
+      for(let k=1;k<=6;k++){const a=a0+end*k/6;pts.push([l.x+Math.sin(a)*rr,l.z+Math.cos(a)*rr])}
+      BRANCHES.push(pts)}
+    // Nhánh Tịnh thất: continue the ring from the last pond spoke on the east side round to the north-east, then a straight
+    // spoke out toward the Tịnh thất door (it faces the hill, so the door lies on the same ray). Grass for the last metre or so.
+    {const TT=TT_SPOT,th=hillAng(...TT);let from=0;for(const t of targets){const l=wishLakes.find(v=>v.name===t.lake),a=hillAng(l.x,l.z);if(Math.sign(a)===Math.sign(th))from=Math.max(from*Math.sign(th),Math.abs(a-Math.sign(a)*delta))*Math.sign(th)}
+      const pts=[],sg=Math.sign(th);for(let a=from;Math.abs(a)<Math.abs(th);a+=sg*.08)pts.push(onRing(a));pts.push(onRing(th));
+      const far=Math.hypot(TT[0]-HILL.x,TT[1]-HILL.z)-3-1.3-1.1;pts.push([HILL.x+Math.sin(th)*far,HILL.z+Math.cos(th)*far]);BRANCHES.push(pts)}}
+  // Nhánh Tư Gia: đường lát đá từ mép Sân đón vòng bờ nam Hồ Sen sang bờ đông, tới trước cửa Tư Gia (mét cuối là cỏ).
+  {const d=TU_GIA.door,ctl=[[GATHER.x+GATHER.r-.4,GATHER.z-1.2],[13,19.5],[23,16.5],[33,12.5],[40.5,7],[d[0]-1.6,d[1]+1.3]].map(([x,z])=>new THREE.Vector3(x,0,z));
+    BRANCHES.push(new THREE.CatmullRomCurve3(ctl,false,'centripetal').getSpacedPoints(Math.ceil(new THREE.CatmullRomCurve3(ctl).getLength()/1.2)).map(v=>[v.x,v.z]))}
+  // Đường lát đá Nhà Văn Hóa (bản đồ v3.6): từ trục chính rẽ Tây ở z = 16 qua trước mặt nhà, lối rẽ ngắn vào cửa Bắc.
+  {const seg=(x0,z0,x1,z1)=>{const n=Math.max(10,Math.ceil(Math.hypot(x1-x0,z1-z0)/.8)),pts=[];for(let i=0;i<=n;i++)pts.push([x0+(x1-x0)*i/n,z0+(z1-z0)*i/n]);return pts};
+    BRANCHES.push(seg(-2.1,VH_ROAD_Z,VH_ROAD_X1,VH_ROAD_Z));BRANCHES.push(seg(VAN_HOA.x,VH_ROAD_Z+.9,VAN_HOA.door[0],VAN_HOA.door[1]+.4))}
+  function branchDistance(x,z){let best=Infinity;for(const pts of BRANCHES)for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz||1)));const d=Math.hypot(ax+vx*u-x,az+vz*u-z);if(d<best)best=d}return best}
+  // Paved ground (main axis, plazas, stairs, Ngũ quan branches): walkers prefer it, grass costs more.
+  function onPaved(x,z){return (Math.abs(x)<1.9&&z>-37&&z<36)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r||stairsDistance(x,z)<1.5||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat-.3||branchDistance(x,z)<1.3}
+  // Footbridge across the channel between the two lotus lobes, on the main axis from the gate to the hill.
+  // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
+  const flagPts=[],flagRand=seededRandom(77),NONBO_R=1.6,nonBo=[];
+  for(const pts of BRANCHES)for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],len=Math.hypot(bx-ax,bz-az),nx=-(bz-az)/len,nz=(bx-ax)/len;
+    for(let t=.2;t<len;t+=.7){if(i===0&&t<FOOT.r-RING_R+30+.4&&Math.hypot(ax+(bx-ax)*t/len-FOOT.x,az+(bz-az)*t/len-FOOT.z)<FOOT.r)continue;for(let o=-.95;o<=.96;o+=.66){if(flagRand()<.2)continue;const w=.26+flagRand()*.12,x=ax+(bx-ax)*t/len+nx*(o+(flagRand()-.5)*.15),z=az+(bz-az)*t/len+nz*(o+(flagRand()-.5)*.15);if(Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r)continue;flagPts.push([x,z,w,.24+flagRand()*.1,0])}}}
+  {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(BRIDGE_ARCH[0]-1.2,BRIDGE_ARCH[0]);
+   // Stone paths on the main axis (gate, gathering plaza, bridge, foot of the hill): irregular flagstones half sunk
+   // into a strip of packed earth, with earth showing between them, so the path melts into the ground.
+   const stonePath=(z0,z1)=>{for(let z=z0+.3;z<z1-.2;z+=.66){let x=-1.45+flagRand()*.2;while(x<1.3){const w=.32+flagRand()*.28;if(flagRand()>.2)flagPts.push([x+w,z+(flagRand()-.5)*.18,w,.26+flagRand()*.12,0]);x+=w*2+.08+flagRand()*.12}}};
+   stonePath(FOOT.z+FOOT.r-.3,BRIDGE_ARCH[0]-1.2);stonePath(BRIDGE_ARCH[1]+1.2,GATHER.z-GATHER.r+.3);stonePath(GATHER.z+GATHER.r-.3,35);flat(BRIDGE_ARCH[1],BRIDGE_ARCH[1]+1.2);
+   // Cầu vòm gỗ: mặt cầu ván gỗ xếp ngang theo đường vòng cung, hai dầm cong ôm dưới mặt cầu, lan can gỗ nâu cùng màu thân thông
+   // (trụ vuông, đầu trụ phẳng), tay vịn cong theo vòm, chấn song chữ thập; mố đá có bậc, bốn cột đèn đá ở hai đầu cầu.
+   // Cả cầu gộp thành một khối hình (một lần vẽ). Lòng vòm giữ trống cho thuyền chui qua.
+   {const parts=[],P=(...a)=>parts.push(HP(...a)),span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0],N=40,HW=1.75,red='#6e4632',redD='#5a3a2a',gold='#c8a96a',/* nâu cùng màu thân thông */plank=['#6d4d2f','#624a33','#684a31']/* cùng màu gỗ thuyền và Bến sen, trầm hơn chút */,dark='#4e3424',stoneC='#7a7466';
+    const Y=z=>bridgeHeight(z),zAt=k=>BRIDGE_ARCH[0]+span*k/N;
+    for(let k=0;k<N;k++){const z0=zAt(k),z1=zAt(k+1),y0=Y(z0),y1=Y(z1),mz=(z0+z1)/2,my=(y0+y1)/2,len=Math.hypot(z1-z0,y1-y0),tilt=-Math.atan2(y1-y0,z1-z0);
+      // ván mặt cầu (2 tấm mỗi đoạn, có khe nhỏ)
+      for(const f of [.25,.75]){const zz=z0+(z1-z0)*f,yy=y0+(y1-y0)*f;P(GB(2*HW+.1,.1,len*.46),plank[(k*2+(f>.5?1:0))%3],0,yy+.05,zz,{rx:tilt})}
+      // dầm cong hai bên và xà ngang dưới mặt cầu
+      for(const x of [-HW+.15,HW-.15])P(GB(.22,.36,len+.03),dark,x,my-.2,mz,{rx:tilt});
+      if(k%2===0)P(GB(2*HW-.1,.14,.16),dark,0,my-.28,mz,{rx:tilt});
+      // lan can: tay vịn trên, thanh giữa, gờ dưới
+      for(const x of [-HW,HW]){P(GB(.14,.12,len+.03),red,x,my+.92,mz,{rx:tilt});P(GB(.08,.07,len+.03),red,x,my+.48,mz,{rx:tilt});P(GB(.12,.1,len+.03),redD,x,my+.12,mz,{rx:tilt})}
+    }
+    // trụ lan can có mũ vàng, giữa các trụ là chấn song chữ thập
+    const POST_STEP=4;for(let k=0;k<=N;k+=POST_STEP){const z=zAt(k),y=Y(z);for(const x of [-HW,HW]){P(GB(.17,1.08,.17),red,x,y+.54,z);P(GB(.21,.06,.21),redD,x,y+1.1,z)}
+      if(k<N){const za=zAt(k),zb=zAt(Math.min(N,k+POST_STEP)),ya=Y(za),yb=Y(zb),mz=(za+zb)/2,my=(ya+yb)/2,L=Math.hypot(zb-za,yb-ya),t=-Math.atan2(yb-ya,zb-za),d=Math.hypot(L,.36);
+        for(const x of [-HW,HW])for(const sg of [-1,1]){const g=GB(.05,.05,d);P(g,redD,x,my+.3,mz,{rx:t+sg*Math.atan2(.36,L)})}}}
+    // mố đá hai đầu có bậc lên cầu: lát đá phiến cùng kiểu đường đi (đá đa giác dẹt, xám rêu, viền sẫm)
+    {const fc=['#5c5a4f','#646155','#56544a','#6a665b','#5f6156'],edgeC='#4b4941',rnd=seededRandom(311),stone=new THREE.DodecahedronGeometry(1,0);
+     const lay=(cx,cz,w,d,top)=>{for(let zz=cz-d/2+.22;zz<cz+d/2-.1;zz+=.46)for(let xx=cx-w/2+.24;xx<cx+w/2-.1;xx+=.5){const sw=.2+rnd()*.06,sd=.18+rnd()*.05;P(stone,fc[Math.floor(rnd()*fc.length)],xx+(rnd()-.5)*.08,top,zz+(rnd()-.5)*.06,{s:[sw,.05,sd],ry:rnd()*Math.PI})}};
+     for(const [z,dir] of [[BRIDGE_ARCH[0],-1],[BRIDGE_ARCH[1],1]]){P(GB(4.2,.55,1.4),edgeC,0,.03,z+dir*.35);lay(0,z+dir*.35,4.1,1.3,.3);P(GB(4,.18,.6),edgeC,0,.36,z+dir*.95);lay(0,z+dir*.95,3.9,.55,.45)}}
+    const bridgeMesh=new THREE.Mesh(mergeColored(parts),houseMat);scene.add(bridgeMesh);
+    }}
+
+  // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
+  // Flagstones laid loosely over packed earth, a ring of larger dark stones at the edge.
+  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||Math.hypot(jx-p.x,jz-p.z)<NONBO_R+.25||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
+    const n=Math.round(p.r*2*Math.PI/.85);for(let k=0;k<n;k++){const a=k/n*Math.PI*2;flagPts.push([p.x+Math.cos(a)*(p.r-.1),p.z+Math.sin(a)*(p.r-.1),.36+flagRand()*.1,.3+flagRand()*.08,1])}}
+  {const geo=new THREE.DodecahedronGeometry(1,0),cols=['#5c5a4f','#646155','#56544a','#6a665b','#5f6156'].map(h=>new THREE.Color(h)),edge=new THREE.Color('#4b4941'),mesh=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),flagPts.length);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
+    flagPts.forEach(([x,z,w,d,rim],i)=>{e.set(0,flagRand()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+(rim?.03:.005),z);sc.set(w,rim?.13:.07,d);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);mesh.setColorAt(i,rim?edge:cols[Math.floor(flagRand()*cols.length)])});
+    mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;scene.add(mesh)}
+  // Đài phun nước nhỏ ba tầng (thay hòn non bộ) ở giữa hai sân nghỉ tròn: bồn tròn viền đá, trụ tiện, ba tầng chén nhỏ dần,
+  // chóp nhọn; nước tràn qua mép từng tầng thành màn mỏng rơi xuống tầng dưới (vân nước chạy xuống, không thêm đèn).
+  const FOUNTAIN_TEX=(()=>{const cv=document.createElement('canvas');cv.width=64;cv.height=128;const c=cv.getContext('2d');const r=seededRandom(91);
+    for(let k=0;k<26;k++){const x=r()*64,w=.8+r()*1.8,y=r()*128,h=20+r()*70,g=c.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'rgba(235,248,250,0)');g.addColorStop(.5,'rgba(235,248,250,'+(.35+r()*.5)+')');g.addColorStop(1,'rgba(235,248,250,0)');c.fillStyle=g;c.fillRect(x,y,w,h);c.fillRect(x,y-128,w,h)}
+    const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(6,1);return t})();
+  const fountainWaterMat=new THREE.MeshBasicMaterial({map:FOUNTAIN_TEX,color:'#dcefF2',transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide});
+  const fountainPoolMat=new THREE.MeshStandardMaterial({color:'#4f8288',metalness:.25,roughness:.18,transparent:true,opacity:.92});
+  for(const p of [GATHER,FOOT]){const g=new THREE.Group();g.position.set(p.x,terrainHeight(p.x,p.z),p.z);const parts=[],stoneF='#b8b1a1',stoneD='#9e9786';
+    const L=(pts,seg=28)=>GL(pts,seg),add=(geo,c,y=0)=>{geo.translate(0,y,0);parts.push([geo,c])};
+    // basin: low wall with a rounded lip
+    add(L([[NONBO_R-.16,.02],[NONBO_R-.16,.42],[NONBO_R-.1,.5],[NONBO_R+.02,.52],[NONBO_R+.1,.46],[NONBO_R+.1,.08],[NONBO_R+.16,0]],40),stoneF);
+    // turned pedestal and three tiers of bowls
+    add(L([[.34,0],[.34,.14],[.24,.22],[.17,.42],[.21,.56],[.16,.66],[.12,.95],[.15,1.02],[.1,1.12]],18),stoneD);
+    const bowl=(R,y)=>{add(L([[0,-.24*R],[.32*R,-.22*R],[.72*R,-.12*R],[R,-.02],[R+.03,.05],[R-.03,.07],[R-.06,.01]],32),stoneF,y)};
+    bowl(.95,1.16);add(L([[.11,0],[.08,.18],[.1,.32],[.06,.5]],14),stoneD,1.17);bowl(.6,1.72);add(L([[.07,0],[.05,.16],[.07,.26],[.04,.38]],12),stoneD,1.73);bowl(.34,2.13);
+    add(L([[.05,0],[.07,.08],[.04,.16],[.055,.24],[0,.38]],10),stoneD,2.14);
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    // still water in the basin and the bowls
+    for(const [r,y] of [[NONBO_R-.17,.4],[.89,1.19],[.55,1.75],[.3,2.15]]){const w=new THREE.Mesh(new THREE.CircleGeometry(r,28),fountainPoolMat);w.rotation.x=-Math.PI/2;w.position.y=y;g.add(w)}
+    // curtains of water spilling over each rim to the level below
+    for(const [r0,y0,r1,y1] of [[.98,1.2,1.08,.41],[.63,1.76,.72,1.2],[.37,2.16,.44,1.76]]){const c=new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,y0-y1,28,1,true),fountainWaterMat);c.position.y=(y0+y1)/2;g.add(c)}
+    const jet=new THREE.Mesh(new THREE.CylinderGeometry(.015,.05,.32,10,1,true),fountainWaterMat);jet.position.y=2.6;g.add(jet);
+    scene.add(g);nonBo.push(g)}
+  // Zig-zag stone stairs up the south face of the hill (no lamps along the paths).
+  {const slabMat=mat('#6c6758'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
+      for(let t=0;t<=len;t+=.62){const x=ax+(bx-ax)*t/len,z=az+(bz-az)*t/len,slab=new THREE.Mesh(new THREE.BoxGeometry(2.8,.16,.56),slabMat);slab.position.set(x,terrainHeight(x,z)+.06,z);slab.rotation.y=yaw;scene.add(slab)}}
+    }
+  // Cổng Yên: a plain wooden gate at the south end of the main axis.
+  const yenGate=new THREE.Group();{const g=yenGate;g.position.set(0,0,34.2);const post=mat('#5b3d2a'),beam=mat('#6b4a32');for(const x of [-2.4,2.4]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,4.4,10),post);p.position.set(x,2.2,0);g.add(p);const foot=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.3,10),stone);foot.position.set(x,.15,0);g.add(foot)}
+    const top=new THREE.Mesh(new THREE.BoxGeometry(6.4,.32,.5),beam);top.position.y=4.5;g.add(top);const tie=new THREE.Mesh(new THREE.BoxGeometry(5.2,.2,.3),beam);tie.position.y=3.7;g.add(tie);
+    const roofG=new THREE.Mesh(new THREE.BoxGeometry(7,.14,1.1),mat('#4b3a31'));roofG.position.y=4.74;g.add(roofG);scene.add(g)}
+  // Simple ritual altar within sanctuary; all offerings are local visual feedback for now.
+  const altar=new THREE.Group();altar.position.set(0,TERRACE_TOP+.08,STATUE.z+2.7);shrine.add(altar);
+  const altarBase=new THREE.Mesh(new THREE.CylinderGeometry(.62,.7,.22,24),mat('#6b4a32'));altar.add(altarBase);
+  const offerings=[];const seenOfferings=new Set();
+  window.addEventListener('anyen-offering',e=>{const kind=e.detail?.kind;if(!['incense','flower','candle'].includes(kind))return;
+    const offeringId=String(e.detail?.offeringId||'');if(offeringId){if(seenOfferings.has(offeringId))return;seenOfferings.add(offeringId);if(seenOfferings.size>200)seenOfferings.delete(seenOfferings.values().next().value)}
+    const count=offerings.length;const x=(count%5-2)*.30,z=Math.floor(count/5)*.28;
+    const obj=new THREE.Group();obj.position.set(x,.22,z);altar.add(obj);
+    if(kind==='incense'){
+      const pot=new THREE.Mesh(new THREE.CylinderGeometry(.13,.17,.18,16),mat('#8e7153'));obj.add(pot);
+      const stick=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.62,8),mat('#a87a4b'));stick.position.y=.36;obj.add(stick);
+      const smokeMat=new THREE.MeshBasicMaterial({color:'#d9d4c5',transparent:true,opacity:.28,depthWrite:false});
+      for(let j=0;j<5;j++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.075+j*.018,9,7),smokeMat.clone());puff.position.set(Math.sin(j*.8)*.045,.72+j*.18,0);obj.add(puff);(window.anyenSmokePuffs ||= []).push({mesh:puff,phase:j*.7+count});}
+    }else if(kind==='flower'){
+      const leaf=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.04,14),mat('#558d69'));obj.add(leaf);
+      for(let j=0;j<9;j++){const a=j*Math.PI*2/9,p=new THREE.Mesh(new THREE.SphereGeometry(.11,9,8),mat(j%2?'#f5c6d5':'#e79fb8'));p.scale.set(.65,1.4,.5);p.position.set(Math.cos(a)*.12,.14,Math.sin(a)*.12);p.rotation.y=-a;obj.add(p)}
+      const center=new THREE.Mesh(new THREE.SphereGeometry(.065,10,8),mat('#f2d28c'));center.position.y=.18;obj.add(center);
+    }else{
+      // Đèn dầu đất nung dạng chén, tương ứng hình nghi thức bình an.
+      const clay=mat('#ad4f34'),rimMat=mat('#d77b52'),oilMat=new THREE.MeshStandardMaterial({color:'#6d3928',metalness:.12,roughness:.42,side:THREE.DoubleSide});
+      const foot=new THREE.Mesh(new THREE.CylinderGeometry(.105,.13,.06,24),clay);foot.position.y=.035;obj.add(foot);
+      const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.20,.115,.14,32,1,true),clay);bowl.position.y=.13;obj.add(bowl);
+      const lip=new THREE.Mesh(new THREE.TorusGeometry(.19,.025,8,32),rimMat);lip.rotation.x=Math.PI/2;lip.position.y=.205;obj.add(lip);
+      const oil=new THREE.Mesh(new THREE.CircleGeometry(.168,32),oilMat);oil.rotation.x=-Math.PI/2;oil.position.y=.192;obj.add(oil);
+      const wick=new THREE.Mesh(new THREE.CylinderGeometry(.009,.009,.07,8),mat('#33221b'));wick.position.set(.09,.225,0);obj.add(wick);
+      const flame=new THREE.Mesh(new THREE.ConeGeometry(.046,.15,14),new THREE.MeshBasicMaterial({color:'#ffba55'}));flame.position.set(.09,.33,0);obj.add(flame);(window.anyenFlames ||= []).push({mesh:flame,phase:count});
+    }
+    offerings.push(obj);
+    document.getElementById('zenHint').textContent=kind==='flower'?'🪷 Đã dâng hoa sen':kind==='incense'?'🪔 Đã dâng hương':'🕯️ Đã dâng nến';
+  });
+  const leaf=mat('#47745c'),pink=mat('#e5a9aa'),petal=mat('#edc6b4');
+  // Hồ Sen lotus: floating notched pads, raised bowl-shaped leaves on stems, open flowers with layered pointed petals
+  // around a yellow seed pod, and a few closed buds. Kept clear of the bridge.
+  const lotusLeaf=mat('#3f7a4c'),lotusLeafPale=mat('#5f9a5c'),lotusStem=mat('#5c8a4a'),petalOuter=mat('#ef9fb9'),petalMid=mat('#f3abc2'),petalInner=mat('#f7bfcf'),seedPod=mat('#e2cf62'),budMat=mat('#e98aaa');
+  const padGeo=new THREE.CircleGeometry(.5,20,.18,Math.PI*2-.36),bowlGeo=new THREE.LatheGeometry([new THREE.Vector2(0,0),new THREE.Vector2(.25,.05),new THREE.Vector2(.5,.15),new THREE.Vector2(.62,.24)],18),petalGeo=new THREE.SphereGeometry(.5,10,8);
+  // cánh mỏng, màu nhạt dần từ mũi cánh (hồng) xuống chân cánh (trắng hồng): mỗi lớp một hình có tô màu theo chiều dài cánh
+  const petalGradMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,side:THREE.DoubleSide,emissive:'#ff6fa6',emissiveIntensity:.16});
+  function petalGrad(tipHex,baseHex){const g=new THREE.SphereGeometry(.5,12,10),P=g.attributes.position,c=new Float32Array(P.count*3),a=new THREE.Color(baseHex),b=new THREE.Color(tipHex),t=new THREE.Color();
+    for(let i=0;i<P.count;i++){const u=Math.min(1,Math.max(0,P.getY(i)+.5)),k=u*u*(3-2*u);t.copy(a).lerp(b,Math.pow(k,1.3));c[i*3]=t.r;c[i*3+1]=t.g;c[i*3+2]=t.b}
+    g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
+  const petalGeoOuter=petalGrad('#ff6fa8','#fff0f5'),petalGeoMid=petalGrad('#ff82b4','#fff4f8'),petalGeoInner=petalGrad('#ff9cc4','#fffafb');
+  function lotusPetal(group,angle,tilt,len,wid,geo,y){const pivot=new THREE.Group();pivot.position.y=y;pivot.rotation.y=angle;const tip=new THREE.Group();tip.rotation.x=tilt;const p=new THREE.Mesh(geo,petalGradMat);p.scale.set(wid,len,wid*.16);p.position.y=len*.5;tip.add(p);pivot.add(tip);group.add(pivot);}
+  function lotusFlower(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const head=new THREE.Group();head.position.y=h;g.add(head);
+    // cánh tròn, xếp 3 lớp so le: ngoài xoè rộng, giữa nghiêng vừa, trong khép ôm gương sen
+    for(let k=0;k<8;k++)lotusPetal(head,k*Math.PI*2/8,1.05,.36,.27,petalGeoOuter,0);
+    for(let k=0;k<8;k++)lotusPetal(head,(k+.5)*Math.PI*2/8,.7,.33,.25,petalGeoMid,.025);
+    for(let k=0;k<6;k++)lotusPetal(head,k*Math.PI*2/6+.2,.38,.27,.21,petalGeoInner,.05);
+    const pod=new THREE.Mesh(new THREE.CylinderGeometry(.09,.065,.09,12),seedPod);pod.position.y=.1;head.add(pod);return g;}
+  function lotusBud(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.026,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const bud=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),budMat);bud.scale.set(1,1.8,1);bud.position.y=h+.14;g.add(bud);const cap=new THREE.Mesh(new THREE.ConeGeometry(.09,.16,10),budMat);cap.position.y=h+.42;g.add(cap);return g;}
+  function lotusPad(r){const pad=new THREE.Mesh(padGeo,Math.random()<.5?lotusLeaf:lotusLeafPale);pad.rotation.x=-Math.PI/2;pad.rotation.z=Math.random()*Math.PI*2;pad.scale.setScalar(r);return pad;}
+  function raisedLeaf(h){const g=new THREE.Group();const stem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.028,h,6),lotusStem);stem.position.y=h/2;g.add(stem);const leaf=new THREE.Mesh(bowlGeo,lotusLeaf);leaf.position.y=h;leaf.rotation.set((Math.random()-.5)*.4,0,(Math.random()-.5)*.4);g.add(leaf);return g;}
+  // Tuyến thuyền ngắm cảnh: vòng số 8 nhỏ (khoảng 130 m, 60 giây) đi giữa hai cánh hồ sen, chui gầm cầu vòm ở giữa lạch hai lần.
+  const BEN_SEN={x:-9,z0:.6,z1:8.8,w:1.7};
+  const BOAT_LOOP=(()=>{const pts=[[0,-4],[6,-7],[12,-10.5],[19,-11.5],[25.5,-8],[26.5,-1.5],[22,3],[15,3.5],[8,.5],[0,-4],[-8,-8.5],[-15,-11.5],[-22,-11],[-26.5,-6],[-25.5,0],[-19,3.2],[-14,1.4],[-10.5,-1.3],[-6.5,-2]].map(([x,z])=>new THREE.Vector3(x,0,z));
+    return new THREE.CatmullRomCurve3(pts,true,'centripetal').getSpacedPoints(300).map(v=>[v.x,v.z])})();
+  function loopDistance(x,z){let best=Infinity;for(let i=0;i<BOAT_LOOP.length;i++){const [ax,az]=BOAT_LOOP[i],[bx,bz]=BOAT_LOOP[(i+1)%BOAT_LOOP.length],vx=bx-ax,vz=bz-az,u=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz||1)));best=Math.min(best,Math.hypot(ax+vx*u-x,az+vz*u-z))}return best}
+  const flowers=[];
+  const lotusRand=(()=>{let a=0x5e17;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}})();
+  for(let i=0,tries=0;i<120&&tries<6000;tries++){const x=(lotusRand()*2-1)*32,z=-4+(lotusRand()*2-1)*12;
+    if(lakeSDF(x,z)>-1.4||Math.abs(x)<3.2||loopDistance(x,z)<2.1||Math.hypot(x-BEN_SEN.x,z-3.5)<4.2)continue;/* inside a lobe, clear of the bridge channel and the boat lane */
+    if(flowers.some(f=>Math.hypot(f.position.x-x,f.position.z-z)<2.05))continue;i++;const a=lotusRand()*6.28;
+    const clump=new THREE.Group();clump.position.set(x,-.03,z);clump.rotation.y=a;clump.userData.y0=-.03;
+    for(let k=0;k<3;k++){const pad=lotusPad(.7+Math.random()*.6);pad.position.set((Math.random()-.5)*1.4,0,(Math.random()-.5)*1.4);clump.add(pad)}
+    if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
+    if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
+    scene.add(clump);flowers.push(clump)}
+  // 3.15: Ba thuyền ngắm cảnh trên hồ sen. Thuyền neo ở Bến sen (cầu gỗ bờ nam, phía tây cầu vòm). Chạm thuyền để lên;
+  // thuyền tự đi một vòng hình số 8 qua hai cánh hồ, chui gầm cầu vòm hai lần, rồi về đúng chỗ neo. Mỗi thuyền một người;
+  // thuyền đang có người thì người khác thấy thuyền đi trên hồ và chờ chiếc khác.
+  const BOAT_SPEED=2.25,BOAT_STEP_MS=900;/* one loop (about 135 m from the pier and back) in about 60 s */
+  function makeBoat(){const g=new THREE.Group(),hullMat=mat('#6d4d2f'),trim=mat('#684a31');
+   const outline=(k)=>{const sh=new THREE.Shape();sh.moveTo(-1.35*k,0);sh.quadraticCurveTo(-1.05*k,-.62*k,-.6*k,-.64*k);sh.lineTo(.6*k,-.64*k);sh.quadraticCurveTo(1.05*k,-.62*k,1.35*k,0);sh.quadraticCurveTo(1.05*k,.62*k,.6*k,.64*k);sh.lineTo(-.6*k,.64*k);sh.quadraticCurveTo(-1.05*k,.62*k,-1.35*k,0);return sh};
+   const wall=outline(1);wall.holes.push(outline(.88));
+   const hullWall=new THREE.Mesh(new THREE.ExtrudeGeometry(wall,{depth:.36,bevelEnabled:false,curveSegments:10}),hullMat);hullWall.rotation.x=-Math.PI/2;g.add(hullWall);
+   const floor=new THREE.Mesh(new THREE.ExtrudeGeometry(outline(.92),{depth:.1,bevelEnabled:false,curveSegments:10}),mat('#624a33'));floor.rotation.x=-Math.PI/2;floor.position.y=.02;g.add(floor);
+   const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
+   const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
+   return {group:g};}
+  // Bến sen: a wooden pier from the south shore into the west lobe; three moorings, two on its west side, one on the east.
+  const BOAT_SLOTS=[{x:-10.75,z:4.7,land:[-9.4,4.7]},{x:-10.75,z:1.9,land:[-9.4,1.9]},{x:-7.25,z:3.2,land:[-8.6,3.2]}];
+  {const deckM=mat('#684a31'),postM=mat('#5a3a2a'),len=BEN_SEN.z1-BEN_SEN.z0;
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w,.14,len),deckM);deck.position.set(BEN_SEN.x,.18,(BEN_SEN.z0+BEN_SEN.z1)/2);scene.add(deck);
+    for(let z=BEN_SEN.z0+.25;z<BEN_SEN.z1;z+=.45){const plank=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w+.04,.02,.05),mat('#624a33'));plank.position.set(BEN_SEN.x,.26,z);scene.add(plank)}
+    for(let z=BEN_SEN.z0+.2;z<BEN_SEN.z1-1.5;z+=1.5)for(const s of [-1,1]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.09,1.4,6),postM);p.position.set(BEN_SEN.x+s*(BEN_SEN.w/2+.05),-.2,z);scene.add(p)}
+    for(const s of BOAT_SLOTS){const bol=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,8),postM);bol.position.set(s.land[0]+(s.x<BEN_SEN.x?-.6:.6),.4,s.z);scene.add(bol)}
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 54px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🚣 BẾN SEN',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.45),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));board.position.set(BEN_SEN.x,1.6,BEN_SEN.z1-.3);scene.add(board);
+    for(const s of [-1,1]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.6,6),postM);p.position.set(BEN_SEN.x+s*.8,.8,BEN_SEN.z1-.32);scene.add(p)}}
+  const boats=BOAT_SLOTS.map((s,i)=>{const b={...makeBoat(),i,slot:s,busy:false};b.group.position.set(s.x,.02,s.z);b.group.rotation.y=Math.PI-Math.PI/2;b.group.traverse(o=>o.userData.boatIndex=i);scene.add(b.group);return b});
+  let boatRide=null,pendingBoat=null;
+  const onBoat=()=>!!boatRide&&(boatRide.phase==='row'||boatRide.phase==='pause');
+  function boatRoute(b){const s=b.slot,n=BOAT_LOOP.length;let k=0,best=1e9;BOAT_LOOP.forEach(([x,z],i)=>{const d=Math.hypot(x-s.x,z-s.z);if(d<best){best=d;k=i}});const pts=[];for(let j=1;j<=n;j++)pts.push(BOAT_LOOP[(k+j)%n]);pts.push([s.x,s.z]);return pts}
+  const boatHud=document.createElement('div');boatHud.id='boatHud';boatHud.hidden=true;
+  boatHud.innerHTML='<span id="boatHudLabel">🚣 Dạo hồ sen</span><button type="button" data-boat="pause">⏸ Dừng ngắm</button><button type="button" data-boat="home">⏹ Về bến</button>';document.body.appendChild(boatHud);
+  function refreshBoatHud(){const r=boatRide;boatHud.hidden=!onBoat();if(!r)return;const done=Math.round(100*(r.travelled||0)/(r.total||1));
+    boatHud.querySelector('#boatHudLabel').textContent='🚣 Thuyền Sen '+(r.b.i+1)+' · '+(r.home?'đang về bến':r.phase==='pause'?'đang dừng ngắm':'dạo hồ '+done+'%');
+    boatHud.querySelector('[data-boat="pause"]').textContent=r.phase==='pause'?'▶ Đi tiếp':'⏸ Dừng ngắm';boatHud.querySelector('[data-boat="pause"]').hidden=!!r.home;}
+  boatHud.addEventListener('click',e=>{const a=e.target.closest('[data-boat]')?.dataset.boat,r=boatRide;if(!a||!r||!onBoat())return;
+    if(a==='pause'){r.phase=r.phase==='pause'?'row':'pause';document.getElementById('zenHint').textContent=r.phase==='pause'?'⏸ Thuyền đang dừng · Vuốt để nhìn quanh':'🚣 Thuyền đi tiếp…'}
+    else if(a==='home'){r.home=true;r.phase='row';document.getElementById('zenHint').textContent='🚣 Thuyền đang về Bến sen…'}refreshBoatHud()});
+  function boardBoat(b=pendingBoat){pendingBoat=null;if(!b)return;if(b.busy){document.getElementById('zenHint').textContent='🚣 Thuyền vừa có người lên, mời bạn chọn chiếc khác';return;}
+    walkRoute.length=0;pendingSeat=null;const route=boatRoute(b);let total=0,px=b.slot.x,pz=b.slot.z;for(const [x,z] of route){total+=Math.hypot(x-px,z-pz);px=x;pz=z}
+    boatRide={b,phase:'board',start:performance.now(),x0:mePosition.x,z0:mePosition.z,heading:Math.PI,path:route,total,travelled:0,heading0:Math.PI,home:false}}
+  function tapBoat(i){const b=boats[i];if(boatRide||!b)return;
+    if(b.busy){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người đi dạo, mời bạn chọn chiếc khác';return;}
+    if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>tapBoat(i),60);return;}
+    if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
+    const [lx,lz]=b.slot.land;if(Math.hypot(mePosition.x-lx,mePosition.z-lz)<1.3){pendingBoat=b;boardBoat();return;}
+    if(navigateTo(lx,lz)){pendingBoat=b;document.getElementById('zenHint').textContent='🚣 Đang ra Bến sen…';}}
+  function boatTap(){if(!boatRide)return false;document.getElementById('zenHint').textContent=boatRide.home?'🚣 Thuyền đang về Bến sen…':'🚣 Thuyền đang dạo hồ · Dùng nút Dừng ngắm hoặc Về bến';return true;}
+  let lastBoatFrame=0;
+  function updateBoatRide(now){
+    const r=boatRide,dt=Math.min(.25,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=r.b.group;
+    if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1){r.phase='row';viewYaw=r.heading;r.heading0=r.heading;document.getElementById('zenHint').textContent='🚣 Thuyền rời Bến sen, dạo một vòng hồ sen…';refreshBoatHud()}}
+    else if(r.phase==='row'){
+      // Give way: another boat close ahead (or meeting us under the bridge) and we pause until it has passed.
+      {const fx=Math.sin(r.heading),fz=Math.cos(r.heading);let wait=false;for(const p of onlineAvatars.values()){if(!p.boat||!p.boat.group.visible)continue;const q=p.boat.group.position,ox=q.x-g.position.x,oz=q.z-g.position.z,d=Math.hypot(ox,oz);if(d>4.5||d<.01)continue;const ahead=(ox*fx+oz*fz)/d;if(ahead>.35&&!(ahead<.8&&r.b.i<p.boatIndex)){wait=true;break}}
+        if(wait!==!!r.yielding){r.yielding=wait;document.getElementById('zenHint').textContent=wait?'🚣 Thuyền chờ một chút để thuyền khác đi qua…':'🚣 Thuyền đi tiếp…'}if(wait){mePosition.set(g.position.x,0,g.position.z);g.position.y=.02+Math.sin(now/700)*.025;return}}
+      const hPrev=r.heading;let left=(r.home?BOAT_SPEED*2:BOAT_SPEED)*dt;/* Về bến: finish the loop four times faster, still on the water */
+      while(left>0&&r.path.length){const [tx,tz]=r.path[0],dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
+        if(d<=left){g.position.x=tx;g.position.z=tz;left-=d;r.travelled+=d;r.path.shift();continue}
+        g.position.x+=dx/d*left;g.position.z+=dz/d*left;r.travelled+=left;left=0;const want=Math.atan2(dx,dz);let dh=want-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*4)}
+      viewYaw+=r.heading-hPrev;r.heading0+=r.heading-hPrev;/* the view turns with the boat */
+      mePosition.set(g.position.x,0,g.position.z);if(!r.path.length){r.phase='dock';r.start=now}
+      if(Math.round(now/500)!==r.hudTick){r.hudTick=Math.round(now/500);refreshBoatHud()}}
+    else if(r.phase==='pause'){mePosition.set(g.position.x,0,g.position.z)}
+    else if(r.phase==='dock'){let dh=Math.PI-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*3);if(Math.abs(dh)<.05||now-r.start>1500){r.phase='ashore';r.start=now;boatHud.hidden=true}}
+    else if(r.phase==='ashore'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u),[lx,lz]=r.b.slot.land;mePosition.set(g.position.x+(lx-g.position.x)*e,0,g.position.z+(lz-g.position.z)*e);
+      if(u>=1){g.position.set(r.b.slot.x,.02,r.b.slot.z);r.heading=Math.PI;g.rotation.set(0,Math.PI/2,0);boatRide=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã về Bến sen · Chạm thuyền để dạo thêm vòng nữa';return}}
+    g.rotation.y=(r.heading||0)-Math.PI/2;g.position.y=.02+Math.sin(now/700)*.025;g.rotation.z=Math.sin(now/900)*.02;
+  }
+  // 3.8: Rừng thông kiểu Đà Lạt. Thân cao thẳng màu nâu đỏ, tán xếp thành nhiều tầng mỏng ở phần ngọn,
+  // cây cao thấp xen nhau; dưới gốc là thảm lá thông, ngoài trảng là thảm cỏ xanh lốm đốm vàng, điểm vài cụm hoa dại nhỏ và khóm dã quỳ.
+  // Mỗi loại cây/hoa/đá là một InstancedMesh (một lần vẽ), nên vài trăm cây vẫn nhẹ cho điện thoại.
+  // Rừng sinh từ một hạt giống cố định: mọi khách nhìn thấy cùng một khu rừng.
+  const treeSpots=[],TREE_CLEAR=1.0,TREE_CELL=4,treeGrid=new Map();
+  const treeCellKey=(cx,cz)=>cx*1000+cz;
+  function treeBlocked(x,z){const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=treeGrid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<TREE_CLEAR)return t}return null}
+  function pushOutOfTrees(x,z){const t=treeBlocked(x,z);if(!t)return [x,z];const d=Math.hypot(x-t[0],z-t[1]);return d>1e-3?[t[0]+(x-t[0])*TREE_CLEAR/d,t[1]+(z-t[1])*TREE_CLEAR/d]:[t[0]+TREE_CLEAR,t[1]]}
+  const FOREST_DEFAULT={seed:1121,inner:500,outer:460,inner_gap:3.1,outer_gap:2.3,flower_patches:150,daquy:70,rocks:70};
+  let forestKey=JSON.stringify(FOREST_DEFAULT);const forestMeshes=[],forestTrees=[];
+  function seededRandom(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  // Merge simple parts into one geometry with per-vertex colours, so a whole tree is a single draw.
+  function mergeColored(parts){let n=0;const geos=parts.map(([g,c])=>{const q=g.index?g.toNonIndexed():g;n+=q.attributes.position.count;return [q,c]});
+    const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+    for(const [g,c] of geos){const k=g.attributes.position.count;pos.set(g.attributes.position.array,o*3);if(!g.attributes.normal)g.computeVertexNormals();nor.set(g.attributes.normal.array,o*3);const cc=new THREE.Color(c);for(let i=0;i<k;i++){col[(o+i)*3]=cc.r;col[(o+i)*3+1]=cc.g;col[(o+i)*3+2]=cc.b}o+=k}
+    const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(pos,3));out.setAttribute('normal',new THREE.BufferAttribute(nor,3));out.setAttribute('color',new THREE.BufferAttribute(col,3));return out}
+  const part=(geo,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0)=>{const g=geo.clone();g.scale(sx,sy,sz);if(rz)g.rotateZ(rz);if(ry)g.rotateY(ry);g.translate(x,y,z);return g};
+  // Tree templates, built at a nominal height and scaled per instance.
+  function pineTemplates(){
+    const bark='#6e4632',barkDark='#5a3a2a',needle=['#2f5a3c','#3a6a45','#2a5236','#45734a'];
+    const blob=new THREE.IcosahedronGeometry(1,0),cyl=(rt,rb,h)=>new THREE.CylinderGeometry(rt,rb,h,7,1),cone=(r,h)=>new THREE.ConeGeometry(r,h,7,1);
+    // Tall Pinus kesiya: long bare trunk, a few short dead branch stubs, crown of flat tiers in the top third.
+    const tall=(H,tiers,stubs)=>mergeColored([[part(cyl(.13,.42,H),0,H/2,0),bark],
+      ...stubs.map(([y,a])=>[part(cyl(.03,.06,1.3),Math.sin(a)*.55,y,Math.cos(a)*.55,1,1,1,a,1.25),barkDark]),
+      ...tiers.map(([x,y,z,sx,sy,sz],i)=>[part(blob,x,y,z,sx,sy,sz,i*.9),needle[i%4]])]);
+    return {
+      tallA:{h:17,geo:tall(17,[[0,16.7,0,1.4,.8,1.4],[.9,15.5,.4,2.1,.7,1.8],[-1.1,14.6,-.3,2.2,.62,1.9],[.5,13.5,-1,1.9,.58,1.7],[-.5,12.5,1,1.8,.55,1.6],[1.3,11.8,.2,1.3,.5,1.2]],[[6,0],[7.5,2.2],[9,4.1],[10.4,1.1]])},
+      tallB:{h:15,geo:tall(15,[[.3,14.7,0,1.3,.8,1.3],[-.9,13.7,.5,2.3,.62,1.8],[1.1,12.9,-.4,2.1,.6,1.9],[-.3,11.8,-.9,1.8,.55,1.6],[.8,11,.9,1.4,.5,1.3]],[[5,1],[6.8,3.3],[8.6,5.2]])},
+      mid:{h:10,geo:mergeColored([[part(cyl(.09,.26,10),0,5,0),bark],[part(cone(2.2,3),0,6.1,0),needle[1]],[part(cone(1.8,2.7),0,7.6,0,1,1,1,.4),needle[0]],[part(cone(1.25,2.3),0,8.9,0,1,1,1,.9),needle[3]],[part(cone(.6,1.6),0,10.1,0),needle[1]]])},
+      young:{h:4.6,geo:mergeColored([[part(cyl(.05,.11,2),0,1,0),bark],[part(cone(1.25,2.1),0,2,0),needle[3]],[part(cone(.9,1.8),0,3.1,0,1,1,1,.5),needle[1]],[part(cone(.5,1.2),0,4.05,0),needle[0]]])}
+    };}
+  const forestMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
+  // Pines that block the view are moved into a small see-through "ghost" copy of their kind and fade there,
+  // with a per-instance alpha (gAlpha); they move back when the view is clear. Nothing is removed.
+  const GHOST_CAP=72,ghostMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true,transparent:true,depthWrite:false});
+  ghostMat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float gAlpha;\nvarying float vGAlpha;').replace('#include <begin_vertex>','#include <begin_vertex>\nvGAlpha=gAlpha;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGAlpha;').replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.a*=vGAlpha;')};
+  function makeGhost(geo){const g=geo.clone();g.setAttribute('gAlpha',new THREE.InstancedBufferAttribute(new Float32Array(GHOST_CAP).fill(1),1));const m=new THREE.InstancedMesh(g,ghostMat,GHOST_CAP);m.setColorAt(0,new THREE.Color(1,1,1));m.count=0;m.frustumCulled=false;m.userData.slots=[];return m}
+  const grassMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+  // Open ground that must stay clear of trees: water, paths, plazas, hilltop, stairs, ponds, buildings, piers.
+  function forestClear(x,z,pad){
+    if(Math.hypot(x-TT_SPOT[0],z-TT_SPOT[1])<9+pad)return true;
+    if(rectHit(VAN_HOA.x,VAN_HOA.z,VAN_HOA.rot,VAN_HOA.W+5,VAN_HOA.D+5,x,z,pad)||(Math.abs(z-VH_ROAD_Z)<2.6+pad&&x>VH_ROAD_X1-2&&x<0)||(Math.abs(x-VAN_HOA.x)<2.6+pad&&z>VH_ROAD_Z&&z<VAN_HOA.z))return true;/* Nhà Văn Hóa và đường lát đá */
+    if(Math.hypot(x-VIV.x,z-VIV.z)<7+pad||Math.hypot(x-TU_GIA.x,z-TU_GIA.z-1.5)<13+pad)return true;/* Cổng Viverse, Tư Gia + Góc Gieo Hạt */
+    if(lakeSDF(x,z)<2.4+pad)return true;
+    if(Math.abs(x)<4.6+pad&&z>-37&&z<40)return true;
+    if(Math.hypot(x-GATHER.x,z-GATHER.z)<11+pad||Math.hypot(x-FOOT.x,z-FOOT.z)<9+pad)return true;
+    if(Math.abs(x)<20&&z>11&&z<33)return true;/* the arrival meadow */
+    const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.flat+2.5)return true;if(hr<HILL.foot&&z>HILL.z&&Math.abs(x)<15)return true;/* keep the statue visible from the gate */
+    if(stairsDistance(x,z)<3.2+pad)return true;
+    if(branchDistance(x,z)<2.8+pad)return true;
+    if(BRANCHES.some(b=>{const c=b[b.length-8];return Math.hypot(x-c[0],z-c[1])<9+pad}))return true;/* flower gardens at the junctions */
+    if(wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+4.5+pad))return true;
+    if(houseHit(x,z,3.5+pad)||inFrontStrip(x,z))return true;
+    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<5+pad))return true;
+    if(SENSE_HOUSES.some(h=>h.id==='xuong_gom'&&rectHit(h.x,h.z,h.rot,h.W+14,h.D+2,x,z,3+pad)))return true;/* firing yard, straw and woodpile beside the workshop */
+    if(Math.abs(x-BEN_SEN.x)<4+pad&&z>BEN_SEN.z0-2&&z<BEN_SEN.z1+4+pad)return true;
+    return false;}
+  const inWalkArea=(x,z)=>Math.abs(x)<72&&z<36&&z>-124;
+  function buildForest(p){
+    for(const m of forestMeshes){scene.remove(m);m.geometry.dispose()}forestMeshes.length=0;forestTrees.length=0;treeSpots.length=0;treeGrid.clear();
+    const rnd=seededRandom(p.seed||1),T=pineTemplates(),kinds=Object.keys(T),list={tallA:[],tallB:[],mid:[],young:[]};
+    const placedTrees=[],near=new Map(),nearKey=(x,z)=>treeCellKey(Math.floor(x/TREE_CELL),Math.floor(z/TREE_CELL));
+    const tooClose=(x,z,gap)=>{const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=near.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<gap)return true}return false};
+    const addTree=(x,z,kind,h)=>{const t=[x,z,kind,h];placedTrees.push(t);const k=nearKey(x,z);if(!near.has(k))near.set(k,[]);near.get(k).push(t);list[kind].push(t)};
+    // Inner forest: open stands of tall pines, a few young ones near clearings. Outer belt: denser, all sizes.
+    for(let n=0,tries=0;n<p.inner&&tries<p.inner*60;tries++){const x=(rnd()*2-1)*70,z=-122+rnd()*156;if(forestClear(x,z,0)||tooClose(x,z,p.inner_gap))continue;
+      const r=rnd(),kind=r<.42?'tallA':r<.72?'tallB':r<.9?'mid':'young';const t=T[kind];addTree(x,z,kind,t.h*(kind==='young'?.6+rnd()*.6:.78+rnd()*.42));n++}
+    for(let n=0,tries=0;n<p.outer&&tries<p.outer*60;tries++){const x=(rnd()*2-1)*104,z=-153+rnd()*216;if(inWalkArea(x,z)&&!(Math.abs(x)>66||z>31||z<-118))continue;if(forestClear(x,z,0)||tooClose(x,z,p.outer_gap))continue;
+      const r=rnd(),kind=r<.36?'tallA':r<.62?'tallB':r<.86?'mid':'young';const t=T[kind];addTree(x,z,kind,t.h*(kind==='young'?.6+rnd()*.6:.75+rnd()*.45));n++}
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),c=new THREE.Color();
+    for(const kind of kinds){const arr=list[kind];if(!arr.length)continue;const mesh=new THREE.InstancedMesh(T[kind].geo,forestMat,arr.length);
+      arr.forEach((t,i)=>{const [x,z,,h]=t,s=h/T[kind].h,w=s*(.85+rnd()*.3);e.set((rnd()-.5)*.05,rnd()*Math.PI*2,(rnd()-.5)*.05);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.08,z);sc.set(w,s,w);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);
+        c.setHSL(.0,0,.86+rnd()*.24);c.offsetHSL((rnd()-.5)*.025,0,0);mesh.setColorAt(i,c);
+        if(inWalkArea(x,z)){treeSpots.push([x,z]);const k=nearKey(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push([x,z])}
+        forestTrees.push({x,z,mesh,index:i,matrix:m4.clone(),alpha:1,slot:-1})});
+      mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh);
+      const ghost=makeGhost(T[kind].geo);scene.add(ghost);forestMeshes.push(ghost);mesh.userData.ghost=ghost}
+    paintGround(placedTrees,rnd);
+    // Hoa dại nhỏ: thỉnh thoảng một cụm vài bông, mỗi cụm một hai màu; ba dáng hoa (cúc năm cánh, chuông nhỏ, chùm sao).
+    {const pet=new THREE.SphereGeometry(.034,5,3),stemG=new THREE.CylinderGeometry(.006,.008,.14,3),eyeG=new THREE.SphereGeometry(.02,5,3),bellG=new THREE.ConeGeometry(.04,.07,6,1,true),W='#ffffff',D='#5a4320',S='#3d5a2a';
+      const shapes=[
+        mergeColored([[part(stemG,0,.07,0),S],...[0,1,2,3,4].map(k=>[part(pet,Math.cos(k*1.257)*.042,.145,Math.sin(k*1.257)*.042,1,.35,1),W]),[part(eyeG,0,.152,0,1,.6,1),D]]),
+        mergeColored([[part(stemG,0,.084,0,1,1.2,1),S],[part(bellG,0,.165,0,1,1,1,0,Math.PI),W],[part(stemG,.03,.07,.01,1,.9,1,0,-.4),S],[part(bellG,.06,.13,.02,.8,.8,.8,0,Math.PI),W]]),
+        mergeColored([[part(stemG,0,.06,0),S],[part(pet,0,.13,0),W],[part(pet,.045,.11,.02,.9,.9,.9),W],[part(pet,-.03,.115,-.035,.85,.85,.85),W],[part(pet,-.01,.1,.045,.8,.8,.8),W]])];
+      const palette=['#f6f3ea','#f7dc5e','#f3a6c4','#b08ae0','#8db6ee','#ec7f5c','#e6b3f0','#fff2a8','#f08aa0'].map(h=>new THREE.Color(h)),byShape=shapes.map(()=>[]);
+      const flowerOk=(x,z)=>lakeSDF(x,z)>.8&&!(Math.abs(x)<2.3&&z>-37&&z<36)&&Math.hypot(x-GATHER.x,z-GATHER.z)>GATHER.r+.4&&Math.hypot(x-FOOT.x,z-FOOT.z)>FOOT.r+.4&&Math.hypot(x-HILL.x,z-HILL.z)>8.7&&stairsDistance(x,z)>1.7
+        &&!wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.45)&&!houseHit(x,z,1.2)&&branchDistance(x,z)>1.4&&!treeBlocked(x,z)&&Math.abs(x)<72&&z<36&&z>-124;
+      for(let patch=0,tries=0;patch<p.flower_patches&&tries<p.flower_patches*40;tries++){const cx=(rnd()*2-1)*70,cz=-122+rnd()*156;if(!flowerOk(cx,cz))continue;patch++;
+        const shape=Math.floor(rnd()*shapes.length),c1=palette[Math.floor(rnd()*palette.length)],c2=rnd()<.5?c1:palette[Math.floor(rnd()*palette.length)],n=3+Math.floor(rnd()*8);
+        for(let k=0;k<n;k++){const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*1.1,x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;if(flowerOk(x,z))byShape[shape].push([x,z,rnd()<.7?c1:c2])}}
+      byShape.forEach((pts,si)=>{if(!pts.length)return;const mesh=new THREE.InstancedMesh(shapes[si],grassMat,pts.length);
+        pts.forEach(([x,z,col],i)=>{const sz=.8+rnd()*.6;e.set((rnd()-.5)*.2,rnd()*Math.PI*2,(rnd()-.5)*.2);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.01,z);sc.set(sz,sz*(.8+rnd()*.5),sz);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4);mesh.setColorAt(i,col)});
+        mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)})}
+    // Dã quỳ (wild sunflowers, Đà Lạt in November): leafy bushes topped with yellow flowers, along clearings and the main axis.
+    {const leafG=new THREE.IcosahedronGeometry(.36,0),stemG=new THREE.CylinderGeometry(.02,.025,.5,4),head=new THREE.CylinderGeometry(.15,.11,.05,9),eye=new THREE.CylinderGeometry(.055,.055,.07,6);
+      const parts=[[part(leafG,0,.3,0,1.3,.9,1.2),'#2f5a3a'],[part(leafG,.28,.48,.12,1,.85,1,1),'#3a6842'],[part(leafG,-.25,.52,-.1,.9,.8,.9,2),'#34613d']];
+      [[0,1.05,0],[.32,.98,.22],[-.3,.94,.16],[.12,.9,-.33],[-.18,1.12,-.2],[.4,.86,-.12],[-.38,.84,-.2]].forEach(([x,y,z],k)=>{parts.push([part(stemG,x*.7,y-.25,z*.7),'#4f7a3a']);parts.push([part(head,x,y,z,1,1,1,k,(k%3-1)*.25),'#f4c21f']);parts.push([part(eye,x,y+.025,z,1,1,1,0,(k%3-1)*.25),'#8a5a1e'])});
+      const geo=mergeColored(parts),pts=[];
+      for(let tries=0;pts.length<p.daquy&&tries<p.daquy*120;tries++){const x=(rnd()*2-1)*71,z=-123+rnd()*158,lk=lakeSDF(x,z),ax=Math.abs(x);
+        const edge=(ax>18.6&&ax<21.6&&z>11&&z<33)||(ax>5.2&&ax<7.6&&((z>4&&z<17)||(z>-36&&z<-13)))||(lk>2.6&&lk<4&&z>-4);
+        if(!edge||ax<4.8||treeBlocked(x,z)||houseHit(x,z,2)||branchDistance(x,z)<1.8||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+3||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+2)continue;
+        if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<2.2)||Math.hypot(x-BEN_SEN.x,z-BEN_SEN.z1)<4)continue;pts.push([x,z])}
+      const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
+      pts.forEach(([x,z],i)=>{const s=.6+rnd()*.35;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z),z);sc.set(s,s*(.9+rnd()*.4),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
+      mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+    // Mossy rocks under the pines and along the shore.
+    {const geo=mergeColored([[part(new THREE.DodecahedronGeometry(.6,0),0,.18,0,1.3,.6,1),'#6c7066'],[part(new THREE.DodecahedronGeometry(.45,0),.1,.38,.05,1.1,.35,.9),'#4b6648']]),pts=[];
+      for(let tries=0;pts.length<p.rocks&&tries<p.rocks*60;tries++){const x=(rnd()*2-1)*71,z=-124+rnd()*160,lk=lakeSDF(x,z);
+        if(!(lk>.6&&lk<2.2)&&rnd()<.6)continue;if(forestClear(x,z,-2.4)&&!(lk>.6&&lk<2.2))continue;if(Math.abs(x)<2.6&&z>-37&&z<36)continue;if(stairsDistance(x,z)<2||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat||treeBlocked(x,z))continue;
+        if(wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+1)||houseHit(x,z,2)||branchDistance(x,z)<1.8||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r+.8||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r+.8)continue;if(Math.hypot(x-BEN_SEN.x,z-BEN_SEN.z1)<3)continue;pts.push([x,z])}
+      const mesh=new THREE.InstancedMesh(geo,forestMat,Math.max(1,pts.length));
+      pts.forEach(([x,z],i)=>{const s=.5+rnd()*1.1;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.05,z);sc.set(s,s*(.7+rnd()*.5),s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});mesh.count=pts.length;
+      mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);forestMeshes.push(mesh)}
+  }
+  // Ground colours: mottled grass with dry patches, a needle carpet under every pine, earth along the main axis,
+  // darker wet soil at the shore, muddy lake bed, darker forest floor on the outer slopes.
+  function paintGround(trees,rnd){
+    const hash=(i,j)=>{const h=Math.sin(i*127.1+j*311.7)*43758.5453;return h-Math.floor(h)};
+    const vnoise=(x,z)=>{const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,ux=fx*fx*(3-2*fx),uz=fz*fz*(3-2*fz);const a=hash(i,j),b=hash(i+1,j),c2=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*ux+(c2-a)*uz+(a-b-c2+d)*ux*uz};
+    const fbm=(x,z)=>.6*vnoise(x,z)+.3*vnoise(x*2.1+7,z*2.1+3)+.1*vnoise(x*4.3+1,z*4.3+9);
+    const C=h=>new THREE.Color(h),grassA=C('#1f4637'),grassB=C('#2d5a43'),dry=C('#4d5f3f'),needles=C('#463b29'),earth=C('#4b4535'),wet=C('#1b3d33'),bed=C('#1a302c'),floor=C('#183629'),moss=C('#2a5240');
+    const grid=new Map();for(const t of trees){const k=treeCellKey(Math.floor(t[0]/TREE_CELL),Math.floor(t[1]/TREE_CELL));if(!grid.has(k))grid.set(k,[]);grid.get(k).push(t)}
+    const nearestTree=(x,z)=>{let best=99;const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=grid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a){const d=Math.hypot(x-t[0],z-t[1])/(t[3]>8?1:.6);if(d<best)best=d}}return best};
+    const pos=ground.geometry.attributes.position,col=ground.geometry.attributes.color,out=new THREE.Color();
+    for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),lk=lakeSDF(x,z);
+      if(lk<0){out.copy(bed)}else{
+        const n=fbm(x*.06,z*.06),n2=fbm(x*.17+11,z*.17+5);out.copy(grassA).lerp(grassB,n);out.lerp(dry,smoothstep(.62,.82,n2)*.55);
+        const rim=Math.max((Math.abs(x)-70)/14,(z-37)/12,(-z-125)/10);if(rim>0)out.lerp(floor,smoothstep(0,.6,rim));
+        const hr=Math.hypot(x-HILL.x,z-HILL.z);if(hr<HILL.foot&&hr>HILL.flat)out.lerp(moss,.35);
+        out.lerp(needles,smoothstep(3.4,.7,nearestTree(x,z))*.8);
+        out.lerp(earth,Math.max(z>-37&&z<36?smoothstep(2.6,1.5,Math.abs(x)):0,smoothstep(2.4,1.2,stairsDistance(x,z))*(hr<HILL.foot?1:0),smoothstep(GATHER.r+1,GATHER.r-.6,Math.hypot(x-GATHER.x,z-GATHER.z)),smoothstep(FOOT.r+1,FOOT.r-.6,Math.hypot(x-FOOT.x,z-FOOT.z)),smoothstep(2.1,1,branchDistance(x,z)))*.85);
+        out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
+      col.setXYZ(i,out.r,out.g,out.b)}
+    col.needsUpdate=true;}
+  // 3.16: Viền cỏ thấp quanh hồ sen, điểm xuyết hoa nhỏ, và hai cây liễu rũ bên bờ nam.
+  const WILLOWS=[{x:12.5,z:10.6,lean:.18,rot:2.6},{x:-35,z:5,lean:.16,rot:.9}];/* liễu Tây dời ra mũi hồ để không che Nhà Văn Hóa */
+  {const rnd=seededRandom(5150),tufts=[],blooms=[];
+    const shoreOk=(x,z)=>{const lk=lakeSDF(x,z);if(lk<.15||lk>2.3)return false;if(Math.abs(x)<2.3&&z>BRIDGE_ARCH[0]-3&&z<BRIDGE_ARCH[1]+4)return false;if(Math.abs(x)<2.2)return false;if(Math.abs(x-BEN_SEN.x)<1.6&&z>4&&z<BEN_SEN.z1+1)return false;if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.8))return false;return true};
+    for(let tries=0;tufts.length<2600&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z))continue;const lk=lakeSDF(x,z);if(rnd()>1.15-lk*.4)continue;tufts.push([x,z,lk])}
+    for(let tries=0;blooms.length<380&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z)||lakeSDF(x,z)<.35)continue;blooms.push([x,z])}
+    const blade=(a,h,c)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-.035,0,0,.035,0,0,.05,h,.03],3));g.computeVertexNormals();return [part(g,0,0,0,1,1,1,a),c]};
+    const tuftGeo=mergeColored([blade(0,.26,'#2f5a3a'),blade(1.3,.2,'#3a6842'),blade(2.5,.3,'#34613d'),blade(3.6,.18,'#2b5234'),blade(4.8,.24,'#3a6842')]);
+    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),c=new THREE.Color();
+    const tm=new THREE.InstancedMesh(tuftGeo,grassMat,tufts.length);
+    tufts.forEach(([x,z,lk],i)=>{const s=.7+rnd()*.7;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,Math.max(terrainHeight(x,z),-.05)-.01,z);sc.set(s,s*(lk<.8?1.25:1),s);m4.compose(v,q,sc);tm.setMatrixAt(i,m4);c.setRGB(.85+rnd()*.3,.9+rnd()*.25,.85+rnd()*.2);tm.setColorAt(i,c)});
+    tm.instanceMatrix.needsUpdate=true;tm.instanceColor.needsUpdate=true;tm.frustumCulled=false;scene.add(tm);
+    const stem=new THREE.CylinderGeometry(.005,.006,.13,3),dot=new THREE.SphereGeometry(.026,5,3),bloomGeo=mergeColored([[part(stem,0,.065,0),'#3d5a2a'],[part(dot,0,.14,0,1,.55,1),'#ffffff'],[part(dot,.03,.125,.02,.8,.5,.8),'#ffffff'],[part(dot,-.025,.12,-.02,.75,.5,.75),'#ffffff']]);
+    const cols=['#f6f3ea','#f7dc5e','#f3a6c4','#b9a0e6','#9cc4f0','#fff2a8'].map(h=>new THREE.Color(h)),bm=new THREE.InstancedMesh(bloomGeo,grassMat,blooms.length);
+    blooms.forEach(([x,z],i)=>{const s=.8+rnd()*.5;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.01,z);sc.set(s,s,s);m4.compose(v,q,sc);bm.setMatrixAt(i,m4);bm.setColorAt(i,cols[Math.floor(rnd()*cols.length)])});
+    bm.instanceMatrix.needsUpdate=true;bm.instanceColor.needsUpdate=true;bm.frustumCulled=false;scene.add(bm);
+    // Weeping willows: a leaning trunk, a soft crown and long drooping strands that sway a little in the wind.
+    for(const w of WILLOWS){const g=new THREE.Group();g.position.set(w.x,terrainHeight(w.x,w.z)-.05,w.z);g.rotation.y=w.rot;const parts=[],P=(...a)=>parts.push([part(...a),'#5a4632']),wr=seededRandom(Math.round(w.x*31+w.z*7)+99);
+      const bark='#5a4632',leafA='#6f8f4a',leafB='#7d9c52',leafC='#5f7f40';
+      P(new THREE.CylinderGeometry(.28,.42,3.2,8),0,1.6,0,1,1,1,0,-w.lean);P(new THREE.CylinderGeometry(.2,.28,2.2,7),.62,3.9,0,1,1,1,0,-w.lean*2.2);
+      for(const [a,l] of [[.4,1.8],[2.2,1.6],[4,1.7],[5.3,1.5]])P(new THREE.CylinderGeometry(.06,.12,l,6),.9+Math.cos(a)*.5,4.9,Math.sin(a)*.5,1,1,1,a,.9);
+      for(let k=0;k<7;k++){const a=k/7*Math.PI*2,r=1.3+wr()*.6;parts.push([part(new THREE.IcosahedronGeometry(1.1+wr()*.4,0),1.1+Math.cos(a)*r,5.5+wr()*.6,Math.sin(a)*r,1.2,.55,1.2),[leafA,leafB,leafC][k%3]])}
+      const strands=[];for(let k=0;k<120;k++){const a=wr()*Math.PI*2,r=1+wr()*2.6,L=2+wr()*3,x=1.1+Math.cos(a)*r,z=Math.sin(a)*r,top=5.7-r*.3;strands.push([part(new THREE.ConeGeometry(.07+wr()*.06,L,3,1),x,top-L/2,z,1,1,1,0,Math.PI),[leafA,leafB,leafC][k%3]])}
+      const crown=new THREE.Mesh(mergeColored(parts),forestMat);g.add(crown);
+      const hang=new THREE.Group();hang.add(new THREE.Mesh(mergeColored(strands),forestMat));hang.position.y=0;g.add(hang);w.hang=hang;
+      scene.add(g);w.group=g}}
+  function updateWillows(t){for(const w of WILLOWS)if(w.hang){w.hang.rotation.z=Math.sin(t*.7+w.x)*.025;w.hang.rotation.x=Math.sin(t*.53+w.z)*.02}}
+  buildForest(FOREST_DEFAULT);
+  // Obstacles between the camera and the avatar fade to see-through (never removed): pines via their ghost copies,
+  // buildings and large props via their own materials.
+  const hiddenMatrix=new THREE.Matrix4().makeScale(0,0,0),tmpColor=new THREE.Color(),tmpMatrix=new THREE.Matrix4(),FADE_MIN=.2;
+  function ghostAdd(t){const g=t.mesh.userData.ghost;if(!g||g.count>=GHOST_CAP)return false;const s=g.count++;g.userData.slots[s]=t;t.slot=s;t.alpha=1;
+    g.setMatrixAt(s,t.matrix);t.mesh.getColorAt(t.index,tmpColor);g.setColorAt(s,tmpColor);g.geometry.attributes.gAlpha.array[s]=1;
+    g.instanceMatrix.needsUpdate=true;g.instanceColor.needsUpdate=true;g.geometry.attributes.gAlpha.needsUpdate=true;t.mesh.setMatrixAt(t.index,hiddenMatrix);t.mesh.instanceMatrix.needsUpdate=true;return true}
+  function ghostRemove(t){const g=t.mesh.userData.ghost,s=t.slot,last=g.count-1,ga=g.geometry.attributes.gAlpha;
+    if(s!==last){const o=g.userData.slots[last];g.getMatrixAt(last,tmpMatrix);g.setMatrixAt(s,tmpMatrix);g.getColorAt(last,tmpColor);g.setColorAt(s,tmpColor);ga.array[s]=ga.array[last];g.userData.slots[s]=o;o.slot=s}
+    g.count=last;g.userData.slots.length=last;t.slot=-1;t.alpha=1;t.mesh.setMatrixAt(t.index,t.matrix);t.mesh.instanceMatrix.needsUpdate=true;g.instanceMatrix.needsUpdate=true;g.instanceColor.needsUpdate=true;ga.needsUpdate=true}
+  const fadeables=[];
+  function addFadeable(obj,x,z,r){const mats=[];obj.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)){o.material=o.material.clone();mats.push({m:o.material,op:o.material.opacity,tr:o.material.transparent,dw:o.material.depthWrite})}});fadeables.push({x,z,r,mats,alpha:1})}
+  function fadeBlockingTrees(cam,target,dt){const ax=cam.x,az=cam.z,bx=target.x,bz=target.z,vx=bx-ax,vz=bz-az,len2=vx*vx+vz*vz||1,k=Math.min(1,dt*7);
+    const blocks=(x,z,r)=>{const u=((x-ax)*vx+(z-az)*vz)/len2;return u>0&&u<1&&Math.hypot(ax+vx*u-x,az+vz*u-z)<r};
+    const W=22+Math.sqrt(len2);for(const t of forestTrees){const far=(Math.abs(t.x-bx)>W||Math.abs(t.z-bz)>W)&&(Math.abs(t.x-ax)>9||Math.abs(t.z-az)>9);if(far&&t.slot<0)continue;const want=!far&&(blocks(t.x,t.z,1.7+Math.min(camZoom,2)*.8)||Math.hypot(t.x-ax,t.z-az)<3+Math.min(camZoom,1.5)*4)?FADE_MIN:1;
+      if(t.slot<0){if(want===1||!ghostAdd(t))continue}
+      t.alpha+=(want-t.alpha)*k;if(want===1&&t.alpha>.97){ghostRemove(t);continue}
+      const ga=t.mesh.userData.ghost.geometry.attributes.gAlpha;ga.array[t.slot]=t.alpha;ga.needsUpdate=true}
+    // Buildings fade only when they stand between the camera and the avatar, not when the avatar faces them.
+    const uAvatar=Math.max(.05,1-5/Math.sqrt(len2)),blocksAvatar=(x,z,r)=>{const u=((x-ax)*vx+(z-az)*vz)/len2;return u>0&&u<uAvatar&&Math.hypot(ax+vx*u-x,az+vz*u-z)<r};
+    for(const f of fadeables){const want=blocksAvatar(f.x,f.z,f.r)?.25:1;if(f.alpha===want)continue;f.alpha+=(want-f.alpha)*k;if(Math.abs(f.alpha-want)<.02)f.alpha=want;
+      const on=f.alpha<1;for(const e of f.mats){if(e.m.transparent!==(on||e.tr)){e.m.transparent=on||e.tr;e.m.needsUpdate=true}e.m.opacity=e.op*f.alpha;e.m.depthWrite=on?false:e.dw}}}
+  addFadeable(orchidHouse,ORCHID.x,ORCHID.z,Math.hypot(ORCHID.w,ORCHID.d)/2*.85);for(const h of SENSE_HOUSES)addFadeable(h.group,h.x,h.z,h.r*.85);addFadeable(yenGate,0,34.2,4.2);addFadeable(bodhiTree,STATUE.x,STATUE.z-11.7,3.2);
+  // Waypoint navigation: smooth guided movement between five destinations.
+  const destinations={
+    gate:{pos:[0,4.5,42],look:[0,4,0]},
+    garden:{pos:[-15,3.6,24],look:[-6,1.5,8]},
+    lotus:{pos:[10,3.8,16],look:[0,.4,-4]},
+    meditation:{pos:[-6,HILL.top+4.2,STATUE.z+13.8],look:[0,HILL.top+1.6,STATUE.z+2.8]},
+    sanctuary:{pos:[0,HILL.top+4,STATUE.z+11.3],look:[0,HILL.top+2.6,STATUE.z]}
+  };
+
+  // Portal markers are part of the 3D scene and can be selected by click/tap.
+  const markers=[];
+  const addMarker=(zone,x,y,z)=>{
+    const group=new THREE.Group();group.position.set(x,y,z);
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(.65,.055,9,48),new THREE.MeshBasicMaterial({color:'#e6c27e'}));group.add(halo);
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,18,14),new THREE.MeshBasicMaterial({color:'#f3d59a'}));group.add(orb);
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.8,8),gold);stem.position.y=-.72;group.add(stem);
+    group.scale.setScalar(.7);scene.add(group);group.userData.zone=zone;markers.push(group);
+  };
+  addMarker('garden',-12,2.5,15);addMarker('lotus',9,2.2,8);addMarker('meditation',-7.2,HILL.top+1.8,STATUE.z+7.4);addMarker('sanctuary',7.2,HILL.top+1.8,STATUE.z+7.4);
+  let currentLook=new THREE.Vector3(0,3,-13),targetLook=currentLook.clone();
+  const targetPosition=new THREE.Vector3(...destinations.gate.pos);
+  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+  let dragging3d=false,moved=false,lastX=0,lastY=0,downX=0,downY=0,lookOffset=0;
+
+  // Camera zoom: pinch with two fingers, mouse wheel, or the ＋/－ buttons. Remembered on this device.
+  let camZoom=1;try{const z=Number(localStorage.getItem('yen_cam_zoom'));if(z>=.45&&z<=3)camZoom=z}catch(e){}
+  // Camera height, like dragging the scene: swipe down to raise the camera (see more from above), swipe up to lower it toward eye level.
+  let camLift=1;try{const v=Number(localStorage.getItem('yen_cam_lift'));if(v>=.35&&v<=2.6)camLift=v}catch(e){}
+  const setCamLift=v=>{camLift=Math.max(.35,Math.min(2.6,v));try{localStorage.setItem('yen_cam_lift',String(camLift))}catch(e){}};
+  const setZoom=z=>{camZoom=Math.max(.45,Math.min(3,z));try{localStorage.setItem('yen_cam_zoom',String(camZoom))}catch(e){}};
+  renderer.domElement.addEventListener('wheel',e=>{if(!document.body.classList.contains('immersive'))return;e.preventDefault();if(bayMode){bayZoomBy(Math.exp(e.deltaY*.0012));return}setZoom(camZoom*Math.exp(e.deltaY*.0012))},{passive:false});
+  {let pinch0=0,zoom0=1;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+    renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2){pinch0=dist(e.touches);zoom0=camZoom;moved=true}},{passive:true});
+    renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinch0){const d=dist(e.touches);if(bayMode){bayZoomBy(pinch0/Math.max(10,d));pinch0=d}else setZoom(zoom0*pinch0/d);moved=true}},{passive:true});
+    renderer.domElement.addEventListener('touchend',e=>{if(e.touches.length<2)pinch0=0},{passive:true})}
+  {const box=document.createElement('div');box.id='camZoomBox';box.innerHTML='<button type="button" data-z="in" aria-label="Phóng to">＋</button><button type="button" data-z="out" aria-label="Thu nhỏ, nhìn toàn cảnh">－</button>';document.body.appendChild(box);
+    box.addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const f=b.dataset.z==='in'?.8:1.25;if(bayMode){bayZoomOver=Math.max(bayZoomOver,.25);bayZoomBy(f)}else setZoom(camZoom*f)})}
+  renderer.domElement.addEventListener('pointerdown',e=>{dragging3d=true;moved=false;lastX=downX=e.clientX;lastY=downY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+  renderer.domElement.addEventListener('pointermove',e=>{if(!dragging3d)return;let dx=e.clientX-lastX,dy=e.clientY-lastY;if(Math.hypot(e.clientX-downX,e.clientY-downY)>12)moved=true;lookOffset=Math.max(-1.2,Math.min(1.2,lookOffset+dx*.003));lastX=e.clientX;lastY=e.clientY});
+  renderer.domElement.addEventListener('pointercancel',()=>{dragging3d=false;});
+  function handleSceneTap(e){
+    if(!document.body.classList.contains('immersive'))return;
+    const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-(e.clientY-rect.top)/rect.height*2+1;
+    raycaster.setFromCamera(pointer,camera);if(bayMode){if(document.body.classList.contains('bay-clean')){document.body.classList.remove('bay-clean');return}bayTap(raycaster);return;}const hits=raycaster.intersectObjects(markers,true);
+    if(hits.length){let obj=hits[0].object;while(obj.parent&&!obj.userData.zone)obj=obj.parent;if(obj.userData.zone){selectZone(obj.userData.zone);return;}}
+    const guestHits=raycaster.intersectObjects([...onlineAvatars.values()].map(v=>v.group),true);
+    if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
+    if(boatRide){if(!boatTap())document.getElementById('zenHint').textContent='🚣 Chờ một chút nhé';return;}
+    {const bh=raycaster.intersectObjects(boats.filter(b=>b.group.visible).map(b=>b.group),true);if(bh.length){tapBoat(bh[0].object.userData.boatIndex);return;}}
+    const peerBoats=[...onlineAvatars.values()].filter(p=>p.boat&&p.boat.group.visible).map(p=>p.boat.group);if(peerBoats.length&&raycaster.intersectObjects(peerBoats,true).length){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người dạo hồ, mời bạn chọn chiếc khác ở Bến sen';return;}
+    {const fh=raycaster.intersectObjects(FLOWER_GARDENS.flatMap(g=>[g.sign,g.mesh].filter(Boolean)),false);if(fh.length){goToGarden(fh[0].object.userData.garden);return;}}
+    if(window.__archTap&&window.__archTap(raycaster))return;
+    if(window.__vivGroup&&raycaster.intersectObjects([window.__vivGroup],true).length){goToOrchid();return;}
+    if(window.__homeGroup&&raycaster.intersectObjects([window.__homeGroup],true).length){goHome(false);return;}
+    if(raycaster.intersectObjects([orchidHouse,orchidRing],true).length){goToOrchid();return;}
+    {const hh=raycaster.intersectObjects([...SENSE_HOUSES.map(h=>h.group),TINH_THAT.group,VAN_HOA.group].filter(Boolean),true);if(hh.length){let o=hh[0].object;while(o&&!o.userData.house)o=o.parent;if(o){goToHouse(o.userData.house);return;}}}
+    // Tap any part of a mat (zabuton, zafu or thảm sen petals) to walk there and sit.
+    const cushionHits=raycaster.intersectObjects(cushions.map(v=>v.group),true);
+    if(cushionHits.length){let obj=cushionHits[0].object;while(obj.parent&&!cushions.some(c=>c.group===obj))obj=obj.parent;const seat=cushions.find(c=>c.group===obj);if(seat){tapSeat(seat);}return;}
+    const groundHits=raycaster.intersectObject(ground,false);
+    if(groundHits.length){const q=groundHits[0].point;if(Math.abs(q.x)<72&&q.z>-124&&q.z<36){navigateTo(q.x,q.z);}}
+
+  }
+  renderer.domElement.addEventListener('pointerup',e=>{dragging3d=false;if(moved)return;handleSceneTap(e);});
+  // Desktop clicks may land on transparent overlays rather than the WebGL canvas.
+  document.addEventListener('click',e=>{if(!document.body.classList.contains('immersive')||e.detail===0)return;if(e.target===renderer.domElement||e.target.closest('button,a,input,select,textarea,label,nav,aside,[role=dialog],#zenToolbar,#zenPanelClose,#zenUnifiedMenu,#zenItemSheet,#zenBagSheet,#zenWishSheet,#zenJournalSheet,#zenJournalOpen,#zenRitualPanel,#zenGestures,#realtimeBox,#resonancePanel,#bayHUD,#bayMap,#baySheet,#profileModal,#anyenWishPanel,#anyenWishQuoteToast,#toast,.profile-bar,.social-demo,.walk-panel,.zone-nav,.zone-help,.zone-action,.immersive-top'))return;handleSceneTap(e);},true);
+  window.addEventListener('yen-zone',e=>{let dest=destinations[e.detail];if(!dest)return;targetPosition.set(...dest.pos);targetLook.set(...dest.look);lookOffset=0;if(document.body.classList.contains('immersive')&&zoneWalkPoints[e.detail]){if(meActivity==='sit')document.getElementById('realtimeSit')?.click();if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();navigateTo(...zoneWalkPoints[e.detail]);}});
+  $('#left').addEventListener('click',()=>{lookOffset-=.2});$('#right').addEventListener('click',()=>{lookOffset+=.2});
+  document.addEventListener('keydown',e=>{if(!document.body.classList.contains('immersive'))return;const keys=['gate','garden','lotus','meditation','sanctuary'];if(e.key==='PageUp'||e.key==='PageDown'){let i=keys.indexOf(activeZone);selectZone(keys[(i+(e.key==='PageUp'?1:4))%5]);e.preventDefault()}});
+  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+  document.querySelector('#sceneMode').textContent='Không gian 3D · Hành trình tương tác';document.body.classList.add('yen-3d-ready');
+  // Free-walk demo: first-person camera on navigable ground; lake and temple are bounded.
+  let walking=false,walkYaw=Math.PI,viewYaw=Math.PI,walkPitch=0,tapTarget=null;const walkRoute=[];const walkingKeys=new Set();
+  const onlineAvatars=new Map();
+  // Local avatar is a separate scene object, never confused with remote peers.
+  const me=new THREE.Group();const meTorso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));meTorso.position.y=1.05;me.add(meTorso);
+  const meHead=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));meHead.position.y=1.85;me.add(meHead);
+  const meCanvas=document.createElement('canvas');meCanvas.width=512;meCanvas.height=112;const meCtx=meCanvas.getContext('2d');const meTexture=new THREE.CanvasTexture(meCanvas);
+  const meTag=new THREE.Sprite(new THREE.SpriteMaterial({map:meTexture,transparent:true,depthTest:false}));meTag.position.set(0,2.17,0);meTag.scale.set(1.7,.37,1);me.add(meTag);scene.add(me);
+  function outfitParts(group,torso){
+    const sash=new THREE.Mesh(new THREE.TorusGeometry(.36,.045,6,18),mat('#e8d5ad'));sash.rotation.x=Math.PI/2;sash.position.y=.83;group.add(sash);
+    const robe=new THREE.Mesh(new THREE.CylinderGeometry(.34,.51,.82,12),mat('#687b48'));robe.position.y=.57;group.add(robe);
+    const vest=new THREE.Mesh(new THREE.BoxGeometry(.72,.7,.44),mat('#d4c8ad'));vest.position.y=1.12;group.add(vest);
+    // Seated meditation: legs folded in a round ring, with the robe draping out over them into a round base. Only shown while sitting.
+    const lap=new THREE.Group();lap.visible=false;const legMat=mat('#687b48');
+    const drape=new THREE.Mesh(new THREE.SphereGeometry(.5,28,12,0,Math.PI*2,0,Math.PI/2),legMat);drape.scale.set(1.04,.8,1.04);drape.position.set(0,-.205,.06);lap.add(drape);
+    const legs=new THREE.Mesh(new THREE.TorusGeometry(.34,.11,10,28),legMat);legs.rotation.x=Math.PI/2;legs.scale.set(1,1,.75);legs.position.set(0,-.13,.1);lap.add(legs);
+    const feet=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat('#e7c9a8'));feet.scale.set(1.5,.5,.8);feet.position.set(0,.12,.27);lap.add(feet);
+    group.add(lap);
+    return {sash,robe,vest,lap,legMat};
+  }
+  function dressAvatar(parts,torso,color,style,sitting){
+    const safe=/^#[0-9a-f]{6}$/i.test(color||'')?color:'#687b48';torso.material.color.set(safe);
+    const mode=['robe','linen','casual'].includes(style)?style:'robe';
+    parts.robe.visible=!sitting;parts.sash.visible=true;parts.vest.visible=mode==='linen';
+    // Top and bottom share the chosen colour; every style keeps the light tan sash.
+    parts.robe.material.color.set(safe);parts.vest.material.color.set(safe);parts.sash.material.color.set('#e4c37b');
+    
+    torso.scale.x=mode==='linen'?.91:1;
+    const slim=mode==='robe'?1:mode==='linen'?.86:.76;parts.robe.scale.set((sitting?.86:1)*slim,sitting?.5:1,(sitting?.86:1)*slim);parts.robe.position.y=sitting?.12:.57;
+    parts.sash.position.y=sitting?.27:.83;parts.vest.position.y=sitting?.56:1.12;parts.vest.scale.y=sitting?.62:1;
+    if(parts.lap){parts.lap.visible=!!sitting;parts.legMat.color.set(safe);}
+    
+  }
+  const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
+  let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,20.4],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
+  // Navigation around the lotus pond and temple: visibility graph, shortest valid route.
+  const zoneWalkPoints={gate:[0,30],garden:[-12,17],lotus:[6,11],meditation:[0,STATUE.z+7.2],sanctuary:[0,STATUE.z+4.2]};
+  const routeGuides=[[-17,-19],[-17,-10],[-17,4],[-17,13],[17,-19],[17,-10],[17,4],[17,13],[-11,-22],[11,-22],[-23,0],[23,0],[0,24],[0,14],[0,9],[0,3],[0,-3],[0,-9],[0,-12],[0,-15],[0,-18],[0,-20.5],[-6,-19],[6,-19]];
+ for(const l of wishLakes){if(l.lotus)continue;for(let k=0;k<12;k++){const a=k*Math.PI/6;routeGuides.push([l.x+Math.cos(a)*4.65,l.z+Math.sin(a)*4.65]);}}
+ for(let k=0;k<24;k++){const a=k*Math.PI/12;routeGuides.push([Math.cos(a)*12.8,-4+Math.sin(a)*12.8]);}
+  function walkable(x,z){if(bayMode)return false;
+    if(Math.abs(x)>=72||z>=36||z<=-124)return false;
+    if(inFrontStrip(x,z))return !wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.6)&&!treeBlocked(x,z);
+    // Hồ sen: only the bridge crosses the water.
+    if(Math.abs(x-BEN_SEN.x)<BEN_SEN.w/2-.15&&z>BEN_SEN.z0+.3&&z<BEN_SEN.z1)return true;/* Bến sen pier */
+    if(lakeSDF(x,z)<.8)return Math.abs(x)<=1.7&&z>=BRIDGE_ARCH[0]-1.4&&z<=BRIDGE_ARCH[1]+1.4;
+    if(wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.6))return false;
+    if(houseHit(x,z,.25))return false;
+    if(window.__ttHit&&window.__ttHit(x,z))return false;
+    if(window.__homeHit&&window.__homeHit(x,z))return false;
+    if(window.__vhHit&&window.__vhHit(x,z))return false;
+    if(window.__gomHit&&window.__gomHit(x,z))return false;
+    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.7))return false;
+    if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
+    // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
+    const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
+    if(hr<HILL.flat-.3)return !(hr<2.5||Math.hypot(x-STATUE.x,z-STATUE.z-2.7)<.7);
+    if(hr<HILL.foot-1&&stairsDistance(x,z)>1.8)return false;
+    return !treeBlocked(x,z);}
+  function clearWalk(a,b){for(let i=0;i<=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35);i++){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.35)),t=i/n;if(!walkable(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false;}return true;}
+  // A* grid pathfinding. Unlike the old sparse visibility graph, this can route
+  // around the central lotus pond and reach all five peripheral ponds.
+  // Reliable, bounded A* grid routing, with a binary heap for mobile.
+  function findWalkPath(tx,tz){
+    const step=1.25,minX=-71,minZ=-123,nx=115,nz=127,N=nx*nz;
+    const pos=i=>[minX+(i%nx)*step,minZ+Math.floor(i/nx)*step];
+    const cell=(x,z)=>Math.max(0,Math.min(nx-1,Math.round((x-minX)/step)))+nx*Math.max(0,Math.min(nz-1,Math.round((z-minZ)/step)));
+    function nearest(x,z){const c=cell(x,z),cx=c%nx,cz=Math.floor(c/nx);for(let r=0;r<=9;r++){let best=-1,dist=Infinity;for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dz))!==r)continue;const xx=cx+dx,zz=cz+dz;if(xx<0||zz<0||xx>=nx||zz>=nz)continue;const i=xx+zz*nx,p=pos(i);if(!walkable(...p))continue;const d=Math.hypot(p[0]-x,p[1]-z);if(d<dist){dist=d;best=i}}if(best>=0)return best}return -1}
+    if(!findWalkPath.paved||findWalkPath.paved.length!==N){const pv=new Uint8Array(N);for(let i=0;i<N;i++)pv[i]=onPaved(...pos(i))?1:0;findWalkPath.paved=pv}const paved=findWalkPath.paved,GRASS=3;
+    const source=nearest(mePosition.x,mePosition.z),target=nearest(tx,tz);if(source<0||target<0)return null;
+    const g=new Float64Array(N).fill(Infinity),prev=new Int32Array(N).fill(-1),closed=new Uint8Array(N),heap=[];
+    function push(id,score){const v={id,score};heap.push(v);let i=heap.length-1;while(i){const p=(i-1)>>1;if(heap[p].score<=score)break;heap[i]=heap[p];i=p}heap[i]=v}
+    function pop(){const top=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1].score<heap[c].score)c++;if(heap[c].score>=last.score)break;heap[i]=heap[c];i=c}heap[i]=last}return top}
+    g[source]=0;push(source,0);const goal=pos(target);let n=0;
+    while(heap.length&&n++<N*8){const u=pop().id;if(closed[u])continue;if(u===target){const raw=[];for(let i=u;i!==source&&i>=0;i=prev[i])raw.push(pos(i));raw.reverse();const off=[0];for(const q of raw)off.push(off[off.length-1]+(onPaved(...q)?0:step));
+      const grassOn=(a,b)=>{const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.5));let g2=0;for(let i=1;i<=n;i++)if(!onPaved(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n))g2+=Math.hypot(b[0]-a[0],b[1]-a[1])/n;return g2};
+      const result=[];let anchor=[mePosition.x,mePosition.z],ai=0,k=0;while(k<raw.length){let j=k;while(j+1<raw.length&&clearWalk(anchor,raw[j+1])&&grassOn(anchor,raw[j+1])<=off[j+2]-off[ai]+.8)j++;result.push(raw[j]);anchor=raw[j];ai=j+1;k=j+1}if(clearWalk(anchor,[tx,tz]))result.push([tx,tz]);return result}
+      closed[u]=1;const ux=u%nx,uz=Math.floor(u/nx),p=pos(u);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const xx=ux+dx,zz=uz+dz;if(xx<0||zz<0||xx>=nx||zz>=nz)continue;const v=xx+zz*nx;if(closed[v])continue;const q=pos(v);if(!walkable(...q)||!clearWalk(p,q))continue;const score=g[u]+Math.hypot(dx,dz)*((paved[u]&&paved[v])?1:GRASS);if(score>=g[v])continue;g[v]=score;prev[v]=u;push(v,score+Math.hypot(q[0]-goal[0],q[1]-goal[1])/step)}}
+    return null;
+  }
+  function clearPendingActions(){pendingSeat=null;pendingBoat=false;pendingOrchid=false;pendingHouse=null;arriveYaw=null;pendingGarden=null;pendingOffer=false;pendingKathina=null}
+  function navigateTo(x,z){if(bayMode){document.getElementById('zenHint').textContent='⛵ Vịnh Yên · Vuốt để xoay nhìn quanh 360°';return false;}if(boatRide){document.getElementById('zenHint').textContent='🚣 Đợi thuyền cập bến rồi hãy đi bộ nhé';return false;}pendingSeat=null;pendingBoat=false;pendingOrchid=false;pendingHouse=null;arriveYaw=null;pendingGarden=null;pendingOffer=false;pendingKathina=null;
+    // Destination selection overrides meditation states, including async realtime updates.
+    meActivity='idle';walkGoal=null;tapTarget=null;
+    window.dispatchEvent(new CustomEvent('anyen-activity',{detail:{activity:'idle'}}));
+    if(!walkable(x,z)){document.getElementById('zenHint').textContent='Không thể đứng trong hồ. Hãy chọn bờ hồ.';return false;}
+    let path=findWalkPath(x,z);
+    // Some spawn positions are off the grid by a fraction; re-anchor at the nearest safe path point.
+    if(!path){const anchors=[[0,16],[0,19],[0,23],[-14,17],[14,17],[0,-20],[0,-28],[-12,-30],[12,-30],[0,STATUE.z+7]];
+      const saved=mePosition.clone();for(const [ax,az] of anchors.sort((a,b)=>Math.hypot(a[0]-saved.x,a[1]-saved.z)-Math.hypot(b[0]-saved.x,b[1]-saved.z))){if(!walkable(ax,az))continue;mePosition.set(ax,0,az);path=findWalkPath(x,z);if(path){mePosition.copy(saved);if(clearWalk([saved.x,saved.z],[ax,az]))path.unshift([ax,az]);else{mePosition.set(ax,0,az);}break;}mePosition.copy(saved);}}
+    if(!path){document.getElementById('zenHint').textContent='Chưa tìm được lối đi đến bờ hồ.';return false;}
+    walkRoute.length=0;walkRoute.push(...path);tapTarget=null;walkDetourFor=null;
+    document.getElementById('zenHint').textContent='🚶 Đang di chuyển đến điểm bạn chọn…';return true;
+  }
+
+  function paintMe(){let p={};try{p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}')}catch{};myStyle=p.style||'robe';myColor=p.color||'#687b48';dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');meCtx.clearRect(0,0,512,112);meCtx.fillStyle='#f4e2b9';meCtx.font='bold 36px sans-serif';meCtx.textAlign='center';meCtx.textBaseline='middle';meCtx.fillText(String(p.name||'Khách Yên').slice(0,24),256,57,470);meTexture.needsUpdate=true;}
+  // Tọa cụ ưu tiên Chánh điện; mở rộng theo vòng ngoài khi đầy.
+  const cushions=[];
+  // Two kinds of seat: the inner rings use the brown zabuton (square mat) with a round zafu on its outer half;
+  // the outer rings use lotus cushions (round green base with soft pink petals). userData says where a guest sits.
+  const cushionMats={base:mat('#4f7a52'),pink:mat('#e59a86'),peach:mat('#f2b884'),cloth:mat('#6e4a33'),edge:mat('#8a6243'),zafu:mat('#c38a3e'),zafuTop:mat('#d9a456')};
+  function buildCushion(kind){const group=new THREE.Group();let base;
+    if(kind==='zabuton'){const cloth=new THREE.Mesh(new THREE.BoxGeometry(1.05,.06,1.05),cushionMats.cloth);cloth.position.y=.03;group.add(cloth);const trim=new THREE.Mesh(new THREE.BoxGeometry(1.12,.03,1.12),cushionMats.edge);trim.position.y=.015;group.add(trim);
+      base=new THREE.Mesh(new THREE.CylinderGeometry(.36,.4,.18,20),cushionMats.zafu);base.position.set(0,.15,.12);group.add(base);const top=new THREE.Mesh(new THREE.CylinderGeometry(.3,.36,.03,20),cushionMats.zafuTop);top.position.set(0,.255,.12);group.add(top);
+      group.userData.sitTop=.27;group.userData.sitBack=.12;}
+    else{// Thảm sen: flat octagonal green base with four big puffy petals, peach over pink, like a four-petal lotus.
+      base=new THREE.Mesh(new THREE.CylinderGeometry(.56,.58,.06,8),cushionMats.base);base.position.y=.03;group.add(base);
+      for(let p=0;p<8;p++){const big=p%2===0,a=p*Math.PI/4+Math.PI/8;const m=new THREE.Mesh(new THREE.SphereGeometry(.2,9,6),big?cushionMats.peach:cushionMats.pink);m.scale.set(big?.95:.8,big?.6:.5,big?1.6:1.3);m.position.set(Math.cos(a)*(big?.24:.2),big?.13:.1,Math.sin(a)*(big?.24:.2));m.rotation.y=-a+Math.PI/2;group.add(m);}
+      group.userData.sitTop=.21;group.userData.sitBack=0;}
+    group.userData.base=base;return group;}
+  const seatLocations=[];
+  // Four concentric rings of lotus cushions around the statue: 6/8/11/22 mats, each turned toward the statue.
+  // Every ring is offset by half a step, so the corridor straight in front (bridge to altar) stays open.
+  const SEAT_RINGS=[3.2,4.3,5.45,6.7],SEAT_COUNTS=[6,8,11,22];
+  SEAT_RINGS.forEach((r,ring)=>{const n=SEAT_COUNTS[ring];for(let k=0;k<n;k++){const a=(k+.5)*Math.PI*2/n;seatLocations.push([STATUE.x+Math.sin(a)*r,STATUE.z+Math.cos(a)*r,true,a,ring])}});
+  // Overflow seats outside only when the sanctuary is full.
+  seatLocations.forEach(([x,z,inner,a=0,ring=0],i)=>{
+    if(!walkable(x,z))return;
+    // Inner two rings: brown zabuton with zafu. Outer rings: pink lotus cushions.
+    const group=buildCushion(ring<2?'zabuton':'lotus');group.position.set(x,HILL.top+TERRACE_TOP,z);group.rotation.y=a;const base=group.userData.base;
+    scene.add(group);cushions.push({x,z,mesh:base,inner,group});
+  });
+  let previousActivity='idle',pendingSeat=null,occupiedPositions=[];
+  function seatDistance(s){return Math.hypot(s.x-mePosition.x,s.z-mePosition.z)}
+  function seatAvailable(s){return !occupiedPositions.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<.8 || (Number.isFinite(p.seatX)&&Math.hypot(p.seatX-s.x,p.seatZ-s.z)<.7));}
+  const statueDistance=s=>Math.round(Math.hypot(s.x-STATUE.x,s.z-STATUE.z)*10)/10;/* rounded so mats on the same ring tie */
+  // Nearest free mat to the Buddha; ties go to the mat closer to the guest.
+  function chooseSeat(){return cushions.filter(seatAvailable).sort((a,b)=>statueDistance(a)-statueDistance(b)||seatDistance(a)-seatDistance(b))[0]||null;}
+  // A tapped mat: only free mats can be chosen. If already sitting elsewhere, stand up and move to it.
+  function tapSeat(seat){
+    const hint=document.getElementById('zenHint');
+    if(meActivity==='sit'&&Math.hypot(seat.x-mePosition.x,seat.z-mePosition.z)<.8){hint.textContent='🧘 Bạn đang ngồi trên tọa cụ này';return;}
+    if(!seatAvailable(seat)){hint.textContent='Tọa cụ này đã có người ngồi, hãy chọn tọa cụ trống khác.';return;}
+    if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>requestSeat(seat,true),60);return;}
+    requestSeat(seat,true);
+  }
+  function requestSeat(seat,picked){
+    if(!seat||!seatAvailable(seat))seat=chooseSeat();
+    if(!seat){document.getElementById('zenHint').textContent='Các tọa cụ đã kín, vui lòng chờ một chút.';return;}
+    if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
+    if(meActivity==='sit')return;
+    if(seatDistance(seat)<.35){mePosition.set(seat.x,0,seat.z);document.getElementById('realtimeSit')?.click();return;}
+    if(navigateTo(seat.x,seat.z)){pendingSeat=seat;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{x:seat.x,z:seat.z}}));document.getElementById('zenHint').textContent=picked?'Đang đến tọa cụ bạn chọn…':seat.inner?'Đang đến tọa cụ trước tượng Phật…':'Chánh điện đã kín, đang đến tọa cụ ngoài sân…';}
+  }
+  function sitNaturally(){
+    // Không dịch chuyển tức thời: chỉ ngồi sau khi đến đúng tọa cụ.
+    window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
+  }
+  // While sitting, the same button reads "Ra ngoài": stand up and walk off the terrace to the bridge.
+  const MEDITATION_EXIT=[0,-17.2];
+  function updateSitButton(){const b=document.querySelector('#zenToolbar [data-zen="sit"]');if(!b)return;const sitting=meActivity==='sit';const label=sitting?'Ra ngoài':'Toạ thiền';b.innerHTML=(sitting?'🚶':'🧘')+'<small>'+label+'</small>';b.setAttribute('aria-label',sitting?'Đứng lên và ra khỏi khu thiền':'Toạ thiền');b.title=label;}
+  window.addEventListener('anyen-activity',()=>setTimeout(updateSitButton,0));
+  window.addEventListener('anyen-request-sit',()=>{if(bayMode){document.getElementById('realtimeSit')?.click();return;}if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>{if(meActivity==='sit')return;if(navigateTo(...MEDITATION_EXIT))document.getElementById('zenHint').textContent='🚶 Đang rời khu thiền…';},60);return;}requestSeat(chooseSeat());});
+  // Sitting avatars rest on the seat (zafu top or lotus centre, from the cushion's userData) and face the statue.
+  function seatOnCushion(group,seat){const a=seat.group.rotation.y,{sitTop,sitBack}=seat.group.userData;group.position.set(seat.x+Math.sin(a)*sitBack,seat.group.position.y+sitTop,seat.z+Math.cos(a)*sitBack);group.rotation.y=a+Math.PI;group.userData.yaw=a+Math.PI;}
+  function poseAvatar(torso,head,tag,sitting){
+    // Seated keeps the standing body width; only the height folds, so the figure doesn't look heavier.
+    torso.scale.set(1,sitting?.6:1,1);
+    torso.position.y=sitting?.42:1.05;
+    head.position.y=sitting?1.06:1.85;
+    tag.position.y=sitting?1.44:2.17;
+  }
+  const roomPalettes={'Sảnh chung':'#092d27','Phòng Sen · 10 người':'#263d36','Phòng Trúc · 20 người':'#183e30','Phòng Riêng':'#342e3e'};
+
+  /* ---- Dữ liệu thế giới dùng chung · Rừng thông ----
+     Nằm trong tệp tĩnh data/world-pine_forest.json cùng trang web. Cảnh luôn dựng sẵn từ giá trị gốc ở trên;
+     tệp chỉ ghi đè khi tải được, nên thiếu tệp hoặc mất mạng thì cảnh vẫn như cũ. */
+  const WORLD_ID='pine_forest';
+  let appliedSky='173c35';
+  function applyWorld(w,source){
+    if(!w||!w.map)return false;
+    const m=w.map;
+    if(!bayMode){
+      if(scene.background&&scene.background.getHexString&&scene.background.getHexString()===appliedSky){scene.background=new THREE.Color(m.sky_color);appliedSky=scene.background.getHexString()}
+      if(scene.fog&&scene.fog.density!==undefined){scene.fog.color.set(m.fog_color);scene.fog.density=Number(m.fog_density)}
+    }
+    hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);
+    sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);if(Array.isArray(m.sun_position))sun.position.set(...m.sun_position);
+    for(const n of w.nature||[]){if(n.kind==='pine_forest'){const key=JSON.stringify(n.params);if(key!==forestKey){forestKey=key;buildForest(n.params)}}}
+    for(const r of w.rooms||[])if(r.name&&r.palette_color)roomPalettes[r.name]=r.palette_color;
+    for(const pr of w.props||[]){if(pr.kind!=='wish_lake')continue;const l=wishLakes.find(v=>v.name===pr.name);if(!l)continue;
+      l.x=Number(pr.x);l.z=Number(pr.z);if(pr.params?.color)l.color=pr.params.color;if(pr.params?.theme)l.theme=pr.params.theme;
+      const g=lakeVisuals.get(l.name);if(g)g.position.set(l.x,.035,l.z);if(l.pool)l.pool.material.color.set(l.color);if(l.redrawLabel)l.redrawLabel()}
+    window.anyenWorld={id:WORLD_ID,source,map:m,rooms:w.rooms||[],buildings:w.buildings||[],props:w.props||[],npcs:w.npcs||[]};
+    window.dispatchEvent(new CustomEvent('anyen-world-loaded',{detail:{id:WORLD_ID,source}}));
+    return true;
+  }
+  (async()=>{try{const r=await fetch('data/world-'+WORLD_ID+'.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');applyWorld(data,'file')}catch(e){window.anyenWorldError=String(e&&e.message||e)}})();
+  window.addEventListener('anyen-room-scene',e=>{const r=e.detail?.room||'Sảnh chung';scene.background=new THREE.Color(roomPalettes[r]||roomPalettes['Sảnh chung']);document.body.dataset.yenRoom=r==='Phòng Riêng'?'private':r.includes('Sen')?'lotus':r.includes('Trúc')?'bamboo':'lobby';});
+  paintMe();window.addEventListener('yen-profile',paintMe);
+  // Small turning preview of the guest's avatar on the profile/welcome screen.
+  let preview=null;
+  window.addEventListener('anyen-avatar-preview',e=>{const d=e.detail||{};const canvasEl=document.getElementById('avatarPreview');if(!canvasEl)return;
+    if(!d.open){if(preview)preview.running=false;return;}
+    if(!preview){try{const W=272,H=170;const r=new THREE.WebGLRenderer({canvas:canvasEl,antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.setSize(W,H,false);r.outputColorSpace=THREE.SRGBColorSpace;const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#f6dfaf','#1b4234',2.4));const sun=new THREE.DirectionalLight('#f5c78c',2);sun.position.set(2,4,3);sc.add(sun);const cam=new THREE.PerspectiveCamera(30,W/H,.1,30);cam.position.set(0,1.75,6.4);cam.lookAt(0,.78,0);
+      // Two figures side by side: standing on the left, seated in meditation on a mat and zafu on the right.
+      const figure=(sitting,x)=>{const g=new THREE.Group();const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.25,16,12),mat('#e7c9a8'));g.add(head);poseAvatar(torso,head,new THREE.Object3D(),sitting);const outfit=outfitParts(g,torso);const holder=new THREE.Group();holder.position.x=x;holder.add(g);sc.add(holder);return {holder,g,torso,outfit,sitting}};
+      const stand=figure(false,-.95),sit=figure(true,.95);
+      const pad=new THREE.Mesh(new THREE.CylinderGeometry(.62,.66,.08,32),mat('#3e6a5b'));pad.position.set(-.95,-.04,0);sc.add(pad);
+      const seat=buildCushion('zabuton');seat.rotation.y=Math.PI;
+      sit.g.position.set(0,seat.userData.sitTop,-seat.userData.sitBack);sit.holder.add(seat);seat.position.x=0;
+      preview={r,sc,cam,figures:[stand,sit],running:false}}catch(err){console.warn('Avatar preview unavailable',err);return}}
+    const p=d.profile||{};for(const f of preview.figures)dressAvatar(f.outfit,f.torso,p.color,p.style,f.sitting);
+    if(!preview.running){preview.running=true;const t0=performance.now();const spin=()=>{if(!preview.running)return;const a=Math.sin((performance.now()-t0)/1400)*.75;for(const f of preview.figures)f.holder.rotation.y=a;preview.r.render(preview.sc,preview.cam);requestAnimationFrame(spin)};spin()}});
+  window.addEventListener('anyen-activity',e=>{previousActivity=meActivity;meActivity=e.detail?.activity||'idle';if(meActivity==='sit'&&previousActivity!=='sit'){tapTarget=null;walkRoute.length=0;sitNaturally();}if(meActivity==='walk'){pendingSeat=null;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));tapTarget=null;walkRoute.length=0;walkGoal=null;}});
+  let walkGoal=null,walkSeed=Math.random()*Math.PI*2,walkCount=0;window.addEventListener('anyen-walk-step',()=>{if(meActivity!=='walk')return;if(!walkGoal){const a=walkSeed+(walkCount++*.87);const r=5+(walkCount%4)*1.3;walkGoal=[Math.sin(a)*r,21+Math.cos(a)*r];}});
+
+  window.addEventListener('anyen-peers',e=>{
+    const all=e.detail||{},incoming={};for(const [id,p] of Object.entries(all))if(p&&(!p.sp||p.sp==='forest'))incoming[id]=p;occupiedPositions=Object.values(incoming).filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.z));
+    for(const [id,entry] of Object.entries(incoming)){
+      if(!entry||!Number.isFinite(entry.x)||!Number.isFinite(entry.z))continue;
+      let mesh=onlineAvatars.get(id);
+      if(!mesh){const group=new THREE.Group();const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;group.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;group.add(head);const tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=112;const tagCtx=tagCanvas.getContext('2d');const tagTex=new THREE.CanvasTexture(tagCanvas);const tag=new THREE.Sprite(new THREE.SpriteMaterial({map:tagTex,transparent:true,depthTest:false}));tag.position.set(0,2.17,0);tag.scale.set(1.7,.37,1);group.add(tag);scene.add(group);mesh={group,torso,head,tag,tagCtx,tagTex,outfit:outfitParts(group,torso),lastName:''};onlineAvatars.set(id,mesh)}
+      dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,entry.activity==='sit');
+      const label=String(entry.name||'Khách Yên').slice(0,24);if(mesh.lastName!==label){const c=mesh.tagCtx;c.clearRect(0,0,512,112);c.font='bold 36px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#f4e2b9';c.fillText(label,256,57,470);mesh.tagTex.needsUpdate=true;mesh.lastName=label;}
+      const sitting=entry.activity==='sit';poseAvatar(mesh.torso,mesh.head,mesh.tag,sitting);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,sitting);
+      const peerSeat=sitting?cushions.find(c=>Math.hypot(c.x-entry.x,c.z-entry.z)<.8):null;const peerBoat=!!entry.boat;const [px,pz]=peerBoat?[entry.x,entry.z]:pushOutOfTrees(Math.max(-72,Math.min(72,entry.x)),Math.max(-124,Math.min(36,entry.z)));mesh.group.position.set(px,peerBoat?.35:groundHeight(px,pz),pz);
+      // Guests rowing on Hồ Sen get a boat under them, pointed the way they are moving.
+      if(peerBoat){if(!mesh.boat){mesh.boat=makeBoat();scene.add(mesh.boat.group);}const mx=px-(mesh.lastX??px),mz=pz-(mesh.lastZ??pz);if(Math.hypot(mx,mz)>.02)mesh.heading=Math.atan2(mx,mz);const h=mesh.heading??0;mesh.boat.group.visible=true;mesh.boatTarget=[px,pz];mesh.boatIndex=Number(entry.boat)-1;if(!mesh.boatShown){mesh.boat.group.position.set(px,.02,pz);mesh.boatShown=true}mesh.group.position.x=mesh.boat.group.position.x;mesh.group.position.z=mesh.boat.group.position.z;mesh.boat.group.rotation.y=h-Math.PI/2;mesh.group.userData.yaw=h;poseAvatar(mesh.torso,mesh.head,mesh.tag,true);dressAvatar(mesh.outfit,mesh.torso,entry.color,entry.style,true);}
+      else if(mesh.boat){mesh.boat.group.visible=false;mesh.boatShown=false;mesh.boatTarget=null}
+      {const kc=entry.k;if(kc&&!mesh.kRobe){mesh.kRobe=robeTray(kc,.9);mesh.kRobe.position.y=2.12;mesh.group.add(mesh.kRobe)}else if(!kc&&mesh.kRobe){mesh.group.remove(mesh.kRobe);mesh.kRobe=null}}mesh.lastX=px;mesh.lastZ=pz;if(!peerBoat)mesh.group.userData.yaw=0;if(peerSeat)seatOnCushion(mesh.group,peerSeat);mesh.baseY=mesh.group.position.y;
+    }
+    for(const [id,obj] of onlineAvatars){if(!incoming[id]){scene.remove(obj.group);if(obj.boat)scene.remove(obj.boat.group);onlineAvatars.delete(id)}}
+    // Three boats: a boat a guest is riding is hidden at the pier here (their own boat is drawn under them) and cannot be boarded.
+    {const taken=new Set(Object.values(incoming).filter(p=>p&&p.boat).map(p=>Number(p.boat)-1));
+     for(const b of boats){b.busy=taken.has(b.i);const mine=boatRide&&boatRide.b===b;if(b.busy&&mine&&boatRide.phase==='board'){boatRide=null;document.getElementById('zenHint').textContent='🚣 Thuyền vừa có người lên, mời bạn chọn chiếc khác';}b.group.visible=!b.busy||(boatRide&&boatRide.b===b)}}
+  });
+  window.setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z,boat:onBoat()?boatRide.b.i+1:0,k:kat.robe?kat.color:0,kr:kat.phase==='round'?kat.r0:0,kf:(kat.phase==='follow'||kat.phase==='join')?kat.leader:'',kj:kat.kj||0}}))},180);
+  // (The two placeholder guests shown while offline were removed: they stood inside pine trees and looked like stray people.)
+  const gestureNames={hello:'Xin chào',handshake:'Bắt tay',namaste:'Chắp tay chào',jump:'Nhảy lên',spin:'Xoay một vòng'};
+  let gesture=null;
+  window.addEventListener('anyen-gesture',e=>{const kind=e.detail?.kind;if(!gestureNames[kind])return;gesture={kind,start:performance.now()};document.getElementById('zenHint').textContent=gestureNames[kind]+' 🙏';window.dispatchEvent(new CustomEvent('anyen-greet',{detail:{gesture:kind}}));});
+  window.addEventListener('anyen-remote-gesture',e=>{
+    const id=e.detail?.id,kind=e.detail?.kind,peer=onlineAvatars.get(id);
+    if(!peer||!gestureNames[kind])return;
+    peer.gesture={kind,start:performance.now()};
+    document.getElementById('zenHint').textContent=(e.detail?.name||'Một người bạn')+' · '+gestureNames[kind];
+  });
+  const walkButtons=document.querySelectorAll('[data-walk]');walkButtons.forEach(b=>{let key=b.dataset.walk;b.addEventListener('pointerdown',e=>{e.preventDefault();if(key==='stop'){walkingKeys.clear();cancelAutoWalk();return}cancelAutoWalk();walkingKeys.add(key);b.setPointerCapture(e.pointerId)});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>walkingKeys.delete(key))});
+  document.addEventListener('keydown',e=>{if(!document.body.classList.contains('immersive')||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k))cancelAutoWalk();if('wasd'.includes(k)&&k.length===1){walkingKeys.add(({w:'forward',s:'back',a:'turnleft',d:'turnright'})[k]);e.preventDefault()}if(k==='arrowup'){walkingKeys.add('forward');e.preventDefault()}if(k==='arrowdown'){walkingKeys.add('back');e.preventDefault()}if(k==='arrowleft'){walkingKeys.add('turnleft');e.preventDefault()}if(k==='arrowright'){walkingKeys.add('turnright');e.preventDefault()}});
+  document.addEventListener('keyup',e=>{const k=e.key.toLowerCase();const map={w:'forward',s:'back',a:'turnleft',d:'turnright',arrowup:'forward',arrowdown:'back',arrowleft:'turnleft',arrowright:'turnright'};if(map[k])walkingKeys.delete(map[k])});
+  function releaseControls(){walkingKeys.clear();dragging3d=false;moved=false;swipeId=null;}
+  window.addEventListener('blur',releaseControls);window.addEventListener('anyen-3d-exit',releaseControls);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseControls()});
+  // Pressing a movement key takes over from any automatic route (tapped ground, a mat, a lake or the boat).
+  function cancelAutoWalk(){if(!walkRoute.length&&!pendingSeat&&!pendingBoat&&!wishDestination&&!pendingOrchid&&!pendingHouse&&!pendingGarden&&!pendingOffer&&!pendingKathina)return;const hadSeat=!!pendingSeat;walkRoute.length=0;clearPendingActions();wishDestination=null;tapTarget=null;if(hadSeat)window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}
+  document.querySelector('#walkReset').onclick=()=>{walking=false;walkingKeys.clear();selectZone('gate')};
+  document.querySelector('#sendGreeting').onclick=()=>{window.dispatchEvent(new Event('anyen-greet'));document.querySelector('#greetingStatus').textContent='🙏 Đã gửi lời chào tới khách trong cùng phòng (nếu đang kết nối).'};
+  let swipeId=null,swipeX=0,swipeY=0;
+  renderer.domElement.addEventListener('pointerdown',e=>{if(swipeId===null){swipeId=e.pointerId;swipeX=e.clientX;swipeY=e.clientY}});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{if(e.pointerId===swipeId)swipeId=null});
+  renderer.domElement.addEventListener('pointermove',e=>{if(!dragging3d||e.pointerId!==swipeId||!document.body.classList.contains('immersive'))return;const dx=e.clientX-swipeX,dy=e.clientY-swipeY;swipeX=e.clientX;swipeY=e.clientY;
+    // A full-width swipe turns the view about 200°; turning only moves the camera, not the avatar.
+    viewYaw-=dx/Math.max(320,innerWidth)*3.5;if(bayMode)walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002));else setCamLift(camLift+dy/Math.max(320,innerHeight)*2.4)});
+  window.addEventListener('yen-zone',()=>{walking=false;walkingKeys.clear()});
+  
+  // ===== VỊNH HẠ LONG: du thuyền dạo vịnh theo bản đồ thật =====
+  // Dữ liệu dùng chung (đảo, bờ, danh thắng, luồng tàu, phòng, NPC) nằm trong tệp tĩnh data/world-halong_bay.json.
+  // Cảnh đặt rất xa làng (z=20000) nên không lẫn với làng. Chạm mặt nước hoặc dùng Bản đồ để chọn nơi đến:
+  // tàu tự tìm đường vòng qua các đảo. Vuốt trái/phải chỉ xoay góc nhìn, không đổi hướng tàu.
+  const BAY={x:0,z:20000};
+  const bayGroup=new THREE.Group();bayGroup.position.set(BAY.x,0,BAY.z);bayGroup.visible=false;scene.add(bayGroup);
+  let bayData=null,bayBuilt=false,bayLoading=null,bayStash=null;
+  const bayHash=(a,b,c)=>{const v=Math.sin(a*12.9898+b*78.233+c*37.719)*43758.5453;return v-Math.floor(v)};
+  const baySm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
+  // ---- Bầu trời buổi sáng và mặt biển ngọc (màu lấy từ khung giờ trong dữ liệu) ----
+  const bayU={time:{value:0},top:{value:new THREE.Color('#7fb6dc')},hor:{value:new THREE.Color('#dfeef2')},haze:{value:new THREE.Color('#cfe0e6')},sunCol:{value:new THREE.Color('#fff2dc')},sunDir:{value:new THREE.Vector3(.4,.55,-.7).normalize()},cover:{value:.42},deep:{value:new THREE.Color('#1f7f74')},shallow:{value:new THREE.Color('#47b39d')},fogD:{value:.00105},camL:{value:new THREE.Vector3()}};
+  const baySky=new THREE.Mesh(new THREE.SphereGeometry(1500,32,16),new THREE.ShaderMaterial({uniforms:bayU,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false,
+    vertexShader:'varying vec3 vD;void main(){vD=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:`uniform vec3 top,hor,haze,sunCol,sunDir;uniform float time,cover;varying vec3 vD;
+      float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}
+      float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n2(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+      void main(){vec3 d=normalize(vD);float y=max(d.y,0.);vec3 c=mix(hor,top,pow(y,.55));
+        float s=max(dot(d,sunDir),0.);c+=sunCol*(pow(s,900.)*1.6+pow(s,14.)*.16);
+        if(d.y>0.){vec2 uv=d.xz/(d.y+.1)*.9+vec2(time*.003,time*.001);float n=fbm(uv*1.4);float cl=smoothstep(.62-cover*.3,.86,n)*smoothstep(.0,.16,d.y);
+          c=mix(c,vec3(.97,.98,1.)*mix(.9,1.03,fbm(uv*3.1))+sunCol*.03,cl*.88);}
+        c=mix(c,haze,exp(-y*11.)*.8);if(d.y<0.)c=haze;
+        gl_FragColor=vec4(c,1.);
+        #include <colorspace_fragment>
+      }`}));
+  baySky.renderOrder=-10;baySky.frustumCulled=false;bayGroup.add(baySky);
+  const BAY_WAVES=[[.08,.035,.62,.12],[-.05,.1,.8,.1],[.15,-.12,1.1,.04]];
+  const bayWaveY=(x,z,t)=>{let y=0;for(const [kx,kz,w,a] of BAY_WAVES)y+=Math.sin(x*kx+z*kz+t*w)*a;return y};
+  const baySea=new THREE.Mesh(new THREE.PlaneGeometry(3600,3600,170,170),new THREE.ShaderMaterial({uniforms:bayU,fog:false,toneMapped:false,
+    vertexShader:`uniform float time;varying vec3 vL;
+      void main(){vec4 w=modelMatrix*vec4(position.x,0.,-position.y,1.);vec3 p=vec3(w.x,0.,w.z-${BAY.z.toFixed(1)});
+        p.y=sin(p.x*.08+p.z*.035+time*.62)*.12+sin(-p.x*.05+p.z*.1+time*.8)*.1+sin(p.x*.15-p.z*.12+time*1.1)*.04;
+        vL=p;gl_Position=projectionMatrix*viewMatrix*vec4(w.x,p.y,w.z,1.);}`,
+    fragmentShader:`uniform float time,fogD;uniform vec3 top,hor,haze,sunCol,sunDir,deep,shallow,camL;varying vec3 vL;
+      void W(inout vec2 g,vec2 p,vec2 k,float w,float a){g+=k*a*cos(dot(p,k)+time*w);}
+      void main(){vec2 p=vL.xz,g=vec2(0.);
+        W(g,p,vec2(.08,.035),.62,.12);W(g,p,vec2(-.05,.1),.8,.1);W(g,p,vec2(.15,-.12),1.1,.04);
+        W(g,p,vec2(1.1,.38),1.5,.024);W(g,p,vec2(-.52,.98),1.7,.02);W(g,p,vec2(1.9,-1.4),2.3,.008);W(g,p,vec2(-2.6,-2.),2.7,.006);W(g,p,vec2(.35,-3.9),3.1,.004);
+        vec3 n=normalize(vec3(-g.x,1.,-g.y)),v=camL-vL;float dist=length(v);v/=dist;
+        float fr=.03+.97*pow(1.-max(dot(n,v),0.),5.);
+        vec3 r=reflect(-v,n);r.y=abs(r.y);
+        vec3 sky=mix(hor,top,pow(clamp(r.y,0.,1.),.55));float s=max(dot(r,sunDir),0.);
+        vec3 body=mix(deep,shallow,clamp(.55+n.y*.25-(1.-n.y)*5.,0.,1.));
+        vec3 c=mix(body,sky,clamp(fr,0.,.62));
+        c+=sunCol*(pow(s,320.)*1.2+pow(s,30.)*.08);
+        c=mix(c,haze,1.-exp(-fogD*fogD*dist*dist));
+        gl_FragColor=vec4(c,1.);
+        #include <colorspace_fragment>
+      }`}));
+  baySea.frustumCulled=false;bayGroup.add(baySea);
+  // ---- Đảo đá vôi: mỗi đảo dựng từ một hình trụ biến dạng (ngấn sóng ở chân, vách đứng, đỉnh tròn phủ cây) ----
+  // ---- Chất liệu đá vôi và tán cây: vẽ bằng code (lặp liền mạch), kèm bản đồ lồi lõm để vách đá bắt sáng ----
+  const bayTex=(()=>{
+    const S=512,rnd=(()=>{let s=7741;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}})();
+    // nhiễu giá trị lặp tuần hoàn: px,py theo ô, chu kỳ gx,gy ô
+    const grid=(gx,gy)=>{const v=new Float32Array(gx*gy);for(let i=0;i<v.length;i++)v[i]=rnd();return(x,y)=>{const fx=x*gx,fy=y*gy,ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy,sx=tx*tx*(3-2*tx),sy=ty*ty*(3-2*ty),a=v[(iy%gy)*gx+ix%gx],b=v[(iy%gy)*gx+(ix+1)%gx],c=v[((iy+1)%gy)*gx+ix%gx],d=v[((iy+1)%gy)*gx+(ix+1)%gx];return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy}};
+    const fb=[grid(4,4),grid(8,8),grid(16,16),grid(32,32),grid(64,64)],fbm=(x,y)=>fb[0](x,y)*.42+fb[1](x,y)*.26+fb[2](x,y)*.16+fb[3](x,y)*.1+fb[4](x,y)*.06;
+    const streakN=[grid(40,2),grid(96,4),grid(200,6)],ledgeN=[grid(3,14),grid(7,30)],stainN=grid(5,8),fine=grid(128,128);
+    const H=new Float32Array(S*S),rock=document.createElement('canvas'),leaf=document.createElement('canvas');rock.width=rock.height=leaf.width=leaf.height=S;
+    const rc=rock.getContext('2d'),ri=rc.createImageData(S,S),lc=leaf.getContext('2d'),li=lc.createImageData(S,S);
+    const leafN=[grid(10,10),grid(24,24),grid(48,48)];
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){const u=x/S,v=y/S,k=y*S+x;
+      const base=fbm(u,v),st=streakN[0](u,v)*.5+streakN[1](u,v)*.32+streakN[2](u,v)*.18,ledge=ledgeN[0](u,v),fn=fine(u,v);
+      const streak=Math.max(0,st-.46)*2.6,shelf=Math.max(0,1-Math.abs(ledgeN[1](u,v)-.5)*14)*(ledge>.55?1:0),stain=Math.max(0,stainN(u,v)-.58)*2.2;
+      H[k]=base*.55+st*.5+fn*.12-shelf*.3;
+      let r=200,g=198,b=188;const lum=.74+base*.3+fn*.1-streak*.36-shelf*.18;
+      r=r*lum+stain*28;g=g*lum+stain*10;b=b*lum-stain*12;// vệt gỉ cam nhạt như đá vôi Hạ Long
+      r+=-streak*6;ri.data[k*4]=Math.min(255,r);ri.data[k*4+1]=Math.min(255,g);ri.data[k*4+2]=Math.min(255,b);ri.data[k*4+3]=255;
+      const l=leafN[0](u,v)*.5+leafN[1](u,v)*.32+leafN[2](u,v)*.18,clump=Math.pow(Math.max(0,l-.32)/.68,1.3);
+      li.data[k*4]=48+clump*70;li.data[k*4+1]=82+clump*92;li.data[k*4+2]=44+clump*40;li.data[k*4+3]=255;}
+    rc.putImageData(ri,0,0);lc.putImageData(li,0,0);
+    // bản đồ pháp tuyến từ độ cao
+    const nc=document.createElement('canvas');nc.width=nc.height=S;const nx=nc.getContext('2d'),ni=nx.createImageData(S,S),hAt=(x,y)=>H[((y+S)%S)*S+(x+S)%S];
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){const dx=(hAt(x+1,y)-hAt(x-1,y))*5,dy=(hAt(x,y+1)-hAt(x,y-1))*5,l=Math.hypot(dx,dy,1),k=(y*S+x)*4;ni.data[k]=(-dx/l*.5+.5)*255;ni.data[k+1]=(dy/l*.5+.5)*255;ni.data[k+2]=(1/l*.5+.5)*255;ni.data[k+3]=255}
+    nx.putImageData(ni,0,0);
+    const mk=(cv,srgb)=>{const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(srgb)t.colorSpace=THREE.SRGBColorSpace;return t};
+    return{rock:mk(rock,true),leaf:mk(leaf,true),normal:mk(nc,false)};
+  })();
+  const KT=(()=>{const g=new THREE.CylinderGeometry(1,1,1,22,16,false),p=g.attributes.position,uv=g.attributes.uv,n=p.count,a=new Float32Array(n),t=new Float32Array(n),ring=new Float32Array(n),u=new Float32Array(n);for(let i=0;i<n;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);a[i]=Math.atan2(z,x);t[i]=y+.5;ring[i]=Math.hypot(x,z)>.01?1:0;u[i]=uv.getX(i)}const idx=Array.from(g.index.array);g.dispose();return{idx,a,t,ring,u,n}})();
+  // ---- Nhìn xuyên vật cản: mảnh nằm giữa camera và người/tàu, trong ống bán kính R quanh đường nhìn, bị đục lưới thưa (mờ đi) ----
+  const SEE={cam:{value:new THREE.Vector3()},tgt:{value:new THREE.Vector3()},rad:{value:0},on:{value:0},onShip:{value:0}};
+  function addSeeThrough(m,ship){const prev=m.onBeforeCompile;m.onBeforeCompile=(sh,r)=>{if(prev)prev(sh,r);sh.uniforms.seeCam=SEE.cam;sh.uniforms.seeTgt=SEE.tgt;sh.uniforms.seeRad=SEE.rad;sh.uniforms.seeOn=ship?SEE.onShip:SEE.on;
+      sh.vertexShader='varying vec3 vSeeW;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvSeeW=(modelMatrix*vec4(transformed,1.)).xyz;');
+      sh.fragmentShader='uniform vec3 seeCam,seeTgt;uniform float seeRad,seeOn;varying vec3 vSeeW;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(seeOn>.5){vec3 ab=seeTgt-seeCam;float t=dot(vSeeW-seeCam,ab)/max(dot(ab,ab),1e-4);if(t>.0&&t<.88){float d=length(vSeeW-(seeCam+ab*t)),R=seeRad*(1.-.55*t);if(d<R){float k=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453);if(k<.9*(1.-smoothstep(R*.6,R,d)))discard;}}}');};
+    m.customProgramCacheKey=()=>'see'+(m.uuid);m.needsUpdate=true;return m}
+  const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.95,vertexColors:true,map:bayTex.rock,normalMap:bayTex.normal,normalScale:new THREE.Vector2(1.3,1.3)});
+  bayRockMat.onBeforeCompile=sh=>{sh.uniforms.leafMap={value:bayTex.leaf};
+    sh.vertexShader='attribute float aGreen;varying float vGreen;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGreen=aGreen;');
+    sh.fragmentShader='uniform sampler2D leafMap;varying float vGreen;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{vec3 lf=texture2D(leafMap,vMapUv*1.7).rgb;float pch=(texture2D(leafMap,vMapUv*.23+.37).g-.2)*1.5;float g=smoothstep(.25,.7,vGreen+(lf.g-.2)*.8+pch*smoothstep(.0,.25,vGreen+.12));diffuseColor.rgb=mix(diffuseColor.rgb,lf*vec3(1.15,1.12,1.),g);}');};
+  addSeeThrough(bayRockMat);
+  const bayChunks=new Map();// "cx,cz" -> {P,I,T,D,H,S,UV,R}
+  const bayExtraRocks=[];// mỏm đá phụ và vòng đảo quanh làng chài: [x,z,bán kính chặn] cho lưới dò đường
+  const bayArchMeshes=[];
+  // Tám dáng đảo đá vôi (khớp trường "shape" trong dữ liệu). Không dùng shadow map: chiều sâu đến từ hình khối,
+  // khe gân đá sẫm, sọc tầng đá và ngấn hàm ếch được tô thẳng vào màu đỉnh.
+  const KSHAPES=[
+    {taper:.1,dome:.22,ribs:10,ribAmp:.15},                        // 0 tháp vách đứng, gân đá sắc
+    {taper:.55,dome:.5,ribs:7,ribAmp:.1,rough:.24},                // 1 núi chóp nón (đầu chóp bo tròn)
+    {taper:.08,dome:.85,round:true},                               // 2 đồi tròn thảm xanh
+    {taper:.15,dome:.5,sx:1.9,sz:.8,saddle:.3,ribs:8,ribAmp:.09},  // 3 dãy núi yên ngựa dài
+    {taper:.2,dome:.4,sx:1.5,sz:.9,saddle:.64,ribs:8,ribAmp:.1},   // 4 núi hai đỉnh tách rõ
+    {taper:0,dome:.36,pinch:.5,bulge:.22,notch:.36,ribs:6},        // 5 hòn nấm thắt chân, hàm ếch sâu
+    {taper:.4,dome:.45,sx:1.1,sz:.42,lean:.25,ribs:4},             // 6 mỏm đá / hòn buồm nghiêng
+    {taper:.25,dome:.55,ribs:4,ribAmp:.08}                         // 7 hòn đá mồ côi sát sóng
+  ];
+  // opt.y0: khối nổi (đầu, mỏ, phiến đá) đặt từ độ cao y0, cao h; mặc định chân ngập từ -4.
+  // opt.grooves: các rãnh ăn mòn ngang; opt.steps: vách giật cấp; opt.notch: độ sâu hàm ếch.
+  function addKarst(x,z,r,h,k,opt={}){
+    if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};
+    const key=Math.floor(x/900)+','+Math.floor(z/900);let ch=bayChunks.get(key);if(!ch){ch={P:[],I:[],T:[],D:[],H:[],S:[],UV:[],R:[]};bayChunks.set(key,ch)}
+    const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??1,dome=opt.dome??(.16+bayHash(k,2,5)*.14),rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
+    const floating=opt.y0!=null,yb=floating?opt.y0:-4,total=floating?h:h+4;
+    const sx=opt.sx||1,sz=(opt.sz||1)*(opt.squash||1),taper=opt.taper??.12,saddle=opt.saddle||0,tilt=opt.round?0:.05+bayHash(k,4,8)*.08;
+    const rough=opt.rough??(opt.round?.1:.18),ribN=opt.round?0:(opt.ribs??5),ribA=opt.ribAmp??.12,notch=floating?0:(opt.notch??.26),steps=opt.steps||0;
+    const reps=Math.max(1,Math.round(2*Math.PI*r*Math.max(sx,1)/44)),vo=bayHash(k,3,7)*4;
+    for(let i=0;i<KT.n;i++){const t=KT.t[i],al=KT.a[i];
+      let prof=opt.cone?Math.pow(Math.max(0,1-t*.92),.9):1-taper*t+(opt.round?0:.06*Math.sin(Math.PI*t));
+      if(steps){const f=t*steps,fl=Math.floor(f);prof*=1-.18*(fl+baySm(.6,1,f-fl))/steps}
+      if(t>1-dome){const u=(t-(1-dome))/dome;prof*=Math.pow(Math.max(0,1-u*u),.42)}
+      if(!opt.round&&!floating)prof*=1+.1*Math.exp(-((t/.1)**2));// chân loe nhẹ ra mặt nước
+      if(pinch!==1)prof*=pinch+(1-pinch)*baySm(.04,.6,t);
+      if(opt.bulge)prof*=1+opt.bulge*Math.exp(-(((t-(opt.bulgeAt??.72))/.15)**2));
+      const hN=(1-saddle*.5)/(1+tilt),hRaw=(1-saddle*Math.pow(Math.sin(al),2))*(1+tilt*Math.cos(al-ph))/(1+tilt),hf=KT.ring[i]?hN+(hRaw-hN)*Math.min(1,prof*1.6):hN;
+      const lump=opt.round?0:baySm(.55,1,t)*(.08*Math.sin(al*2+ph*2.1)+.05*Math.sin(al*5+ph*.7)+.03*Math.sin(al*9+ph))*(KT.ring[i]?Math.min(1,prof*1.6):0);
+      const wy=yb+t*total*(1-(1-hf)*baySm(.3,1,t))*(1+lump);
+      // ngấn hàm ếch do sóng bào mòn sát mực nước (0..2,6) và các rãnh ăn mòn ngang
+      if(notch)prof*=1-notch*baySm(-.25,.55,wy)*(1-baySm(1.9,2.7,wy));
+      if(opt.grooves)for(const gy of opt.grooves)prof*=1-.3*Math.exp(-(((wy-gy)/.6)**2));
+      // khe gân đá: đường lõm hẹp chạy dọc vách, sẫm màu
+      let crev=0;if(ribN){const rs=Math.abs(Math.sin(al*ribN*.5+ph+Math.sin(t*3.1+ph)*.35));crev=Math.pow(1-rs,6)*baySm(.06,.25,t)*(1-baySm(1-dome-.05,1-dome+.1,t))}
+      const crown=baySm(.55,1,t);
+      // mặt đá bào mòn không đều: nhiều lớp gợn theo cả góc lẫn chiều cao, lệch pha từng đảo
+      const nz=opt.round?1+.08*Math.sin(al*3+ph)+.05*Math.sin(al*5+t*4+ph):1+rough*(.75*Math.sin(al*2+ph+t*1.7)+.55*Math.sin(al*3+ph*1.9+t*3.3)+.35*Math.sin(al*5+ph*2.3+t*5.1)+.25*Math.sin(al*7-ph+t*7.3)+.3*(bayHash(al*5,t*9,k)-.5))+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
+      const rr=r*prof*nz*KT.ring[i],px=Math.cos(al)*rr*sx+lean*t*t*total,pz=Math.sin(al)*rr*sz;
+      ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);ch.R.push(crev);
+      ch.UV.push(KT.u[i]*reps,wy/44+vo);}
+    for(const j of KT.idx)ch.I.push(base+j);
+  }
+  // Tô màu đá: đá vôi xám ngà, sọc tầng ngang, khe gân sẫm, ngấn nước ẩm; cây chỉ phủ mặt hướng lên,
+  // vách hẫng (ny < -0,1) giữ đá trần.
+  const rockTint=['#e9e8e2','#dfe0da','#ecebe4'].map(c=>new THREE.Color(c)),rockWet=new THREE.Color('#7d857a'),rockStrata=new THREE.Color('#a9a89c'),rockCrev=new THREE.Color('#5e6359'),rockNotch=new THREE.Color('#4f564f'),rockStreak=new THREE.Color('#585d58'),rockOchre=new THREE.Color('#b59a6e');
+  function paintRock(c,wy,px,pz,hh,crev){
+    c.copy(rockTint[Math.floor(hh*3)%3]);
+    const s=.5+.5*Math.sin(wy*1.15+px*.011+pz*.015);c.lerp(rockStrata,baySm(.84,.98,s)*.32);
+    c.lerp(rockCrev,Math.min(1,crev*1.1)*.6);
+    c.lerp(rockWet,(1-baySm(2.4,3.6,wy))*.55);c.lerp(rockNotch,(1-baySm(.6,2.6,wy))*baySm(-.6,.2,wy)*.65);
+  }
+  function finishKarsts(){
+    const c=new THREE.Color(),meshes=[];
+    for(const ch of bayChunks.values()){
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(ch.P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(ch.UV,2));g.setIndex(ch.I);g.computeVertexNormals();
+      const N=g.attributes.normal,n=ch.T.length,col=new Float32Array(n*3),gr=new Float32Array(n);
+      for(let i=0;i<n;i++){const t=ch.T[i],hh=ch.H[i],px=ch.P[i*3],wy=ch.P[i*3+1],pz=ch.P[i*3+2],ny=N.getY(i),crev=ch.R[i];
+        paintRock(c,wy,px,pz,hh,crev);
+        // vệt nước chảy dọc vách dựng: vệt sẫm đen xám và vệt vàng gỉ, dài từ mép rừng xuống, nhạt dần về chân
+        const steep=1-baySm(.3,.7,Math.abs(ny)),u=px*.83+pz*.61,run=baySm(1.5,.25*ch.D[i]+.0,1-t+.35);
+        const sd=baySm(.62,.92,.5+.5*Math.sin(u*1.7+Math.sin(u*.23)*3.1))*(.55+.45*Math.sin(u*.37+wy*.018)),so=baySm(.78,.96,.5+.5*Math.sin(u*2.9+1.7+Math.sin(u*.41)*2.3));
+        c.lerp(rockStreak,sd*steep*baySm(4,14,wy)*.42);c.lerp(rockOchre,so*steep*baySm(6,18,wy)*.3*(.6+.4*run));
+        // mảng cây bám vách và gờ đá (nhiều ở nửa trên)
+        const tuft=baySm(.5,.8,.5+.5*Math.sin(px*.07+wy*.13+Math.sin(pz*.05)*2.)*Math.sin(pz*.08-wy*.09+Math.sin(px*.04)*1.7))*baySm(.25,.6,t);
+        const green=ch.S[i]?1:Math.max(baySm(.3,.68,ny),baySm(ch.D[i]-.12,ch.D[i]+.04,t),(hh>.72&&t>.3)?.65:0,t>.3?.14:0,tuft*.9);
+        gr[i]=green*baySm(-.1,.2,ny)*baySm(2.6,3.8,wy)*(1-crev*.85);
+        col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+      g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));g.computeBoundingSphere();
+      const m=new THREE.Mesh(g,bayRockMat);bayGroup.add(m);meshes.push(m);
+    }
+    bayChunks.clear();return meshes.concat(bayArchMeshes);
+  }
+  // Vòm đá xuyên thủy: khối đá có lỗ vòm, cửa vòm quay thẳng về hướng f (về phía tàu tiếp cận).
+  function addCaveArch(cx,cz,f,W,H,ow,oh,depth){
+    const s=new THREE.Shape();s.moveTo(-W/2,-6);s.lineTo(W/2,-6);s.lineTo(W/2*1.02,H*.62);s.quadraticCurveTo(W/2*.92,H,0,H*1.02);s.quadraticCurveTo(-W/2*.95,H,-W/2*1.04,H*.58);s.closePath();
+    const hole=new THREE.Path();hole.moveTo(-ow/2,-5);hole.lineTo(ow/2,-5);hole.lineTo(ow/2,oh-ow/2);hole.absarc(0,oh-ow/2,ow/2,0,Math.PI,false);hole.lineTo(-ow/2,-5);s.holes.push(hole);
+    const geo=new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelThickness:2.2,bevelSize:2.2,bevelSegments:3,steps:2,curveSegments:18});geo.translate(0,0,-depth/2);
+    const p=geo.attributes.position,uv=geo.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,uv.getX(i)/44,uv.getY(i)/44);
+    geo.computeVertexNormals();
+    const N=geo.attributes.normal,col=new Float32Array(p.count*3),gr=new Float32Array(p.count),c=new THREE.Color();
+    for(let i=0;i<p.count;i++){const y=p.getY(i),inner=Math.abs(p.getX(i))<ow/2+1.5&&y<oh+1;paintRock(c,y,p.getX(i)+cx,p.getZ(i)+cz,bayHash(i,2,3),inner?.55:0);if(inner)c.multiplyScalar(.72);
+      col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;gr[i]=baySm(H*.7,H*.9,y)*baySm(-.1,.3,N.getY(i))+(N.getY(i)>.6?.6:0)*baySm(H*.4,H*.6,y)}
+    geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));
+    const m=new THREE.Mesh(geo,bayRockMat);m.position.set(cx,0,cz);m.rotation.y=Math.PI/2-f;bayGroup.add(m);bayArchMeshes.push(m);return m;
+  }
+  // ---- Phông tranh toàn cảnh 360°: nhiều lớp núi đá xa chìm trong sương, phía bắc là đồi bờ Hạ Long ----
+  function paintBackdrop(p,sunAz){
+    const W=4096,Hh=1024,cv=document.createElement('canvas');cv.width=W;cv.height=Hh;const g=cv.getContext('2d');
+    const R=p.radius||2200,top=p.top||420,bottom=-30,yPx=y=>(top-y)/(top-bottom)*Hh,base=yPx(0);
+    let s=p.seed||1119;const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+    const haze=new THREE.Color(p.haze||'#cfe0e6'),far=new THREE.Color(p.far_rock||'#a9bdbf'),near=new THREE.Color(p.near_rock||'#7f9a8c'),leaf=new THREE.Color(p.leaf||'#6f8f62'),warm=new THREE.Color('#f3dcc0');
+    const css=c=>'#'+c.getHexString(),mixC=(a,b,t)=>a.clone().lerp(b,t);
+    const azOf=x=>x/W*Math.PI*2,north=x=>{const d=Math.atan2(Math.sin(azOf(x)-Math.PI),Math.cos(azOf(x)-Math.PI));return Math.abs(d)<(p.north_span||.75)};
+    const sunNear=x=>{const d=Math.atan2(Math.sin(azOf(x)-sunAz),Math.cos(azOf(x)-sunAz));return Math.max(0,1-Math.abs(d)/1.1)};
+    const angle=(y,dist)=>yPx(Math.tan(Math.atan2(y,dist))*R);// độ cao biểu kiến khi đặt núi ở khoảng cách dist
+    const layers=p.layers||[{dist:5200,count:110,h:[70,170],w:[160,520]},{dist:4200,count:90,h:[80,190],w:[150,480]},{dist:3400,count:70,h:[90,210],w:[130,420]},{dist:2800,count:50,h:[100,220],w:[110,360]}];
+    const island=(cx,w,hTop,col,colTop,dist,mist)=>{const kind=rnd();// tháp · chóp · đồi · dãy
+      if(kind<.28){w*=.38;hTop=base-(base-hTop)*1.35}else if(kind<.5){w*=.75;hTop=base-(base-hTop)*1.15}else if(kind<.7){hTop=base-(base-hTop)*.55;w*=1.1}
+      const prof=[];if(kind<.28)prof.push([.18,.12],[.38,.01],[.62,0],[.82,.1]);else if(kind<.5)prof.push([.22,.2],[.42,.03],[.6,0],[.78,.16]);else if(kind<.7)prof.push([.2,.3],[.5,0],[.8,.3]);else{const n=2+Math.floor(rnd()*3);for(let b=0;b<=n;b++)prof.push([.12+.76*b/n,(b%2?.28:0)+rnd()*.18])}
+      for(const off of [-W,0,W]){const x0=cx+off-w/2,x1=cx+off+w/2;if(x1<0||x0>W)continue;
+      const pts=prof.map(([u,d])=>[x0+w*u,hTop+d*(base-hTop)]);
+      g.beginPath();g.moveTo(x0-w*.04,base+2);g.bezierCurveTo(x0+w*.02,base-(base-hTop)*.4,x0-w*.03,pts[0][1]+(base-hTop)*.25,pts[0][0],pts[0][1]);
+      for(let b=1;b<pts.length;b++){const [px,py]=pts[b-1],[qx,qy]=pts[b];g.quadraticCurveTo((px+qx)/2,Math.min(py,qy)-(base-hTop)*.08,qx,qy)}
+      g.bezierCurveTo(x1+w*.03,pts[pts.length-1][1]+(base-hTop)*.25,x1-w*.02,base-(base-hTop)*.4,x1+w*.04,base+2);g.closePath();
+      const gr=g.createLinearGradient(0,hTop,0,base);gr.addColorStop(0,css(colTop));gr.addColorStop(.35,css(col));gr.addColorStop(1,css(mixC(col,haze,mist)));g.fillStyle=gr;g.fill();
+      g.save();g.clip();g.globalAlpha=.16;for(let k=0;k<w/5;k++){const sx=x0+rnd()*w;g.fillStyle=rnd()<.5?css(mixC(col,new THREE.Color('#ffffff'),.35)):css(mixC(col,new THREE.Color('#41504a'),.35));g.fillRect(sx,hTop+rnd()*(base-hTop)*.4,1+rnd()*2.5,(base-hTop)*(.25+rnd()*.6))}g.restore();g.globalAlpha=1}};
+    layers.forEach((L,li)=>{const t=li/(layers.length-1||1),col=mixC(far,near,t).lerp(haze,.45-.3*t),colTop=mixC(col,leaf,.25+.35*t);
+      for(let k=0;k<L.count;k++){const cx=rnd()*W;if(north(cx))continue;const w=(L.w[0]+rnd()*(L.w[1]-L.w[0]))/L.dist*W/(2*Math.PI),hTop=angle(L.h[0]+rnd()*(L.h[1]-L.h[0]),L.dist);const sw=sunNear(cx)*.35;
+        island(cx,w,hTop,mixC(col,warm,sw),mixC(colTop,warm,sw*.6),L.dist,.8-.3*t)}
+      // dải sương sau mỗi lớp
+      const mg=g.createLinearGradient(0,base-90+li*8,0,base);mg.addColorStop(0,css(haze)+'00');mg.addColorStop(1,css(haze)+'a0');g.fillStyle=mg;g.fillRect(0,base-90+li*8,W,90-li*8);});
+    // đồi bờ bắc (Bãi Cháy · Hòn Gai): dải đồi thấp, thoải, nhiều cây
+    {const c1=mixC(near,haze,.45),c2=mixC(leaf,haze,.35);for(let pass=0;pass<2;pass++){g.beginPath();let first=true;for(let x=0;x<=W;x+=8){if(!north(x)&&!north(x-8)){if(!first){g.lineTo(x,base+2);g.closePath();g.fillStyle=css(pass?c2:c1);g.fill();g.beginPath();first=true}continue}
+        const az=azOf(x),hh=angle((pass?55:90)+Math.sin(az*9+pass)*25+Math.sin(az*23)*10,pass?1800:2600);if(first){g.moveTo(x,base+2);first=false}g.lineTo(x,hh)}
+      if(!first){g.lineTo(W,base+2);g.closePath();g.fillStyle=css(pass?c2:c1);g.fill()}}}
+    const hg=g.createLinearGradient(0,base-40,0,Hh);hg.addColorStop(0,css(haze)+'00');hg.addColorStop(.25,css(haze)+'ff');hg.addColorStop(1,css(haze)+'ff');g.fillStyle=hg;g.fillRect(0,base-40,W,Hh-base+40);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=THREE.RepeatWrapping;tex.anisotropy=4;
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(R,R,top-bottom,96,1,true),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,fog:false,toneMapped:false,side:THREE.BackSide}));
+    m.position.y=(top+bottom)/2;m.renderOrder=-9;m.frustumCulled=false;return m;
+  }
+  let bayBackdrop=null;
+  // ---- Du thuyền 5 sao: thân xanh ngọc, ba tầng trắng có dải kính, boong mũi gỗ, lan can kính ----
+  const bayMult=()=>bayShip.mult||1;
+  function setBayMult(N){const M=bayMult();if(N===M)return;
+    // đang dừng ngắm trong tour: phần thời gian còn lại co/giãn theo tốc độ mới
+    if(typeof bayTour!=='undefined'&&bayTour&&bayTour.dwellUntil){const now=performance.now();bayTour.dwellUntil=now+Math.max(0,bayTour.dwellUntil-now)*M/N}
+    bayShip.mult=N;bayShip.fast=N>1;bayStatusKey='';refreshOpts();refreshBayHud()}
+  let bayPause=null,bayAt=null;// bayAt: danh thắng tàu vừa tới / đang tới {p,x,z}
+  const bayShip={group:new THREE.Group(),x:0,z:0,heading:0,speed:0,path:[],dest:null,fast:false,stopped:true,trail:[],trailT:0};
+  // Ván sàn: dải ván 0,25 đơn vị chạy dọc thân tàu, mạch ghép so le, vân màu nâu óc chó ấm
+  function deckPlankTex(base){const c=document.createElement('canvas');c.width=256;c.height=512;const x=c.getContext('2d'),col=new THREE.Color(base);
+    for(let i=0;i<8;i++){const off=(i*197)%512;for(let seg=-1;seg<2;seg++){const y0=off+seg*512,k=.9+((i*37+seg*11)%7)/30,cc=col.clone().multiplyScalar(k);x.fillStyle='#'+cc.getHexString();x.fillRect(i*32,y0,32,512);
+        x.strokeStyle='rgba(0,0,0,.08)';for(let g=0;g<5;g++){x.beginPath();x.moveTo(i*32+4+g*6,y0);x.lineTo(i*32+4+g*6+((g%2)?2:-2),y0+512);x.stroke()}
+        x.fillStyle='rgba(20,12,8,.55)';x.fillRect(i*32,y0,32,2)}
+      x.fillStyle='rgba(20,12,8,.6)';x.fillRect(i*32,0,1.6,512)}
+    const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(.5,1/6);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
+  function buildShip(ex){
+    const g=bayShip.group,L=ex.length/2,B=ex.beam/2,mat=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.6,...o});
+    const outline=(inset,front=L,back=-L)=>{const s=new THREE.Shape(),b=B-inset,f=front-inset,k=back+inset;s.moveTo(-b,-(k+2));s.quadraticCurveTo(-b,-k,0,-k);s.quadraticCurveTo(b,-k,b,-(k+2));s.lineTo(b,-(f-12));s.quadraticCurveTo(b*.95,-(f-3),0,-f);s.quadraticCurveTo(-b*.95,-(f-3),-b,-(f-12));s.closePath();return s};
+    const slab=(shape,y,h,m)=>{const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,curveSegments:14});geo.rotateX(-Math.PI/2);const mesh=new THREE.Mesh(geo,m);mesh.position.y=y;g.add(mesh);return mesh};
+    const hull=mat(ex.hull_color||'#2f8c8a',{roughness:.45}),white=mat(ex.body_color||'#f4f2ec',{roughness:.5}),glass=mat(ex.glass||'#3f5f6c',{roughness:.12,metalness:.25,color:new THREE.Color(ex.glass||'#3f5f6c').lerp(new THREE.Color('#9fc4cf'),.35)}),wood=mat('#ffffff',{roughness:.72,map:deckPlankTex(ex.deck_wood||'#a07e60')}),dark=mat('#25363c'),woodMain=wood.clone(),whiteSolid=white.clone();addSeeThrough(white,1);addSeeThrough(glass,1);addSeeThrough(dark,1);addSeeThrough(wood,1);addSeeThrough(hull,1);
+    slab(outline(0),-2.6,3.8,hull);slab(outline(-.05),1.15,1.4,whiteSolid);slab(outline(.25),2.5,.12,woodMain);
+    const stripe=slab(outline(-.07),1.05,.14,dark);stripe.scale.set(1,1,1);
+    // dải cửa sổ tròn ở thân
+    for(let z=-L+5;z<L-12;z+=2.6)for(const sx of [-1,1]){const p=new THREE.Mesh(new THREE.CircleGeometry(.28,10),dark);p.position.set(sx*(B+.02),.2,z);p.rotation.y=sx*Math.PI/2;g.add(p)}
+    // ba tầng thượng tầng
+    const railSets=[];
+    const decks=[[0,-L+2.5,L-14,4.7],[1,-L+2.5,L-17.5,4.5],[2,-L+5,L-23,4.2]];
+    decks.forEach(([i,back,front,b])=>{const y=2.62+i*2.85;const sh=(w)=>{const s=new THREE.Shape();s.moveTo(-w,-back);s.lineTo(w,-back);s.lineTo(w,-(front-w));s.absarc(0,-(front-w),w,0,Math.PI,true);s.lineTo(-w,-back);return s};
+      slab(sh(b+.35),y-.1,.32,white);slab(sh(b-.06),y+.22,.55,white);const gl=slab(sh(b-.12),y+.77,1.55,glass);slab(sh(b+.42),y+2.32,.42,white);slab(sh(b+.3),y+2.74,.03,wood);// mái mỗi tầng là sân gỗ của tầng trên
+      const nextFront=i<2?decks[i+1][2]:-1e9,ring=sh(b+.1).getPoints(10).map(p=>new THREE.Vector3(p.x,0,-p.y));
+      railSets.push({pts:i===2?ring.filter(p=>p.z>-L+3.2):ring.filter(p=>p.z>nextFront-.6),y0:y+2.77})
+      for(let z=back+1.5;z<front-b;z+=3.2)for(const sx of [-1,1]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.32,2.1,.42),white);pillar.position.set(sx*(b-.02),y+1.27,z);g.add(pillar)}
+      if(i===0){const rail=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,front-back),white);}});
+    // boong thượng: hồ bơi, ghế nằm, cột anten
+    const topY=2.62+2*2.85+2.74;const pool=new THREE.Mesh(new THREE.BoxGeometry(5.5,.12,4),mat('#5cc6d6',{roughness:.2}));pool.position.set(0,topY+.08,-L+12);g.add(pool);
+    for(let k=0;k<4;k++){const ch=new THREE.Mesh(new THREE.BoxGeometry(.8,.25,2),white);ch.position.set(-3+k*2,topY+.15,-L+7.5);ch.rotation.x=-.12;g.add(ch)}
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(2.2,.2,8,20,Math.PI),white);arch.position.set(0,topY,-L+5.5);arch.rotation.y=Math.PI/2;g.add(arch);
+    const awning=new THREE.Mesh(new THREE.BoxGeometry(7,.18,4.5),white);awning.position.set(0,topY+2.4,-L+9.5);g.add(awning);
+    for(const sx of [-3.2,3.2])for(const sz of [-L+7.7,-L+11.3]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,2.4,6),white);p.position.set(sx,topY+1.2,sz);g.add(p)}
+    // lan can kính và tay vịn quanh mũi tàu
+    const railPts=[],rw=B-.35,fz=L-.6,bz=L-14;const bez=t=>{const p0=[rw,fz-12],p1=[rw*.95,fz-3],p2=[0,fz];return[(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],(1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]]};
+    const half=[[rw,bz],[rw,(bz+fz-12)/2]];for(let k=0;k<=10;k++)half.push(bez(k/10*.94));
+    for(const [x,z] of half)railPts.push(new THREE.Vector3(-x,3.55,z));for(let k=half.length-1;k>=0;k--)railPts.push(new THREE.Vector3(half[k][0],3.55,half[k][1]));
+    const steel=mat('#e3e6e8',{metalness:.8,roughness:.22}),cap=mat(ex.rail_wood||'#9a6448',{roughness:.45}),// lan can luôn giữ nguyên, không làm mờ
+    curve=new THREE.CatmullRomCurve3(railPts);
+    const handrail=new THREE.Mesh(new THREE.TubeGeometry(curve,80,.085,8,false),cap);handrail.scale.set(1,1,1);g.add(handrail);
+    {const low=railPts.map(p=>new THREE.Vector3(p.x,2.66,p.z));g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(low),80,.035,6,false),steel))}
+    {const pos=[],idx=[],cp=curve.getSpacedPoints(80);cp.forEach((p,i)=>{pos.push(p.x,2.62,p.z,p.x,3.47,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
+     g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#d6f0f2',transparent:true,opacity:.16,metalness:.1,side:THREE.DoubleSide,depthWrite:false,roughness:.05})));
+     // mép kính hơi xanh như kính cường lực
+     const edge=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cp.map(p=>new THREE.Vector3(p.x,3.45,p.z))),80,.02,4,false),new THREE.MeshStandardMaterial({color:'#9fd3d6',transparent:true,opacity:.6,roughness:.1}));g.add(edge)}
+    {const cp=curve.getSpacedPoints(26);for(const p of cp){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.92,8),steel);post.position.set(p.x,3.06,p.z);g.add(post);
+      const clip=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.12),steel);clip.position.set(p.x,3.48,p.z);g.add(clip)}}
+    // lan can kính + tay vịn gỗ quanh boong thượng (chừa lối cầu thang phía sau)
+    for(const {pts,y0} of railSets){if(pts.length<3)continue;const cz=pts.reduce((s,p)=>s+p.z,0)/pts.length-3;pts.sort((a,b)=>Math.atan2(a.x,a.z-cz)-Math.atan2(b.x,b.z-cz));
+      const cv=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x,y0+.95,p.z))),cp=cv.getSpacedPoints(70);
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(cv,90,.075,8,false),cap));
+      const pos=[],idx=[];cp.forEach((p,i)=>{pos.push(p.x,y0,p.z,p.x,y0+.9,p.z);if(i){const a=(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}});const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));gg.setIndex(idx);gg.computeVertexNormals();
+      g.add(new THREE.Mesh(gg,new THREE.MeshStandardMaterial({color:'#d6f0f2',transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false,roughness:.05})));
+      for(const p of cv.getSpacedPoints(Math.max(8,Math.round(cv.getLength()/1.1)))){const post=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.95,8),steel);post.position.set(p.x,y0+.47,p.z);g.add(post)}}
+    // bọt sóng ở mũi
+    const foam=new THREE.Mesh(new THREE.RingGeometry(3.5,5.2,24,1,Math.PI*.15,Math.PI*.7),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));foam.rotation.x=-Math.PI/2;foam.position.set(0,.25,L-3.2);g.add(foam);bayShip.foam=foam;
+    bayShip.bow=new THREE.Vector3(...(ex.bow_spot||[0,2.62,18.8]));bayShip.deck=new THREE.Vector3(...(ex.deck_spot||[0,11.06,-3.2]));bayShip.ex=ex;bayShip.max=ex.max_speed||10;bayShip.turn=ex.turn_rate||.45;bayShip.clear=ex.clearance||26;bayShip.len=ex.length;
+    bayGroup.add(g);
+  }
+  // ---- Vệt sóng sau tàu (ribbon trong suốt, mờ dần theo thời gian) ----
+  const bayWake=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,side:THREE.DoubleSide}));bayWake.frustumCulled=false;bayGroup.add(bayWake);
+  const WAKE_N=70;
+  function updateWake(t){
+    const pts=bayShip.trail,pos=[],col=[],idx=[];
+    const strip=(off,w0,grow,alpha)=>{let base=pos.length/3;for(let i=0;i<pts.length;i++){const p=pts[i],age=(t-p.t),fade=Math.max(0,1-age/14)*p.s*alpha;const rx=Math.cos(p.h),rz=-Math.sin(p.h);const o=off===0?0:Math.sign(off)*(Math.abs(off)+age*2.4),w=w0+age*grow;
+      for(const e of [-.5,.5]){pos.push(p.x+rx*(o+e*w),.18,p.z+rz*(o+e*w));col.push(1,1,1,fade*(off===0?1:.9))}
+      if(i){const a=base+(i-1)*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}}};
+    if(pts.length>1){strip(-4.6,1.1,.35,.55);strip(4.6,1.1,.35,.55);strip(0,7,.9,.32)}
+    const g=bayWake.geometry;g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,4));g.setIndex(idx);
+  }
+  // ---- Bờ đất, danh thắng, làng chài, cầu, thuyền gỗ, phao ----
+  const bayPick=[];const bayJunks=[];const bayBuoys=[];let bayKarstMeshes=[];const bayLand=[];
+  function makeJunk(hullColor){const g=new THREE.Group(),m=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
+    const hull=new THREE.Mesh(new THREE.BoxGeometry(2.6,1.2,9),m(hullColor||'#7d5a3d'));hull.position.y=.3;g.add(hull);
+    const bow=new THREE.Mesh(new THREE.ConeGeometry(1.3,2.6,4),m(hullColor||'#7d5a3d'));bow.rotation.set(Math.PI/2,0,Math.PI/4);bow.scale.set(1,1,.45);bow.position.set(0,.45,5.6);g.add(bow);
+    const cab=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.3,4.2),m('#a27e58'));cab.position.set(0,1.55,-1.2);g.add(cab);
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(2.7,.15,4.8),m('#5c4130'));roof.position.set(0,2.25,-1.2);g.add(roof);
+    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,5,6),m('#4a3424'));mast.position.set(0,3.4,1.6);g.add(mast);
+    const sail=new THREE.Mesh(new THREE.PlaneGeometry(2.4,3),new THREE.MeshStandardMaterial({color:'#b98b62',side:THREE.DoubleSide,roughness:.9}));sail.position.set(.06,3.5,1);sail.rotation.y=Math.PI/2;g.add(sail);
+    return g}
+  // ---- Điêu khắc các danh thắng có tên ----
+  const lmFacing=p=>{const [ax,az]=p.params?.approach||[p.x+60,p.z];return Math.atan2(az-p.z,ax-p.x)};// hướng từ danh thắng ra điểm tàu ghé
+  const darkMat=new THREE.MeshBasicMaterial({color:'#1a221f'}),pineMat=new THREE.MeshStandardMaterial({color:'#3d6b46',roughness:1,flatShading:true}),pineDark=new THREE.MeshStandardMaterial({color:'#2f5839',roughness:1,flatShading:true});
+  const chanLines=()=>{const c=bayData?.nature?.find(n=>n.kind==='channels');return c?{hw:c.params.half_width,lines:c.params.lines}:{hw:0,lines:[]}};
+  function clearOfChannels(x,z,pad){const {hw,lines}=chanLines();for(const L of lines)for(let i=0;i<L.length-1;i++){const [ax,az]=L[i],[bx,bz]=L[i+1],vx=bx-ax,vz=bz-az,l2=vx*vx+vz*vz||1,t=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/l2));if(Math.hypot(ax+vx*t-x,az+vz*t-z)<hw+pad)return false}return true}
+  function caveMouth(x,z,f,dist,y,w,hgt){const m=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),darkMat);m.scale.set(w,hgt,Math.max(3,w*.45));m.position.set(x+Math.cos(f)*dist,y,z+Math.sin(f)*dist);m.rotation.y=Math.PI/2-f;bayGroup.add(m)}
+  function pines(cx,cy,cz,rot,ax,az,n,k){for(let j=0;j<n;j++){const u=(bayHash(k,j,1)-.5)*2*ax,v=(bayHash(k,j,2)-.5)*2*az;if((u/ax)**2+(v/az)**2>1)continue;const s=.8+bayHash(k,j,3)*.7,c=new THREE.Mesh(new THREE.ConeGeometry(1.1*s,3.2*s,7),j%2?pineMat:pineDark);
+    c.position.set(cx+u*Math.cos(rot)-v*Math.sin(rot),cy+1.3*s,cz+u*Math.sin(rot)+v*Math.cos(rot));bayGroup.add(c)}}
+  const DECO={};const decoMat=c=>DECO[c]||(DECO[c]=new THREE.MeshStandardMaterial({color:c,roughness:.85}));
+  const decoBox=(g,w,hh,d,c,px,py,pz,ry=0)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),decoMat(c));m.position.set(px,py,pz);m.rotation.y=ry;g.add(m);return m};
+  // Ô dù bãi tắm: cán trắng + tán nón màu
+  function addUmbrellas(x,z,f,r,n,k){const cols=['#d9583f','#2f7fb5','#f2c14e','#e9e4d8','#3f9a7a'];for(let j=0;j<n;j++){const a=f+(j-(n-1)/2)*(.62/n)*1.6,d=r*(.86+bayHash(k,j,8)*.12),g=new THREE.Group();g.position.set(x+Math.cos(a)*d,.3,z+Math.sin(a)*d);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.6,5),decoMat('#f1ece2'));pole.position.y=1.3;g.add(pole);const top=new THREE.Mesh(new THREE.ConeGeometry(1.5,.7,8),decoMat(cols[(j+k)%5]));top.position.y=2.7;g.add(top);bayGroup.add(g)}}
+  // Hàng phi lao / cây ven bãi: nón xanh sẫm
+  function addBeachTrees(x,z,f,r,n,k,span=.7){for(let j=0;j<n;j++){const a=f+(j/(n-1)-.5)*span*Math.PI,d=r*(.66+bayHash(k,j,9)*.06),hh=5+bayHash(k,j,7)*4,t=new THREE.Mesh(new THREE.ConeGeometry(1.4+bayHash(k,j,6),hh,6),decoMat(j%3?'#2f5e3a':'#3d6b40'));t.position.set(x+Math.cos(a)*d,hh/2+.6,z+Math.sin(a)*d);bayGroup.add(t)}}
+  // Ki-ốt / nhà gỗ ven bãi
+  function addKiosks(x,z,f,r,n,k){for(let j=0;j<n;j++){const a=f+(j-(n-1)/2)*.16,d=r*.74,g=new THREE.Group();g.position.set(x+Math.cos(a)*d,.3,z+Math.sin(a)*d);g.rotation.y=-a+Math.PI/2;
+    decoBox(g,4.2,2.4,3,'#f3efe6',0,1.2,0);decoBox(g,4.8,.25,3.8,j%2?'#2f7fb5':'#c4553c',0,2.55,.2);bayGroup.add(g)}}
+  // Thuyền thúng / xuồng gỗ nhỏ và đò mui đen (ảnh làng chài Cửa Vạn)
+  function makeSampan(canopy){const g=new THREE.Group();const hull=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.1,9,10,1,false,0,Math.PI),decoMat('#6f4f36'));hull.rotation.set(0,0,Math.PI/2);hull.rotation.order='ZXY';hull.rotation.x=Math.PI/2;hull.scale.set(1,1,.6);hull.position.y=.5;g.add(hull);
+    decoBox(g,.3,.9,9.2,'#b7412f',1.45,.9,0);if(canopy){const c=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,4.6,12,1,true,-Math.PI/2,Math.PI),decoMat('#2b2b2b'));c.rotation.x=Math.PI/2;c.position.set(0,1.1,-.6);g.add(c)}return g}
+  function buildLandmark(p){
+    const q=p.params||{},x=p.x,z=p.z,r=q.radius||0,h=q.height||0,k=Math.round(x*7+z*3),f=lmFacing(p),fx=Math.cos(f),fz=Math.sin(f);
+    if(q.shape==='big_island'){
+      // đỉnh chính vách dựng, 8 hòn phụ đa hình thái quây phía sau, cửa hang tối mở về phía tàu
+      addKarst(x,z,r*.45,h*1.15,k,{taper:.1,dome:.26,ribs:11,ribAmp:.13});
+      const sh=[0,4,1,3,5,0,6,2];for(let j=0;j<8;j++){const a=f+.55+j*(2*Math.PI-1.1)/7+(bayHash(k,j,4)-.5)*.2,d=r*(.5+bayHash(k,j,3)*.28);
+        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(.17+bayHash(k,j,1)*.15),h*(.45+bayHash(k,j,2)*.55),k+j+1,{shape:sh[j]})}
+      caveMouth(x,z,f,r*.43,h*.2,r*.15,r*.1);
+    }
+    else if(q.shape==='pair'){
+      // Hòn Trống Mái: hai khối đá chân thắt mảnh, nghiêng tựa vào nhau trên một rạn đá ngầm; không tạc chi tiết
+      const A=.78,ux=Math.cos(A),uz=Math.sin(A),sep=r*.7;
+      addKarst(x,z,r*.9,.2,k,{round:true,sx:1.6,sz:.75,rot:A,notch:0});
+      addKarst(x-ux*sep,z-uz*sep,r*.5,h,k+1,{taper:.15,pinch:.45,dome:.42,lean:.1,rot:A,ribs:5,ribAmp:.08,bulge:.12,bulgeAt:.62,sz:.82,rough:.2});
+      addKarst(x+ux*sep,z+uz*sep,r*.46,h*.8,k+2,{taper:.15,pinch:.48,dome:.5,lean:.1,rot:A+Math.PI,ribs:4,ribAmp:.07,bulge:.18,bulgeAt:.6,sz:.85,rough:.2});
+    }
+    else if(q.shape==='incense'){
+      // Hòn Đỉnh Hương: một khối liền, chân bị sóng khoét thắt lại, thân nở dần lên đỉnh rộng và bằng, phủ cây bụi
+      const rot=f+Math.PI/2;
+      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.42,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22});
+    }
+    else if(q.shape==='dog'){
+      // Hòn Chó Đá: cụm đá tự nhiên, khối cao phía trước tựa vào khối thấp phía sau, gợi dáng chó ngồi khi nhìn từ luồng tàu
+      addKarst(x-fx*r*.3,z-fz*r*.3,r*.62,h*.5,k,{taper:.1,dome:.55,sx:1.15,rot:f,ribs:5,rough:.22});
+      addKarst(x+fx*r*.18,z+fz*r*.18,r*.42,h,k+1,{taper:.3,dome:.42,lean:.08,rot:f,ribs:6,bulge:.1,bulgeAt:.55,rough:.22});
+    }
+    else if(q.shape==='titop'){
+      // Ti Tốp: đỉnh vách giật cấp, vai núi phía sau, bãi cát khô và cát ẩm hình lưỡi liềm, hai mũi đá ôm bãi, lầu vọng cảnh 2 mái đỏ
+      addKarst(x,z,r*.62,h*1.5,k,{taper:.14,dome:.34,steps:2,ribs:7,rough:.2});
+      addKarst(x-fx*r*.4,z-fz*r*.4,r*.45,h*1.05,k+1,{taper:.15,dome:.42,ribs:6,rough:.2});
+      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.38,Math.PI*.76),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      sand(.78,1.12,.28,'#efe3c4');sand(1.1,1.26,.2,'#c9b48e');
+      for(const s of [-1,1]){const a=f+s*Math.PI*.42;addKarst(x+Math.cos(a)*r*1.08,z+Math.sin(a)*r*1.08,r*.2,h*.38,k+5+s,{shape:6,rot:a})}
+      const top=h*1.5,pav=new THREE.Group(),white=new THREE.MeshStandardMaterial({color:'#f1ece2'}),red=new THREE.MeshStandardMaterial({color:'#b6533c',flatShading:true});
+      for(const a of [-1,1])for(const b of [-1,1]){const col=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,3.4,8),white);col.position.set(a*1.3,1.2,b*1.3);pav.add(col)}
+      const r1=new THREE.Mesh(new THREE.ConeGeometry(2.7,1.3,4),red);r1.position.y=3.2;r1.rotation.y=Math.PI/4;const r2=new THREE.Mesh(new THREE.ConeGeometry(1.8,1.1,4),red);r2.position.y=4.25;r2.rotation.y=Math.PI/4;pav.add(r1,r2);
+      pav.position.set(x,top-1.2,z);bayGroup.add(pav);
+      addKiosks(x,z,f-.55,r,4,k);addUmbrellas(x,z,f+.15,r,7,k);
+      // bậc đá trắng dẫn lên đỉnh (dải zíc zắc trên sườn phía bãi)
+      for(let j=0;j<7;j++){const t=j/7,a=f+(j%2?.25:-.1),d=r*(.62-t*.42),y=1+t*(top-3),s=new THREE.Mesh(new THREE.BoxGeometry(1.2,.5,7),decoMat('#e8e1d2'));s.position.set(x+Math.cos(a)*d,y,z+Math.sin(a)*d);s.rotation.y=-a;s.rotation.x=.55;bayGroup.add(s)}
+      for(const s of [-1,1]){const jk=makeJunk(s>0?'#8a6446':'#6f4f36');const a=f+s*.3,d=r*1.45;jk.position.set(x+Math.cos(a)*d,0,z+Math.sin(a)*d);jk.rotation.y=-a;bayGroup.add(jk)}
+    }
+    else if(q.shape==='arch'){
+      // Hang Luồn: vòm đá xuyên thủy quay về phía tàu, hai vách trụ hai bên, vòng 5 đỉnh quây hồ nước lặng bên trong
+      const R=r*.92;addCaveArch(x+fx*R,z+fz*R,f,r*1.05,h*.95,r*.56,h*.62,r*.3);
+      for(const s of [-1,1]){const a=f+s*.45;addKarst(x+Math.cos(a)*R,z+Math.sin(a)*R,r*.26,h,k+3+s,{shape:0,rot:a})}
+      const sh=[0,4,7,0,5];for(let j=0;j<5;j++){const a=f+.9+j*(2*Math.PI-1.8)/4,low=j===2;addKarst(x+Math.cos(a)*R,z+Math.sin(a)*R,r*(low?.2:.26+bayHash(k,j,1)*.1),h*(low?.32:.8+bayHash(k,j,2)*.35),k+10+j,{shape:sh[j],rot:a})}// đỉnh đối diện vòm thấp để nhìn xuyên thấy hồ và trời
+    }
+    else if(q.shape==='trio'){
+      // Hòn Ba Trái Đào: ba đỉnh đá tròn nối chân nhau, xếp ngang tầm nhìn từ luồng tàu, bãi cát nhỏ phía trước
+      const px=-fz,pz=fx;for(let j=-1;j<=1;j++)addKarst(x+px*j*r*.55,z+pz*j*r*.55,r*.42,h*(j?(j>0?.86:.92):1),k+j+2,{taper:.18,dome:.62,ribs:4,ribAmp:.07,rough:.2});
+      const m=new THREE.Mesh(new THREE.RingGeometry(r*.6,r*.95,24,1,-f-Math.PI*.3,Math.PI*.6),new THREE.MeshStandardMaterial({color:'#efe3c4',roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,.26,z);bayGroup.add(m);
+    }
+    else if(q.shape==='beach'){
+      // Đảo có bãi tắm (Đảo Khỉ): đồi đá phủ rừng, bãi cát khô + cát ẩm lưỡi liềm quay về phía tàu, hai mũi đá
+      addKarst(x,z,r*.62,h,k,{taper:.12,dome:.5,ribs:5,rough:.2});addKarst(x-fx*r*.38,z-fz*r*.38,r*.5,h*.8,k+1,{shape:2});
+      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.36,Math.PI*.72),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      sand(.74,1.1,.28,'#f1e6c8');sand(1.08,1.24,.2,'#c9b48e');
+      for(const s of [-1,1]){const a=f+s*Math.PI*.4;addKarst(x+Math.cos(a)*r*1.05,z+Math.sin(a)*r*1.05,r*.17,h*.3,k+5+s,{shape:6,rot:a})}
+      addBeachTrees(x,z,f,r,9,k,.62);addUmbrellas(x,z,f,r,4,k);
+    }
+    else if(q.shape==='cove'){
+      // Áng nước kín kiểu Lan Hạ / Cống Đỏ: vòng vách đá dựng đứng, đỉnh tròn phủ rừng, mở về phía tàu; nhà bè nhỏ trong áng
+      const sh=[0,3,4,0,3,0,4];for(let j=0;j<7;j++){const a=f+.75+j*(2*Math.PI-1.5)/6,d=r*(.95+bayHash(k,j,3)*.15);
+        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(.3+bayHash(k,j,1)*.1),h*(.78+bayHash(k,j,2)*.4),k+j,{shape:sh[j],rot:a+Math.PI/2,taper:.05,dome:.5,ribs:10,ribAmp:.13,rough:.22})}
+      const g=new THREE.Group();g.position.set(x-fx*r*.15,0,z-fz*r*.15);g.rotation.y=-f;decoBox(g,12,.5,8,'#8a6f52',0,.25,0);decoBox(g,6,3,5,'#4f9a8c',-1.5,2,0);decoBox(g,7,.3,6,'#5f8f6a',-1.5,3.6,0);
+      for(let j=0;j<4;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1,10),decoMat('#2f6fb0'));b.position.set(3+j%2*1.2,1,-2+Math.floor(j/2)*1.2);g.add(b)}bayGroup.add(g);
+      const sp=makeSampan(true);sp.position.set(x-fx*r*.15+fz*12,0,z-fz*r*.15-fx*12);sp.rotation.y=-f;bayGroup.add(sp);
+    }
+    else if(q.shape==='island_beach'){
+      // Đảo Bái Tử Long: hai đồi tròn thấp phủ rừng, bãi cát trắng dài lưỡi liềm, hàng phi lao, ô dù
+      const px=-fz,pz=fx;addKarst(x-fx*r*.25+px*r*.2,z-fz*r*.25+pz*r*.2,r*.55,h,k,{shape:2,sx:1.5,rot:f+Math.PI/2});addKarst(x-fx*r*.3-px*r*.35,z-fz*r*.3-pz*r*.35,r*.42,h*.75,k+1,{shape:2,rot:f});
+      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,40,1,-f-Math.PI*.46,Math.PI*.92),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      sand(.6,1.02,.3,'#f4ead0');sand(1.0,1.16,.2,'#cdb995');
+      addBeachTrees(x,z,f,r*.95,14,k,.82);addUmbrellas(x,z,f,r*.95,8,k);addKiosks(x,z,f+.5,r*.9,3,k);
+    }
+    else if(q.shape==='village'){
+      // Dãy nhà bè san sát dọc chân vách đá (như làng chài Cửa Vạn): sàn gỗ, vách xanh, mái tôn, thùng phao xanh, cờ đỏ, đò mui đen, xuồng gỗ
+      const walls=['#4f9a8c','#5d8fb0','#7fae9a','#3f7f86','#a9c3b4','#6a9fc0'],roofs=['#5f8f6a','#4d7d8a','#6f8f78'],px=-fz,pz=fx;
+      const back=34;for(let j=-4;j<=4;j++){const g=new THREE.Group(),off=j*13+(bayHash(k,j+5,1)-.5)*3,dep=back+(bayHash(k,j+5,2)-.5)*8;g.position.set(x+px*off-fx*dep,0,z+pz*off-fz*dep);g.rotation.y=-f+Math.PI/2;
+        decoBox(g,12,.5,10,'#8a6f52',0,.25,0);decoBox(g,12.5,.35,1.4,'#a68a66',0,.4,5.8);// sàn bè + lối ván ra mép nước
+        const ww=7+bayHash(k,j+5,3)*2.5;decoBox(g,ww,3.2,6,walls[(j+9)%6],-1,2.1,-1.2);decoBox(g,ww+1.4,.3,7.4,roofs[(j+9)%3],-1,3.85,-1.2).rotation.x=-.08;
+        decoBox(g,3.2,1.6,3,'#e7e1d3',4,1.3,1.6);// gian phơi đồ
+        for(let b=0;b<3;b++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.95,10),decoMat(b%2?'#2f6fb0':'#3b82c4'));c.position.set(2+b*1.1,.95,-3.4);g.add(c)}
+        if(j%3===0){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,6,5),decoMat('#d9d2c2'));pole.position.set(-4.5,4,2.5);g.add(pole);decoBox(g,.05,1,1.6,'#d2332b',-4.5,6.3,3.3)}
+        bayGroup.add(g)}
+      for(const [s,cn] of [[-1,true],[1,false],[.3,true]]){const sp=makeSampan(cn);sp.position.set(x+px*s*30-fx*(back-12),0,z+pz*s*30-fz*(back-12));sp.rotation.y=-f+(s>0?.2:-.3);bayGroup.add(sp)}
+      // vòng đảo tháp đá vôi đa dạng bao quanh làng, chừa luồng tàu và lối vào phía tàu ghé
+      const sh=[0,1,4,3,5,6,0,1];for(let j=0;j<8;j++){const a=f+.9+j*(2*Math.PI-1.8)/7,d=160+bayHash(k,j,5)*30,rr=20+bayHash(k,j,1)*12,s=sh[j],er=rr*(s===3?1.9:s===4?1.5:1),qx=x+Math.cos(a)*d,qz=z+Math.sin(a)*d;
+        if(!clearOfChannels(qx,qz,er*1.3+30))continue;addKarst(qx,qz,rr,rr*(2.2+bayHash(k,j,2)*1.2),k+j,{shape:s});bayExtraRocks.push([qx,qz,er*1.25])}}
+    else if(q.shape==='pier'){const pier=new THREE.Mesh(new THREE.BoxGeometry(6,1,60),new THREE.MeshStandardMaterial({color:'#b9b1a2'}));pier.position.set(x,.6,z+22);bayGroup.add(pier);
+      for(let j=0;j<2;j++){const jk=makeJunk(['#7d5a3d','#8a6446'][j]);jk.position.set(x-6.5,0,z+10+j*16);jk.rotation.y=j%2?Math.PI/2:-Math.PI/2;bayGroup.add(jk)}}
+    else if(q.shape==='bridge'){const m=new THREE.MeshStandardMaterial({color:'#e9e6df',roughness:.6});const deck=new THREE.Mesh(new THREE.BoxGeometry(260,2.2,9),m);deck.position.set(x,20,z);bayGroup.add(deck);
+      for(const sx of [-45,45]){const py=new THREE.Mesh(new THREE.BoxGeometry(4,64,4),m);py.position.set(x+sx,30,z);bayGroup.add(py);
+        const pos=[];for(let j=1;j<=8;j++)for(const s of [-1,1]){pos.push(x+sx,58-j*1.5,z,x+sx+s*j*13,21,z)}const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));bayGroup.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:'#d9d6cf'})))}}
+    if(r>0||q.shape==='village'||q.shape==='pier'||q.shape==='bridge'){const pr=Math.max(r*1.1,q.shape==='bridge'?60:30);const hit=new THREE.Mesh(new THREE.CylinderGeometry(pr,pr,(h||30)+20,10),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(x,(h||30)/2,z);hit.userData.landmark=p;bayGroup.add(hit);bayPick.push(hit)}
+  }
+  // ===== Tư Đảo (đảo riêng): 160 m phía đông Hòn Gà Chọi, nhìn về Gà Chọi; cầu tàu quay về phía tây để du thuyền cập.
+  // Cùng một toạ độ cho mọi người, mỗi người thấy đảo của mình.
+  const TU_DAO={x:1428,z:650,r:40,dock:[1428-108,650],heading:Math.PI/2};
+  function buildTuDao(){const g=new THREE.Group();g.position.set(TU_DAO.x,0,TU_DAO.z);
+    // thân đảo: bãi cát quanh mép, cỏ cây phía trên, vài mảng đá vôi; mép hơi lượn
+    const nr=9,ns=48,P=[],C=[],I=[],col=new THREE.Color(),sand=new THREE.Color('#e6d3a4'),grass=new THREE.Color('#5f9248'),grass2=new THREE.Color('#79a654'),rock=new THREE.Color('#9a958a');
+    const prof=[[0,10.5],[.2,10.2],[.4,9.4],[.58,8],[.7,6],[.78,3.2],[.86,1.4],[.95,.4],[1.02,-1.5],[1.1,-5]];
+    P.push(0,prof[0][1],0);col.copy(grass2);C.push(col.r,col.g,col.b);
+    for(let i=1;i<=nr;i++)for(let j=0;j<ns;j++){const th=j/ns*Math.PI*2,w=1+.1*Math.sin(3*th+1)+.06*Math.sin(7*th),rr=prof[i][0]*TU_DAO.r*w,y=prof[i][1]+(i<6?Math.sin(5*th+i)*.4:0);
+      P.push(Math.cos(th)*rr,y,Math.sin(th)*rr);
+      if(y<2.2)col.copy(sand);else if(i>=4&&i<=5&&Math.sin(4*th+2)>.55)col.copy(rock);else col.copy(grass).lerp(grass2,.5+.5*Math.sin(3*th+i));C.push(col.r,col.g,col.b)}
+    const at=(i,j)=>1+(i-1)*ns+(j%ns);for(let j=0;j<ns;j++)I.push(0,at(1,j+1),at(1,j));
+    for(let i=1;i<nr;i++)for(let j=0;j<ns;j++)I.push(at(i,j),at(i,j+1),at(i+1,j),at(i,j+1),at(i+1,j+1),at(i+1,j));
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(C,3));geo.setIndex(I);geo.computeVertexNormals();
+    const land=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true}));g.add(land);
+    const M=c=>new THREE.MeshStandardMaterial({color:c,roughness:.9});
+    // nhà nghỉ trên đảo: sàn gỗ, mái lá, hiên nhìn về phía tây (Hòn Gà Chọi)
+    const villa=new THREE.Group();villa.position.set(-4,10.2,0);villa.rotation.y=-Math.PI/2;g.add(villa);
+    const box=(w,h,d,c,x,y,z,p)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);(p||villa).add(m);return m};
+    box(16,.6,12,'#8a6a48',0,.3,1.5);box(12,4.2,8,'#efe4cc',0,2.7,-.5);box(3,3,.2,'#6b4a32',0,2.1,3.55);for(const s of [-1,1])box(2.6,1.8,.2,'#9fc2c4',s*3.6,3,3.55);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(10.5,4.6,4),M('#a0784a'));roof.rotation.y=Math.PI/4;roof.scale.set(1,1,.82);roof.position.set(0,7,-.2);villa.add(roof);
+    for(const x of [-7,7])for(const z of [-5,7])box(.4,4.6,.4,'#5b3d2a',x,2.6,z);box(16,.3,4,'#a0784a',0,5,5.6);
+    // hàng thông và tre trên đảo
+    const tm=M('#3f6b48'),tt=M('#6a4a32');for(let k=0;k<11;k++){const a=k/11*Math.PI*2+.3,rr=17+(k%3)*4;if(Math.cos(a)<-.55)continue;const t=new THREE.Group();t.position.set(Math.cos(a)*rr,8.5-(rr-17)*.35,Math.sin(a)*rr);
+      const tr=new THREE.Mesh(new THREE.CylinderGeometry(.35,.5,6,6),tt);tr.position.y=3;t.add(tr);for(let q=0;q<3;q++){const c=new THREE.Mesh(new THREE.ConeGeometry(3.2-q*.8,3.4,7),tm);c.position.y=5+q*1.8;t.add(c)}g.add(t)}
+    // cầu tàu gỗ ra phía tây cho du thuyền cập, đèn lồng hai bên
+    const pier=new THREE.Group();g.add(pier);const pl=new THREE.Mesh(new THREE.BoxGeometry(48,.8,5),M('#8a6a48'));pl.position.set(-TU_DAO.r-20,1.6,0);pier.add(pl);const gw=new THREE.Mesh(new THREE.BoxGeometry(7,.25,1.8),M('#7a5a3c'));gw.position.set(-TU_DAO.r-47.5,2.05,0);pier.add(gw);/* cầu lên tàu */
+    for(let x=-TU_DAO.r-42;x<=-TU_DAO.r+2;x+=7)for(const s of [-1,1]){const po=new THREE.Mesh(new THREE.CylinderGeometry(.35,.4,6,6),M('#5b3d2a'));po.position.set(x,-1,s*2.6);pier.add(po);
+      if((x+TU_DAO.r)%14===0){const lp=new THREE.Mesh(new THREE.SphereGeometry(.45,8,6),new THREE.MeshStandardMaterial({color:'#ffd9a0',emissive:'#ffb860',emissiveIntensity:.8}));lp.position.set(x,3.6,s*2.6);pier.add(lp)}}
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 56px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🏝 TƯ ĐẢO',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(8,2),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));board.position.set(-TU_DAO.r-8,5.6,0);board.rotation.y=-Math.PI/2;pier.add(board);
+    for(const s of [-1,1]){const p2=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,5,6),M('#5b3d2a'));p2.position.set(-TU_DAO.r-8,3.2,s*4.2);pier.add(p2)}
+    land.userData.tuDao='island';g.children.forEach(ch=>ch.traverse(o=>{if(o.isMesh)o.userData.tuDao=ch===villa?'house':ch===pier?'pier':'island'}));
+    bayGroup.add(g);TU_DAO.group=g;bayExtraRocks.push([TU_DAO.x,TU_DAO.z,TU_DAO.r*1.15])}
+  // Bấm cầu tàu / đảo / nhà: tàu cập cầu tàu (nếu đang ở xa thì đi tới trước), rồi bước lên đảo.
+  // Tạm thời không gian trên đảo dùng chung không gian Tư Gia. Lưu tàu ở cầu tàu, nên tắt đột xuất hay rời đi thì lần sau vào vịnh vẫn đứng ở cầu tàu.
+  let tuDaoPending=null;const TU_DAO_SPOTS={pier:'Cầu tàu',island:'Bãi đảo',house:'Nhà nghỉ trên đảo'};
+  function tuDaoTap(kind){const [x,z]=TU_DAO.dock;if(bayIsland){islandGo(kind);return}if(Math.hypot(bayShip.x-x,bayShip.z-z)>6||bayShip.path.length){tuDaoPending=kind;setDestination(x,z,'Tư Đảo của bạn');bayCaption('🏝 Đang tới Tư Đảo · cập cầu tàu rồi lên '+TU_DAO_SPOTS[kind].toLowerCase(),5000);return}dockAtTuDao();islandGo(kind)}
+  function dockAtTuDao(){const [x,z]=TU_DAO.dock;dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayShip.x=x;bayShip.z=z;bayShip.speed=0;bayShip.heading=TU_DAO.heading;bayShip.trail.length=0;saveBayState()}
+  function stepOnIsland(kind){if(!bayMode)return;const [x,z]=TU_DAO.dock;dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayShip.x=x;bayShip.z=z;bayShip.speed=0;bayShip.heading=TU_DAO.heading;saveBayState();
+    window.__tuDaoSpot=TU_DAO_SPOTS[kind]||'Bãi đảo';exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace(kind)},80)}
+  // ===== Đi bộ trên Tư Đảo: khi tàu đã cập cầu tàu, bấm cầu tàu → xuống tàu đứng trên cầu tàu; bấm đảo → xuống tàu, dạo một vòng quanh đảo;
+  // bấm nhà → xuống tàu, đi hết cầu tàu, lên dốc rồi vào nhà. Bấm mặt nước / nút Về tàu → đi về cầu tàu và lên tàu.
+  // Tàu vẫn neo ở cầu tàu (đã lưu), nên rời đi hay tắt trang thì lần sau trở lại đúng chỗ tàu đang neo ở Tư Đảo.
+  const TD_PROF=[[0,10.5],[.2,10.2],[.4,9.4],[.58,8],[.7,6],[.78,3.2],[.86,1.4],[.95,.4],[1.02,-1.5]];
+  function tdGroundY(x,z){// toạ độ trong đảo
+    const PIER_X0=-TU_DAO.r-52,PIER_X1=-TU_DAO.r+4;let y=-1.5;
+    {const th=Math.atan2(z,x),w=1+.1*Math.sin(3*th+1)+.06*Math.sin(7*th),rr=Math.hypot(x,z)/(TU_DAO.r*w);for(let i=0;i<TD_PROF.length-1;i++){const [a,ya]=TD_PROF[i],[b,yb]=TD_PROF[i+1];if(rr>=a&&rr<=b){y=ya+(yb-ya)*(rr-a)/(b-a);break}}if(rr<0)y=TD_PROF[0][1]}
+    if(x>=PIER_X0&&x<=PIER_X1&&Math.abs(z)<2.5)y=Math.max(y,2);/* mặt cầu tàu */
+    if(x>PIER_X1&&x<PIER_X1+6&&Math.abs(z)<2.5)y=Math.max(y,2-(x-PIER_X1)*.25);/* dốc từ cầu tàu xuống bãi */
+    if(x>=-11.5&&x<=.5&&Math.abs(z)<=8)y=Math.max(y,10.8);/* sàn nhà nghỉ */
+    return y}
+  const TD_PIER_END=[-TU_DAO.r-43,0],TD_PIER_MID=[-TU_DAO.r-20,0],TD_PIER_START=[-TU_DAO.r+4,0],TD_DOOR=[-8.2,0];
+  let bayIsland=null;const tdV=new THREE.Vector3();
+  function tdBowLocal(){const v=(bayShip.bow||new THREE.Vector3(0,2.62,18.8)).clone();bayShip.group.localToWorld(v);TU_DAO.group.worldToLocal(v);return [v.x,v.z]}
+  function tdLoop(){const pts=[];for(let k=0;k<=24;k++){const th=Math.PI+k/24*Math.PI*2,w=1+.1*Math.sin(3*th+1)+.06*Math.sin(7*th),r=TU_DAO.r*w*.8;pts.push([Math.cos(th)*r,Math.sin(th)*r])}return pts}
+  function islandGo(kind){if(!bayIsland){const b=tdBowLocal();bayIsland={x:b[0],z:b[1],yaw:Math.atan2(TD_PIER_END[0]-b[0],TD_PIER_END[1]-b[1]),path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;
+      bayIsland.path.push(TD_PIER_END)}
+    const I=bayIsland;I.then=null;const onPier=I.x<TD_PIER_START[0]+1,base=I.x<TD_PIER_END[0]-.5?[TD_PIER_END]:[];I.path=base;
+    if(kind==='pier'){I.path=base.concat([TD_PIER_MID]);bayCaption('🏝 Đứng trên cầu tàu Tư Đảo · bấm đảo để dạo, bấm nhà để vào nhà, bấm mặt nước để về tàu',5500)}
+    else if(kind==='island'){I.path=(onPier?base.concat([TD_PIER_START]):[]).concat(tdLoop(),[TD_PIER_START]);bayCaption('🏝 Dạo một vòng quanh Tư Đảo…',4000)}
+    else if(kind==='house'){I.path=(onPier?base.concat([TD_PIER_START]):[]).concat([[-24,0],[-18,0],[-12.2,0],TD_DOOR]);I.then='house';bayCaption('🏡 Đi qua cầu tàu lên nhà nghỉ trên đảo…',4000)}
+    refreshIslandHud()}
+  function islandBack(){if(!bayIsland)return;const I=bayIsland,b=tdBowLocal();I.then='board';I.path=(I.x>TD_PIER_START[0]?[TD_PIER_START]:[]).concat([TD_PIER_MID,TD_PIER_END,b]);bayCaption('⛵ Đang về tàu…',3000)}
+  function islandBoardNow(){if(!bayIsland)return;bayIsland=null;document.body.classList.remove('bay-island');viewYaw=0;refreshIslandHud()}
+  function updateIslandWalk(dt){const I=bayIsland;if(!I)return;let left=4.5*dt*(bayMult?bayMult():1);
+    while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
+      I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
+    I.moving=I.path.length>0;I.t+=dt;
+    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='board')islandBoardNow();else if(t==='house'){window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
+  function islandWorld(out){const I=bayIsland;out.set(I.x,tdGroundY(I.x,I.z)+(I.moving?Math.abs(Math.sin(I.t*7))*.08:0),I.z);TU_DAO.group.localToWorld(out);return out}
+  const islandHud=document.createElement('button');islandHud.type='button';islandHud.id='islandBack';islandHud.textContent='⛵ Về tàu';islandHud.hidden=true;document.body.appendChild(islandHud);
+  {const st=document.createElement('style');st.textContent='#islandBack{position:fixed;z-index:73;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);border:1px solid #c8a96a;border-radius:999px;background:#c8a96a;color:#0b2824;font-weight:600;font-size:14px;padding:9px 16px;cursor:pointer}#islandBack[hidden]{display:none}body.bay-island #bayHUD{opacity:.45;pointer-events:none}';document.head.appendChild(st)}
+  function refreshIslandHud(){islandHud.hidden=!bayIsland||!bayMode}
+  islandHud.addEventListener('click',islandBack);
+  function goTuDao(instant){if(!bayBuilt)return;const [x,z]=TU_DAO.dock;
+    if(!instant){setDestination(x,z,'Tư Đảo của bạn');return}
+    dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;bayShip.x=x;bayShip.z=z;bayShip.speed=0;bayShip.trail.length=0;bayShip.heading=TU_DAO.heading;viewYaw=0;bayAt=null;
+    updateBay(0);camera.position.copy(bayCam);refreshBayHud();drawBayMap();document.body.classList.add('bay-warp');setTimeout(()=>document.body.classList.remove('bay-warp'),60);
+    bayCaption('🏝 Tư Đảo của bạn · cập cầu tàu, nhìn về Hòn Gà Chọi · Lên đảo, chọn phong cách và mời khách sẽ mở ở bước tiếp theo',6500)}
+  window.__goTuDao=goTuDao;
+  function buildBay(d){
+    const ship=d.buildings.find(b=>b.kind==='cruise_ship');buildShip(ship.exterior);
+    const ts=d.map.time_slots?.[d.map.active_time_slot||'morning']||{};
+    if(ts.sky_top)bayU.top.value.set(ts.sky_top);if(ts.sky_horizon)bayU.hor.value.set(ts.sky_horizon);if(ts.haze)bayU.haze.value.set(ts.haze);if(ts.water_deep)bayU.deep.value.set(ts.water_deep);if(ts.water_shallow)bayU.shallow.value.set(ts.water_shallow);if(ts.cloud_cover!=null)bayU.cover.value=ts.cloud_cover;
+    if(ts.sun_elevation!=null){const e=ts.sun_elevation,a=ts.sun_azimuth||0;bayU.sunDir.value.set(Math.sin(a)*Math.cos(e),Math.sin(e),Math.cos(a)*Math.cos(e)).normalize()}
+    bayU.fogD.value=Number(d.map.fog_density)||.00105;bayU.sunCol.value.set(d.map.sun_color||'#fff2dc');
+    for(const n of d.nature){
+      if(n.kind==='land')for(const L of n.params.polygons){const s=new THREE.Shape(L.pts.map(([x,z])=>new THREE.Vector2(x,-z)));const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(1,L.height-6),bevelEnabled:L.height>4,bevelThickness:6,bevelSize:14,bevelSegments:3,curveSegments:4});geo.rotateX(-Math.PI/2);
+        const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:L.color,roughness:1}));m.position.y=-4;bayGroup.add(m);bayLand.push(L);
+        if(L.hills){const xs=L.pts.map(p=>p[0]),zs=L.pts.map(p=>p[1]),inP=(x,z)=>{let c=false;for(let a=0,b2=L.pts.length-1;a<L.pts.length;b2=a++){const [x1,z1]=L.pts[a],[x2,z2]=L.pts[b2];if((z1>z)!==(z2>z)&&x<(x2-x1)*(z-z1)/(z2-z1)+x1)c=!c}return c};
+          let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const r=L.hills>10?60+bayHash(k,3,3)*90:30+bayHash(k,3,3)*30;
+            if(!inP(x,z)||!inP(x+r*.8,z)||!inP(x-r*.8,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;addKarst(x,z,r,r*(.45+bayHash(k,4,4)*.5)+L.height,9000+k,{round:true,dome:.75});made++}}}
+      if(n.kind==='backdrop'){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
+      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>{addKarst(x,z,r,h,i*7+v,{shape:v});
+        // 1–2 mỏm đá phụ ven mép nước ở các đảo lớn, chỉ đặt khi nằm ngoài luồng tàu
+        if(v===7||r<32)return;const er=r*(v===3?1.5:v===4?1.3:1),cnt=1+(r>=44&&bayHash(i,5,9)>.4?1:0);
+        for(let j=0;j<cnt;j++){const a=bayHash(i,j,13)*6.28,d=er*(1.1+bayHash(i,j,17)*.22),sr=r*(.12+bayHash(i,j,19)*.08),sh=Math.min(h*.35,sr*(1.6+bayHash(i,j,23)*1.6))+2,qx=x+Math.cos(a)*d,qz=z+Math.sin(a)*d;
+          if(!clearOfChannels(qx,qz,sr*1.3+30))continue;addKarst(qx,qz,sr,sh,i*31+j,{shape:bayHash(i,j,29)>.5?7:6,rot:a});bayExtraRocks.push([qx,qz,sr*1.3])}})
+    }
+    for(const p of d.props){
+      if(p.kind==='landmark')buildLandmark(p);
+      if(p.kind==='moored_boat'){const g=makeJunk(p.params?.hull);g.position.set(p.x,0,p.z);g.rotation.y=p.params?.heading||0;g.scale.setScalar(.9);bayGroup.add(g);bayBuoys.push({g,x:p.x,z:p.z})}
+      if(p.kind==='junk_boat'){const g=makeJunk(p.params?.hull);bayGroup.add(g);bayJunks.push({g,x:p.x,z:p.z,r:p.params?.loop_radius||50,sp:p.params?.speed||3,ph:p.params?.phase||0})}
+      if(p.kind==='buoy'){const g=new THREE.Group(),c=p.params?.color||'#d8483a';const b=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.1,2.4,12),new THREE.MeshStandardMaterial({color:c}));b.position.y=.8;g.add(b);
+        const band=new THREE.Mesh(new THREE.CylinderGeometry(.92,.92,.5,12),new THREE.MeshStandardMaterial({color:'#f4f2ec'}));band.position.y=1.2;g.add(band);
+        const cone=new THREE.Mesh(new THREE.ConeGeometry(.6,1.1,10),new THREE.MeshStandardMaterial({color:c}));cone.position.y=2.55;g.add(cone);g.position.set(p.x,0,p.z);bayGroup.add(g);bayBuoys.push({g,x:p.x,z:p.z})}
+    }
+    window.__bayRockCount={field:(d.nature.find(n=>n.kind==='karst_field')?.params.items.length)||0,extra:bayExtraRocks.length};
+    bayKarstMeshes=finishKarsts();
+    buildTuDao();
+    buildNav(d,ship.exterior);
+    const sp=d.map.spawn;bayShip.x=sp.x;bayShip.z=sp.z;bayShip.heading=sp.heading||0;
+    bayBuilt=true;
+  }
+  // ---- Lưới dò đường: ô bị chặn bởi đảo, bờ đất (cộng khoảng an toàn của tàu); A* tám hướng rồi kéo thẳng đường ----
+  const NAV={C:24};
+  function buildNav(d,ex){
+    const b=d.map.bounds,C=NAV.C,CL=ex.clearance||26;NAV.x0=b.x_min;NAV.z0=b.z_min;NAV.nx=Math.ceil((b.x_max-b.x_min)/C);NAV.nz=Math.ceil((b.z_max-b.z_min)/C);
+    const blk=NAV.block=new Uint8Array(NAV.nx*NAV.nz);
+    const disc=(x,z,r)=>{const i0=Math.max(0,Math.floor((x-r-NAV.x0)/C)),i1=Math.min(NAV.nx-1,Math.floor((x+r-NAV.x0)/C)),j0=Math.max(0,Math.floor((z-r-NAV.z0)/C)),j1=Math.min(NAV.nz-1,Math.floor((z+r-NAV.z0)/C));
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const cx=NAV.x0+(i+.5)*C,cz=NAV.z0+(j+.5)*C;if(Math.hypot(cx-x,cz-z)<r)blk[j*NAV.nx+i]=1}};
+    for(const n of d.nature)if(n.kind==='karst_field')for(const [x,z,r,,v] of n.params.items)disc(x,z,r*(v===3?1.9:v===4?1.35:1)*1.25+CL);
+    for(const p of d.props){if(p.kind==='moored_boat')disc(p.x,p.z,8+CL);if(p.kind==='landmark'&&p.params?.shape==='pier')disc(p.x,p.z+22,14+CL)}
+    for(const p of d.props)if(p.kind==='landmark'){const q=p.params||{};if(q.radius>0)disc(p.x,p.z,q.radius*(q.shape==='big_island'?1.25:1.4)+CL);
+      if(q.shape==='village'){const f=lmFacing(p);disc(p.x-Math.cos(f)*34,p.z-Math.sin(f)*34,56+CL)}}
+    for(const [x,z,rr] of bayExtraRocks)disc(x,z,rr+CL);
+    const inPoly=(x,z,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const [x1,z1]=P[i],[x2,z2]=P[j];if((z1>z)!==(z2>z)&&x<(x2-x1)*(z-z1)/(z2-z1)+x1)c=!c}return c};
+    const segD=(px,pz,ax,az,bx,bz)=>{const vx=bx-ax,vz=bz-az,L=vx*vx+vz*vz||1,t=Math.max(0,Math.min(1,((px-ax)*vx+(pz-az)*vz)/L));return Math.hypot(ax+vx*t-px,az+vz*t-pz)};
+    for(const L of bayLand){const P=L.pts,xs=P.map(p=>p[0]),zs=P.map(p=>p[1]),pad=CL+12;
+      const i0=Math.max(0,Math.floor((Math.min(...xs)-pad-NAV.x0)/C)),i1=Math.min(NAV.nx-1,Math.floor((Math.max(...xs)+pad-NAV.x0)/C)),j0=Math.max(0,Math.floor((Math.min(...zs)-pad-NAV.z0)/C)),j1=Math.min(NAV.nz-1,Math.floor((Math.max(...zs)+pad-NAV.z0)/C));
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*NAV.nx+i;if(blk[k])continue;const cx=NAV.x0+(i+.5)*C,cz=NAV.z0+(j+.5)*C;if(inPoly(cx,cz,P)){blk[k]=1;continue}
+        for(let a=0,b2=P.length-1;a<P.length;b2=a++){if(segD(cx,cz,P[a][0],P[a][1],P[b2][0],P[b2][1])<pad){blk[k]=1;break}}}}
+    // mép bản đồ
+    for(let i=0;i<NAV.nx;i++){blk[i]=1;blk[(NAV.nz-1)*NAV.nx+i]=1}for(let j=0;j<NAV.nz;j++){blk[j*NAV.nx]=1;blk[j*NAV.nx+NAV.nx-1]=1}
+  }
+  const navCell=(x,z)=>[Math.max(0,Math.min(NAV.nx-1,Math.floor((x-NAV.x0)/NAV.C))),Math.max(0,Math.min(NAV.nz-1,Math.floor((z-NAV.z0)/NAV.C)))];
+  const navFree=(x,z)=>{const [i,j]=navCell(x,z);return !NAV.block[j*NAV.nx+i]};
+  function nearestFree(i,j,towardI,towardJ){if(!NAV.block[j*NAV.nx+i])return[i,j];let best=null;for(let r=1;r<60&&!best;r++){for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;const a=i+di,b=j+dj;if(a<0||b<0||a>=NAV.nx||b>=NAV.nz||NAV.block[b*NAV.nx+a])continue;const score=Math.hypot(di,dj)+.15*Math.hypot(a-towardI,b-towardJ)/60;if(!best||score<best[2])best=[a,b,score]}}return best?[best[0],best[1]]:null}
+  function lineFree(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/(NAV.C*.45));for(let k=0;k<=n;k++){const t=k/n;if(!navFree(ax+(bx-ax)*t,az+(bz-az)*t))return false}return true}
+  function findPath(sx,sz,tx,tz){
+    const nx=NAV.nx,blk=NAV.block;let [si,sj]=navCell(sx,sz);let [ti,tj]=navCell(tx,tz);
+    const s=nearestFree(si,sj,ti,tj),t=nearestFree(ti,tj,si,sj);if(!s||!t)return null;[si,sj]=s;[ti,tj]=t;
+    const N=nx*NAV.nz,gs=new Float32Array(N).fill(Infinity),par=new Int32Array(N).fill(-1),closed=new Uint8Array(N),heap=[];
+    const hf=(i,j)=>{const dx=Math.abs(i-ti),dz=Math.abs(j-tj);return Math.max(dx,dz)+.414*Math.min(dx,dz)};
+    const push=(k,f)=>{heap.push([f,k]);let c=heap.length-1;while(c){const p=(c-1)>>1;if(heap[p][0]<=heap[c][0])break;[heap[p],heap[c]]=[heap[c],heap[p]];c=p}};
+    const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let c=0;for(;;){const l=c*2+1,r=l+1;let m=c;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===c)break;[heap[m],heap[c]]=[heap[c],heap[m]];c=m}}return top};
+    const sk=sj*nx+si,tk=tj*nx+ti;gs[sk]=0;push(sk,hf(si,sj));const D=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+    let found=false;while(heap.length){const [,k]=pop();if(closed[k])continue;closed[k]=1;if(k===tk){found=true;break}const i=k%nx,j=(k-i)/nx;
+      for(const [di,dj,c] of D){const a=i+di,b=j+dj;if(a<0||b<0||a>=nx||b>=NAV.nz)continue;const kk=b*nx+a;if(blk[kk]||closed[kk])continue;if(di&&dj&&(blk[j*nx+a]||blk[b*nx+i]))continue;const g=gs[k]+c;if(g<gs[kk]){gs[kk]=g;par[kk]=k;push(kk,g+hf(a,b))}}}
+    if(!found)return null;
+    const raw=[];for(let k=tk;k!==-1;k=par[k]){const i=k%nx,j=(k-i)/nx;raw.push([NAV.x0+(i+.5)*NAV.C,NAV.z0+(j+.5)*NAV.C])}raw.reverse();
+    const end=navFree(tx,tz)?[tx,tz]:raw[raw.length-1];raw[raw.length-1]=end;
+    const out=[];let cx=sx,cz=sz,k=0;while(k<raw.length-1){let far=k+1;for(let m=raw.length-1;m>k+1;m--){if(lineFree(cx,cz,raw[m][0],raw[m][1])){far=m;break}}out.push(raw[far]);[cx,cz]=raw[far];k=far}
+    if(!out.length)out.push(end);return out;
+  }
+  // ---- Điểm đến: vòng sáng trên mặt nước ----
+  const bayMarker=new THREE.Group();{const ring=new THREE.Mesh(new THREE.RingGeometry(5,6.4,40),new THREE.MeshBasicMaterial({color:'#f6e3b0',transparent:true,opacity:.85,depthWrite:false,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.4;bayMarker.add(ring);
+    const pin=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,9,8),new THREE.MeshBasicMaterial({color:'#f6e3b0'}));pin.position.y=4.8;bayMarker.add(pin);const top=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshBasicMaterial({color:'#e9b866'}));top.position.y=9.6;bayMarker.add(top);bayMarker.userData.ring=ring}
+  bayMarker.visible=false;bayGroup.add(bayMarker);
+  const fmtKm=u=>{const m=u*(bayData?.map?.geo?.meters_per_unit||4);return m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'};
+  function setDestination(x,z,label,fromTour){if(bayIsland)islandBoardNow();if(bayPause&&!fromTour)dropPause();bayShip.faceLm=null;
+    if(!bayBuilt)return;if(!fromTour&&typeof bayTour!=='undefined'&&bayTour)endTour(false);const path=findPath(bayShip.x,bayShip.z,x,z);
+    if(!path){bayCaption('Không tìm được đường tới đó, hãy chọn chỗ nước thoáng hơn');return}
+    const end=path[path.length-1];bayShip.path=path;bayShip.dest={x:end[0],z:end[1],label:label||null};bayShip.stopped=false;
+    let len=0,px=bayShip.x,pz=bayShip.z;for(const [a,b] of path){len+=Math.hypot(a-px,b-pz);px=a;pz=b}
+    bayMarker.position.set(end[0],0,end[1]);bayMarker.visible=false;
+    bayCaption((fromTour&&bayTour?'🧭 '+(bayTour.idx+1)+'/'+bayTour.stops.length+' · ':'⛵ ')+'Đang đi tới '+(label||'điểm đã chọn')+' · khoảng '+fmtKm(len),5200);refreshBayHud();drawBayMap();
+  }
+  function pauseShip(){if(!bayBuilt||bayPause)return;const S=bayShip;
+    bayPause={path:S.path.slice(),dest:S.dest,marker:bayMarker.visible,tour:bayTour||null,dwell:bayTour&&bayTour.dwellUntil?Math.max(0,bayTour.dwellUntil-performance.now()):0,auto:false,turn:0};
+    S.path=[];S.dest=null;if(bayTour)bayTour.dwellUntil=0;bayTour=null;bayMarker.visible=false;viewYaw=0;
+    bayCaption('⏸ Thuyền dừng lại · vuốt hoặc giữ nút xoay để ngắm, bấm 📷 để chụp ảnh',5000);bayStatusKey='';refreshBayHud();drawBayMap()}
+  function resumeShip(){const P=bayPause;if(!P)return;bayPause=null;const S=bayShip;viewYaw=0;
+    if(P.tour){bayTour=P.tour;if(P.path.length){S.path=P.path;S.dest=P.dest;bayMarker.visible=P.marker}else bayTour.dwellUntil=performance.now()+Math.max(1500,P.dwell)}
+    else if(P.path.length){S.path=P.path;S.dest=P.dest;bayMarker.visible=P.marker}
+    bayCaption(P.path.length||P.tour?'▶ Thuyền đi tiếp':'⚓ Thôi ngắm cảnh',3000);bayStatusKey='';refreshBayHud();drawBayMap()}
+  function dropPause(){if(!bayPause)return;bayPause=null;bayStatusKey='';refreshBayHud()}
+  function stopShip(){dropPause();dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;refreshBayHud();drawBayMap()}
+  // ---- Âm sóng tổng hợp tại chỗ ----
+  // Âm thanh của vịnh: Sóng biển · Nhạc (nhạc thiền tạo ngay trên máy) · Im lặng. Lưu lựa chọn trên máy.
+  let bayAudio=null,bayAudioMode='waves';try{const m=localStorage.getItem('yen_bay_audio');bayAudioMode=['waves','music','silent'].includes(m)?m:(localStorage.getItem('yen_bay_sound')==='0'?'silent':'waves')}catch(e){}
+  const BAY_AUDIO={waves:['🌊','Sóng biển'],music:['🎵','Nhạc'],silent:['🔇','Im lặng']};
+  function startBaySound(){
+    stopBaySound(true);if(bayAudioMode==='silent')return;
+    try{const a=new(window.AudioContext||window.webkitAudioContext)(),master=a.createGain();master.gain.value=0;master.connect(a.destination);const st={a,master,timers:[]};
+      if(bayAudioMode==='waves'){const len=a.sampleRate*4,buf=a.createBuffer(1,len,a.sampleRate),d=buf.getChannelData(0);let b0=0,b1=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;b0=.997*b0+w*.029;b1=.985*b1+w*.032;d[i]=(b0+b1)*.9}
+        const src=a.createBufferSource();src.buffer=buf;src.loop=true;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=480;const g=a.createGain();g.gain.value=.3;
+        const lfo=a.createOscillator();lfo.frequency.value=.1;const lg=a.createGain();lg.gain.value=.18;lfo.connect(lg);lg.connect(g.gain);src.connect(lp);lp.connect(g);g.connect(master);src.start();lfo.start();master.gain.linearRampToValueAtTime(.45,a.currentTime+2.5)}
+      else{// nhạc: nền hợp âm ngũ cung chậm, vài tiếng chuông gió lấp lánh, có vang nhẹ
+        const echo=a.createDelay(2);echo.delayTime.value=.42;const fb=a.createGain();fb.gain.value=.38;const wet=a.createGain();wet.gain.value=.35;echo.connect(fb);fb.connect(echo);echo.connect(wet);wet.connect(master);
+        const PENTA=[261.63,293.66,329.63,392,440],note=(f,type,att,dur,vol,when=a.currentTime)=>{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(vol,when+att);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);g.connect(echo);o.start(when);o.stop(when+dur+.1)};
+        const chords=[[0,2,4],[1,3,0],[2,4,1],[4,1,3]];let ci=0;
+        const pad=()=>{const c=chords[ci++%chords.length];for(const k of c){note(PENTA[k]/2,'sine',2.5,9,.05);note(PENTA[k]/2*1.003,'triangle',3,9,.02)}};
+        const bell=()=>{note(PENTA[Math.floor(Math.random()*5)]*(Math.random()<.5?2:1),'sine',.02,3.2,.045)};
+        pad();st.timers.push(setInterval(pad,8000));st.timers.push(setInterval(()=>{if(Math.random()<.7)bell()},1700));
+        master.gain.linearRampToValueAtTime(.8,a.currentTime+3)}
+      bayAudio=st}catch(e){bayAudio=null}
+  }
+  function stopBaySound(quick){if(!bayAudio)return;const {a,master,timers}=bayAudio;bayAudio=null;timers.forEach(clearInterval);try{master.gain.cancelScheduledValues(a.currentTime);master.gain.setValueAtTime(master.gain.value,a.currentTime);master.gain.linearRampToValueAtTime(0,a.currentTime+(quick?.2:.6));setTimeout(()=>a.close(),quick?300:800)}catch(e){}}
+  function setBayAudio(mode){bayAudioMode=mode;try{localStorage.setItem('yen_bay_audio',mode)}catch(e){}if(bayMode)startBaySound();refreshBayHud();if(typeof refreshOpts==='function')refreshOpts();bayCaption(BAY_AUDIO[mode][0]+' Âm thanh: '+BAY_AUDIO[mode][1],2500)}
+  // ---- Bảng điều khiển và bản đồ ----
+  const bayHUD=document.createElement('div');bayHUD.id='bayHUD';bayHUD.setAttribute('role','region');bayHUD.setAttribute('aria-label','Vịnh Hạ Long');
+  bayHUD.innerHTML='<div class="bay-row" style="position:relative"><button type="button" data-bay="status" class="bay-status" title="Mở tùy chọn du thuyền"><span class="bay-st-ico">⚓</span><span class="bay-st-text">Đang neo</span></button><button type="button" data-bay="pause" class="bay-stop" title="Dừng thuyền ngắm cảnh" aria-label="Dừng thuyền ngắm cảnh" aria-pressed="false">⏸️<span> Ngắm cảnh</span></button><button type="button" data-bay="fast" class="bay-fast" title="Đi nhanh: tốc độ ×5" aria-label="Đi nhanh, tốc độ nhân 5" aria-pressed="false">⏩<span> Nhanh</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bay="tab-tour" title="Tour trải nghiệm" aria-label="Tour trải nghiệm">🧭<span> Tour</span></button><button type="button" data-bay="tab-cruise" title="Dạo ngắm vịnh" aria-label="Dạo ngắm vịnh">⛵<span> Dạo vịnh</span></button><button type="button" data-bay="tab-dest" title="Điểm đến · đến ngay" aria-label="Điểm đến">📍<span> Điểm đến</span></button><button type="button" data-bay="tab-view" title="Góc nhìn" aria-label="Góc nhìn">🎥<span> Góc nhìn</span></button><button type="button" data-bay="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bay="clean" title="Toàn cảnh: ẩn hết nút, chạm màn hình để hiện lại" aria-label="Toàn cảnh, ẩn hết nút">⛶<span> Toàn cảnh</span></button><button type="button" data-bay="audio" title="Âm thanh" aria-label="Chọn âm thanh">🌊<span> Âm thanh</span></button></div><div class="bay-row bay-pause-row" id="bayPauseRow" hidden><button type="button" data-bp2="left" title="Xoay trái (giữ để xoay)" aria-label="Xoay trái">⟲<span> Xoay trái</span></button><button type="button" data-bp2="auto" title="Tự xoay 360°" aria-label="Tự xoay 360 độ" aria-pressed="false">🔄<span> 360°</span></button><button type="button" data-bp2="right" title="Xoay phải (giữ để xoay)" aria-label="Xoay phải">⟳<span> Xoay phải</span></button><button type="button" data-bp2="front" title="Nhìn về mũi tàu" aria-label="Nhìn về mũi tàu">⬆<span> Mũi tàu</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bp2="bowl" title="Xoay mũi tàu sang trái (giữ để xoay)" aria-label="Xoay mũi tàu sang trái">↶<span> Quay tàu</span></button><button type="button" data-bp2="bowr" title="Xoay mũi tàu sang phải (giữ để xoay)" aria-label="Xoay mũi tàu sang phải">↷<span> Quay tàu</span></button><i class="bay-sep" aria-hidden="true"></i><button type="button" data-bp2="photo" title="Chụp ảnh" aria-label="Chụp ảnh">📷<span> Chụp ảnh</span></button><button type="button" data-bp2="go" class="bay-go" title="Đi tiếp" aria-label="Đi tiếp">▶<span> Đi tiếp</span></button><button type="button" data-bp2="end" title="Kết thúc hành trình, neo tại đây" aria-label="Kết thúc hành trình">⏹<span> Neo lại</span></button></div><div class="bay-pop" id="bayAudioPop" role="menu" hidden><button type="button" role="menuitemradio" data-aud="waves">🌊 Sóng biển</button><button type="button" role="menuitemradio" data-aud="music">🎵 Nhạc thư giãn</button><button type="button" role="menuitemradio" data-aud="silent">🔇 Im lặng</button></div>';
+  const bayCapBox=document.createElement('div');bayCapBox.id='bayCapBox';bayCapBox.innerHTML='<div class="bay-caption" id="bayCaption" aria-live="polite"></div>';document.body.appendChild(bayCapBox);
+  document.body.appendChild(bayHUD);
+  const BAY_TABS='<div class="bay-tabs" role="tablist"><button type="button" role="tab" data-tab="tour" aria-label="Tour trải nghiệm">🧭<span> Tour trải nghiệm</span></button><button type="button" role="tab" data-tab="cruise" aria-label="Dạo ngắm vịnh">⛵<span> Dạo ngắm vịnh</span></button><button type="button" role="tab" data-tab="dest" aria-label="Điểm đến">📍<span> Điểm đến</span></button><button type="button" role="tab" data-tab="view" aria-label="Góc nhìn">🎥<span> Góc nhìn</span></button></div>';
+  const BAY_FOOT='<div class="bay-sheet-foot"><span>Tốc độ</span><button type="button" data-opt="slow">▶ Thong thả</button><button type="button" data-opt="fast">⏩ Nhanh ×5</button><span>Âm thanh</span><button type="button" data-opt="aud" data-mode="waves">🌊 Sóng</button><button type="button" data-opt="aud" data-mode="music">🎵 Nhạc</button><button type="button" data-opt="aud" data-mode="silent">🔇 Im lặng</button></div>';
+  const bayMapBox=document.createElement('div');bayMapBox.id='bayMap';bayMapBox.setAttribute('role','dialog');bayMapBox.setAttribute('aria-label','Bản đồ vịnh Hạ Long');
+  bayMapBox.innerHTML='<div class="bay-map-head"><b>⛵ Du thuyền Yên</b><button type="button" data-bay="map-close">✕ Đóng</button></div>'+BAY_TABS+'<div class="bay-regions" id="bayRegions" role="tablist"></div><canvas id="bayMapCanvas" width="720" height="620"></canvas><p class="bay-map-note">Chạm một điểm trên bản đồ hoặc tên danh thắng để đến ngay. Bấm 📸 để đến điểm check-in và mở máy ảnh, danh thắng ở phía sau lưng bạn. Vị trí theo bản đồ thật (gần đúng), kích thước đảo được phóng đại.</p><div class="bay-map-places" id="bayMapPlaces"></div>'+BAY_FOOT;
+  document.body.appendChild(bayMapBox);
+  let captionTimer=0;function bayCaption(s,ms=4200){const c=document.getElementById('bayCaption');c.textContent=s;c.classList.add('show');clearTimeout(captionTimer);captionTimer=setTimeout(()=>c.classList.remove('show'),ms)}
+  // Trạng thái tàu: neo · đang đi tới · dạo vịnh (đang đi / dừng ngắm) · đang ở danh thắng
+  const shortName=n=>String(n||'').split(' · ')[0];
+  function bayStatus(){
+    const S=bayShip;let rem=0,px=S.x,pz=S.z;for(const [a,b] of S.path){rem+=Math.hypot(a-px,b-pz);px=a;pz=b}
+    if(bayPause){const where=bayPause.tour?shortName(bayPause.tour.tour.name):bayPause.dest?.label?'đến '+shortName(bayPause.dest.label):bayPause.path.length?'đến điểm đã chọn':'';return{ico:'⏸',text:'Dừng ngắm cảnh'+(where?' · '+where:''),short:'Đang dừng',moving:false,paused:true}}
+    if(typeof bayTour!=='undefined'&&bayTour){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark),n=bayTour.stops.length,k=(bayTour.idx+1)+'/'+n;
+      const nm=shortName(p?.name).replace(/^(Hòn|Đảo|Động|Hang|Làng chài|Cảng tàu khách quốc tế) /,'');
+      if(S.path.length)return{ico:'🧭',text:shortName(bayTour.tour.name)+' · '+k+' · đến '+shortName(p?.name)+' · còn '+fmtKm(rem),short:k+' · '+nm+' · '+fmtKm(rem),moving:true,tour:true};
+      if(bayTour.dwellUntil){const sec=Math.max(0,Math.ceil((bayTour.dwellUntil-performance.now())/1000));return{ico:'📍',text:shortName(p?.name)+' · '+k+' · đi tiếp sau '+sec+' giây',short:k+' · '+nm+' · '+sec+' giây',moving:true,tour:true}}
+      return{ico:'📍',text:shortName(p?.name)+' · '+k,short:k+' · '+nm,moving:true,tour:true}}
+    if(S.path.length){const nm=S.dest?.label?shortName(S.dest.label).replace(/^(Hòn|Đảo|Động|Hang|Làng chài|Cảng tàu khách quốc tế) /,''):'điểm chọn';return{ico:'⛵',text:'Đến '+(S.dest?.label?shortName(S.dest.label):'điểm đã chọn')+' · còn '+fmtKm(rem),short:nm+' · '+fmtKm(rem),moving:true}}
+    let near=null;if(bayData)for(const p of bayData.props){if(p.kind!=='landmark')continue;const d=Math.hypot(p.x-S.x,p.z-S.z);if(!near||d<near.d)near={p,d}}
+    if(bayAt&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<200)near={p:bayAt.p,d:0};
+    const nm=near?shortName(near.p.name).replace(/^Cảng tàu khách quốc tế /,'Cảng '):'';
+    if(near&&near.d<(near.p.params?.radius||30)+260)return{ico:'📍',text:'Đang ở '+shortName(near.p.name),short:'Ở '+nm,moving:false};
+    if(near&&near.d<900)return{ico:'⚓',text:'Đang neo · gần '+shortName(near.p.name),short:'Neo · gần '+nm,moving:false};
+    return{ico:'⚓',text:'Đang neo giữa vịnh',short:'Neo giữa vịnh',moving:false};
+  }
+  let bayStatusKey='';
+  function refreshBayHud(){
+    const st=bayStatus(),narrow=innerWidth<760,txt=narrow&&st.short?st.short:st.text,key=st.ico+txt+st.moving;
+    if(key!==bayStatusKey){bayStatusKey=key;const chip=bayHUD.querySelector('[data-bay="status"]');chip.querySelector('.bay-st-ico').textContent=st.ico;chip.querySelector('.bay-st-text').textContent=txt;chip.classList.toggle('moving',st.moving);chip.setAttribute('aria-label','Trạng thái tàu: '+st.text+'. Mở Hành trình');
+      const pb=bayHUD.querySelector('[data-bay="pause"]');pb.setAttribute('aria-pressed',String(!!st.paused));pb.title=st.paused?'Đang dừng ngắm cảnh':'Dừng thuyền ngắm cảnh';
+      const pr=document.getElementById('bayPauseRow');pr.hidden=!st.paused;document.body.classList.toggle('bay-paused',!!st.paused);if(st.paused){const g=pr.querySelector('[data-bp2="go"]');g.hidden=!bayPause.path.length&&!bayPause.tour;pr.querySelector('[data-bp2="end"]').hidden=g.hidden}}
+    if(bayPause){const a=document.querySelector('[data-bp2="auto"]');if(a)a.setAttribute('aria-pressed',String(!!bayPause.auto))}
+    {const ab=bayHUD.querySelector('[data-bay="audio"]');if(ab){const [ic,lb]=BAY_AUDIO[bayAudioMode];ab.innerHTML=ic+'<span> '+lb+'</span>';ab.title='Âm thanh: '+lb}for(const b of bayHUD.querySelectorAll('[data-aud]'))b.setAttribute('aria-checked',String(b.dataset.aud===bayAudioMode))}
+    bayHUD.querySelector('[data-bay="tab-tour"]').setAttribute('aria-pressed',String(!!(typeof bayTour!=='undefined'&&bayTour)));
+    {const fb=bayHUD.querySelector('[data-bay="fast"]'),M=bayMult();if(fb&&fb.dataset.m!==String(M)){fb.dataset.m=String(M);fb.setAttribute('aria-pressed',String(M>1));fb.innerHTML='⏩<span> '+(M>1?'×'+M:'Nhanh')+'</span>';
+      fb.title=M===1?'Đi nhanh: tốc độ ×5':'Đang đi ×5 · bấm để về tốc độ thường';fb.setAttribute('aria-label',fb.title)}}
+  }
+
+  // ---- Bảng tùy chọn của du thuyền: Tour trải nghiệm · Dạo ngắm vịnh · Điểm đến · Góc nhìn ----
+  const baySheet=document.createElement('div');baySheet.id='baySheet';baySheet.setAttribute('role','dialog');baySheet.setAttribute('aria-label','Tùy chọn du thuyền');
+  baySheet.innerHTML='<div class="bay-map-head"><b>⛵ Du thuyền Yên</b><button type="button" data-bay="sheet-close">✕ Đóng</button></div>'+BAY_TABS+'<p class="bay-map-note" id="baySheetTitle"></p><div id="baySheetBody"></div>'+BAY_FOOT;
+  document.body.appendChild(baySheet);
+  const closeSheet=()=>{baySheet.classList.remove('open');document.body.classList.remove('bay-map-open')};
+  baySheet.addEventListener('click',e=>{if(e.target.closest('[data-bay="sheet-close"]'))closeSheet()});
+  const setTab=t=>{for(const b of document.querySelectorAll('.bay-tabs [data-tab]'))b.setAttribute('aria-selected',String(b.dataset.tab===t))};
+  let lastTrip='tour';
+  function openTrip(tab){if(!bayBuilt){bayCaption('Đang tải bản đồ vịnh…');return}tab=tab||lastTrip;lastTrip=tab;
+    if(tab==='dest'){closeSheet();openBayMap()}else{bayMapBox.classList.remove('open');({tour:renderTours,cruise:renderCruise,view:renderViews})[tab]();baySheet.classList.add('open');document.body.classList.add('bay-map-open')}
+    setTab(tab);refreshOpts()}
+  document.addEventListener('click',e=>{const b=e.target.closest('.bay-tabs [data-tab]');if(b)openTrip(b.dataset.tab);
+    const o=e.target.closest('[data-opt]');if(!o)return;
+    if(o.dataset.opt==='slow'||o.dataset.opt==='fast'||o.dataset.opt==='fast9'){setBayMult(o.dataset.opt==='slow'?1:5);bayStatusKey='';refreshBayHud();refreshOpts();if(baySheet.classList.contains('open')&&lastTrip!=='view')openTrip(lastTrip)}
+    if(o.dataset.opt==='aud')setBayAudio(o.dataset.mode)});
+  function refreshOpts(){const M=bayMult();for(const [k,v] of [['slow',1],['fast',5],['fast9',-1]])for(const b of document.querySelectorAll('[data-opt="'+k+'"]'))b.setAttribute('aria-pressed',String(M===v));
+    for(const b of document.querySelectorAll('[data-opt="aud"]'))b.setAttribute('aria-pressed',String(b.dataset.mode===bayAudioMode))}
+  const lmById=id=>bayData?.props.find(p=>p.kind==='landmark'&&p.id===id);
+  function legLength(fx,fz,tx,tz){const p=findPath(fx,fz,tx,tz);if(!p)return Math.hypot(tx-fx,tz-fz)*1.3;let len=0,x=fx,z=fz;for(const [a,b] of p){len+=Math.hypot(a-x,b-z);x=a;z=b}return len}
+  // Thời gian: trên web theo tốc độ tàu trong cảnh; ngoài đời theo tốc độ tàu du lịch thật (ước tính, ghi trong dữ liệu).
+  const fmtDur=s=>{s=Math.max(1,Math.round(s));if(s<60)return s+' giây';const m=Math.round(s/60);if(m<60)return m+' phút';const hh=Math.floor(m/60),mm=m%60;return hh+' giờ'+(mm?' '+mm+' phút':'')};
+  const webSecs=len=>len/(bayShip.max*bayMult())+(len>1?5/bayMult():0);
+  const realSecs=len=>len*(bayData?.map?.geo?.meters_per_unit||4)/1000/(bayShip.ex?.real_speed_kmh||15)*3600;
+  const legInfo=(len,dwell=0)=>fmtKm(len)+' · web '+fmtDur(webSecs(len)+dwell/bayMult())+' · ngoài đời ≈ '+fmtDur(realSecs(len));
+  const approachOf=p=>viewPoint(p);
+  const sheetBody=(note)=>{document.getElementById('baySheetTitle').textContent=note;const body=document.getElementById('baySheetBody');body.innerHTML='';return body};
+  function renderTours(){
+    const body=sheetBody('Chọn tour và đoạn muốn đi: từ điểm nào đến điểm nào. Thời gian ngoài đời là ước tính theo tàu du lịch thật ('+(bayShip.ex?.real_speed_kmh||15)+' km/giờ).');
+    if(bayTour){const cur=document.createElement('div');cur.className='bay-tour-now';cur.textContent='Đang đi: '+shortName(bayTour.tour.name)+' · điểm '+(bayTour.idx+1)+'/'+bayTour.stops.length;const stop=document.createElement('button');stop.type='button';stop.textContent='⏹ Kết thúc tour';stop.onclick=()=>{endTour(true);stopShip();closeSheet()};cur.appendChild(stop);body.appendChild(cur)}
+    for(const t of bayData.props.filter(p=>p.kind==='tour')){
+      const stops=(t.params?.stops||[]).filter(s=>lmById(s.landmark));if(!stops.length)continue;
+      const card=document.createElement('div');card.className='bay-card bay-tour';
+      card.innerHTML='<b></b><small></small><div class="bay-range"><label>Từ <select data-r="from"></select></label><label>Đến <select data-r="to"></select></label></div><ol class="bay-legs"></ol><div class="bay-tour-foot"><em></em><button type="button">⛵ Bắt đầu</button></div>';
+      card.querySelector('b').textContent=t.name;card.querySelector('small').textContent=t.params?.summary||'';
+      const selFrom=card.querySelector('[data-r="from"]'),selTo=card.querySelector('[data-r="to"]');
+      stops.forEach((s,i)=>{const nm=shortName(lmById(s.landmark).name);selFrom.add(new Option((i+1)+'. '+nm,i));selTo.add(new Option((i+1)+'. '+nm,i))});selTo.value=String(stops.length-1);
+      const legsCache=new Map();const leg=(ax,az,bx,bz)=>{const k=[ax,az,bx,bz].map(Math.round).join(',');if(!legsCache.has(k))legsCache.set(k,legLength(ax,az,bx,bz));return legsCache.get(k)};
+      const draw=()=>{let a=+selFrom.value,b=+selTo.value;if(b<a){b=a;selTo.value=String(a)}
+        const ol=card.querySelector('.bay-legs');ol.innerHTML='';let x=bayShip.x,z=bayShip.z,total=0,dwell=0,prev='Vị trí tàu';
+        for(let i=a;i<=b;i++){const p=lmById(stops[i].landmark),[px,pz]=approachOf(p),len=leg(x,z,px,pz);total+=len;if(i<b)dwell+=stops[i].dwell||0;
+          const li=document.createElement('li');li.innerHTML='<span></span><small></small>';li.querySelector('span').textContent=prev+' → '+shortName(p.name);li.querySelector('small').textContent=len<30?'đang ở đây':legInfo(len);ol.appendChild(li);x=px;z=pz;prev=shortName(p.name)}
+        card.querySelector('em').textContent='Tổng '+fmtKm(total)+' · web '+fmtDur(webSecs(total)+dwell/bayMult())+' (gồm dừng ngắm) · ngoài đời ≈ '+fmtDur(realSecs(total));};
+      selFrom.onchange=draw;selTo.onchange=draw;draw();
+      card.querySelector('.bay-tour-foot button').onclick=()=>{startTour(t,+selFrom.value,+selTo.value);closeSheet()};body.appendChild(card)}
+  }
+  function renderCruise(){
+    const body=sheetBody('Chọn điểm đến tiếp theo, tàu tự chạy tới và tránh các đảo trên đường.');
+    const list=bayData.props.filter(p=>p.kind==='landmark').map(p=>{const [ax,az]=approachOf(p),d=Math.hypot(ax-bayShip.x,az-bayShip.z);return{p,d}}).sort((a,b)=>a.d-b.d).map(({p,d},i)=>{const [ax,az]=approachOf(p);return{p,len:d<30?0:i<10?legLength(bayShip.x,bayShip.z,ax,az):d*1.25}});
+    for(const {p,len} of list){const c=document.createElement('div');c.className='bay-card bay-tour';
+      c.innerHTML='<b></b><small></small><div class="bay-tour-foot"><em></em><button type="button">⛵ Đi tới</button></div>';c.querySelector('b').textContent=p.name;c.querySelector('small').textContent=p.params?.description||'';
+      c.querySelector('em').textContent=len<1?'Tàu đang ở đây':legInfo(len);const btn=c.querySelector('button');if(len<1)btn.hidden=true;
+      btn.onclick=()=>{endTour(false);goLandmark(p);closeSheet()};body.appendChild(c)}
+  }
+  let bayView='bow';try{const v=localStorage.getItem('yen_bay_view');if(['bow','sundeck','far','spin'].includes(v))bayView=v}catch(e){}
+  function renderViews(){
+    const body=sheetBody('Chọn góc nhìn. Ở mọi góc, bạn vẫn vuốt trái/phải để nhìn quanh mà không đổi hướng tàu.');
+    const views=bayShip.ex?.views||[{id:'bow',label:'Mũi tàu'},{id:'sundeck',label:'Boong thượng'},{id:'far',label:'Ngắm tàu từ xa'},{id:'spin',label:'Tự xoay 360°'}],ico={bow:'🧍',sundeck:'☀️',far:'🛳',spin:'🔄'};
+    const grid=document.createElement('div');grid.className='bay-views';
+    for(const v of views){const b=document.createElement('button');b.type='button';b.className='bay-card';b.setAttribute('aria-pressed',String(v.id===bayView));b.innerHTML='<b></b><small></small>';b.querySelector('b').textContent=(ico[v.id]||'🎥')+' '+v.label;b.querySelector('small').textContent=v.note||'';
+      b.onclick=()=>{setBayView(v.id);closeSheet()};grid.appendChild(b)}
+    body.appendChild(grid);
+  }
+  // Zoom trong vịnh: ＋/－, con lăn chuột, chụm 2 ngón. Gần ↔ xa sau lưng người (camera lên cao dần để thấy toàn cảnh);
+  // đã xa hết cỡ mà vẫn thu nhỏ tiếp → chuyển sang "Ngắm tàu từ xa"; ở đó phóng to hết cỡ → trở về sau lưng người.
+  let bayLift=0,bayLiftWant=0,bayLiftT=0,bayLiftObjs=null,bayLiftPull=false;
+  let bayZoom=1,bayFarZoom=1,bayZoomOver=0,bayZoomBack='bow';try{const z=Number(localStorage.getItem('yen_bay_zoom'));if(z>=.8&&z<=4)bayZoom=z}catch(e){}
+  const BZ_MIN=.8,BZ_MAX=4,BF_MIN=.55,BF_MAX=1.8;
+  function bayZoomBy(f,force){if(!bayMode||(bayPhoto&&!force)||bayOutfitOpen)return;const far=bayView==='far';
+    if(!far){if(f>1&&bayZoom>=BZ_MAX-1e-3){bayZoomOver+=Math.log(f);if(bayZoomOver>.3){bayZoomOver=0;bayZoomBack=bayView;setBayView('far');bayFarZoom=BF_MIN;bayCaption('🛳 Toàn cảnh từ xa · bấm ＋ để quay lại sau lưng',3000)}}
+      else{bayZoomOver=0;bayZoom=Math.max(BZ_MIN,Math.min(BZ_MAX,bayZoom*f))}}
+    else{if(f<1&&bayFarZoom<=BF_MIN+1e-3){bayZoomOver+=Math.log(1/f);if(bayZoomOver>.3){bayZoomOver=0;setBayView(bayZoomBack&&bayZoomBack!=='far'?bayZoomBack:'bow');bayZoom=BZ_MAX}}
+      else{bayZoomOver=0;bayFarZoom=Math.max(BF_MIN,Math.min(BF_MAX,bayFarZoom*f))}}
+    try{localStorage.setItem('yen_bay_zoom',String(bayZoom))}catch(e){}}
+  function setBayView(id){bayView=id;viewYaw=0;bayLift=0;bayLiftT=0;walkPitch=id==='far'?.12:.05;try{localStorage.setItem('yen_bay_view',id)}catch(e){}refreshBayHud();
+    const v=(bayShip.ex?.views||[]).find(x=>x.id===id);bayCaption('🎥 '+(v?.label||'Góc nhìn')+(v?.note?' · '+v.note:''),3500)}
+  // Lịch trình: đi lần lượt tới điểm ghé của từng danh thắng, dừng ngắm vài giây rồi đi tiếp.
+  let bayTour=null;
+  function startTour(t,from=0,to){dropPause();let stops=(t.params?.stops||[]).filter(s=>lmById(s.landmark));if(to==null)to=stops.length-1;stops=stops.slice(Math.max(0,from),Math.max(from,to)+1);if(!stops.length)return;bayTour={tour:t,stops,idx:0,dwellUntil:0};bayCaption('🧭 Bắt đầu: '+shortName(t.name)+' · '+shortName(lmById(stops[0].landmark).name)+' → '+shortName(lmById(stops[stops.length-1].landmark).name),5000);sailToStop()}
+  function sailToStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);let a=viewPoint(p);bayAt={p,x:a[0],z:a[1]};
+    if(Math.hypot(a[0]-bayShip.x,a[1]-bayShip.z)<8){bayShip.faceLm=p;arriveStop();return}
+    setDestination(a[0],a[1],p.name,true);if(!bayShip.path.length){a=p.params?.approach||[p.x,p.z];bayAt={p,x:a[0],z:a[1]};setDestination(a[0],a[1],p.name,true)}bayShip.faceLm=p;if(!bayShip.path.length){bayCaption('Không tìm được đường tới '+p.name+', bỏ qua điểm này');nextStop()}}
+  function arriveStop(){const s=bayTour.stops[bayTour.idx],p=lmById(s.landmark);bayCaption('📍 '+(bayTour.idx+1)+'/'+bayTour.stops.length+' · '+p.name+(s.note?' · '+s.note:''),Math.max(4000,(s.dwell||0)*1000/bayMult()));
+    if(bayTour.idx>=bayTour.stops.length-1){const name=shortName(bayTour.tour.name);setTimeout(()=>{if(!bayTour)return;bayTour=null;refreshBayHud();bayCaption('✨ Hoàn thành tour · '+name,6000)},Math.max(2500,(s.dwell||0)*1000/bayMult()));return}
+    bayTour.dwellUntil=performance.now()+(s.dwell||0)*1000/bayMult();}
+  function nextStop(){if(!bayTour)return;bayTour.idx++;bayTour.dwellUntil=0;if(bayTour.idx>=bayTour.stops.length){bayTour=null;refreshBayHud();return}sailToStop();refreshBayHud()}
+  function endTour(say){if(!bayTour)return;bayTour=null;if(say)bayCaption('Đã kết thúc lịch trình dạo vịnh');refreshBayHud()}
+  refreshBayHud();
+  const mapView={s:1,ox:0,oz:0};
+  let mapRegion='all';try{const v=localStorage.getItem('yen_bay_region');if(v)mapRegion=v}catch(e){}
+  const REGION_NAME={halong:'Vịnh Hạ Long',lanha:'Vịnh Lan Hạ',btl:'Vịnh Bái Tử Long'};
+  const lmRegion=p=>p.params?.region||'halong';
+  const LM_ICON={village:'🏘',beach:'🏖',island_beach:'🏖',titop:'🏖',arch:'🕳',cove:'🌿',big_island:'⛰',pier:'⚓',bridge:'🌉'};
+  function regionBounds(){const b=bayData.map.bounds;if(mapRegion==='all')return b;const ps=bayData.props.filter(p=>p.kind==='landmark'&&lmRegion(p)===mapRegion);if(!ps.length)return b;
+    const xs=ps.map(p=>p.x),zs=ps.map(p=>p.z),pad=650,span=Math.max(...xs)-Math.min(...xs);return{x_min:Math.min(...xs)-pad,x_max:Math.max(...xs)+pad+span*.22,z_min:Math.min(...zs)-pad,z_max:Math.max(...zs)+pad}}
+  function renderRegions(){const box=document.getElementById('bayRegions');if(!box)return;const items=bayData.nature.find(n=>n.kind==='map_regions')?.params.items||[{id:'all',name:'Toàn cảnh'}];
+    box.innerHTML='';for(const it of items){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=it.name;b.setAttribute('aria-selected',String(it.id===mapRegion));b.onclick=()=>{mapRegion=it.id;try{localStorage.setItem('yen_bay_region',it.id)}catch(e){}renderRegions();renderPlaces();drawBayMap()};box.appendChild(b)}}
+  function closeMapBox(){bayMapBox.classList.remove('open');document.body.classList.remove('bay-map-open')}
+  function renderPlaces(){const places=document.getElementById('bayMapPlaces');places.innerHTML='';
+    const groups=mapRegion==='all'?['halong','lanha','btl']:[mapRegion];
+    for(const g of groups){const ps=bayData.props.filter(p=>p.kind==='landmark'&&lmRegion(p)===g);if(!ps.length)continue;
+      if(groups.length>1){const hd=document.createElement('div');hd.className='bay-place-head';hd.textContent=REGION_NAME[g];places.appendChild(hd)}
+      for(const p of ps){const w=document.createElement('span');w.className='bay-place';const btn=document.createElement('button');btn.type='button';btn.textContent=(LM_ICON[p.params?.shape]||'🪨')+' '+p.name;btn.title='Đến ngay '+p.name;btn.onclick=()=>{warpToLandmark(p);closeMapBox()};
+        const ck=document.createElement('button');ck.type='button';ck.className='bay-ck';ck.textContent='📸';ck.title='Check-in chụp ảnh tại '+p.name;ck.setAttribute('aria-label','Check-in chụp ảnh tại '+p.name);ck.onclick=()=>checkinLandmark(p);
+        w.append(btn,ck);places.appendChild(w)}}}
+  function checkinLandmark(p){if(!bayBuilt)return;closeMapBox();closeSheet();warpToLandmark(p,true);setTimeout(()=>{openPhoto();if(bayPhoto){bayPhoto.pose=PHOTO_POSES.find(q=>q.id==='scene')||PHOTO_POSES[0];bayPhoto.cam={...CAM0};renderPhotoBar()}bayCaption('📸 Check-in '+p.name+' · chỉnh camera rồi bấm chụp',4200)},350)}
+  function drawBayMap(){
+    if(!bayBuilt||!bayMapBox.classList.contains('open'))return;const cv=document.getElementById('bayMapCanvas'),ctx=cv.getContext('2d'),b=regionBounds(),W=cv.width,H=cv.height;
+    mapView.s=Math.min(W/(b.x_max-b.x_min),H/(b.z_max-b.z_min));mapView.ox=(W-(b.x_max-b.x_min)*mapView.s)/2-b.x_min*mapView.s;mapView.oz=(H-(b.z_max-b.z_min)*mapView.s)/2-b.z_min*mapView.s;
+    const X=x=>x*mapView.s+mapView.ox,Z=z=>z*mapView.s+mapView.oz,FS=Math.min(2.1,Math.max(1,W/Math.max(1,cv.clientWidth))),fz=n=>Math.round(n*FS)+'px';
+    ctx.fillStyle='#bfe1da';ctx.fillRect(0,0,W,H);
+    for(const L of bayLand){ctx.beginPath();L.pts.forEach(([x,z],i)=>i?ctx.lineTo(X(x),Z(z)):ctx.moveTo(X(x),Z(z)));ctx.closePath();ctx.fillStyle=L.color;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1}
+    for(const n of bayData.nature){if(n.kind==='karst_field'){ctx.fillStyle='#7f9b77';for(const [x,z,r] of n.params.items){ctx.beginPath();ctx.arc(X(x),Z(z),Math.max(1.2,r*mapView.s),0,6.283);ctx.fill()}}
+      if(n.kind==='channels'){ctx.strokeStyle='#ffffffaa';ctx.setLineDash([4,5]);ctx.lineWidth=1.2;for(const line of n.params.lines){ctx.beginPath();line.forEach(([x,z],i)=>i?ctx.lineTo(X(x),Z(z)):ctx.moveTo(X(x),Z(z)));ctx.stroke()}ctx.setLineDash([])}}
+    {const lb=bayData.nature.find(n=>n.kind==='map_labels');if(lb){ctx.textAlign='center';for(const L of lb.params.items){ctx.fillStyle='#2f5a52aa';ctx.font='italic 600 '+fz(mapRegion==='all'?13:16)+' Georgia,serif';ctx.fillText(L.name,X(L.x),Z(L.z));if(L.sub){ctx.font='italic '+fz(12)+' Georgia,serif';ctx.fillText(L.sub,X(L.x),Z(L.z)+16*FS)}}ctx.textAlign='left'}}
+    if(bayShip.path.length){ctx.strokeStyle='#e9a94f';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(X(bayShip.x),Z(bayShip.z));for(const [x,z] of bayShip.path)ctx.lineTo(X(x),Z(z));ctx.stroke()}
+    ctx.font='600 13px Inter,system-ui,sans-serif';ctx.textBaseline='middle';
+    const showLabel=mapRegion!=='all',mapLabelBoxes=[];
+    for(const p of bayData.props){if(p.kind!=='landmark')continue;const px=X(p.x),pz=Z(p.z);if(px<-20||pz<-20||px>W+20||pz>H+20)continue;ctx.fillStyle=mapRegion==='all'||lmRegion(p)===mapRegion?'#b8862f':'#b8862f88';ctx.beginPath();ctx.arc(px,pz,(showLabel?5:3.5)*FS,0,6.283);ctx.fill();
+      if(!showLabel)continue;ctx.font=fz(14)+' system-ui,sans-serif';ctx.fillText(LM_ICON[p.params?.shape]||'',px-7*FS,pz-13*FS);ctx.font='600 '+fz(13)+' Inter,system-ui,sans-serif';const label=p.name.split(' · ')[0],tw=ctx.measureText(label).width;
+      const cand=[[px+8*FS,pz,'left'],[px-8*FS,pz,'right'],[px,pz+15*FS,'center'],[px,pz-26*FS,'center']];let put=null;
+      for(const [lx,ly,al] of cand){const x0=al==='left'?lx:al==='right'?lx-tw:lx-tw/2,rc=[x0-2,ly-8*FS,x0+tw+2,ly+8*FS];if(rc[0]<0||rc[2]>W||rc[1]<0||rc[3]>H)continue;if(!mapLabelBoxes.some(o=>rc[0]<o[2]&&rc[2]>o[0]&&rc[1]<o[3]&&rc[3]>o[1])){put=[lx,ly,al,rc];break}}
+      if(!put)continue;mapLabelBoxes.push(put[3]);ctx.textAlign=put[2];ctx.lineWidth=3;ctx.strokeStyle='#ffffffdd';ctx.strokeText(label,put[0],put[1]);ctx.fillStyle='#24423c';ctx.fillText(label,put[0],put[1]);ctx.textAlign='left'}
+    {const km=mapRegion==='all'?10:2,px=km*1000/(bayData.map.geo?.meters_per_unit||4)*mapView.s;ctx.fillStyle='#24423c';ctx.fillRect(14,H-18,px,3*FS);ctx.font=fz(11)+' Inter,system-ui,sans-serif';ctx.fillText(km+' km',14,H-22-8*FS)}
+    ctx.save();ctx.translate(X(bayShip.x),Z(bayShip.z));ctx.rotate(-bayShip.heading+Math.PI);ctx.fillStyle='#0f5e66';ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(7,8);ctx.lineTo(0,4);ctx.lineTo(-7,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+    ctx.fillStyle='#24423c';ctx.font='12px Inter,system-ui,sans-serif';ctx.fillText('B ↑',W-34,18);
+  }
+  function openBayMap(){bayMapBox.classList.add('open');document.body.classList.add('bay-map-open');if(bayBuilt){renderRegions();renderPlaces()}drawBayMap()}
+  // Dịch chuyển tức thì: tàu hiện ngay ở điểm ghé, mũi tàu quay về phía danh thắng.
+  // Điểm ngắm: lùi đủ xa để danh thắng nằm trọn trong khung (cao và ngang), nhìn vào mặt đẹp nhất, không bị đảo khác che
+  const LM_SIZE={big_island:[2.2,1.15],titop:[2.4,1.5],pair:[2.6,1],incense:[2.2,1],dog:[2.4,1],arch:[2.6,1.35],trio:[2,1],beach:[2.4,1],island_beach:[2.3,1],cove:[2.6,1.25]};
+  const VP_CACHE=new Map();
+  function viewPoint(p,asp){const key=p.id+'|'+(asp?'a'+asp:camera.aspect<1?'n':'w');if(VP_CACHE.has(key))return VP_CACHE.get(key).slice();const v=viewPointCalc(p,asp);VP_CACHE.set(key,v);return v.slice()}
+  function viewPointCalc(p,aspO){const q=p.params||{},sh=q.shape,r=q.radius||20,h=q.height||20,f=lmFacing(p);
+    let vx=Math.cos(f),vz=Math.sin(f);
+    if(sh==='pair'){const A=.78+Math.PI/2;let px=Math.cos(A),pz=Math.sin(A);if(px*vx+pz*vz<0){px=-px;pz=-pz}vx=px;vz=pz}// Trống Mái: nhìn ngang trục hai hòn
+    const [kw,kh]=LM_SIZE[sh]||[0,0];let W=Math.max(30,r*kw),H=h*kh;if(sh==='village'){W=120;H=36}if(sh==='pier'){W=60;H=12}if(sh==='bridge'){W=300;H=40}
+    const vf=57*Math.PI/180,asp=Math.max(.45,Math.min(2.2,aspO||camera.aspect||1.6)),hf=2*Math.atan(Math.tan(vf/2)*asp);
+    const want=Math.max(h<30&&r<20?38:70,H/Math.tan(vf*.42),(W/2)/Math.tan(hf*.4))+r*(sh==='arch'?1.3:.6)+18;// +18: mũi tàu ở trước tâm tàu
+    const base=Math.atan2(vx,vz),front=[p.x+vx*(r*1.45+34),p.z+vz*(r*1.45+34)],isArch=sh==='arch',wantA=isArch?r*.92+Math.max(45,h*1.5)+18:want;
+    for(const s of (isArch?[1,1.1,.92,1.2,.85]:[1,.9,.8,.7,.6,.5]))for(let k=0;k<(isArch?5:15);k++){const ang=base+(k%2?1:-1)*Math.ceil(k/2)*(isArch?.08:.15),d=wantA*s,qx=p.x+Math.sin(ang)*d,qz=p.z+Math.cos(ang)*d;
+      const fx=p.x+Math.sin(ang)*(r*1.45+34),fz=p.z+Math.cos(ang)*(r*1.45+34);
+      if(navFree(qx,qz)&&lineFree(qx,qz,fx,fz))return[qx,qz]}
+    return p.params?.approach||[p.x+60,p.z]}
+  function warpToLandmark(p,photo){
+    if(!bayBuilt)return;dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;
+    const [ax,az]=photo&&camera.aspect<1?viewPoint(p,.8):viewPoint(p);
+    bayShip.x=ax;bayShip.z=az;bayShip.speed=0;bayShip.trail.length=0;
+    if(Math.hypot(p.x-ax,p.z-az)>1)bayShip.heading=Math.atan2(p.x-ax,p.z-az);viewYaw=0;
+    bayAt={p,x:ax,z:az};updateBay(0);camera.position.copy(bayCam);bayLastNear=p;refreshBayHud();drawBayMap();
+    document.body.classList.add('bay-warp');setTimeout(()=>document.body.classList.remove('bay-warp'),60);
+    bayCaption('✨ Đã đến '+p.name+(p.params?.description?' · '+p.params.description:''),5200);
+  }
+  function warpToPoint(x,z){
+    if(!bayBuilt)return;let px=x,pz=z;if(!navFree(x,z)){const [i,j]=navCell(x,z),f=nearestFree(i,j,i,j);if(!f){bayCaption('Chỗ đó không đến được');return}px=NAV.x0+(f[0]+.5)*NAV.C;pz=NAV.z0+(f[1]+.5)*NAV.C}
+    dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;bayShip.x=px;bayShip.z=pz;bayShip.speed=0;bayShip.trail.length=0;viewYaw=0;
+    updateBay(0);camera.position.copy(bayCam);refreshBayHud();drawBayMap();document.body.classList.add('bay-warp');setTimeout(()=>document.body.classList.remove('bay-warp'),60);bayCaption('✨ Đã đến vị trí bạn chọn trên bản đồ',4000);
+  }
+  function goLandmark(p){let a=viewPoint(p);setDestination(a[0],a[1],p.name);if(!bayShip.path.length&&Math.hypot(a[0]-bayShip.x,a[1]-bayShip.z)>30){a=p.params?.approach||[p.x,p.z];setDestination(a[0],a[1],p.name)}bayAt={p,x:a[0],z:a[1]};bayShip.faceLm=p}
+  document.getElementById('bayMapCanvas').addEventListener('click',e=>{if(!bayBuilt)return;const cv=e.currentTarget,r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*cv.width,pz=(e.clientY-r.top)/r.height*cv.height;
+    const x=(px-mapView.ox)/mapView.s,z=(pz-mapView.oz)/mapView.s;let near=null;for(const p of bayData.props){if(p.kind!=='landmark')continue;const d=Math.hypot(p.x-x,p.z-z)*mapView.s;if(d<14&&(!near||d<near.d))near={p,d}}
+    if(near)warpToLandmark(near.p);else warpToPoint(x,z);(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'))});
+  bayMapBox.addEventListener('click',e=>{if(e.target.closest('[data-bay="map-close"]'))(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'))});
+  document.addEventListener('pointerdown',e=>{const p=document.getElementById('bayAudioPop');if(p&&!p.hidden&&!e.target.closest('#bayAudioPop,[data-bay="audio"]')){p.hidden=true;document.body.classList.remove('bay-pop-open')}},true);
+  bayHUD.addEventListener('click',e=>{const au=e.target.closest('[data-aud]');if(au){setBayAudio(au.dataset.aud);document.getElementById('bayAudioPop').hidden=true;document.body.classList.remove('bay-pop-open');return}const act=e.target.closest('[data-bay]')?.dataset.bay;if(!act)return;
+    if(act==='status')openTrip();
+    if(act.startsWith('tab-'))openTrip(act.slice(4));
+    if(act==='photo')openPhoto();
+    if(act==='clean'){closeSheet();document.body.classList.add('bay-clean');const p=document.getElementById('bayAudioPop');if(p)p.hidden=true}
+    if(act==='audio'){const p=document.getElementById('bayAudioPop');p.hidden=!p.hidden;document.body.classList.toggle('bay-pop-open',!p.hidden)}
+    if(act==='pause'){if(bayPause)resumeShip();else pauseShip()}
+    if(act==='fast'){const N=bayMult()>1?1:5;setBayMult(N);bayCaption(N===1?'⛵ Về tốc độ thường':'⏩ Đi nhanh · tốc độ ×'+N+' (cả thời gian dừng ngắm)',2500)}
+  });
+  {const pr=document.getElementById('bayPauseRow');
+    pr.addEventListener('click',e=>{const b=e.target.closest('[data-bp2]');if(!b||!bayPause)return;const k=b.dataset.bp2;
+      if(k==='auto'){bayPause.auto=!bayPause.auto;refreshBayHud()}
+      else if(k==='front'){bayPause.auto=false;bayPause.snap=true;refreshBayHud()}
+      else if(k==='photo'){bayPause.auto=false;openPhoto()}
+      else if(k==='go')resumeShip();
+      else if(k==='end'){stopShip();bayCaption('⚓ Đã neo tàu tại đây')}});
+    for(const [k,d] of [['left',1],['right',-1]]){const b=pr.querySelector('[data-bp2="'+k+'"]');
+      b.addEventListener('pointerdown',e=>{if(!bayPause)return;e.preventDefault();bayPause.turn=d;bayPause.auto=false;bayPause.snap=false;refreshBayHud();try{b.setPointerCapture(e.pointerId)}catch(_){}});
+      for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{if(bayPause)bayPause.turn=0})}
+    for(const [k,d] of [['bowl',1],['bowr',-1]]){const b=pr.querySelector('[data-bp2="'+k+'"]');
+      b.addEventListener('pointerdown',e=>{if(!bayPause)return;e.preventDefault();bayPause.bow=d;bayShip.faceLm=null;try{b.setPointerCapture(e.pointerId)}catch(_){}});
+      for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{if(bayPause)bayPause.bow=0})}}
+  document.getElementById('enterBay')?.addEventListener('click',()=>{if(!document.body.classList.contains('yen-3d-error'))startBaySound()});
+  // Chạm trong cảnh: danh thắng → đi tới điểm ghé; đảo hay mặt nước → đi tới chỗ nước gần nhất.
+  const bayPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),bayHit=new THREE.Vector3();
+  function bayTap(ray){
+    if(!bayBuilt){bayCaption('Đang tải bản đồ vịnh…');return}
+    if(TU_DAO.group){const th=ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao){tuDaoTap(th.object.userData.tuDao);return}}
+    if(bayIsland){islandBack();return}
+    const lmHit=ray.intersectObjects(bayPick,false)[0],rock=ray.intersectObjects(bayKarstMeshes,false)[0];
+    if(lmHit&&(!rock||lmHit.distance<rock.distance+60)){goLandmark(lmHit.object.userData.landmark);return}
+    let pt=null;if(rock)pt=rock.point;else if(ray.ray.intersectPlane(bayPlane,bayHit))pt=bayHit;
+    if(!pt){bayCaption('Chạm xuống mặt nước để chọn nơi tàu đi tới',3000);return}
+    const x=pt.x-BAY.x,z=pt.z-BAY.z;if(Math.hypot(x-bayShip.x,z-bayShip.z)>1700){bayCaption('Chỗ đó xa quá, hãy mở 🗺 Bản đồ để chọn',3500);return}
+    setDestination(x,z,rock?'chân đảo đá':null);
+  }
+  // ---- Trang phục riêng cho Vịnh Yên: kiểu đi biển và trang phục thiền; rừng thông giữ trang phục cũ ----
+  const BAY_OUTFIT_KEY='yen_bay_outfit_1',BAY_OUTFIT_SEEN='yen_bay_outfit_seen_1';
+  // Năm kiểu: thiền phục (như Rừng Yên) và bốn kiểu dựng riêng cho vịnh. Phụ kiện chọn nhiều: nón, kính, khăn.
+  const SEA_STYLES={tee_jeans:{block:'tee'},suit:{block:'suit'},maxi:{dress:'maxi'},ao_dai:{block:'aodai'}};
+  const BAY_STYLE_IDS=['robe','tee_jeans','suit','maxi','ao_dai'];
+  let bayOutfit={style:'tee_jeans',color:'#90b7a5',acc:['hat']},bayOutfitSaved=null,bayOutfitOpen=false;
+  try{const o=JSON.parse(localStorage.getItem(BAY_OUTFIT_KEY)||'null');if(o&&o.style==='gown')o.style='ao_dai';if(o&&BAY_STYLE_IDS.includes(o.style)){bayOutfit={style:o.style,color:/^#[0-9a-f]{6}$/i.test(o.color)?o.color:'#90b7a5',acc:Array.isArray(o.acc)?o.acc.filter(a=>['hat','glasses','scarf'].includes(a)):[]};bayOutfitSaved={...bayOutfit,acc:[...bayOutfit.acc]}}}catch(e){}
+  const wearMat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
+  // Bộ đồ gắn vào một nhân vật (thân + đầu). Dựng từ khối đơn giản nhưng có dáng: quần ống côn, áo vest có ve áo,
+  // đầm maxi xòe nhẹ, đầm dạ tiệc ôm dáng đuôi cá; phụ kiện gắn vào đầu.
+  const shade=(hex,k)=>{const c=new THREE.Color(hex);c.multiplyScalar(k);return '#'+c.getHexString()};
+  const lathe=(pts,seg=28)=>new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg);
+  function makeSeaWear(group,head){
+    const w={group:new THREE.Group(),m:{},head};group.add(w.group);w.group.visible=false;
+    const M=(k,c,o={})=>w.m[k]=new THREE.MeshStandardMaterial({color:c,roughness:.8,...o});
+    M('legs','#3d5a80');M('shoe','#2b2b2b',{roughness:.45});M('top','#90b7a5',{roughness:.72});M('trim','#ffffff');M('shirt','#f4f2ec');M('tie','#3a3f52');M('dress','#e8a1b4',{side:THREE.DoubleSide});M('gown','#b5a1c7',{roughness:.32,metalness:.22,side:THREE.DoubleSide});M('gold','#d9b56a',{roughness:.35,metalness:.5});M('scarf','#f0e5d4');M('straw','#e2cf9c');M('band','#7a5a3c');M('lens','#1f2629',{roughness:.2,metalness:.4});M('belt','#1b1b1b',{roughness:.45,side:THREE.DoubleSide});M('buckle','#c9ccd1',{roughness:.25,metalness:.8});M('skin','#e7c9a8');
+    // quần: hai ống côn từ hông xuống giày
+    w.legs=new THREE.Group();for(const sx of [-.14,.14]){const leg=new THREE.Mesh(lathe([[0,.06],[.105,.07],[.13,.45],[.155,.8],[0,.84]],14),w.m.legs);leg.position.x=sx;const shoe=new THREE.Mesh(new THREE.BoxGeometry(.16,.07,.28),w.m.shoe);shoe.position.set(sx,.035,.04);w.legs.add(leg,shoe)}w.group.add(w.legs);
+    // áo thun: viền gấu, cổ tròn, tay ngắn
+    w.tee=new THREE.Group();{const col=new THREE.Mesh(new THREE.TorusGeometry(.17,.03,8,20),w.m.trim);col.rotation.x=Math.PI/2;col.position.y=1.53;w.tee.add(col);
+      const belt=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.07,28,1,true),w.m.belt);belt.position.y=.82;const buckle=new THREE.Mesh(new THREE.BoxGeometry(.09,.06,.02),w.m.buckle);buckle.position.set(0,.82,.305);w.tee.add(belt,buckle);
+      for(const sx of [-1,1]){const sl=new THREE.Mesh(new THREE.CapsuleGeometry(.11,.12,4,10),w.m.top);sl.position.set(sx*.4,1.32,0);sl.rotation.z=sx*.5;w.tee.add(sl)}}w.group.add(w.tee);
+    // vest: áo khoác dài qua hông, ve áo chữ V lộ sơ mi trắng và cà vạt, hàng cúc
+    w.suit=new THREE.Group();{const coat=new THREE.Mesh(new THREE.CapsuleGeometry(.37,.5,4,14),w.m.top);coat.position.y=1.12;coat.scale.z=1.03;w.suit.add(coat);
+      const collar=new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,.2,20,1,true),w.m.top);collar.position.y=1.68;w.suit.add(collar);
+      const scol=new THREE.Mesh(new THREE.CylinderGeometry(.165,.175,.16,20,1,true),w.m.shirt);scol.position.y=1.72;w.suit.add(scol);
+      for(const sx of [-1,1]){const pt=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.012),w.m.shirt);pt.position.set(sx*.06,1.65,.205);pt.rotation.z=sx*.75;w.suit.add(pt)}
+      const v=new THREE.Shape();v.moveTo(-.13,.24);v.lineTo(.13,.24);v.lineTo(0,-.12);v.closePath();const shirt=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);shirt.position.set(0,1.12,.377);w.suit.add(shirt);
+      const tie=new THREE.Mesh(new THREE.BoxGeometry(.06,.26,.01),w.m.tie);tie.position.set(0,1.18,.383);w.suit.add(tie);
+      for(const sx of [-1,1]){const lap=new THREE.Mesh(new THREE.BoxGeometry(.06,.3,.012),w.m.trim);lap.position.set(sx*.1,1.2,.378);lap.rotation.z=sx*.38;w.suit.add(lap);
+        const sl=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,4,10),w.m.top);sl.position.set(sx*.43,1.08,0);sl.rotation.z=sx*.12;w.suit.add(sl)}
+      for(const y of [1.05,.92]){const b=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),w.m.tie);b.position.set(0,y,.39);w.suit.add(b)}}w.group.add(w.suit);
+    // đầm maxi: thân áo hai dây, chân váy dài xòe nhẹ có nếp gợn, nơ eo
+    w.maxi=new THREE.Group();{const pts=[];for(let k=0;k<=10;k++){const t=k/10;pts.push([.25+t*.12+t*t*.3,.86-t*.82])}pts.push([0,.04]);const skirt=new THREE.Mesh(lathe(pts.reverse().map(([r,y])=>[r,y]),36),w.m.dress);
+      const pos=skirt.geometry.attributes.position;for(let q=0;q<pos.count;q++){const x=pos.getX(q),z=pos.getZ(q),y=pos.getY(q),a=Math.atan2(z,x),f=1+.05*Math.sin(a*9)*(1-y/.86);pos.setX(q,x*f);pos.setZ(q,z*f)}skirt.geometry.computeVertexNormals();w.maxi.add(skirt);
+      const sash=new THREE.Mesh(new THREE.TorusGeometry(.33,.035,8,24),w.m.scarf);sash.rotation.x=Math.PI/2;sash.position.y=.87;sash.scale.set(.8,.8,1);w.maxi.add(sash);const bow=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),w.m.scarf);bow.scale.set(1.6,1,.6);bow.position.set(.08,.87,.27);w.maxi.add(bow);
+      for(const sx of [-1,1]){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.22,6),w.m.dress);st.position.set(sx*.16,1.52,.08);w.maxi.add(st)}}w.group.add(w.maxi);
+    // đầm dạ tiệc: trễ vai, thân ôm theo ngực, eo, hông; xòe đuôi cá với hai tầng bèo; tà dài phía sau;
+    // viền bèo mềm quanh vai, dây chuyền vàng mảnh
+    w.gown=new THREE.Group();{
+      const body=new THREE.Mesh(lathe([[0,.01],[.52,.01],[.45,.04],[.34,.12],[.24,.28],[.2,.42],[.22,.58],[.26,.74],[.255,.84],[.19,.97],[.2,1.08],[.245,1.22],[.255,1.3],[.22,1.36],[0,1.36]],48),w.m.gown);w.gown.add(body);
+      const tier=(r,y,k)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(r,.045,8,40),w.m.gown);t.rotation.x=Math.PI/2;t.position.y=y;const p=t.geometry.attributes.position;for(let q=0;q<p.count;q++){const x=p.getX(q),yy=p.getY(q),a=Math.atan2(yy,x);p.setZ(q,p.getZ(q)+Math.sin(a*k)*.012)}t.geometry.computeVertexNormals();w.gown.add(t)};
+      tier(.33,.16,14);tier(.44,.06,18);
+      const train=new THREE.Mesh(lathe([[0,.01],[.48,.01],[.4,.05],[.3,.14],[.2,.3],[0,.3]],32),w.m.gown);train.scale.set(.8,1,2.4);train.position.z=-.3;w.gown.add(train);
+      const ruffle=new THREE.Mesh(new THREE.TorusGeometry(.25,.045,10,40),w.m.gown);ruffle.rotation.x=Math.PI/2;ruffle.position.y=1.37;ruffle.scale.set(1.25,.78,1);{const p=ruffle.geometry.attributes.position;for(let q=0;q<p.count;q++){const x=p.getX(q),yy=p.getY(q),a=Math.atan2(yy,x);p.setZ(q,p.getZ(q)+Math.sin(a*16)*.01)}ruffle.geometry.computeVertexNormals()}w.gown.add(ruffle);
+      const belt=new THREE.Mesh(new THREE.TorusGeometry(.195,.014,8,30),w.m.gold);belt.rotation.x=Math.PI/2;belt.position.y=.97;w.gown.add(belt);
+      const neck=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,6,24),w.m.gold);neck.rotation.x=Math.PI/2-.35;neck.position.set(0,1.6,.03);w.gown.add(neck);
+      const pend=new THREE.Mesh(new THREE.OctahedronGeometry(.028),w.m.gold);pend.position.set(0,1.51,.12);w.gown.add(pend);
+    }w.group.add(w.gown);
+    // Thân dạng khối (theo hình mẫu): cổ, thân áo, hai tay có bàn tay, hai ống quần, giày.
+    // Dùng cho vest, áo thun · quần jean và áo dài. Phần trên tách riêng để hạ xuống khi ngồi thiền.
+    M('pants','#3b3b3b');M('jean','#2c3a52');M('sneaker','#f2f0ea',{roughness:.6});M('silk','#f7f4ec',{roughness:.5,side:THREE.DoubleSide});M('lapel','#000000');M('ad','#e8a1b4',{roughness:.5,side:THREE.DoubleSide});
+    // Khối bo tròn cạnh (bán kính theo cạnh ngắn nhất), đổ bóng mượt như hình mẫu
+    const rbox=(sx,sy,sz,k=.32)=>{const r=Math.min(sx,sy,sz)*k,g=new THREE.BoxGeometry(sx,sy,sz,6,6,6),p=g.attributes.position,hx=sx/2-r,hy=sy/2-r,hz=sz/2-r,v=new THREE.Vector3(),c=new THREE.Vector3();
+      for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(Math.max(-hx,Math.min(hx,v.x)),Math.max(-hy,Math.min(hy,v.y)),Math.max(-hz,Math.min(hz,v.z)));v.sub(c);if(v.lengthSq()>1e-9)v.setLength(r);v.add(c);p.setXYZ(i,v.x,v.y,v.z)}
+      g.computeVertexNormals();return g};
+    const B=(x,y,z,sx,sy,sz,m,g)=>{const thin=Math.min(sx,sy,sz)<.03;const b=new THREE.Mesh(thin?new THREE.BoxGeometry(sx,sy,sz):rbox(sx,sy,sz),m);b.position.set(x,y,z);g.add(b);return b};
+    w.bk={};const mk=()=>{const g=new THREE.Group();w.group.add(g);g.visible=false;return g};
+    // ---- vest: dáng chiết eo (ngực rộng, eo thon, vạt xòe nhẹ), vai tròn mềm, ve áo satin, khăn cài túi ngực ----
+    {const up=mk(),lg=mk();w.bk.suit={up,lg};
+      M('satin','#000000',{roughness:.35,metalness:.08});M('gloss','#1b1b1b',{roughness:.25,metalness:.15});w.m.top.roughness=.6;
+      const R=(x,y,z,sx,sy,sz,m,g,k)=>{const b=new THREE.Mesh(rbox(sx,sy,sz,k),m);b.position.set(x,y,z);g.add(b);return b};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      const coat=new THREE.Mesh(lathe([[0,.84],[.255,.84],[.275,.88],[.27,.95],[.235,1.06],[.25,1.18],[.29,1.32],[.3,1.42],[.28,1.5],[.2,1.55],[.08,1.57],[0,1.57]],32),w.m.top);coat.scale.z=.56;up.add(coat);
+      const v=new THREE.Shape();v.moveTo(-.1,0);v.lineTo(.1,0);v.lineTo(0,-.3);v.closePath();const sh=new THREE.Mesh(new THREE.ShapeGeometry(v),w.m.shirt);sh.position.set(0,1.53,.163);up.add(sh);
+      for(const sx of [-1,1]){const l=B(sx*.07,1.4,.164,.075,.3,.012,w.m.satin,up);l.rotation.z=sx*.34}
+      B(0,1.38,.167,.045,.26,.008,w.m.tie,up);
+      for(const y of [1.12,1.02]){const bt=new THREE.Mesh(new THREE.SphereGeometry(.016,10,8),w.m.satin);bt.position.set(0,y,.138);up.add(bt)}
+      const sq=new THREE.Shape();sq.moveTo(-.04,0);sq.lineTo(.04,0);sq.lineTo(.02,.04);sq.lineTo(0,.025);sq.lineTo(-.02,.045);sq.closePath();const pk=new THREE.Mesh(new THREE.ShapeGeometry(sq),w.m.shirt);pk.position.set(.16,1.33,.165);up.add(pk);
+      const col=new THREE.Mesh(new THREE.TorusGeometry(.085,.022,8,20),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
+      for(const sx of [-1,1]){const arm=R(sx*.335,1.17,0,.13,.6,.15,w.m.top,up,.5);arm.rotation.z=sx*.05;B(sx*.345,.865,0,.115,.035,.14,w.m.shirt,up);R(sx*.345,.8,0,.1,.1,.11,w.m.skin,up,.48);
+        R(sx*.11,.47,0,.19,.78,.21,w.m.pants,lg,.45);R(sx*.11,.04,.04,.19,.08,.3,w.m.gloss,lg,.45)}}
+    // ---- áo thun · quần jean ----
+    {const up=mk(),lg=mk();w.bk.tee={up,lg};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      B(0,1.2,0,.58,.66,.32,w.m.top,up);
+      const col=new THREE.Mesh(new THREE.TorusGeometry(.09,.02,6,18),w.m.shirt);col.rotation.x=Math.PI/2;col.position.y=1.535;up.add(col);
+      for(const sx of [-1,1]){B(sx*.36,1.42,0,.17,.22,.22,w.m.top,up);B(sx*.36,1.07,0,.11,.48,.13,w.m.skin,up);
+        B(sx*.12,.47,0,.21,.78,.23,w.m.jean,lg);B(sx*.12,.04,.04,.21,.08,.3,w.m.sneaker,lg)}
+      B(0,.88,0,.585,.06,.325,w.m.belt,up);B(0,.88,.165,.07,.05,.01,w.m.buckle,up)}
+    // ---- áo dài: cổ đứng, tay dài ôm, thân ôm eo, tà trước và tà sau xẻ hông, quần lụa trắng ống rộng ----
+    {const up=mk(),lg=mk();w.bk.aodai={up,lg};
+      B(0,1.585,0,.15,.14,.15,w.m.skin,up);
+      const col=new THREE.Mesh(new THREE.CylinderGeometry(.095,.1,.13,20,1,true),w.m.ad);col.position.y=1.6;up.add(col);
+      const torso=new THREE.Mesh(lathe([[0,.86],[.23,.86],[.2,1.0],[.24,1.22],[.27,1.38],[.25,1.5],[.12,1.55],[0,1.55]],24),w.m.ad);torso.scale.z=.62;up.add(torso);
+      // đường xẻ cúc chéo từ cổ sang nách phải
+      const seam=B(.11,1.47,.156,.2,.016,.01,w.m.gold,up);seam.rotation.z=-.45;
+      for(const sx of [-1,1]){const a=B(sx*.33,1.2,0,.12,.62,.15,w.m.ad,up);a.rotation.z=sx*.06;B(sx*.345,.85,0,.1,.09,.11,w.m.skin,up)}
+      // hai tà: hình thang, hơi bay nhẹ ra sau
+      const panel=(z,tilt)=>{const s=new THREE.Shape();s.moveTo(-.21,0);s.lineTo(.21,0);s.lineTo(.25,-.74);s.quadraticCurveTo(0,-.78,-.25,-.74);s.closePath();const p=new THREE.Mesh(new THREE.ShapeGeometry(s,8),w.m.ad);p.position.set(0,.88,z);p.rotation.x=tilt;lg.add(p);return p};
+      panel(.125,-.06);const back=panel(-.125,.1);back.rotation.y=Math.PI;
+      for(const sx of [-1,1]){const pl=new THREE.Mesh(lathe([[0,.05],[.165,.05],[.15,.4],[.12,.86],[0,.86]],16),w.m.silk);pl.position.x=sx*.11;lg.add(pl);B(sx*.11,.03,.03,.14,.05,.24,w.m.sneaker,lg)}}
+    // phụ kiện trên đầu
+    w.hat=new THREE.Group();{const brim=new THREE.Mesh(new THREE.CylinderGeometry(.48,.5,.02,32),w.m.straw);brim.position.y=.13;const crown=new THREE.Mesh(new THREE.SphereGeometry(.22,20,10,0,Math.PI*2,0,Math.PI/2),w.m.straw);crown.scale.y=.85;crown.position.y=.13;const band=new THREE.Mesh(new THREE.CylinderGeometry(.222,.222,.05,24),w.m.band);band.position.y=.165;w.hat.add(brim,crown,band)}head.add(w.hat);
+    w.glasses=new THREE.Group();{for(const sx of [-.085,.085]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.02,16),w.m.lens);l.rotation.x=Math.PI/2;l.position.set(sx,.03,.236);w.glasses.add(l)}const br=new THREE.Mesh(new THREE.BoxGeometry(.06,.012,.015),w.m.lens);br.position.set(0,.04,.24);w.glasses.add(br)}head.add(w.glasses);
+    w.scarf=new THREE.Group();{const ring=new THREE.Mesh(new THREE.TorusGeometry(.19,.06,8,22),w.m.scarf);ring.rotation.x=Math.PI/2;ring.position.y=-.27;const t1=new THREE.Mesh(new THREE.BoxGeometry(.11,.34,.04),w.m.scarf);t1.position.set(.09,-.46,.19);t1.rotation.z=.12;const t2=t1.clone();t2.position.set(.15,-.42,.17);t2.rotation.z=.32;w.scarf.add(ring,t1,t2)}head.add(w.scarf);
+    for(const a of [w.hat,w.glasses,w.scarf])a.visible=false;
+    return w;
+  }
+  const bw=makeSeaWear(me,meHead);
+  const bayBaseStyle=(o=bayOutfit)=>SEA_STYLES[o.style]?'casual':o.style;
+  // Mặc bộ đồ (gọi sau dressAvatar). active=false thì tháo hết (rời vịnh).
+  function wearSea(w,parts,torso,o,sitting,active){
+    const st=active&&SEA_STYLES[o.style],c=o.color;w.group.visible=!!st&&(!sitting||!!st.block);
+    w.legs.visible=false;w.tee.visible=false;w.suit.visible=false;w.gown.visible=false;w.maxi.visible=st?.dress==='maxi'&&!sitting;
+    for(const [k,b] of Object.entries(w.bk)){const on=st?.block===k;b.up.visible=on;b.lg.visible=on&&!sitting;b.up.position.y=sitting?-.79:0}
+    torso.visible=!st?.block;if(w.head){const k=st?.block?1.14:1;w.head.scale.setScalar(k)}
+    if(st){parts.robe.visible=false;parts.vest.visible=false;parts.sash.visible=false;
+      const legC=st.block==='tee'?'#2c3a52':st.block==='suit'?c:st.block==='aodai'?c:c;
+      w.m.legs.color.set(legC);w.m.top.color.set(c);w.m.trim.color.set('#ffffff');w.m.pants.color.set(c);w.m.ad.color.set(c);w.m.lapel.color.set(shade(c,.78));if(w.m.satin)w.m.satin.color.set(shade(c,.62));w.m.dress.color.set(c);w.m.gown.color.set(c);
+      torso.material.color.set(c);
+      w.m.scarf.color.set(st.dress==='maxi'?'#fbf6ec':(c==='#f0e5d4'?'#e8a1b4':'#f0e5d4'));w.m.tie.color.set('#1f2430');
+      // ngồi thiền: chân xếp mang màu quần hoặc màu váy; áo vest vẫn mặc
+      if(sitting&&parts.legMat)parts.legMat.color.set(legC);
+      // đứng: thân áo ngắn lại thành phần trên (eo ~0,8) để lộ quần hoặc chân váy; ngồi: áo vest thành màu thân
+      if(!sitting&&st.dress){torso.scale.y=.62;torso.position.y=1.26;torso.scale.x=.78;torso.scale.z=.74}
+}
+    if(!st)torso.visible=true;
+    const acc=active?o.acc:[];w.hat.visible=acc.includes('hat');w.glasses.visible=acc.includes('glasses');w.scarf.visible=acc.includes('scarf');
+  }
+  function bayDress(sitting){wearSea(bw,meOutfit,meTorso,bayOutfit,sitting,bayMode)}
+  // Xem trước trong bảng trang phục: một người đứng, một người ngồi thiền trên tọa cụ, xoay nhẹ.
+  let bayPrev=null;
+  function bayPreview(open){
+    const cv=document.getElementById('bayPreview');if(!open||!cv){if(bayPrev)bayPrev.running=false;return}
+    if(!bayPrev||bayPrev.cv!==cv){try{if(bayPrev){bayPrev.r.dispose();try{bayPrev.r.forceContextLoss()}catch(e){}}const W=272,H=170;const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.setSize(W,H,false);r.outputColorSpace=THREE.SRGBColorSpace;
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4e6','#2f5a50',2.1));const s=new THREE.DirectionalLight('#fff0dc',1.7);s.position.set(1.5,4,4);sc.add(s);const rim=new THREE.DirectionalLight('#cfe8e0',.9);rim.position.set(-3,2,-3);sc.add(rim);r.toneMapping=THREE.ACESFilmicToneMapping;
+      const cam=new THREE.PerspectiveCamera(30,W/H,.1,30);cam.position.set(0,1.8,6.4);cam.lookAt(0,.82,0);
+      const fig=(sitting,x)=>{const g=new THREE.Group();const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));g.add(torso);const head=new THREE.Mesh(new THREE.SphereGeometry(.25,16,12),mat('#e7c9a8'));g.add(head);const tag=new THREE.Object3D();poseAvatar(torso,head,tag,sitting);const parts=outfitParts(g,torso);const w=makeSeaWear(g,head);const holder=new THREE.Group();holder.position.x=x;holder.add(g);sc.add(holder);return{holder,g,torso,head,tag,parts,w,sitting}};
+      const stand=fig(false,-.95),sit=fig(true,.95);
+      const deck=new THREE.Mesh(new THREE.CylinderGeometry(.62,.66,.08,48),mat('#5d7a52'));deck.position.set(-.95,-.04,0);sc.add(deck);
+      const seat=buildCushion('zabuton');seat.rotation.y=Math.PI;sit.g.position.set(0,seat.userData.sitTop,-seat.userData.sitBack);sit.holder.add(seat);
+      bayPrev={cv,r,sc,cam,figs:[stand,sit],running:false}}catch(err){console.warn('Bay outfit preview unavailable',err);return}}
+    for(const f of bayPrev.figs){poseAvatar(f.torso,f.head,f.tag,f.sitting);dressAvatar(f.parts,f.torso,bayOutfit.color,bayBaseStyle(),f.sitting);wearSea(f.w,f.parts,f.torso,bayOutfit,f.sitting,true)}
+    if(!bayPrev.running){bayPrev.running=true;const t0=performance.now(),spin=()=>{if(!bayPrev||!bayPrev.running)return;const a=Math.sin((performance.now()-t0)/1400)*.75;for(const f of bayPrev.figs)f.holder.rotation.y=a;bayPrev.r.render(bayPrev.sc,bayPrev.cam);requestAnimationFrame(spin)};spin()}
+  }
+  // Bảng "Lên Du thuyền Yên": chọn trang phục, nhân vật đổi ngay ở mũi tàu, camera quay ra trước mặt.
+  const bayOutfitBox=document.createElement('div');bayOutfitBox.id='bayOutfit';bayOutfitBox.setAttribute('role','dialog');bayOutfitBox.setAttribute('aria-label','Trang phục đi biển');
+  document.body.appendChild(bayOutfitBox);
+  const outfitData=()=>bayData?.map?.outfits||{styles:BAY_STYLE_IDS.map(id=>({id,label:id})),accessories:[{id:'hat',label:'Nón'},{id:'glasses',label:'Kính'},{id:'scarf',label:'Khăn'}],colors:null};
+  function renderOutfit(){
+    const d=outfitData(),pal=Array.isArray(d.colors)?d.colors:[['Vàng','#d9b67d'],['Xanh','#90b7a5'],['Kem','#f0e5d4'],['Tím','#b5a1c7'],['Rêu','#687b48'],['Hồng','#e8a1b4']];
+    if(!pal.some(c=>c[1]===bayOutfit.color)&&pal[0])bayOutfit.color=pal[0][1];
+    const chip=(attr,val,label,on)=>'<button type="button" class="bo-chip" data-'+attr+'="'+val+'" aria-pressed="'+on+'">'+label+'</button>';
+    const typed=bayOutfitBox.querySelector('#bayName')?.value;let name='';try{name=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||''}catch(e){}
+    const keep=document.getElementById('bayPreview');if(keep)keep.remove();
+    bayOutfitBox.innerHTML='<div class="bay-map-head"><b>⛵ Lên Du thuyền Yên</b><button type="button" data-bo="later">Để sau</button></div>'+
+      '<p class="bay-map-note">Trang phục này chỉ dùng ở Vịnh Yên, rừng thông vẫn giữ trang phục cũ.</p>'+
+      '<div class="bo-preview"></div><label class="bo-label" for="bayName">Tên hoặc nickname</label><input id="bayName" maxlength="24" placeholder="Ví dụ: Người ngắm vịnh">'+
+      '<div class="bo-label">Kiểu trang phục</div><div class="bo-row">'+d.styles.map(s=>chip('style',s.id,s.label,s.id===bayOutfit.style)).join('')+'</div>'+
+      '<div class="bo-label">Màu sắc</div><div class="bo-row">'+pal.map(([n,c])=>chip('color',c,'<i style="background:'+c+'"></i>'+n,c===bayOutfit.color)).join('')+'</div>'+
+      '<div class="bo-label">Phụ kiện (chọn nhiều)</div><div class="bo-row">'+d.accessories.map(a=>'<button type="button" class="bo-chip bo-check" role="checkbox" data-acc="'+a.id+'" aria-checked="'+bayOutfit.acc.includes(a.id)+'" aria-pressed="'+bayOutfit.acc.includes(a.id)+'"><b>'+(bayOutfit.acc.includes(a.id)?'✓':'')+'</b>'+a.label+'</button>').join('')+'</div>'+
+      '<div class="row"><button type="button" class="cta" data-bo="save">⛵ Lên tàu</button></div>';
+    const slot=bayOutfitBox.querySelector('.bo-preview');let cv=keep;if(!cv){cv=document.createElement('canvas');cv.id='bayPreview';cv.width=544;cv.height=340;cv.setAttribute('aria-label','Xem trước trang phục: dáng đứng và dáng ngồi thiền')}slot.appendChild(cv);slot.insertAdjacentHTML('beforeend','<div class="preview-caption" aria-hidden="true"><span>Đứng</span><span>Ngồi thiền</span></div>');bayPreview(true);
+    const inp=bayOutfitBox.querySelector('#bayName');inp.value=typed!=null?typed:(name==='Khách Yên'?'':name);
+  }
+  function openBayOutfit(){if(!bayMode)return;bayOutfitOpen=true;renderOutfit();bayOutfitBox.classList.add('open');document.body.classList.add('bay-outfit-open');closeSheet();closeMapBox()}
+  function closeBayOutfit(save){
+    if(save){bayOutfitSaved={...bayOutfit,acc:[...bayOutfit.acc]};try{localStorage.setItem(BAY_OUTFIT_KEY,JSON.stringify(bayOutfit))}catch(e){}
+      const nm=(bayOutfitBox.querySelector('#bayName')?.value||'').trim().replace(/[<>]/g,'').slice(0,24);
+      if(nm){try{if(typeof guestProfile==='object'&&guestProfile){guestProfile.name=nm;localStorage.setItem('yenGuestProfile17',JSON.stringify(guestProfile));if(typeof refreshGuest==='function')refreshGuest()}else{const p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}');p.name=nm;localStorage.setItem('yenGuestProfile17',JSON.stringify(p))}}catch(e){}window.dispatchEvent(new CustomEvent('yen-profile'))}
+      bayCaption('⛵ Chào '+(nm||'bạn')+' · Chúc chuyến đi biển an yên',4500)}
+    else if(bayOutfitSaved)bayOutfit={...bayOutfitSaved,acc:[...bayOutfitSaved.acc]};
+    try{localStorage.setItem(BAY_OUTFIT_SEEN,'1')}catch(e){}
+    bayOutfitOpen=false;bayPreview(false);bayOutfitBox.classList.remove('open');document.body.classList.remove('bay-outfit-open');
+  }
+  bayOutfitBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.style){bayOutfit.style=b.dataset.style;renderOutfit()}else if(b.dataset.acc){const a=b.dataset.acc;bayOutfit.acc=bayOutfit.acc.includes(a)?bayOutfit.acc.filter(x=>x!==a):[...bayOutfit.acc,a];renderOutfit()}else if(b.dataset.color){bayOutfit.color=b.dataset.color;renderOutfit()}
+    else if(b.dataset.bo==='save')closeBayOutfit(true);else if(b.dataset.bo==='later')closeBayOutfit(false)});
+  window.addEventListener('anyen-bay-outfit',openBayOutfit);
+  // ---- Chụp ảnh: nhân vật quay lưng về phía biển nhìn vào máy, chọn dáng, đếm ngược rồi chụp ----
+  const PHOTO_POSES=[{id:'front',label:'Nhìn thẳng',yaw:0,lean:0,tilt:0},{id:'scene',label:'Ngắm vịnh',yaw:.75,lean:0,tilt:-.18},{id:'soft',label:'Nghiêng đầu',yaw:-.25,lean:.05,tilt:.22},{id:'side',label:'Dáng nghiêng',yaw:-.9,lean:-.03,tilt:-.1}];
+  let bayPhoto=null;// {pose, side, shooting}
+  const photoBox=document.createElement('div');photoBox.id='bayPhoto';photoBox.setAttribute('role','dialog');photoBox.setAttribute('aria-label','Chụp ảnh');
+  document.body.appendChild(photoBox);
+  const photoFlash=document.createElement('div');photoFlash.id='bayFlash';document.body.appendChild(photoFlash);
+  // Cỡ ảnh theo nơi đăng (w×h là ảnh xuất ra) và khung trang trí
+  const PHOTO_FMT=[
+    {id:'screen',label:'Như màn hình',w:0,h:0},
+    {id:'fb_post',label:'FB bài dọc 4:5',w:1080,h:1350},
+    {id:'fb_land',label:'FB bài ngang',w:1200,h:630},
+    {id:'fb_cover',label:'Ảnh bìa FB',w:1702,h:630},
+    {id:'story',label:'Story FB · Zalo 9:16',w:1080,h:1920},
+    {id:'avatar',label:'Avatar tròn',w:1080,h:1080,round:true},
+    {id:'square',label:'Vuông 1:1',w:1080,h:1080}];
+  const PHOTO_FRAME=[{id:'none',label:'Không khung'},{id:'white',label:'Viền trắng'},{id:'polaroid',label:'Polaroid'},{id:'gold',label:'Viền vàng'},{id:'film',label:'Phim'}];
+  let photoFmt='screen',photoFrame='none',photoTag=true;try{const s=JSON.parse(localStorage.getItem('yen_bay_photo_fmt')||'{}');if(PHOTO_FMT.some(f=>f.id===s.fmt))photoFmt=s.fmt;if(PHOTO_FRAME.some(f=>f.id===s.frame))photoFrame=s.frame;if(typeof s.tag==='boolean')photoTag=s.tag}catch(e){}
+  const savePhotoOpts=()=>{try{localStorage.setItem('yen_bay_photo_fmt',JSON.stringify({fmt:photoFmt,frame:photoFrame,tag:photoTag}))}catch(e){}};
+  const fmtById=id=>PHOTO_FMT.find(f=>f.id===id)||PHOTO_FMT[0];
+  // Khung xem trước: vùng ảnh sẽ chụp (khớp cách dựng ảnh trong capture)
+  function placePhotoCrop(){const box=photoBox.querySelector('.bp-crop');if(!box)return;const F=fmtById(photoFmt),W=innerWidth,Hh=innerHeight;
+    if(!F.w){box.hidden=true;return}box.hidden=false;const T=F.w/F.h,A=W/Hh;let bw,bh;if(T<A){bh=Hh;bw=Hh*T}else{bw=W;bh=W/T}
+    box.style.width=bw+'px';box.style.height=bh+'px';box.style.left=(W-bw)/2+'px';box.style.top=(Hh-bh)/2+'px';box.classList.toggle('round',!!F.round);
+    box.querySelector('b').textContent=F.label+' · '+F.w+'×'+F.h}
+  addEventListener('resize',()=>{if(bayPhoto&&!bayPhoto.shooting)placePhotoCrop()});
+  function renderPhotoBar(){
+    const cb=(k,ic,t)=>'<button type="button" class="bp-cb" data-cam="'+k+'" title="'+t+'" aria-label="'+t+'">'+ic+'</button>';
+    const chip=(attr,id,label,on)=>'<button type="button" class="bo-chip" '+attr+'="'+id+'" aria-pressed="'+on+'">'+label+'</button>';
+    const pi=PHOTO_POSES.indexOf(bayPhoto.pose);
+    photoBox.innerHTML='<div class="bp-touch" aria-hidden="true"></div><div class="bp-count" id="bpCount" aria-live="assertive"></div><div class="bp-col" role="toolbar" aria-label="Điều khiển chụp ảnh">'+
+      '<button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp ngay">📷</button>'+cb('zin','🔍＋','Zoom gần (phóng to)')+cb('zout','🔍－','Zoom xa (thu nhỏ)')+cb('u','▲','Hướng camera lên')+cb('d','▼','Hướng camera xuống')+cb('l','◀','Hướng camera sang trái')+cb('r','▶','Hướng camera sang phải')+
+      '<button type="button" class="bp-cb" data-bp="pose" title="Đổi dáng: '+bayPhoto.pose.label+'" aria-label="Đổi dáng, đang là '+bayPhoto.pose.label+'">🧍<small>'+(pi+1)+'/'+PHOTO_POSES.length+'</small></button>'+
+      '<button type="button" class="bp-cb" data-bp="flip" title="Đổi bên" aria-label="Đổi bên">↔</button><button type="button" class="bp-cb" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button><button type="button" class="bp-cb bp-x" data-bp="cancel" title="Thoát chụp ảnh" aria-label="Thoát chụp ảnh">✕</button></div><div class="bp-bar" hidden><div class="bp-cam">'+
+      cb('zin','🔍＋','Zoom gần')+cb('zout','🔍－','Zoom xa')+'<i></i>'+cb('l','◀','Camera sang trái')+cb('u','▲','Camera lên cao')+cb('d','▼','Camera xuống thấp')+cb('r','▶','Camera sang phải')+'<i></i>'+cb('ol','⟲','Xoay vòng quanh sang trái')+cb('or','⟳','Xoay vòng quanh sang phải')+'<button type="button" class="bp-cb bp-reset" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button></div><p class="bp-tip">Kéo màn hình để xoay quanh · chụm 2 ngón hoặc lăn chuột để zoom</p><div class="bo-row">'+PHOTO_POSES.map(p=>'<button type="button" class="bo-chip" data-pose="'+p.id+'" aria-pressed="'+(bayPhoto.pose.id===p.id)+'">'+p.label+'</button>').join('')+
+      '<button type="button" class="bo-chip" data-bp="flip" title="Đổi góc chụp">↔ Đổi góc</button></div><div class="bp-actions"><button type="button" class="chip" data-bp="cancel">✕ Hủy</button><button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp">📷</button><span></span></div></div>';
+    bindPhotoCam();placePhotoCrop();
+  }
+  // Camera chụp ảnh: orb = xoay quanh người, zoom = gần/xa, h = cao/thấp, px = trái/phải
+  // Không cho camera chui vào cột, cabin, thân tàu: bắn tia từ người ra camera, gặp khối lớn thì kéo camera vào trước khối đó.
+  let photoBlockers=null;const photoRay=new THREE.Raycaster(),photoDir=new THREE.Vector3(),photoFrom=new THREE.Vector3();
+  function shipBlockers(){photoAvoid(null);return photoBlockers}
+  function photoAvoid(cam,at){
+    if(!photoBlockers){photoBlockers=[];const sp=new THREE.Sphere(),sc=new THREE.Vector3();bayShip.group.updateMatrixWorld(true);bayShip.group.traverse(o=>{if(!o.isMesh||!o.geometry)return;o.geometry.computeBoundingSphere?.();if(!o.geometry.boundingSphere)return;sp.copy(o.geometry.boundingSphere);o.getWorldScale(sc);const r=sp.radius*Math.max(sc.x,sc.y,sc.z),bx=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox),sz=new THREE.Vector3();bx.getSize(sz).multiply(sc);const thin=[sz.x,sz.y,sz.z].sort((a,b)=>a-b);
+      if(r>1.2&&thin[1]>.35)photoBlockers.push(o)})}
+    if(!cam)return;
+    photoFrom.set(at.x,at.y+1.1,at.z);photoDir.subVectors(cam,photoFrom);const L=photoDir.length();if(L<.5)return;photoDir.divideScalar(L);
+    photoRay.set(photoFrom,photoDir);photoRay.far=L;const hit=photoRay.intersectObjects(photoBlockers,false)[0];
+    if(hit&&hit.distance>.3)cam.copy(photoFrom).addScaledVector(photoDir,Math.max(.6,hit.distance-.35));
+  }
+  const camClamp=(v,a,b)=>Math.max(a,Math.min(b,v)),CAM0={zoom:1,yaw:0,pitch:0};
+  const CAM_RATE={zin:['zoom',.9],zout:['zoom',-.9],l:['yaw',.55],r:['yaw',-.55],u:['pitch',.4],d:['pitch',-.4]};
+  // Zoom khi chụp ảnh giống lúc bình thường: thu nhỏ = camera lùi xa, lên cao (xa hết cỡ → ngắm tàu từ xa);
+  // phóng to = lại gần; đã gần hết cỡ mà vẫn phóng to thì zoom ống kính (tele) tới 4×.
+  function photoZoom(f){const C=bayPhoto&&bayPhoto.cam;if(!C)return;
+    if(f>1){if(C.zoom>1.001)C.zoom=Math.max(1,C.zoom/f);else bayZoomBy(f,true)}
+    else{if(bayView==='far'||bayZoom>BZ_MIN+1e-3)bayZoomBy(f,true);else C.zoom=Math.min(4,C.zoom/f)}}
+  function camStep(C,k,v){if(k==='zoom')photoZoom(Math.exp(-v));else if(k==='pitch')C.pitch=camClamp(C.pitch+v,-.7,.7);else if(k==='yaw')C.yaw=camClamp(C.yaw+v,-1.4,1.4)}
+  function bindPhotoCam(){
+    for(const b of photoBox.querySelectorAll('[data-cam]')){
+      b.addEventListener('pointerdown',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();bayPhoto.hold=CAM_RATE[b.dataset.cam];try{b.setPointerCapture(e.pointerId)}catch(_){}});
+      for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{if(bayPhoto)bayPhoto.hold=null})}
+    const el=photoBox.querySelector('.bp-touch'),pts=new Map();let pinch0=0,zoom0=1;
+    el.addEventListener('pointerdown',e=>{if(!bayPhoto||bayPhoto.shooting)return;try{el.setPointerCapture(e.pointerId)}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pts.size===2){const [p,q]=[...pts.values()];pinch0=Math.hypot(p.x-q.x,p.y-q.y)}});
+    el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p||!bayPhoto||bayPhoto.shooting)return;const C=bayPhoto.cam;
+      if(pts.size===1){const f=(camera.fov/57);C.yaw=camClamp(C.yaw+(e.clientX-p.x)/Math.max(320,innerWidth)*1.6*f,-1.4,1.4);C.pitch=camClamp(C.pitch+(e.clientY-p.y)/Math.max(320,innerHeight)*1.2*f,-.7,.7)}
+      p.x=e.clientX;p.y=e.clientY;
+      if(pts.size===2&&pinch0>0){const [a,c]=[...pts.values()],d=Math.max(20,Math.hypot(a.x-c.x,a.y-c.y));photoZoom(pinch0/d);pinch0=d}});
+    for(const ev of ['pointerup','pointercancel'])el.addEventListener(ev,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0});
+    el.addEventListener('wheel',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();photoZoom(Math.exp(e.deltaY*.0012))},{passive:false});
+  }
+  function openPhoto(){if(!bayMode||!bayBuilt)return;closeSheet();closeMapBox();if(bayOutfitOpen)closeBayOutfit(false);
+    bayShip.group.updateMatrixWorld(true);const base={fov:camera.fov,lp:bayShip.group.worldToLocal(camera.position.clone()),ld:camera.getWorldDirection(new THREE.Vector3()).applyQuaternion(bayShip.group.getWorldQuaternion(new THREE.Quaternion()).invert())};
+    const autoPaused=!bayPause&&(bayShip.path.length>0||(typeof bayTour!=='undefined'&&!!bayTour));if(autoPaused){const vy=viewYaw;pauseShip();viewYaw=vy}
+    bayPhoto={pose:PHOTO_POSES[0],side:1,shooting:false,cam:{...CAM0},hold:null,autoPaused,base};meTag.visible=false;renderPhotoBar();photoBox.classList.add('open');document.body.classList.add('bay-photo-open');
+    bayCaption('📷 Chỉnh góc ở cột bên phải rồi bấm chụp'+(autoPaused?' · tàu tạm dừng':''),3000)}
+  function closePhoto(){if(!bayPhoto)return;clearInterval(photoTick);document.getElementById('bpCount')?.classList.remove('show');const ap=bayPhoto.autoPaused,fv=bayPhoto.base?.fov;bayPhoto=null;if(fv&&camera.fov!==fv){camera.fov=fv;camera.updateProjectionMatrix()}if(ap&&bayPause)resumeShip();photoBox.classList.remove('open');document.body.classList.remove('bay-photo-open');meTag.visible=true;meHead.rotation.set(0,0,0);me.rotation.z=0}
+  photoBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!bayPhoto||bayPhoto.shooting)return;
+    if(b.dataset.pose){bayPhoto.pose=PHOTO_POSES.find(p=>p.id===b.dataset.pose)||PHOTO_POSES[0];renderPhotoBar()}
+    else if(b.dataset.fmt){photoFmt=b.dataset.fmt;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none';savePhotoOpts();renderPhotoBar()}
+    else if(b.dataset.frame){photoFrame=b.dataset.frame;savePhotoOpts();renderPhotoBar()}
+    else if(b.dataset.tag){photoTag=!photoTag;savePhotoOpts();renderPhotoBar()}
+    else if(b.dataset.bp==='flip'){bayPhoto.side*=-1}
+    else if(b.dataset.bp==='pose'){const i=(PHOTO_POSES.indexOf(bayPhoto.pose)+1)%PHOTO_POSES.length;bayPhoto.pose=PHOTO_POSES[i];renderPhotoBar();bayCaption('🧍 Dáng: '+bayPhoto.pose.label,1600)}
+    else if(b.dataset.bp==='reset'){bayPhoto.cam={...CAM0}}
+    else if(b.dataset.bp==='cancel')closePhoto();
+    else if(b.dataset.bp==='shoot')shootPhoto()});
+  let photoTick=0;
+  function shootPhoto(){
+    bayPhoto.shooting=true;clearInterval(photoTick);capture();
+  }
+  function capture(){
+    if(!bayPhoto)return;meTag.visible=false;updateBay(0);camera.position.copy(bayCam);camera.lookAt(bayLook);
+    const F=fmtById(photoFmt);let shot;
+    if(F.w){// dựng ảnh ở đúng kích thước: giữ góc nhìn dọc nếu ảnh hẹp hơn màn hình, thu góc nhìn dọc nếu ảnh rộng hơn (khớp khung xem trước)
+      const sz=renderer.getSize(new THREE.Vector2()),pr=renderer.getPixelRatio(),fov0=camera.fov,asp0=camera.aspect,T=F.w/F.h,A=sz.x/sz.y;
+      try{camera.aspect=T;if(T>A)camera.fov=2*Math.atan(Math.tan(fov0*Math.PI/360)*A/T)*180/Math.PI;camera.updateProjectionMatrix();renderer.setPixelRatio(1);renderer.setSize(F.w,F.h,false);
+        renderer.render(scene,camera);shot=renderer.domElement.toDataURL('image/png')}catch(e){shot=null}
+      renderer.setPixelRatio(pr);renderer.setSize(sz.x,sz.y,false);camera.fov=fov0;camera.aspect=asp0;camera.updateProjectionMatrix()}
+    else{renderer.render(scene,camera);try{shot=renderer.domElement.toDataURL('image/png')}catch(e){shot=null}}
+    photoFlash.classList.remove('go');void photoFlash.offsetWidth;photoFlash.classList.add('go');
+    if(!shot){bayCaption('Chưa chụp được ảnh trên thiết bị này');bayPhoto.shooting=false;return}
+    const img=new Image();img.onload=()=>{
+      const W=img.width,H=img.height,S0=Math.max(1,Math.min(W,H)/700),fr=photoFrame,round=!!F.round;
+      // lề khung: trái, trên, phải, dưới
+      const m=round?[0,0,0,0]:fr==='white'?[.035,.035,.035,.035]:fr==='polaroid'?[.045,.045,.045,.16]:fr==='film'?[.02,.075,.02,.075]:fr==='gold'?[.028,.028,.028,.028]:[0,0,0,0];
+      const base=Math.min(W,H),ml=Math.round(base*m[0]),mt=Math.round(base*m[1]),mr=Math.round(base*m[2]),mb=Math.round(base*m[3]);
+      // ảnh trong khung thu nhỏ để tổng kích thước vẫn đúng cỡ đã chọn
+      const out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d');
+      const iw=W-ml-mr,ih=H-mt-mb,sc=Math.max(iw/W,ih/H),dw=W*sc,dh=H*sc;
+      g.fillStyle=fr==='film'?'#111':fr==='gold'?'#0d2f29':'#fbf8f1';g.fillRect(0,0,W,H);
+      g.save();g.beginPath();g.rect(ml,mt,iw,ih);g.clip();g.drawImage(img,ml+(iw-dw)/2,mt+(ih-dh)/2,dw,dh);g.restore();
+      if(fr==='gold'&&!round){g.strokeStyle='#c8a96a';g.lineWidth=3*S0;g.strokeRect(ml-6*S0,mt-6*S0,iw+12*S0,ih+12*S0);g.lineWidth=1.2*S0;g.strokeRect(ml-12*S0,mt-12*S0,iw+24*S0,ih+24*S0)}
+      if(fr==='film'&&!round){g.fillStyle='#e9e4d8';const hw=base*.035,hh=base*.035*.62,step=hw*1.9;for(let x=step*.4;x<W;x+=step){g.fillRect(x,mt*.3,hw,hh);g.fillRect(x,H-mt*.3-hh,hw,hh)}}
+      const W2=iw,H2=ih,X0=ml,Y0=mt;
+      // khung mềm và dòng tên địa danh
+      if(!fr||fr==='none'){const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,30,26,.35)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
+      const S=Math.max(1,W2/900);let place='Vịnh Hạ Long';try{const st=bayStatus();if(st&&/Ở |Đang ở /.test(st.text)){const nm=st.text.replace(/^Đang ở |^Ở /,'');let rg='halong';for(const p of bayData.props)if(p.kind==='landmark'&&shortName(p.name)===nm)rg=lmRegion(p);place=nm+' · '+(REGION_NAME[rg]||'Vịnh Hạ Long')}}catch(e){}
+      const d=new Date(),line=place+' · '+d.toLocaleDateString('vi-VN');g.textBaseline='middle';
+      if(fr==='polaroid'){if(photoTag){const cy=Y0+H2+mb/2;g.textAlign='center';g.fillStyle='#4a3b2a';g.font='italic 600 '+Math.round(mb*.26)+'px Georgia, serif';g.fillText('✧ Làng Yên',W/2,cy-mb*.14,W*.9);g.font=Math.round(mb*.17)+'px system-ui, sans-serif';g.fillStyle='#6d5d49';g.fillText(line,W/2,cy+mb*.2,W*.9);g.textAlign='left'}}
+      else if(round){if(fr==='film'){g.strokeStyle='#111';g.lineWidth=base*.05;g.beginPath();g.arc(W/2,H/2,base/2-base*.06,0,Math.PI*2);g.stroke()}if(fr==='gold'||fr==='white'){g.strokeStyle=fr==='gold'?'#c8a96a':'#fbf8f1';g.lineWidth=base*.03;g.beginPath();g.arc(W/2,H/2,base/2-base*.05,0,Math.PI*2);g.stroke()}}
+      else if(photoTag&&H2/W2<3){const narrow=W2<H2*.9,pad=22*S,bh=(narrow?96:74)*S*(H2/W2<.5?.8:1),by=Y0+H2-bh;g.fillStyle='rgba(9,43,38,.78)';g.fillRect(X0,by,W2,bh);g.fillStyle='#c8a96a';g.fillRect(X0,by,W2,2*S);
+        g.fillStyle='#f4e2b9';g.font='600 '+(26*S)+'px Georgia, serif';
+        if(narrow){g.fillText('✧ LÀNG YÊN',X0+pad,by+30*S);g.font=(17*S)+'px system-ui, sans-serif';g.fillStyle='#f1e6cf';g.fillText(line,X0+pad,by+66*S,W2-pad*2)}
+        else{g.fillText('✧ LÀNG YÊN',X0+pad,by+bh/2);g.font=(18*S)+'px system-ui, sans-serif';g.textAlign='right';g.fillStyle='#f1e6cf';g.fillText(line,X0+W2-pad,by+bh/2);g.textAlign='left'}}
+      out.toBlob(blob=>showPhoto(blob,out.toDataURL('image/jpeg',.9)),'image/jpeg',.92)};
+    img.src=shot;
+  }
+  let bayPhotoUrl=null;
+  function showPhoto(blob,url){
+    const name='lang-yen-vinh-ha-long-'+Date.now()+'.jpg';
+    const chip=(attr,id,label,on)=>'<button type="button" class="bo-chip" '+attr+'="'+id+'" aria-pressed="'+on+'">'+label+'</button>';
+    photoBox.innerHTML='<div class="bp-result"><img alt="Ảnh vừa chụp ở Vịnh Hạ Long"><div class="bp-opts"><div class="bp-fmt"><span>Cỡ ảnh</span>'+PHOTO_FMT.map(f=>chip('data-fmt',f.id,f.label,f.id===photoFmt)).join('')+'</div><div class="bp-fmt"><span>Khung</span>'+PHOTO_FRAME.map(f=>chip('data-frame',f.id,f.label,f.id===photoFrame)).join('')+chip('data-tag','1','🏷 Địa danh',photoTag)+'</div></div><div class="bp-actions"><button type="button" class="chip" data-bp="again">↺ Chụp lại</button><a class="cta" download="'+name+'">⬇ Tải ảnh</a><button type="button" class="chip" data-bp="share">↗ Chia sẻ</button><button type="button" class="chip" data-bp="done">✕ Xong</button></div><p class="bp-hint" role="status"></p></div>';
+    photoBox.querySelector('img').src=url;
+    const share=photoBox.querySelector('[data-bp="share"]');const file=blob?new File([blob],name,{type:'image/jpeg'}):null;
+    // Tải ảnh: dùng blob URL (data URL lớn hay bị trình duyệt chặn). iPhone và trình duyệt trong Zalo/Facebook: mở bảng chia sẻ để "Lưu hình ảnh".
+    {const a=photoBox.querySelector('a.cta'),ua=navigator.userAgent,ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),
+      inApp=/FBAN|FBAV|FB_IAB|Instagram|Zalo|Line\/|MicroMessenger|TikTok|musical_ly/i.test(ua),canFile=!!(file&&navigator.canShare&&navigator.canShare({files:[file]})),touch=matchMedia('(pointer:coarse)').matches;
+      if(bayPhotoUrl)try{URL.revokeObjectURL(bayPhotoUrl)}catch(e){}bayPhotoUrl=blob?URL.createObjectURL(blob):null;a.href=bayPhotoUrl||url;
+      const hint=photoBox.querySelector('.bp-hint'),say=t=>{hint.textContent=t;hint.classList.add('on')};
+      if(ios)a.textContent='🖼 Lưu vào Album ảnh';else if(inApp)a.textContent='⬇ Lưu vào máy';
+      say(inApp?'Bạn đang mở web trong ứng dụng (Zalo/Facebook…), nơi thường không cho tải file: bấm "Lưu vào máy" rồi chọn "Lưu hình ảnh", hoặc chạm giữ vào ảnh.':ios?(canFile?'Bấm "Lưu vào Album ảnh" → chọn "Lưu hình ảnh" (Save Image) là ảnh vào ứng dụng Ảnh.':'Chạm giữ vào ảnh ở trên → chọn "Lưu vào Ảnh" (Save to Photos).'):touch?'Ảnh tải về nằm trong thư mục Download (mở bằng Thư viện ảnh). Cũng có thể chạm giữ vào ảnh để lưu.':'Ảnh tải về nằm trong thư mục Tải xuống (Downloads) của máy.');
+      a.onclick=e=>{if((ios||inApp)&&canFile){e.preventDefault();navigator.share({files:[file]}).then(()=>say(ios?'✓ Nếu đã chọn "Lưu hình ảnh", ảnh nằm trong ứng dụng Ảnh › Gần đây.':'✓ Đã mở bảng chia sẻ.')).catch(()=>{});return}
+        if(ios){e.preventDefault();const im=photoBox.querySelector('.bp-result img');im.classList.add('bp-pulse');setTimeout(()=>im.classList.remove('bp-pulse'),1600);say('Máy chưa hỗ trợ lưu bằng nút: chạm giữ vào ảnh ở trên → chọn "Lưu vào Ảnh" (Save to Photos).');return}
+        if(inApp){e.preventDefault();say('Ứng dụng này chặn tải ảnh: chạm giữ vào ảnh → "Lưu ảnh", hoặc mở anyen.space bằng Safari/Chrome.');return}
+        setTimeout(()=>say(ios?'Ảnh đã lưu vào ứng dụng Tệp › Tải về. Muốn ảnh nằm trong ứng dụng Ảnh: chạm giữ vào ảnh → "Lưu vào Ảnh".':touch?'✓ Đã tải: '+name+' · xem trong thư mục Download hoặc Thư viện ảnh.':'✓ Đã tải: '+name+' · trong thư mục Tải xuống (Downloads).'),400)};}
+    if(!(file&&navigator.canShare&&navigator.canShare({files:[file]}))||/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))share.hidden=true;
+    share.onclick=()=>navigator.share({files:[file],title:'Làng Yên · Vịnh Hạ Long'}).catch(()=>{});
+    photoBox.querySelector('[data-bp="again"]').onclick=()=>{bayPhoto.shooting=false;renderPhotoBar()};
+    photoBox.querySelector('.bp-opts').onclick=e=>{const b=e.target.closest('button');if(!b||!bayPhoto)return;
+      if(b.dataset.fmt){photoFmt=b.dataset.fmt;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none'}else if(b.dataset.frame)photoFrame=b.dataset.frame;else if(b.dataset.tag)photoTag=!photoTag;else return;
+      savePhotoOpts();photoBox.querySelector('.bp-result').classList.add('busy');setTimeout(capture,30)};
+    photoBox.querySelector('[data-bp="done"]').onclick=closePhoto;
+  }
+  // ---- Mỗi khung hình ----
+  const BAY_WATER={lanha:['#18786a','#3fb594'],btl:['#1f7686','#4fb3b0']};let bayWaterRegion='halong',bayWaterBase=null;const bayTmpC1=new THREE.Color(),bayTmpC2=new THREE.Color();
+  const bayUpY=new THREE.Vector3(0,1,0);let bayCamYaw=null;const bayTmpQ=new THREE.Quaternion(),bayTmpD=new THREE.Vector3();
+  // Camera tự lên cao khi bị đá, vách, cabin che giữa camera và người (hoặc tàu khi ngắm từ xa): thử các độ cao tăng dần, lấy mức thấp nhất nhìn thông.
+  const bayLiftRay=new THREE.Raycaster(),bayLiftA=new THREE.Vector3(),bayLiftB=new THREE.Vector3(),bayLiftD=new THREE.Vector3();
+  function bayBlocked(from,to,objs){bayLiftD.subVectors(to,from);const L=bayLiftD.length();if(L<.3)return false;bayLiftD.divideScalar(L);bayLiftRay.set(from,bayLiftD);bayLiftRay.far=L;return bayLiftRay.intersectObjects(objs,false).length>0}
+  function bayLiftFor(from,camAt,steps,objs){bayLiftPull=false;for(const h of steps){if(!bayBlocked(from,camAt(h),objs))return h}bayLiftPull=true;return steps[steps.length-1]}
+  // đá quá cao, nâng hết mức vẫn bị che: kéo camera vào sát trước vật cản
+  function bayPullIn(from,cam,objs){if(!bayLiftPull)return;bayLiftD.subVectors(cam,from);const L=bayLiftD.length();if(L<.5)return;bayLiftD.divideScalar(L);bayLiftRay.set(from,bayLiftD);bayLiftRay.far=L;const hit=bayLiftRay.intersectObjects(objs,false)[0];if(hit)cam.copy(from).addScaledVector(bayLiftD,Math.max(1.2,hit.distance-.8))}
+  function bayLiftStep(dt,from,camAt,steps,objs){bayLiftT-=dt;if(bayLiftT<=0){bayLiftT=.15;bayLiftWant=bayLiftFor(from,camAt,steps,objs)}
+    bayLift+=(bayLiftWant-bayLift)*Math.min(1,dt*(bayLiftWant>bayLift?3.2:.8));return bayLift}
+  const bayAvatar={pos:new THREE.Vector3(),yaw:0};const bayTmp=new THREE.Vector3(),bayLook=new THREE.Vector3(),bayCam=new THREE.Vector3();let bayLastNear=null,bayMapTimer=0;
+  function updateBay(dt){
+    const t=performance.now()/1000;bayU.time.value=t;const S=bayShip;
+    if(bayBuilt){
+      if(S.path.length){const [tx,tz]=S.path[0],dx=tx-S.x,dz=tz-S.z,dist=Math.hypot(dx,dz),last=S.path.length===1;
+        if(dist<(last?3:Math.max(18,Math.min(70,S.speed*2.2)))){S.path.shift();if(!S.path.length){const label=S.dest?.label;S.dest=null;bayMarker.visible=false;refreshBayHud();if(bayTour)arriveStop();else bayCaption(label?'Đã đến '+label:'⚓ Tàu đã tới nơi',5000);if(tuDaoPending&&label==='Tư Đảo của bạn'){const k=tuDaoPending;tuDaoPending=null;setTimeout(()=>{if(bayMode){dockAtTuDao();islandGo(k)}},700)}}}
+        else{const want=Math.atan2(dx,dz);let dh=want-S.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));const turn=S.turn*Math.sqrt(bayMult())*(.35+.65*Math.min(1,S.speed/(S.max*bayMult())));S.heading+=Math.max(-turn*dt,Math.min(turn*dt,dh));
+          const top=S.max*bayMult(),slow=last?Math.min(1,dist/(60*Math.max(1,Math.sqrt(bayMult())*1.2)))*.95+.05:1;const target=top*slow*Math.max(.25,Math.cos(Math.min(1.3,Math.abs(dh))));S.speed+=(target-S.speed)*Math.min(1,dt*.5)}}
+      else{S.speed+=(0-S.speed)*Math.min(1,dt*.6);
+        if(S.faceLm&&bayAt&&bayAt.p===S.faceLm&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<60){const p=S.faceLm,want=Math.atan2(p.x-S.x,p.z-S.z),dh=Math.atan2(Math.sin(want-S.heading),Math.cos(want-S.heading));S.heading+=Math.max(-.6*dt,Math.min(.6*dt,dh));viewYaw*=1-Math.min(1,dt*1.5);const k=Math.min(1,dt*1.2);S.x+=(bayAt.x-S.x)*k;S.z+=(bayAt.z-S.z)*k;S.speed*=1-k;if(Math.abs(dh)<.01&&Math.abs(viewYaw)<.01&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<1){S.faceLm=null;viewYaw=0}}if(bayTour&&bayTour.dwellUntil&&performance.now()>bayTour.dwellUntil)nextStop()}
+      S.x+=Math.sin(S.heading)*S.speed*dt;S.z+=Math.cos(S.heading)*S.speed*dt;
+      S.trailT+=dt;if(S.trailT>.25){S.trailT=0;const sternX=S.x-Math.sin(S.heading)*(S.len/2-3),sternZ=S.z-Math.cos(S.heading)*(S.len/2-3);S.trail.push({x:sternX,z:sternZ,h:S.heading,t,s:Math.min(1,S.speed/6)});while(S.trail.length>WAKE_N)S.trail.shift()}
+      updateWake(t);S.foam.material.opacity=Math.min(.75,S.speed/10);
+      const y=bayWaveY(S.x,S.z,t)*.35;S.group.position.set(S.x,y,S.z);S.group.rotation.set(0,0,0);S.group.rotateY(S.heading);S.group.rotateX(Math.sin(t*.7)*.006);S.group.rotateZ(Math.sin(t*.55+1)*.008);S.group.updateMatrixWorld(true);
+      for(const j of bayJunks){const a=t*j.sp/j.r+j.ph;j.g.position.set(j.x+Math.cos(a)*j.r,bayWaveY(j.x,j.z,t)*.8,j.z+Math.sin(a)*j.r);j.g.rotation.y=-a+Math.PI}
+      for(const b of bayBuoys){b.g.position.y=bayWaveY(b.x,b.z,t)*.9;b.g.rotation.z=Math.sin(t*1.2+b.x)*.08}
+      if(bayMarker.visible){const k=1+Math.sin(t*3)*.08;bayMarker.userData.ring.scale.set(k,k,1)}
+      baySea.position.set(Math.round(S.x/40)*40,0,Math.round(S.z/40)*40);
+      let near=null;for(const p of bayData.props){if(p.kind!=='landmark')continue;const d=Math.hypot(p.x-S.x,p.z-S.z);if(d<(p.params?.radius||30)+220&&(!near||d<near.d))near={p,d}}
+      if(bayAt&&Math.hypot(S.x-bayAt.x,S.z-bayAt.z)<200)near={p:bayAt.p,d:0};
+      if(near&&near.p!==bayLastNear&&!S.dest&&!bayTour)bayCaption(near.p.name+' · '+(near.p.params?.description||''),5200);bayLastNear=near?near.p:null;
+      bayMapTimer+=dt;if(bayMapTimer>.4){bayMapTimer=0;drawBayMap();refreshBayHud();
+        let nr=null;for(const p of bayData.props){if(p.kind!=='landmark')continue;const d=Math.hypot(p.x-S.x,p.z-S.z);if(!nr||d<nr.d)nr={p,d}}bayWaterRegion=nr?lmRegion(nr.p):'halong'}
+      if(!bayWaterBase){bayWaterBase={d:bayU.deep.value.clone(),s:bayU.shallow.value.clone()}}
+      {const W=BAY_WATER[bayWaterRegion],td=W?bayTmpC1.set(W[0]):bayWaterBase.d,tsh=W?bayTmpC2.set(W[1]):bayWaterBase.s,kk=Math.min(1,dt*.35);bayU.deep.value.lerp(td,kk);bayU.shallow.value.lerp(tsh,kk)}
+    }
+    // người đứng ở mũi tàu, quay mặt theo hướng tàu
+    const view=bayPhoto?'photo':bayOutfitOpen?'outfit':bayView,wide=camera.aspect<1?1.25:1;
+    if(bayIsland){updateIslandWalk(dt);}if(bayIsland){islandWorld(bayTmp);bayAvatar.pos.copy(bayTmp);bayAvatar.yaw=bayIsland.yaw}else{bayTmp.copy(view==='sundeck'&&bayShip.deck?bayShip.deck:(bayShip.bow||new THREE.Vector3(0,2.62,18.8)));bayShip.group.localToWorld(bayTmp);bayAvatar.pos.copy(bayTmp);bayAvatar.yaw=S.heading;}mePosition.set(bayTmp.x,0,bayTmp.z);
+    if(view==='spin'&&!bayPause)viewYaw+=dt*.12;
+    if(bayPause&&bayPause.bow){S.heading+=bayPause.bow*dt*.45}
+    if(bayPause&&view!=='photo'){if(bayPause.turn)viewYaw+=bayPause.turn*dt*1.1;else if(bayPause.auto)viewYaw+=dt*.22;else if(bayPause.snap){const d=Math.atan2(Math.sin(-viewYaw),Math.cos(-viewYaw));viewYaw+=d*Math.min(1,dt*4);if(Math.abs(d)<.01){viewYaw=0;bayPause.snap=false}}}
+    // chụp ảnh: máy đặt trên boong trước mặt người (người quay lưng về phía biển), khung lấy cả vịnh phía sau
+    // chụp ảnh: camera giống hệt lúc bình thường (cùng góc nhìn, cùng zoom xa/gần, tự nâng khi bị che), cộng thêm xoay trái/phải, lên/xuống và zoom ống kính
+    const cv=view==='photo'?bayView:view;let PC=null;
+    if(view==='photo'){PC=bayPhoto.cam||(bayPhoto.cam={...CAM0});if(bayPhoto.hold&&!bayPhoto.shooting)camStep(PC,bayPhoto.hold[0],bayPhoto.hold[1]*dt)}
+    // Góc nhìn: mũi tàu / boong thượng / tự xoay (sau lưng người) · ngắm tàu từ xa (vòng quanh tàu) · trang phục (trước mặt người)
+    if(cv==='far'){const c=bayShip.group.position,cx=c.x+BAY.x,cz=c.z+BAY.z,yaw=S.heading+viewYaw+Math.PI*.78+(view==='photo'?(bayPhoto.t0??(bayPhoto.t0=t)):t)*.03,d=82*wide*bayFarZoom,h0=24*Math.pow(bayFarZoom,.7)+Math.sin(walkPitch)*-30;
+      bayLiftA.set(cx,6,cz);const lift=bayLiftStep(dt,bayLiftA,h=>bayLiftB.set(cx-Math.sin(yaw)*d,h0+h,cz-Math.cos(yaw)*d),[0,8,16,28,44],bayKarstMeshes);
+      bayCam.set(cx-Math.sin(yaw)*d,h0+lift,cz-Math.cos(yaw)*d);bayPullIn(bayLiftA,bayCam,bayKarstMeshes);camera.position.lerp(bayCam,Math.min(1,dt*2.5));bayLook.set(cx,4,cz);camera.lookAt(bayLook)}
+    else if(cv==='outfit'){const narrow=camera.aspect<1,yaw=S.heading+Math.PI+.35+viewYaw*.5,d=narrow?6.4:6;bayCam.set(bayTmp.x-Math.sin(yaw)*d,bayTmp.y+1.5,bayTmp.z-Math.cos(yaw)*d);camera.position.lerp(bayCam,Math.min(1,dt*4));
+      // điện thoại: nhân vật ở nửa trên (bảng chọn ở dưới); màn rộng: nhân vật lệch trái (bảng chọn ở bên phải)
+      const side=narrow?0:-2.1,rx=Math.cos(yaw),rz=-Math.sin(yaw);bayLook.set(bayTmp.x+rx*side,bayTmp.y+(narrow?-.72:.95),bayTmp.z+rz*side);camera.lookAt(bayLook)}
+    else{
+      // Camera gắn chặt sau lưng người: khoảng cách cố định (không zoom tới lui khi tàu tăng/giảm tốc), chỉ hướng nhìn trễ nhẹ khi tàu đổi hướng
+      const want=(bayIsland?bayIsland.yaw:S.heading)+viewYaw;if(bayCamYaw==null||dt===0)bayCamYaw=want;else{const d=Math.atan2(Math.sin(want-bayCamYaw),Math.cos(want-bayCamYaw));bayCamYaw+=d*Math.min(1,dt*(Math.abs(d)>.6?6:2.4))}
+      // zoom: xa dần thì camera lùi và lên cao để thấy toàn cảnh; bị che thì tự nâng cao thêm
+      const zx=Math.max(0,bayZoom-1),yaw=bayCamYaw,dist=(meActivity==='sit'?3.1:3.7)*wide*(cv==='sundeck'?1.06:1)*bayZoom,up=(cv==='sundeck'?2.9:2.7)*Math.min(1,bayZoom)+zx*2.2-Math.sin(walkPitch)*2.2;
+      if(!bayLiftObjs&&bayKarstMeshes.length&&bayBuilt){const sb=shipBlockers();if(sb.length)bayLiftObjs=sb.concat(bayKarstMeshes)}
+      bayLiftA.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);const lift=bayLiftStep(dt,bayLiftA,h=>bayLiftB.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+h,bayTmp.z-Math.cos(yaw)*dist),[0,1.5,3,5,8,12],bayLiftObjs||bayKarstMeshes);
+      bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+lift,bayTmp.z-Math.cos(yaw)*dist);bayPullIn(bayLiftA,bayCam,bayLiftObjs||bayKarstMeshes);camera.position.copy(bayCam);
+      // hướng nhìn: như cũ (về chân trời); khi lùi xa / lên cao thì cúi xuống vừa đủ để người vẫn nằm trong khung
+      const ly=bayTmp.y+(camera.aspect<1?1.6:2.6)+Math.sin(walkPitch)*14-(cv==='sundeck'?4.5:0),hd=Math.max(.5,Math.hypot(bayCam.x-bayTmp.x,bayCam.z-bayTmp.z)),p0=Math.atan2(bayCam.y-ly,hd+30),pMe=Math.atan2(bayCam.y-(bayTmp.y+1),hd),
+        half=Math.atan(Math.tan((view==='photo'&&bayPhoto.base?bayPhoto.base.fov:camera.fov)*Math.PI/360)),pitch=Math.max(p0,pMe-half*(.85-.25*Math.min(1,(zx+lift)/6)));
+      bayLook.set(bayCam.x+Math.sin(yaw)*Math.cos(pitch)*30,bayCam.y-Math.sin(pitch)*30,bayCam.z+Math.cos(yaw)*Math.cos(pitch)*30);camera.lookAt(bayLook)}
+    if(PC){camera.rotateOnWorldAxis(bayUpY,PC.yaw);camera.rotateX(PC.pitch);const fv=(bayPhoto.base?.fov||camera.fov)/PC.zoom;if(Math.abs(camera.fov-fv)>.01){camera.fov=fv;camera.updateProjectionMatrix()}}
+    baySky.position.set(camera.position.x-BAY.x,0,camera.position.z-BAY.z);if(bayBackdrop){bayBackdrop.position.x=camera.position.x-BAY.x;bayBackdrop.position.z=camera.position.z-BAY.z}
+    bayU.camL.value.set(camera.position.x-BAY.x,camera.position.y,camera.position.z-BAY.z);
+    // ống nhìn xuyên: tới ngực người, hoặc tới thân tàu khi ngắm từ xa
+    meTag.visible=view==='far';SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
+    if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
+  }
+  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=fetch('data/world-halong_bay.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
+  // Chỉ một cảnh chạy: khi vào vịnh, mọi vật của rừng thông được ẩn và ngừng cập nhật; rời vịnh thì hiện lại.
+  function setVillageActive(on){for(const o of scene.children){if(o===bayGroup||o===me||o.isLight)continue;if(!on){if(!('_vis' in o.userData))o.userData._vis=o.visible;o.visible=false}else if('_vis' in o.userData){o.visible=o.userData._vis;delete o.userData._vis}}}
+  // Lưu trạng thái từng cảnh trên máy để quay lại đúng chỗ (kể cả sau khi tải lại trang).
+  window.addEventListener('anyen-save-now',()=>{if(bayMode)saveBayState();else if(document.body.classList.contains('immersive'))saveForestState()});
+  function saveForestState(){try{localStorage.setItem('yen_forest_state',JSON.stringify({x:mePosition.x,z:mePosition.z,yaw:viewYaw,t:Date.now()}))}catch(e){}}
+  function saveBayState(){if(!bayBuilt)return;const S=bayShip;const st={x:S.x,z:S.z,heading:S.heading,fast:S.fast,mult:bayMult(),t:Date.now()};
+    const T=bayTour||bayPause?.tour,D=S.dest||bayPause?.dest;
+    if(D&&!T)st.dest={x:D.x,z:D.z,label:D.label};
+    if(T)st.tour={id:T.tour.id,stops:T.stops.map(s=>s.landmark),idx:T.idx};
+    try{localStorage.setItem('yen_bay_state',JSON.stringify(st))}catch(e){}}
+  function restoreBayState(){let st=null;try{st=JSON.parse(localStorage.getItem('yen_bay_state')||'null')}catch(e){}if(!st||!Number.isFinite(st.x)||!navFree(st.x,st.z))return false;
+    bayShip.x=st.x;bayShip.z=st.z;bayShip.heading=st.heading||0;bayShip.mult=(st.mult>1||st.fast)?5:1;bayShip.fast=bayShip.mult>1;bayShip.trail.length=0;bayShip.speed=0;bayShip.path=[];bayShip.dest=null;
+    if(st.tour){const t=bayData.props.find(p=>p.kind==='tour'&&p.id===st.tour.id),stops=t&&(t.params?.stops||[]).filter(s=>st.tour.stops.includes(s.landmark));if(stops?.length){bayTour={tour:t,stops,idx:Math.min(st.tour.idx||0,stops.length-1),dwellUntil:0};sailToStop();bayCaption('🧭 Tiếp tục tour · '+shortName(t.name),4500)}}
+    else if(st.dest)setDestination(st.dest.x,st.dest.z,st.dest.label);
+    return true}
+  window.addEventListener('anyen-3d-exit',()=>{if(!bayMode)saveForestState()});
+  // Không gian đang ở: 'forest' | 'bay' | 'room:<id>' | 'out'. Người ở không gian khác thì không hiện hình ở đây (chỉ giữ vị trí, trạng thái).
+  const setSpace=s=>window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:s}}));
+  window.addEventListener('anyen-3d-enter',()=>setSpace(window.anyenPendingBay?'bay':'forest'));window.addEventListener('anyen-3d-exit',()=>setSpace('out'));
+  window.addEventListener('anyen-3d-enter',()=>{if(window.anyenPendingBay)return;let st=null;try{st=JSON.parse(localStorage.getItem('yen_forest_state')||'null')}catch(e){}
+    if(st&&Number.isFinite(st.x)&&walkable(st.x,st.z)){walkRoute.length=0;tapTarget=null;mePosition.set(st.x,0,st.z);walking=true;walkYaw=viewYaw=Number(st.yaw)||Math.PI;document.getElementById('zenHint').textContent='Quay lại chỗ bạn dừng lần trước'}});
+  {let st=null;try{st=JSON.parse(localStorage.getItem('yen_forest_state')||'null')}catch(e){}if(st&&Number.isFinite(st.x)&&walkable(st.x,st.z))mePosition.set(st.x,0,st.z)}// nạp vị trí rừng ngay khi mở trang
+  setInterval(()=>{if(!document.body.classList.contains('immersive'))return;if(bayMode)saveBayState();else saveForestState()},3000);
+  // Nhà hoa lan: walk to the door, then open the Viverse scene over the forest.
+  const orchidBox=document.createElement('div');orchidBox.id='orchidPortal';orchidBox.setAttribute('role','dialog');orchidBox.setAttribute('aria-label','Nhà Sắc · hoa lan');orchidBox.hidden=true;
+  orchidBox.innerHTML='<div class="orchid-top"><span>🌸 Nhà Sắc · ORCHID hoa lan</span><button type="button" id="orchidBack">← Trở về Rừng Yên</button></div><div class="orchid-frame"></div>';
+  document.body.appendChild(orchidBox);
+  function goToOrchid(){if(bayMode||boatRide)return;if(Math.hypot(mePosition.x-VIV.door[0],mePosition.z-VIV.door[1])<1.6){openOrchid();return;}
+    if(navigateTo(...(nearestWalkable(...VIV.door,VIV.rot+Math.PI)||VIV.door))){pendingOrchid=true;document.getElementById('zenHint').textContent='🌀 Đang đến Cổng Viverse…';}}
+  function openOrchid(){if(orchidOpen||bayMode)return;if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openOrchid());return}orchidOpen=true;walkRoute.length=0;walkingKeys.clear();
+    // sang Viverse: lưu vị trí, trạng thái ở rừng; người khác không còn thấy mình trên bản đồ rừng
+    saveForestState();window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'viverse'}}));
+    window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
+    const f=document.createElement('iframe');f.src=ORCHID.url;f.title=ORCHID.title;f.allow='clipboard-write; fullscreen; autoplay; xr-spatial-tracking; gyroscope; accelerometer';f.allowFullscreen=true;
+    orchidBox.querySelector('.orchid-frame').replaceChildren(f);orchidBox.hidden=false;document.body.classList.add('orchid-open');}
+  function closeOrchid(){if(!orchidOpen)return;orchidOpen=false;orchidBox.hidden=true;orchidBox.querySelector('.orchid-frame').replaceChildren();document.body.classList.remove('orchid-open');
+    // Step out of the door facing Hồ Sắc.
+    // ra khỏi cổng: đứng trước cổng; có người đứng đó thì sang chỗ trống gần nhất
+    {const x0=VIV.door[0]+Math.sin(VIV.rot)*.4,z0=VIV.door[1]+Math.cos(VIV.rot)*.4,p=nearestWalkable(x0,z0,VIV.rot)||[x0,z0];mePosition.set(p[0],0,p[1])}viewYaw=walkYaw=VIV.rot;lastWalkFrame=performance.now();
+    if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));
+    window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
+    document.getElementById('zenHint').textContent='Đã trở về Rừng Yên · Chạm Cổng Viverse để vào lại';}
+  document.getElementById('orchidBack').addEventListener('click',closeOrchid);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&orchidOpen)closeOrchid()});
+  window.addEventListener('anyen-3d-exit',()=>closeOrchid());
+  // 3.9: Bản đồ Rừng Yên và điểm đến nhanh. Chạm bản đồ để đi bộ tới; mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
+  const forestMapBox=document.createElement('section');forestMapBox.id='forestMap';forestMapBox.setAttribute('role','dialog');forestMapBox.setAttribute('aria-label','Bản đồ Rừng Yên');
+  forestMapBox.innerHTML='<div class="fm-head"><strong>🗺 Bản đồ Rừng Yên</strong><button type="button" data-fm="close">✕ Đóng</button></div><div class="fm-body"><canvas id="forestMapCanvas" width="480" height="545" aria-label="Bản đồ, chạm để đi bộ tới"></canvas><div class="fm-list"><div class="fm-note">Chạm vào bản đồ để đi bộ tới chỗ đó, hoặc chọn điểm đến:</div><div id="forestMapList"></div></div></div>';
+  document.body.appendChild(forestMapBox);
+  const forestMapOpen=document.createElement('button');forestMapOpen.type='button';forestMapOpen.id='forestMapOpen';forestMapOpen.textContent='🗺 Bản đồ';document.body.appendChild(forestMapOpen);
+  const FM={x0:-74,x1:74,z0:-128,z1:40,w:480,h:545},fmCanvas=forestMapBox.querySelector('#forestMapCanvas'),fmCtx=fmCanvas.getContext('2d');
+  const fmX=x=>(x-FM.x0)/(FM.x1-FM.x0)*FM.w,fmY=z=>(z-FM.z0)/(FM.z1-FM.z0)*FM.h,fmS=m=>m/(FM.x1-FM.x0)*FM.w;
+  function lakeApproach(l){const dx=FOOT.x-l.x,dz=FOOT.z-l.z,d=Math.hypot(dx,dz)||1,px=l.x+dx/d*(POND_R+1.6),pz=l.z+dz/d*(POND_R+1.6);return [px,pz,Math.atan2(l.x-px,l.z-pz)]}
+  function quickPlaces(){const out=[['⛩','Cổng Yên',0,31,Math.PI],['🌿','Sân đón',0,20.5,Math.PI],['🪷','Hồ sen · bờ nam',8,11.5,Math.PI],
+      ['🚣','Bến sen · thuyền ngắm cảnh',BEN_SEN.x,BEN_SEN.z1+1.2,Math.PI],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
+      ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🪜','Bậc đá lên đồi',STAIRS[STAIRS.length-1][0],STAIRS[STAIRS.length-1][1]+.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
+      ['🏡','Tư Gia của bạn',TU_GIA.door[0],TU_GIA.door[1],TU_GIA.rot+Math.PI,'tu_gia'],['🌀','Cổng Viverse · ORCHID hoa lan',VIV.door[0],VIV.door[1],VIV.rot+Math.PI,'orchid'],['🌸','Nhà Sắc · hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id]),['🟧','Tịnh thất may y',TINH_THAT.door[0],TINH_THAT.door[1],TINH_THAT.rot+Math.PI,'tinh_that'],[VAN_HOA.icon,VAN_HOA.name,VAN_HOA.door[0],VAN_HOA.door[1],VAN_HOA.rot+Math.PI,'van_hoa'],...FLOWER_GARDENS.map((g,i)=>[FLOWER_KINDS[g.kind].icon,g.pier?'Hái sen ở Bến sen':FLOWER_KINDS[g.kind].garden,g.x,g.pier?g.z-.6:g.z,null,'garden:'+i])];
+    for(const l of wishLakes){if(l.lotus)continue;const [x,z,yaw]=lakeApproach(l);out.push(['💧','Hồ '+l.name+' · '+l.theme,x,z,yaw])}
+    return out}
+  // A free spot: walkable and at least 1.2 m from any other guest, so arrivals never land on top of someone.
+  const GUEST_AVOID=1.3;let walkWaitStart=0,walkDetourFor=null;
+  function guestDist(x,z){let m=1e9;for(const p of onlineAvatars.values()){const g=p.group;if(g&&g.visible){const d=Math.hypot(g.position.x-x,g.position.z-z);if(d<m)m=d}}return m}
+  // Bước đi có hợp lệ với người khác không: không bước vào sát người (dưới 0,75), nhưng luôn cho bước ra xa nếu đang lỡ đứng sát
+  const guestStepOk=(ox,oz,nx,nz)=>{const dn=guestDist(nx,nz);return dn>=.75||dn>guestDist(ox,oz)+1e-4};
+  // Chỗ trống gần nhất (đi được, cách mọi người ≥ 1)
+  function freeSpotNear(x,z){for(let r=.9;r<=3.3;r+=.3)for(let k=0;k<12;k++){const a=k/12*Math.PI*2+r,qx=x+Math.sin(a)*r,qz=z+Math.cos(a)*r;if(walkable(qx,qz)&&guestDist(qx,qz)>=1)return[qx,qz]}return null}
+  let unstackT=0;
+  function guestNear(x,z,r){for(const p of onlineAvatars.values()){const g=p.group;if(g&&g.visible&&Math.hypot(g.position.x-x,g.position.z-z)<r)return true}return false}
+  function nearestWalkable(x,z,yaw){const ok=(a,b)=>walkable(a,b)&&!guestNear(a,b,GUEST_AVOID);if(ok(x,z))return [x,z];
+    // Side-by-side first: free spots to the left and right of the arrival point, in a row facing the same way.
+    if(yaw!=null){const rx=Math.cos(yaw),rz=-Math.sin(yaw);for(let k=1;k<=4;k++)for(const s of [1,-1]){const q=[x+rx*s*k*GUEST_AVOID,z+rz*s*k*GUEST_AVOID];if(ok(...q))return q}}
+    for(let r=GUEST_AVOID;r<=6;r+=.65)for(let k=0;k<16;k++){const a=k*Math.PI/8,q=[x+Math.cos(a)*r,z+Math.sin(a)*r];if(ok(...q))return q}return walkable(x,z)?[x,z]:null}
+  function standUpForTravel(){if(meActivity==='sit')document.getElementById('realtimeSit')?.click();if(meActivity==='walk')document.getElementById('realtimeWalk')?.click()}
+  function teleportTo(x,z,yaw){if(bayMode||boatRide)return false;const p=nearestWalkable(x,z,yaw);if(!p)return false;standUpForTravel();
+    walkRoute.length=0;clearPendingActions();wishDestination=null;walkingKeys.clear();tapTarget=null;
+    mePosition.set(p[0],0,p[1]);if(yaw!=null){viewYaw=walkYaw=yaw}lookOffset=0;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:p[0],z:p[1]}}));return true}
+  function walkToPlace(x,z,kind,yaw){if(String(kind).startsWith('garden:')){standUpForTravel();goToGarden(FLOWER_GARDENS[Number(kind.slice(7))]);return true}if(kind==='orchid'){standUpForTravel();goToOrchid();return true}if(kind==='tu_gia'){standUpForTravel();goHome(false);return true}{const h=[...SENSE_HOUSES,TINH_THAT,VAN_HOA].find(v=>v.id===kind);if(h){standUpForTravel();goToHouse(h);return true}}const p=nearestWalkable(x,z,yaw);if(!p)return false;standUpForTravel();const ok=navigateTo(...p);if(ok&&yaw!=null)arriveYaw=yaw;return ok}
+  function drawForestMap(){const c=fmCtx;c.clearRect(0,0,FM.w,FM.h);c.fillStyle='#163428';c.fillRect(0,0,FM.w,FM.h);
+    c.fillStyle='#24503e';c.beginPath();c.roundRect(fmX(-72),fmY(-124),fmS(144),fmY(36)-fmY(-124),18);c.fill();
+    // hill: foot, slope, flat top with the stone terrace
+    c.fillStyle='#2c5c45';c.beginPath();c.arc(fmX(HILL.x),fmY(HILL.z),fmS(HILL.foot),0,7);c.fill();c.fillStyle='#35694e';c.beginPath();c.arc(fmX(HILL.x),fmY(HILL.z),fmS(HILL.flat+4),0,7);c.fill();
+    c.fillStyle='#b9ad8a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(8.4),0,7);c.fill();
+    // pines
+    c.fillStyle='rgba(28,58,36,.85)';for(const t of forestTrees){if(t.x<FM.x0||t.x>FM.x1||t.z<FM.z0||t.z>FM.z1)continue;c.beginPath();c.arc(fmX(t.x),fmY(t.z),1.9,0,7);c.fill()}
+    // lotus lake: two lobes and the channel
+    c.fillStyle='#3f8088';for(const [cx,rx,rz] of LOTUS_LAKE.lobes){c.beginPath();c.ellipse(fmX(cx),fmY(LOTUS_LAKE.z),fmS(rx),fmS(rz),0,0,7);c.fill()}
+    c.fillRect(fmX(-LOTUS_LAKE.channel[0]),fmY(LOTUS_LAKE.z-LOTUS_LAKE.channel[1]),fmS(LOTUS_LAKE.channel[0]*2),fmS(LOTUS_LAKE.channel[1]*2));
+    c.fillStyle='#e99ab6';for(const f of flowers){c.beginPath();c.arc(fmX(f.position.x),fmY(f.position.z),1.6,0,7);c.fill()}
+    // main axis, plazas, stairs, bridge, gate, piers
+    c.strokeStyle='#8a8068';c.lineCap='round';c.lineWidth=fmS(3.2);c.beginPath();c.moveTo(fmX(0),fmY(35));c.lineTo(fmX(0),fmY(FOOT.z));c.stroke();
+    for(const pts of BRANCHES){c.lineWidth=fmS(2.2);c.beginPath();pts.forEach(([x,z],i)=>i?c.lineTo(fmX(x),fmY(z)):c.moveTo(fmX(x),fmY(z)));c.stroke()}
+    c.lineWidth=fmS(2.8);c.beginPath();STAIRS.forEach(([x,z],i)=>i?c.lineTo(fmX(x),fmY(z)):c.moveTo(fmX(x),fmY(z)));c.stroke();
+    c.fillStyle='#8a8068';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(p.r),0,7);c.fill()}c.fillStyle='#3f7f86';for(const p of [GATHER,FOOT]){c.beginPath();c.arc(fmX(p.x),fmY(p.z),fmS(NONBO_R),0,7);c.fill()}
+    c.fillStyle='#8a6a48';c.fillRect(fmX(-1.8),fmY(BRIDGE_ARCH[0]),fmS(3.6),fmY(BRIDGE_ARCH[1])-fmY(BRIDGE_ARCH[0]));
+    c.fillRect(fmX(BEN_SEN.x-BEN_SEN.w/2),fmY(BEN_SEN.z0),fmS(BEN_SEN.w),fmS(BEN_SEN.z1-BEN_SEN.z0));c.save();c.strokeStyle='rgba(240,220,170,.35)';c.setLineDash([3,4]);c.lineWidth=1.2;c.beginPath();BOAT_LOOP.forEach(([x,z],i)=>i?c.lineTo(fmX(x),fmY(z)):c.moveTo(fmX(x),fmY(z)));c.closePath();c.stroke();c.restore();c.fillStyle='#7a5634';for(const b of boats){const q=b.group.position;c.beginPath();c.ellipse(fmX(q.x),fmY(q.z),5,2.5,-(b===boatRide?.b?boatRide.heading:Math.PI)+Math.PI/2,0,7);c.fill()}c.fillStyle='#8a6a48';
+    c.fillStyle='#6b4a32';c.fillRect(fmX(-3.4),fmY(34.2)-3,fmS(6.8),6);
+    // sense ponds and the orchid house
+    for(const l of wishLakes){if(l.lotus)continue;c.fillStyle='#c1a676';c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(POND_R+.35),0,7);c.fill();c.fillStyle=l.color;c.beginPath();c.arc(fmX(l.x),fmY(l.z),fmS(POND_R),0,7);c.fill()}
+    c.save();c.translate(fmX(ORCHID.x),fmY(ORCHID.z));c.rotate(-ORCHID.rot);c.fillStyle='#f0b8d0';c.fillRect(-fmS(ORCHID.w/2),-fmS(ORCHID.d/2),fmS(ORCHID.w),fmS(ORCHID.d));c.restore();
+    for(const g of FLOWER_GARDENS){c.fillStyle={hong:'#e01b3c',cam_tu_cau:'#2e9bff',nhai:'#ff6e38',cuc:'#ffd000',lan:'#7b4bff',sen:'#ffffff'}[g.kind];c.beginPath();c.arc(fmX(g.x),fmY(g.z),g.pier?3:5,0,7);c.fill()}
+    for(const h of SENSE_HOUSES){c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e0b07a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
+    {const h=VAN_HOA;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#d9c39a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
+    {const h=TINH_THAT;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#c98a1c';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore()}
+    {const h=TU_GIA;c.save();c.translate(fmX(h.x),fmY(h.z));c.rotate(-h.rot);c.fillStyle='#e7b97a';c.fillRect(-fmS(h.W/2),-fmS(h.D/2),fmS(h.W),fmS(h.D));c.restore();c.fillStyle='#7fbf5a';c.beginPath();c.arc(fmX(h.garden[0]),fmY(h.garden[1]),fmS(1.6),0,7);c.fill();c.font='16px sans-serif';c.textAlign='center';c.fillText('🏡',fmX(h.x),fmY(h.z)-fmS(5));c.fillText('🌀',fmX(VIV.x),fmY(VIV.z)-fmS(4));c.fillStyle='#9a7fd0';c.beginPath();c.arc(fmX(VIV.x),fmY(VIV.z),fmS(2.2),0,7);c.fill()}
+    c.fillStyle='#e8c46a';c.beginPath();c.arc(fmX(STATUE.x),fmY(STATUE.z),fmS(1.6),0,7);c.fill();
+    // labels
+    c.font='600 13px system-ui,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(8,30,24,.85)';c.fillStyle='#f6ead0';
+    const label=(t,x,z,dy=0)=>{const half=c.measureText(t).width/2+4,lx=Math.max(half,Math.min(FM.w-half,fmX(x)));c.strokeText(t,lx,fmY(z)+dy);c.fillText(t,lx,fmY(z)+dy)};
+    label('Tượng Phật',STATUE.x,STATUE.z,-26);label('Hồ sen',-18,LOTUS_LAKE.z,4);label('Hồ sen',18,LOTUS_LAKE.z,4);label('Sân chân đồi',FOOT.x+14,FOOT.z,4);label('Sân đón',GATHER.x+11,GATHER.z,4);label('Cổng Yên',0,34.2,18);label('Nhà Sắc',ORCHID.x,ORCHID.z,fmS(ORCHID.d/2)+14);for(const h of SENSE_HOUSES)label(h.short||h.name,h.x,h.z,fmS(h.D/2)+14);label(TINH_THAT.name,TINH_THAT.x,TINH_THAT.z,fmS(TINH_THAT.D/2)+14);label(VAN_HOA.name,VAN_HOA.x,VAN_HOA.z,fmS(VAN_HOA.D/2)+14);
+    for(const l of wishLakes)if(!l.lotus)label('Hồ '+l.name,l.x,l.z,4);
+    // other guests, then you (gold, with a heading arrow)
+    c.fillStyle='#f4f1e6';for(const p of onlineAvatars.values()){const g=p.group;if(!g||!g.visible)continue;c.beginPath();c.arc(fmX(g.position.x),fmY(g.position.z),4,0,7);c.fill()}
+    const mx=fmX(mePosition.x),my=fmY(mePosition.z),hx=Math.sin(viewYaw),hz=Math.cos(viewYaw);
+    c.fillStyle='#f2c75c';c.strokeStyle='#3a2a10';c.lineWidth=2;c.beginPath();c.moveTo(mx+hx*14,my+hz*14);c.lineTo(mx-hz*7-hx*4,my+hx*7-hz*4);c.lineTo(mx+hz*7-hx*4,my-hx*7-hz*4);c.closePath();c.fill();c.stroke();
+    c.beginPath();c.arc(mx,my,6,0,7);c.fill();c.stroke();}
+  let fmTimer=0;
+  function renderForestPlaces(){const list=forestMapBox.querySelector('#forestMapList');list.innerHTML='';quickPlaces().forEach(([icon,name,,,,kind],i)=>{const row=document.createElement('div');row.className='fm-item';
+      row.innerHTML='<span>'+icon+' '+name+'</span><button type="button" data-fm-walk="'+i+'" aria-label="Đi bộ tới '+name+'">🚶 Đi bộ</button><button type="button" data-fm-tp="'+i+'" aria-label="Đến ngay '+name+'">✨ Đến ngay</button>';list.appendChild(row)})}
+  function openForestMap(){if(bayMode||!document.body.classList.contains('immersive'))return;document.body.className=document.body.className.replace(/\bzen-sheet-\S+/g,'').trim();
+    renderForestPlaces();drawForestMap();forestMapBox.classList.add('open');document.body.classList.add('forest-map-open');clearInterval(fmTimer);fmTimer=setInterval(drawForestMap,400)}
+  function closeForestMap(){forestMapBox.classList.remove('open');document.body.classList.remove('forest-map-open');clearInterval(fmTimer);fmTimer=0}
+  forestMapOpen.addEventListener('click',openForestMap);
+  document.addEventListener('click',e=>{if(e.target.closest('[data-zen-action="forestmap"]'))openForestMap();if(e.target.closest('[data-zen-action="kathina"]')){document.body.className=document.body.className.replace(/\bzen-sheet-\S+/g,'').trim();window.dispatchEvent(new Event('anyen-kathina'))}if(e.target.closest('[data-zen-action="offerflowers"]')){document.body.className=document.body.className.replace(/\bzen-sheet-\S+/g,'').trim();openOfferGuide()}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&forestMapBox.classList.contains('open'))closeForestMap()});
+  window.addEventListener('anyen-3d-exit',closeForestMap);window.addEventListener('anyen-3d-exit',()=>{boatHud.hidden=true});
+  forestMapBox.addEventListener('click',e=>{if(e.target.closest('[data-fm="close"]')){closeForestMap();return}
+    const w=e.target.closest('[data-fm-walk]'),t=e.target.closest('[data-fm-tp]');if(!w&&!t)return;const pl=quickPlaces()[Number((w||t).dataset[w?'fmWalk':'fmTp'])];if(!pl)return;const [,name,x,z,yaw,kind]=pl;
+    const ok=w?walkToPlace(x,z,kind,yaw):teleportTo(x,z,yaw);closeForestMap();
+    document.getElementById('zenHint').textContent=ok?(w?'🚶 Đang đi bộ tới '+name+'…':'✨ Đã đến '+name):'Chưa tới được '+name+' lúc này';});
+  fmCanvas.addEventListener('click',e=>{const r=fmCanvas.getBoundingClientRect(),x=FM.x0+(e.clientX-r.left)/r.width*(FM.x1-FM.x0),z=FM.z0+(e.clientY-r.top)/r.height*(FM.z1-FM.z0);
+    /* tapping a house on the map walks to its door */
+    if(rectHit(ORCHID.x,ORCHID.z,ORCHID.rot,ORCHID.w,ORCHID.d,x,z,1)){standUpForTravel();goToOrchid();closeForestMap();return}{const h=[...SENSE_HOUSES,VAN_HOA].find(v=>rectHit(v.x,v.z,v.rot,v.W,v.D,x,z,1));if(h){standUpForTravel();goToHouse(h);closeForestMap();return}}
+    const ok=walkToPlace(x,z);if(ok)closeForestMap();else document.getElementById('zenHint').textContent='Chỗ này chưa đi tới được, hãy chạm gần lối đi hơn';});
+  // 3.17: Vườn hoa ở năm ngã rẽ đường Ngũ quan và nghi thức dâng hoa.
+  // Hái hoa ở sáu vườn quanh các hồ Lục Căn (sen trắng ở luống cạnh Hồ Niệm), tối đa 9 bông; bấm Xong để xem trước bó hoa, tự sắp xếp, ưng ý thì mang lên đồi
+  // đặt trước tượng Phật. Bệ có 9 chỗ; bó mới nhất thay bó cũ nhất. Hoa lưu trên Supabase nên mọi khách đều thấy và hoa không tự mất.
+  const FLOWER_KINDS={
+    hong:{name:'Hồng đỏ ruby',icon:'🌹',garden:'Vườn hồng đỏ'},
+    cam_tu_cau:{name:'Cẩm tú cầu lam',icon:'💠',garden:'Vườn cẩm tú cầu'},
+    nhai:{name:'Huệ cam đào',icon:'🧡',garden:'Vườn huệ cam đào'},
+    cuc:{name:'Cúc vàng',icon:'🌼',garden:'Vườn cúc vàng'},
+    lan:{name:'Oải hương tím',icon:'🪻',garden:'Vườn oải hương'},
+    sen:{name:'Sen trắng',icon:'🪷',garden:'Luống sen trắng'}};
+  const BOUQUET_MAX=9,OFFER_SLOTS=9;
+  // Quy hoạch v3.3 · kho 69/9: 9 món trưng bày = 6 món được chọn (mang về túi) nhiều nhất + 3 món mới nhất còn lại.
+  // Trả về theo thứ tự mới → cũ. Khi chưa ai chọn món nào, kết quả chính là 9 món mới nhất.
+  const STORE_FETCH=69;function pickNine(rows){const seq=r=>Number(r.seq)||0,bySeq=[...rows].sort((a,b)=>seq(b)-seq(a)),byPick=[...rows].sort((a,b)=>(Number(b.picks)||0)-(Number(a.picks)||0)||seq(b)-seq(a));
+    const top=byPick.slice(0,6),ids=new Set(top.map(r=>String(r.id)));return [...top,...bySeq.filter(r=>!ids.has(String(r.id))).slice(0,3)].sort((a,b)=>seq(b)-seq(a))}
+  window.__pickNine=pickNine;
+  // One merged, vertex-coloured stem per kind (about 0.6 m tall), shared by the gardens (instanced) and the bouquets.
+  const flowerGeos={};
+  // 3.23: Hoa vẽ lại (sen, hồng, cẩm tú cầu, huệ, cúc, oải hương): cánh hoa là lưới cong có chuyển màu theo chiều dài cánh,
+  // dựng mặt trước và mặt sau đều sáng. Hai mức chi tiết: 'lo' cho vườn hoa (hàng trăm cây, InstancedMesh), 'hi' cho bó hoa.
+  const FL={C:h=>new THREE.Color(h),tmp:new THREE.Color(),up:new THREE.Vector3(0,1,0),nv:new THREE.Vector3()};
+  function flPetal({L,Wd,cup=.3,curl=0,prof,stops,edge=null,nu=6,nv=4}){const pos=[],col=[],idx=[],tmp=FL.tmp;
+    for(let a=0;a<=nu;a++){const u=a/nu,hw=Wd*.5*prof(u);for(let b=0;b<=nv;b++){const v=b/nv*2-1;pos.push(v*hw,u*L,-cup*Wd*v*v*(.3+.7*u)-curl*L*u*u);
+      let k=0;while(k<stops.length-2&&u>stops[k+1][0])k++;const [u0,c0]=stops[k],[u1,c1]=stops[k+1];tmp.copy(c0).lerp(c1,Math.min(1,Math.max(0,(u-u0)/(u1-u0||1))));if(edge)tmp.lerp(edge,Math.pow(Math.abs(v),3)*.35*u);col.push(tmp.r,tmp.g,tmp.b)}}
+    for(let a=0;a<nu;a++)for(let b=0;b<nv;b++){const q=a*(nv+1)+b;idx.push(q,q+1,q+nv+1,q+1,q+nv+2,q+nv+1)}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();return g}
+  function flBuilder(){const parts=[];return {
+    put(g,{tilt=0,ang=0,y=0,x=0,z=0,soft=.55,single=false}={}){g.rotateX(tilt);g.rotateY(ang);g.translate(x,y,z);const a=g.toNonIndexed(),nr=a.attributes.normal;
+      for(let i=0;i<nr.count;i++){FL.nv.fromBufferAttribute(nr,i);if(FL.nv.y<0)FL.nv.negate();FL.nv.multiplyScalar(soft).add(FL.up).normalize();nr.setXYZ(i,FL.nv.x,FL.nv.y,FL.nv.z)}parts.push(a);if(single)return;
+      const b=a.clone();for(const at of [b.attributes.position,b.attributes.color,b.attributes.normal])for(let i=0;i<at.count;i+=3){const t=[at.getX(i+1),at.getY(i+1),at.getZ(i+1)];at.setXYZ(i+1,at.getX(i+2),at.getY(i+2),at.getZ(i+2));at.setXYZ(i+2,...t)}parts.push(b)},
+    solid(g,c,{x=0,y=0,z=0}={}){g.translate(x,y,z);const q=g.index?g.toNonIndexed():g;if(c!=null){const cc=FL.C(c),cl=[];for(let i=0;i<q.attributes.position.count;i++)cl.push(cc.r,cc.g,cc.b);q.setAttribute('color',new THREE.Float32BufferAttribute(cl,3))}if(!q.attributes.normal)q.computeVertexNormals();parts.push(q)},
+    geo(){let n=0;for(const q of parts)n+=q.attributes.position.count;const P=new Float32Array(n*3),N=new Float32Array(n*3),K=new Float32Array(n*3);let o=0;for(const q of parts){const k=q.attributes.position.count;P.set(q.attributes.position.array,o*3);N.set(q.attributes.normal.array,o*3);K.set(q.attributes.color.array,o*3);o+=k}
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('normal',new THREE.BufferAttribute(N,3));g.setAttribute('color',new THREE.BufferAttribute(K,3));return g}}}
+  const flOval=p=>u=>u<.55?Math.max(.1,Math.pow(Math.sin(u/.55*Math.PI/2),p)):Math.pow(Math.cos((u-.55)/.45*Math.PI/2),.7)*(1-.8*Math.pow((u-.55)/.45,3));
+  const flOvalR=u=>u<.6?Math.max(.12,Math.pow(Math.sin(u/.6*Math.PI/2),.6)):Math.pow(Math.cos((u-.6)/.4*Math.PI/2),.45)*(1-.55*Math.pow((u-.6)/.4,4));
+  const flRoundTip=u=>u<.68?Math.max(.15,Math.pow(Math.sin(u/.68*Math.PI/2),.6)):Math.sqrt(Math.max(0,1-Math.pow((u-.68)/.32,2)))*.97+.03;
+  // 3.30: Sáu loài hoa dâng Phật theo bản thiết kế "06 loài hoa dâng Phật" (màu tươi sáng, khối đơn giản, tô màu theo đỉnh,
+  // không dùng ảnh): Sen Trắng (Hồ Niệm), Huệ Cam Đào (Hồ Chạm), Cẩm Tú Cầu Lam (Hồ Thanh), Oải Hương Tím (Hồ Hương),
+  // Hồng Đỏ Ruby (Hồ Sắc), Cúc Vàng (Hồ Vị). Khóa loài giữ như cũ để hợp với dữ liệu đã lưu: sen = Sen Trắng, nhai = Huệ Cam Đào.
+  const FLOWER_BUILD={
+    sen(B,hi){// Sen trắng dâng Phật: cùng dáng sen trong Hồ Sen (cánh tròn bầu, 3 lớp 8 + 8 + 6 so le ôm gương sen), nhưng màu trắng
+      const grad=(tip,base)=>{const g=new THREE.SphereGeometry(.5,hi?12:7,hi?10:5),P=g.attributes.position,c=new Float32Array(P.count*3),a=new THREE.Color(base),b=new THREE.Color(tip),t=new THREE.Color();
+        const pink=new THREE.Color('#f59ab8'),BR=1.45;/* viền hồng nhạt ở rìa cánh; màu nhân >1 để cánh trắng sáng hơn dưới ánh rừng */
+        for(let i=0;i<P.count;i++){const y=P.getY(i),u=Math.min(1,Math.max(0,y+.5)),k=u*u*(3-2*u),half=Math.sqrt(Math.max(1e-4,.25-y*y)),rim=Math.min(1,Math.abs(P.getX(i))/half);
+          t.copy(a).lerp(b,Math.pow(k,1.3)).lerp(pink,Math.pow(rim,5)*(.25+.6*u));c[i*3]=t.r*BR;c[i*3+1]=t.g*BR;c[i*3+2]=t.b*BR}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g};
+      const outer=grad('#ffffff','#f6faee'),mid=grad('#ffffff','#f8fbf2'),inner=grad('#ffffff','#fbfcf6');
+      const petal=(geo,ang,tilt,len,wid,y)=>{const g=geo.clone();g.scale(wid,len,wid*.16);g.translate(0,len*.5,0);g.rotateX(tilt);g.rotateY(ang);g.translate(0,y,0);B.solid(g,null)};
+      for(let k=0;k<8;k++)petal(outer,k*Math.PI*2/8,1.05,.36,.27,0);
+      for(let k=0;k<8;k++)petal(mid,(k+.5)*Math.PI*2/8,.7,.33,.25,.025);
+      for(let k=0;k<6;k++)petal(inner,k*Math.PI*2/6+.2,.38,.27,.21,.05);
+      B.solid(new THREE.CylinderGeometry(.09,.065,.09,hi?12:7),'#d9c75c',{y:.1});
+      if(hi)for(let k=0;k<7;k++){const d=new THREE.CircleGeometry(.012,6);d.rotateX(-Math.PI/2);B.solid(d,'#8a7a2c',{x:Math.cos(k*.9)*.045*(k%2?1:.5),y:.1455,z:Math.sin(k*.9)*.045*(k%2?1:.5)})}},
+    nhai(B,hi){const C=FL.C,r=hi?[8,3]:[4,2],back=[[0,C('#ffe66d')],[.36,C('#ff773d')],[1,C('#f04f1c')]],front=[[0,C('#fff08a')],[.34,C('#ff974d')],[1,C('#ff5e26')]];
+      const pr=u=>Math.max(.12,Math.sin(Math.min(1,u*1.05)*Math.PI))*(u<.3?.7+u:1);
+      for(let k=0;k<6;k++){const fr=k%2===1;B.put(flPetal({L:fr?.27:.29,Wd:fr?.11:.12,cup:.35,curl:-.42,prof:pr,stops:fr?front:back,edge:fr?C('#ee6228'):C('#dc4e1c'),nu:r[0],nv:r[1]}),{tilt:.95,ang:k/6*Math.PI*2+(fr?.08:0),y:fr?.008:0})}
+      B.solid(new THREE.CylinderGeometry(.03,.008,.06,hi?10:5),'#ffe66d',{y:.02});
+      const ax=new THREE.Vector3(1,0,0);for(let k=0;k<6;k++){const a=k/6*Math.PI*2+.5,len=.2,f=new THREE.CylinderGeometry(.0025,.003,len,3);f.translate(0,len/2,0);f.rotateX(.42);f.rotateY(a);B.solid(f,'#ffda66',{y:.01});
+        const tip=new THREE.Vector3(0,len,0).applyAxisAngle(ax,.42).applyAxisAngle(FL.up,a),an=new THREE.SphereGeometry(.012,hi?6:4,hi?4:2);an.scale(1.6,.7,.8);an.rotateY(a);B.solid(an,'#b54114',{x:tip.x,y:tip.y+.01,z:tip.z})}},
+    cam_tu_cau(B,hi){const C=FL.C,cols=['#2b96f3','#4ab3ff','#8cd3ff','#58bcff','#248ce8','#9cdeff','#38a2fc','#6ec4ff'].map(C),N=hi?26:14,R0=.26,rnd=seededRandom(331),L=hi?.1:.12;
+      for(let i=0;i<N;i++){const yy=1-(i/(N-1))*1.25,r=Math.sqrt(Math.max(0,1-yy*yy)),a=i*2.39996,p=new THREE.Vector3(Math.cos(a)*r,yy,Math.sin(a)*r);
+        const c=cols[(i*5)%cols.length],c2=c.clone().lerp(C('#ffffff'),.3),q=new THREE.Quaternion().setFromUnitVectors(FL.up,p),rot0=rnd()*Math.PI;
+        for(let k=0;k<4;k++){const g=flPetal({L,Wd:L*.85,cup:.12,curl:-.03,prof:flRoundTip,stops:[[0,c2],[1,c]],nu:hi?4:2,nv:hi?3:1});g.rotateX(1.45);g.rotateY(rot0+k*Math.PI/2);g.applyQuaternion(q);g.translate(p.x*R0,p.y*R0+.25,p.z*R0);B.put(g,{soft:.9,single:!hi})}
+        const d=new THREE.SphereGeometry(.014,hi?6:4,hi?4:2);d.translate(p.x*(R0+.01),p.y*(R0+.01)+.25,p.z*(R0+.01));B.solid(d,'#ffffff')}
+      for(const s of [-1,1])B.put(flPetal({L:.24,Wd:.13,cup:.25,curl:.08,prof:flOval(.7),stops:[[0,C('#2f9456')],[1,s<0?C('#3eac66'):C('#52c078')]],nu:hi?6:3,nv:hi?3:1}),{tilt:1.5,ang:s*Math.PI/2,y:.0,soft:.4})},
+    lan(B,hi){const C=FL.C,tiers=['#7b4bff','#7b4bff','#8a5cff','#9568ff','#a47aff','#b08cff','#c2a3ff','#d0b5ff','#d9c2ff'],bud=new THREE.SphereGeometry(1,hi?6:4,hi?4:2);
+      const spike=(bx,bz,lean,turn,h)=>{const stem=new THREE.CylinderGeometry(.008,.011,h,hi?5:3);stem.translate(0,h/2,0);stem.rotateZ(lean);stem.rotateY(turn);stem.translate(bx,0,bz);B.solid(stem,'#3d9864');
+        const dir=new THREE.Vector3(-Math.sin(lean),Math.cos(lean),0).applyAxisAngle(FL.up,turn),tip=new THREE.Vector3(bx,0,bz).addScaledVector(dir,h),W=hi?12:10,K=5;
+        for(let w=0;w<W;w++){const t=w/(W-1),p=tip.clone().addScaledVector(dir,-.34+t*.36),rr=.03*(1-.4*Math.abs(t-.45)),c=tiers[Math.min(tiers.length-1,Math.floor(t*tiers.length))],sz=.024*(1-.45*Math.pow(Math.abs(t-.45)/.55,2));
+          for(let k=0;k<K;k++){const a=k/K*Math.PI*2+w*.6,g=bud.clone();g.scale(sz*.8,sz*1.4,sz*.8);B.solid(g,c,{x:p.x+Math.cos(a)*rr,y:p.y,z:p.z+Math.sin(a)*rr})}
+          if(hi){const cx=new THREE.SphereGeometry(.012,5,3);cx.scale(1,.45,1);B.solid(cx,'#46a66d',{x:p.x,y:p.y-.02,z:p.z})}}};
+      spike(-.07,0,.2,0,.62);spike(0,0,0,0,.72);spike(.07,0,-.2,0,.6);
+      for(const [a,l] of [[.9,.16],[2.3,.14],[3.9,.16],[5.2,.13]]){const s=new THREE.CylinderGeometry(.005,.006,l,3);s.translate(0,l/2,0);s.rotateZ(.5);s.rotateY(a);B.solid(s,'#48a870',{y:.04})}
+      const rib=new THREE.TorusGeometry(.03,.009,hi?6:4,hi?16:8);rib.rotateX(Math.PI/2);B.solid(rib,'#e0a538',{y:.11});const rib2=new THREE.TorusGeometry(.032,.006,4,hi?16:8);rib2.rotateX(Math.PI/2);B.solid(rib2,'#c28822',{y:.095})},
+    hong(B,hi){const C=FL.C,r=hi?[7,4]:[4,2],outer=[[0,C('#b00d2a')],[.6,C('#e31c3e')],[.88,C('#ff5c78')],[1,C('#ff99ab')]],mid=[[0,C('#c41232')],[.72,C('#f02649')],[1,C('#ff637e')]],coreS=[[0,C('#8c0720')],[1,C('#c41232')]];
+      const pr=flRoundTip;
+      for(let k=0;k<3;k++)B.put(flPetal({L:.13,Wd:.1,cup:1.1,curl:.18,prof:pr,stops:coreS,nu:r[0],nv:r[1]}),{tilt:.05,ang:k*2.09+.3,y:.04,soft:.25});
+      for(let k=0;k<3;k++)B.put(flPetal({L:.19,Wd:.16,cup:1.0,curl:-.04,prof:pr,stops:mid,edge:C('#a30d29'),nu:r[0],nv:r[1]}),{tilt:.16,ang:k*2.09+1.35,y:.02,soft:.25});
+      for(let k=0;k<4;k++)B.put(flPetal({L:.22,Wd:.2,cup:.85,curl:-.36,prof:pr,stops:outer,edge:C('#a30e2a'),nu:r[0],nv:r[1]}),{tilt:.3,ang:k*Math.PI/2+.6,soft:.25});
+      for(let k=0;k<3;k++)B.put(flPetal({L:.14,Wd:.07,cup:.2,curl:-.05,prof:flOval(.8),stops:[[0,C('#3ea85d')],[1,C('#52bc6e')]],nu:hi?6:3,nv:1}),{tilt:1.95,ang:k*2.09+.9,y:.0,soft:.3});
+      B.solid(new THREE.SphereGeometry(.035,hi?10:6,hi?6:3),'#3ea85d',{y:-.01})},
+    cuc(B,hi){const C=FL.C,r=hi?[6,3]:[3,1],outer=[[0,C('#ffb300')],[.62,C('#ffd400')],[1,C('#fff05a')]],inner=[[0,C('#ffc200')],[.68,C('#ffe026')],[1,C('#fff780')]];
+      const pr=u=>u<.25?Math.max(.25,Math.sin(u/.25*Math.PI/2)):Math.pow(Math.max(0,1-Math.pow((u-.25)/.75,2.2)),.6)*.95+.05;
+      for(let k=0;k<12;k++)B.put(flPetal({L:.25,Wd:.105,cup:.5,curl:-.02,prof:flOval(.55),stops:outer,nu:r[0],nv:r[1]}),{tilt:1.43,ang:k/12*Math.PI*2,y:.005});
+      for(let k=0;k<10;k++)B.put(flPetal({L:.19,Wd:.09,cup:.55,curl:.06,prof:flOval(.55),stops:inner,nu:r[0],nv:r[1]}),{tilt:1.05,ang:k/10*Math.PI*2+.31,y:.012});
+      const dome=new THREE.SphereGeometry(.062,hi?16:8,hi?8:4,0,Math.PI*2,0,Math.PI/2);dome.scale(1,.55,1);B.solid(dome,'#f58b00',{y:.008});
+      if(hi)for(let k=0;k<8;k++){const d=new THREE.SphereGeometry(.007,5,3);B.solid(d,'#fff282',{x:Math.cos(k*.785)*.035,y:.034,z:Math.sin(k*.785)*.035})}}};
+  const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.52,cuc:.47,lan:.48,sen:.55};
+  // Scale each model into the old flower's frame: heads sit at HEAD_Y on a thin stem; huệ and oải hương are whole plants.
+  const FLOWER_FIT={sen:{d:.17,y:.55},hong:{d:.12,y:.53},cam_tu_cau:{d:.17,y:.5},cuc:{d:.17,y:.47},nhai:{d:.19,y:.52},lan:{h:.5}};
+  function flowerGeo(kind,lod='lo'){const key=kind+':'+lod;if(flowerGeos[key])return flowerGeos[key];const hi=lod==='hi';let g;{const B=flBuilder();(FLOWER_BUILD[kind]||FLOWER_BUILD.sen)(B,hi);g=B.geo()}if(kind==='nhai')g.rotateZ(.24);/* đầu huệ nghiêng 14° */g.computeBoundingBox();const bb=g.boundingBox,f=FLOWER_FIT[kind]||FLOWER_FIT.sen,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
+    if(f.h){const s=f.h/sz.y;g.translate(-c.x,-bb.min.y,-c.z);g.scale(s,s,s);return flowerGeos[key]=g}
+    const s=f.d/Math.max(sz.x,sz.z);g.translate(-c.x,-c.y,-c.z);g.scale(s,s,s);g.translate(0,f.y,0);
+    const stemTop=f.y-sz.y*s*.35,P=[],S='#389e52',Sd='#3fa356';P.push([part(new THREE.CylinderGeometry(.006,.008,stemTop,4),0,stemTop/2,0),S]);
+    for(const [y,a] of [[.2,0],[.3,2.6]])P.push([part(new THREE.SphereGeometry(.05,6,4),Math.cos(a)*.045,y,Math.sin(a)*.045,.5,.14,1,-a),Sd]);
+    const st=mergeColored(P),B2=flBuilder();B2.solid(g,null);B2.solid(st,null);return flowerGeos[key]=B2.geo()}
+
+  // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
+  const BOUQUET_LAYOUTS={tron:'🔵 Tròn',thap:'🔺 Tháp',quat:'🪭 Quạt'};
+  const flowerMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6});
+  // Bó hoa theo ba kiểu tham khảo: Tròn (bó tay gói giấy kraft, hoa xếp thành vòm), Tháp (giỏ nan, hoa xếp hình tháp nhọn),
+  // Quạt (hộp gỗ, hoa xòe rộng). Đầu hoa đặt lên một khung hình định sẵn, cuống gom vào trong giấy / giỏ / hộp;
+  // khe trống giữa các bông được lấp bằng chùm hoa nhỏ hồng nhạt và lá xanh.
+  const fillerGeo=(()=>{const P=[],dot=new THREE.SphereGeometry(.016,5,3);P.push([part(new THREE.CylinderGeometry(.004,.005,.12,3),0,.06,0),'#5e7f4a']);
+    [[0,.125,0],[.02,.115,.012],[-.018,.118,-.01],[.008,.108,-.02],[-.01,.104,.02],[.024,.1,-.006]].forEach(([x,y,z],k)=>P.push([part(dot,x,y,z),k%2?'#f6c9d6':'#fbe0e8']));return mergeColored(P)})();
+  const leafGeo=mergeColored([[part(new THREE.SphereGeometry(.05,6,4),0,.09,0,.42,1.9,.14),'#4f7f45'],[part(new THREE.CylinderGeometry(.004,.005,.06,3),0,.02,0),'#4f7f45']]);
+  function headFrame(n,layout){const pts=[];
+    if(layout==='thap'){const rows=[[1,0,.78],[3,.085,.66],[5,.15,.52],[6,.2,.39]];let left=n;for(const [cap,r,y] of rows){const m=Math.min(cap,left);for(let k=0;k<m;k++){const a=k/m*Math.PI*2+(r?.4:0);pts.push([Math.sin(a)*r,y,Math.cos(a)*r])}left-=m;if(!left)break}}
+    else if(layout==='quat'){const rows=n<=4?[n]:n<=7?[n-3,3]:[5,n-5];rows.forEach((m,ri)=>{for(let k=0;k<m;k++){const a=m===1?0:(-1+2*k/(m-1))*(ri?.75:1.1);const R=ri?.17:.3;pts.push([Math.sin(a)*R,.19+Math.cos(a)*R*.85+(ri?.02:0),ri?.06:-.02])}})}
+    else{if(n===1)pts.push([0,.41,0]);else{pts.push([0,.47,0]);const m=n-1,inner=Math.min(m,5);for(let k=0;k<inner;k++){const a=k/inner*Math.PI*2;pts.push([Math.sin(a)*.13,.42,Math.cos(a)*.13])}for(let k=0;k<m-inner;k++){const a=(k+.5)/(m-inner)*Math.PI*2;pts.push([Math.sin(a)*.25,.36,Math.cos(a)*.25])}}}
+    return pts}
+  const BQ_BASE={tron:[0,.02,0],thap:[0,.05,0],quat:[0,.02,0]},BQ_WRAP=.75;
+  // Stems must stay inside the wrap or the box: the part of each stem below its head is trimmed where it would show outside
+  // (below the paper sleeve or through the side of the cone for Tròn, under the box for Quạt).
+  function bqOutside(layout,p){if(layout==='quat')return p.y<.004;if(layout!=='tron')return false;const sc=BQ_WRAP,yl=p.y/sc,r=Math.hypot(p.x,p.z)/sc;
+    if(yl<-.035)return true;if(yl>.255)return false;const cone=yl<.03?.055:yl<.16?.055+(.2-.055)*(yl-.03)/.13:.2,coll=yl>=.15?.19+(.3-.19)*(yl-.15)/.1:0;return r>Math.max(cone,coll)-.006}
+  function bqPullIn(layout,p){if(layout==='quat'){p.y=Math.max(p.y,.006);return}const sc=BQ_WRAP;p.y=Math.max(p.y,-.03*sc);const yl=p.y/sc;if(yl>.255)return;
+    const cone=yl<.03?.055:yl<.16?.055+(.2-.055)*(yl-.03)/.13:.2,coll=yl>=.15?.19+(.3-.19)*(yl-.15)/.1:0,R=(Math.max(cone,coll)-.01)*sc,r=Math.hypot(p.x,p.z);if(r>R){p.x*=R/r;p.z*=R/r}}
+  function trimStems(g,layout,flowers){if(layout==='thap')return;let fi=0;const v=new THREE.Vector3(),inv=new THREE.Matrix4();
+    for(const m of [...g.children]){if(!m.isMesh)continue;const geo=m.geometry,cutY=geo===fillerGeo?.07:geo===leafGeo?.05:(()=>{const k=flowers[fi++],h=HEAD_Y[k]||.5;return k==='lan'?h-.12:h-.09})();
+      m.updateMatrix();const src=geo.index?geo.toNonIndexed():geo,P=src.attributes.position,keep=[];
+      for(let i=0;i<P.count;i+=3){let drop=false;for(let q=0;q<3&&!drop;q++){if(P.getY(i+q)>=cutY)continue;v.fromBufferAttribute(P,i+q).applyMatrix4(m.matrix);if(bqOutside(layout,v))drop=true}if(!drop)keep.push(i)}
+      if(keep.length*3===P.count)continue;const out=new THREE.BufferGeometry();for(const name of Object.keys(src.attributes)){const a=src.attributes[name],n=a.itemSize,arr=new Float32Array(keep.length*3*n);keep.forEach((i,t)=>{for(let q=0;q<3*n;q++)arr[t*3*n+q]=a.array[i*n+q]});out.setAttribute(name,new THREE.BufferAttribute(arr,n))}m.geometry=out}}
+  function placeStem(g,geo,mat_,head,headY,base,s){const P=new THREE.Vector3(...head),B=new THREE.Vector3(...base),d=P.clone().sub(B).normalize(),m=new THREE.Mesh(geo,mat_);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);m.scale.setScalar(s);m.position.copy(P).addScaledVector(d,-headY*s);g.add(m);return m}
+  const bqMats={kraftOut:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.FrontSide}),paperIn:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.BackSide}),kraft:new THREE.MeshStandardMaterial({color:'#c9a77a',roughness:.95,side:THREE.DoubleSide}),paper:new THREE.MeshStandardMaterial({color:'#f2ede2',roughness:.9,side:THREE.DoubleSide}),ribbon:new THREE.MeshStandardMaterial({color:'#f4efe6',roughness:.6,side:THREE.DoubleSide}),
+    slat:new THREE.MeshStandardMaterial({color:'#c69a5e',roughness:.9}),slatDark:new THREE.MeshStandardMaterial({color:'#8f6a3c',roughness:.9}),bark:new THREE.MeshStandardMaterial({color:'#6a4a32',roughness:1,flatShading:true}),twine:new THREE.MeshStandardMaterial({color:'#b89a6a',roughness:1})};
+  // Oải hương ưu tiên vào giữa bó, xen kẽ với hoa khác: lavender takes every other slot of the inner positions (not the very centre).
+  function arrangeLavender(flowers,layout){const n=flowers.length,lav=flowers.filter(f=>f==='lan'),rest=flowers.filter(f=>f!=='lan');if(!lav.length||lav.length===n)return flowers.slice();
+    const hs=headFrame(n,layout),order=hs.map((h,i)=>i).filter(i=>i>0).sort((a,b)=>Math.hypot(hs[a][0],hs[a][2])-Math.hypot(hs[b][0],hs[b][2])),pick=[];
+    for(let k=0;k<order.length&&pick.length<lav.length;k+=2)pick.push(order[k]);for(let k=1;k<order.length&&pick.length<lav.length;k+=2)pick.push(order[k]);
+    const out=new Array(n);pick.forEach(i=>out[i]='lan');let r=0;for(let i=0;i<n;i++)if(!out[i])out[i]=rest[r++];return out}
+  function buildBouquet(flowers,layout){if(!BOUQUET_LAYOUTS[layout])layout='tron';flowers=arrangeLavender(flowers,layout);let g=new THREE.Group();const base=BQ_BASE[layout],heads=headFrame(flowers.length,layout),s=layout==='tron'?.95:1;
+    let seed=7;for(const f of flowers)seed=(seed*31+f.length*17+f.charCodeAt(0))|0;const rnd=seededRandom(seed+layout.length*101);
+    heads.forEach((h,k)=>placeStem(g,flowerGeo(flowers[k],'hi'),flowerMat,h,HEAD_Y[flowers[k]]||.5,base,s));
+    // fillers: pink sprays and leaves in the gaps around and between the heads
+    const fill=[],leaves=[];heads.forEach(([x,y,z],k)=>{const n=layout==='quat'?2:2;for(let j=0;j<n;j++){const a=rnd()*Math.PI*2,r=.07+rnd()*.05;fill.push([x+Math.sin(a)*r,y-.02-rnd()*.05,z+Math.cos(a)*r])}});
+    const rim=layout==='tron'?[.2,.3]:layout==='thap'?[.2,.27]:[.24,.1];for(let k=0;k<9;k++){const a=k/9*Math.PI*2+rnd()*.3;leaves.push([Math.sin(a)*rim[0]*(layout==='quat'?1.3:1),rim[1]+rnd()*.05,Math.cos(a)*rim[0]*(layout==='quat'?.5:1)]);fill.push([Math.sin(a+.35)*rim[0]*.9*(layout==='quat'?1.3:1),rim[1]+.06+rnd()*.05,Math.cos(a+.35)*rim[0]*.9*(layout==='quat'?.5:1)])}
+    for(const p of fill)placeStem(g,fillerGeo,flowerMat,p,.125,base,1);
+    for(const p of leaves)placeStem(g,leafGeo,flowerMat,p,.17,base,1);
+    trimStems(g,layout,flowers);
+    if(layout==='tron'){// kraft wrap with white inner paper, flared edges and a tied ribbon (built at full size, shown at half)
+      const wrapG=g;g=new THREE.Group();g.scale.setScalar(BQ_WRAP);wrapG.add(g);
+      const outer=new THREE.Mesh(new THREE.CylinderGeometry(.2,.055,.13,12,1,true),bqMats.kraft);outer.position.y=.095;g.add(outer);
+      const inner=new THREE.Mesh(new THREE.CylinderGeometry(.19,.05,.12,12,1,true),bqMats.paper);inner.position.y=.11;inner.rotation.y=.3;g.add(inner);
+      const upN=(geo,inside)=>{const n=geo.attributes.normal,P=geo.attributes.position;for(let i=0;i<n.count;i++){const x=P.getX(i),z=P.getZ(i),r=Math.hypot(x,z)||1;inside?n.setXYZ(i,x/r*.45,-.9,z/r*.45):n.setXYZ(i,x/r*.55,.85,z/r*.55)}return geo};/* inside faces are drawn as back faces, whose normal three.js flips, so they get a downward normal that turns upward */const collar=new THREE.Mesh(upN(new THREE.CylinderGeometry(.3,.19,.1,18,1,true)),bqMats.kraftOut);collar.position.y=.2;g.add(collar);const collarIn=new THREE.Mesh(upN(new THREE.CylinderGeometry(.295,.185,.1,18,1,true),true),bqMats.paperIn);collarIn.position.y=.2;collarIn.rotation.y=.2;g.add(collarIn);
+      const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.08,10),bqMats.kraft);sleeve.position.y=.0;g.add(sleeve);
+      const band=new THREE.Mesh(new THREE.TorusGeometry(.058,.008,6,18),bqMats.ribbon);band.rotation.x=Math.PI/2;band.position.y=.05;g.add(band);
+      for(const s2 of [-1,1]){const loop=new THREE.Mesh(new THREE.TorusGeometry(.03,.006,5,12),bqMats.ribbon);loop.position.set(s2*.035,.06,.065);loop.rotation.y=s2*.6;g.add(loop);const tail=new THREE.Mesh(new THREE.PlaneGeometry(.02,.16),bqMats.ribbon);tail.position.set(s2*.02,-.03,.066);tail.rotation.z=s2*.15;g.add(tail)}
+      g=wrapG;}
+    else if(layout==='thap'){// woven slat basket
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(.19,.15,.24,16),bqMats.slat);body.position.y=.12;g.add(body);
+      for(let k=0;k<16;k++){const a=k/16*Math.PI*2,sl=new THREE.Mesh(new THREE.BoxGeometry(.008,.245,.012),bqMats.slatDark);sl.position.set(Math.sin(a)*.172,.12,Math.cos(a)*.172);sl.rotation.y=a;sl.rotation.x=Math.cos(a)*.08;sl.rotation.z=-Math.sin(a)*.08;g.add(sl)}
+      for(const y of [.03,.21]){const hoop=new THREE.Mesh(new THREE.TorusGeometry(y>.1?.188:.155,.009,5,24),bqMats.slatDark);hoop.rotation.x=Math.PI/2;hoop.position.y=y;g.add(hoop)}}
+    else{// rough wooden box with a twine tie
+      const box=new THREE.Mesh(new THREE.BoxGeometry(.4,.11,.18),bqMats.bark);box.position.y=.055;g.add(box);
+      for(let k=0;k<6;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.012,.11,.01),bqMats.slatDark);r.position.set(-.17+k*.068,.055,.091);g.add(r)}
+      const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.08,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.1,3),bqMats.twine);t.position.set(x,.03,.095);g.add(t)}}
+    return g}
+
+  // Gardens at the five junctions of the Ngũ quan ring (where each branch leaves the ring), plus lotus picking at Bến sen.
+  const FLOWER_GARDENS=[{kind:'hong',lake:'Sắc'},{kind:'cam_tu_cau',lake:'Thanh'},{kind:'lan',lake:'Hương'},{kind:'cuc',lake:'Vị'},{kind:'nhai',lake:'Chạm'},{kind:'sen',lake:'Niệm'}]/* bản đồ v3.6: Huệ cạnh Hồ Chạm, Oải hương cạnh Hồ Hương */.map((g,i)=>{const pts=BRANCHES[i],c=pts[pts.length-8],phi=Math.atan2(c[0]-HILL.x,c[1]-HILL.z),l=wishLakes.find(v=>v.name===g.lake),th=Math.atan2(l.x-HILL.x,l.z-HILL.z),sg=Math.sign(Math.atan2(Math.sin(th-phi),Math.cos(th-phi)))||1;
+    const u=[Math.sin(phi),Math.cos(phi)],w=[-sg*Math.cos(phi),sg*Math.sin(phi)];/* u: outward along the branch, w: along the ring away from the pond */
+    return {...g,x:c[0],z:c[1],u,w,cx:c[0]+(u[0]+w[0])*1.5,cz:c[1]+(u[1]+w[1])*1.5}});
+  /* hoa sen hồng ở Bến sen không còn hái được: sen dâng Phật là Sen Trắng ở luống cạnh Hồ Niệm */
+  {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
+    for(const gd of FLOWER_GARDENS){
+      if(!gd.pier){const R=6,pts=[];for(let tries=0;pts.length<240&&tries<9000;tries++){const a=rnd()*Math.PI/2,r=.25+Math.sqrt(rnd())*(R-.4),ca=Math.cos(a),sa=Math.sin(a),x=gd.cx+(gd.u[0]*ca+gd.w[0]*sa)*r,z=gd.cz+(gd.u[1]*ca+gd.w[1]*sa)*r;
+          if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.7)||houseHit(x,z,.6)||treeBlocked(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.26))continue;pts.push([x,z])}
+        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,pts.length);pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.8;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.02,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
+        mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
+        // a low leafy border under the flowers
+        const bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),mat('#2f5a3a'),pts.length);pts.forEach(([x,z],i)=>{e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.05,z+(rnd()-.5)*.2);sc.set(1.5,.6,1.5);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)});bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
+        // low edging stones along the curved edge and the two straight sides of the bed
+        const ring=[];for(let k=0;k<=22;k++){const a=k/22*Math.PI/2,x=gd.cx+(gd.u[0]*Math.cos(a)+gd.w[0]*Math.sin(a))*(R+.2),z=gd.cz+(gd.u[1]*Math.cos(a)+gd.w[1]*Math.sin(a))*(R+.2);if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||houseHit(x,z,.3)||wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.4))continue;ring.push([x,z,a])}
+        for(const dir of [gd.u,gd.w])for(let t=.4;t<=R;t+=.55){const x=gd.cx+dir[0]*t-(dir===gd.u?gd.w[0]:gd.u[0])*.2,z=gd.cz+dir[1]*t-(dir===gd.u?gd.w[1]:gd.u[1])*.2;if(!onPaved(x,z))ring.push([x,z,Math.atan2(dir[0],dir[1])])}
+        const edge=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.22,0),mat('#6c695d'),Math.max(1,ring.length));ring.forEach(([x,z,a],i)=>{e.set(0,a,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.06,z);sc.set(1.4,.6,1);m4.compose(v,q,sc);edge.setMatrixAt(i,m4)});edge.count=ring.length;edge.instanceMatrix.needsUpdate=true;scene.add(edge);
+        }
+      // a floating flower sign above each garden: tap it to go and pick
+      const cv=document.createElement('canvas');cv.width=256;cv.height=256;const cx=cv.getContext('2d');cx.fillStyle='rgba(11,45,40,.82)';cx.beginPath();cx.arc(128,128,112,0,7);cx.fill();cx.strokeStyle='#c8a96a';cx.lineWidth=8;cx.stroke();cx.font='120px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(FLOWER_KINDS[gd.kind].icon,128,138);
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);const sx=gd.pier?gd.x:gd.cx+(gd.u[0]+gd.w[0])*2.4,sz=gd.pier?gd.z:gd.cz+(gd.u[1]+gd.w[1])*2.4;sp.position.set(sx,terrainHeight(sx,sz)+2.6,sz);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
+  // ---- basket, picking, arranging, carrying, offering
+  let bouquetYaw=0,bqSpin=true,flowerBasket=[],bouquetLayout='tron',carriedBouquet=null,pendingGarden=null,pendingOffer=false,swapPick=-1;
+  const flowerUi=document.createElement('div');flowerUi.innerHTML=`
+    <section id="flowerSheet" role="dialog" aria-label="Hái hoa" hidden><div class="fl-head"><strong id="flowerSheetTitle"></strong><button type="button" data-fl="close">✕ Đóng</button></div>
+      <p class="fl-note" id="flowerSheetNote"></p><div class="fl-row"><button type="button" class="fl-main" data-fl="pick">＋ Hái 1 bông</button><span id="flowerCount"></span></div>
+      <div class="fl-chips" id="flowerChips"></div><div class="og-list" id="flowerOthers" hidden></div><div class="fl-row"><button type="button" data-fl="others">🌸 Hoa khác</button><button type="button" data-fl="done" class="fl-gold">✓ Xong · bó hoa</button></div></section>
+    <section id="bouquetBox" role="dialog" aria-label="Bó hoa" hidden><div class="fl-head"><strong>💐 Sắp xếp bó hoa</strong><button type="button" data-fl="later">✕ Để sau</button></div>
+      <div class="fl-body"><canvas id="bouquetCanvas" width="320" height="320"></canvas><div class="fl-side">
+        <div class="fl-note">Kiểu bó</div><div class="fl-row" id="bouquetLayouts"></div>
+        <div class="fl-note">Chạm hai bông để đổi chỗ cho nhau (bông đầu tiên ở giữa / trên cùng). Chạm ✕ để bỏ bớt.</div><div class="fl-chips" id="bouquetChips"></div>
+        <div class="fl-row"><button type="button" data-fl="more">🌸 Hoa khác</button><button type="button" data-fl="redo">🔁 Chọn lại</button></div>
+        <button type="button" class="fl-gold" data-fl="ok">✅ Ưng ý · mang đi dâng</button></div></div></section>
+    <button type="button" id="flowerPill" hidden></button>`;
+  document.body.appendChild(flowerUi);
+  const flSheet=document.getElementById('flowerSheet'),bqBox=document.getElementById('bouquetBox'),flPill=document.getElementById('flowerPill'),hint=t=>{document.getElementById('zenHint').textContent=t};
+  function refreshFlowerPill(){if(carriedBouquet){flPill.hidden=false;flPill.textContent='💐 Mang bó hoa · '+(Math.hypot(mePosition.x-STATUE.x,mePosition.z-STATUE.z)<9?'Dâng hoa':'Đi dâng hoa');}else if(flowerBasket.length){flPill.hidden=false;flPill.textContent='🧺 Giỏ hoa '+flowerBasket.length+'/'+BOUQUET_MAX+' · Bó hoa';}else flPill.hidden=true}
+  function chipsHtml(list,removable,sel){return list.map((k,i)=>'<button type="button" class="fl-chip'+(i===sel?' sel':'')+'" data-i="'+i+'" aria-label="'+FLOWER_KINDS[k].name+'">'+FLOWER_KINDS[k].icon+(removable?'<span data-x="'+i+'">✕</span>':'')+'</button>').join('')||'<span class="fl-note">Giỏ còn trống</span>'}
+  let sheetGarden=null;
+  function openGardenSheet(gd){sheetGarden=gd;document.getElementById('flowerOthers').hidden=true;flSheet.querySelector('[data-fl="others"]').textContent='🌸 Hoa khác';const k=FLOWER_KINDS[gd.kind];document.getElementById('flowerSheetTitle').textContent=k.icon+' '+k.garden;
+    document.getElementById('flowerSheetNote').textContent=gd.pier?'Hái sen ở Bến sen để thêm vào bó hoa dâng Phật.':'Hái '+k.name.toLowerCase()+' để thêm vào bó hoa dâng Phật. Có thể hái ở nhiều vườn.';renderGardenSheet();flSheet.hidden=false;document.body.classList.add('flower-open')}
+  function renderGardenSheet(){document.getElementById('flowerCount').textContent='Giỏ: '+flowerBasket.length+'/'+BOUQUET_MAX;
+    document.getElementById('flowerOthers').innerHTML=FLOWER_GARDENS.map((g,i)=>g===sheetGarden?'':'<div class="og-g"><span>'+FLOWER_KINDS[g.kind].icon+' '+(g.pier?'Hoa sen · Bến sen':FLOWER_KINDS[g.kind].garden)+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>').join('');document.getElementById('flowerChips').innerHTML=chipsHtml(flowerBasket,true);
+    flSheet.querySelector('[data-fl="pick"]').disabled=flowerBasket.length>=BOUQUET_MAX||!!carriedBouquet;flSheet.querySelector('[data-fl="done"]').disabled=!flowerBasket.length;refreshFlowerPill()}
+  function closeFlowerUi(){flSheet.hidden=true;bqBox.hidden=true;document.body.classList.remove('flower-open');stopPreview()}
+  flSheet.addEventListener('click',e=>{const ow=e.target.closest('[data-og-walk]'),ot=e.target.closest('[data-og-tp]');if(ow||ot){const gd=FLOWER_GARDENS[Number((ow||ot).dataset[ow?'ogWalk':'ogTp'])];closeFlowerUi();if(ow){standUpForTravel();goToGarden(gd)}else if(teleportTo(gd.x,gd.pier?gd.z-.6:gd.z,null))setTimeout(()=>openGardenSheet(gd),250);return}const x=e.target.closest('[data-x]');if(x){flowerBasket.splice(Number(x.dataset.x),1);renderGardenSheet();return}const a=e.target.closest('[data-fl]')?.dataset.fl;if(!a)return;
+    if(a==='others'){const o=document.getElementById('flowerOthers');o.hidden=!o.hidden;e.target.closest('[data-fl]').textContent=o.hidden?'🌸 Hoa khác':'▴ Ẩn hoa khác';return}
+    if(a==='close')closeFlowerUi();else if(a==='pick'&&sheetGarden&&flowerBasket.length<BOUQUET_MAX&&!carriedBouquet){flowerBasket.push(sheetGarden.kind);renderGardenSheet();if(flowerBasket.length>=BOUQUET_MAX)hint('🧺 Giỏ đã đủ 9 bông · Bấm Xong để bó hoa')}
+    else if(a==='done'&&flowerBasket.length)openBouquet()});
+  // Preview: a small separate renderer that spins the bouquet slowly.
+  let pv=null;
+  function startPreview(){const cv=document.getElementById('bouquetCanvas');if(!pv){const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.setSize(320,320,false);r.outputColorSpace=THREE.SRGBColorSpace;
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff4dc','#2d4a3a',2.4));const d=new THREE.DirectionalLight('#ffe6c0',1.6);d.position.set(1,2,1.5);sc.add(d);const cam=new THREE.PerspectiveCamera(32,1,.01,10);cam.position.set(0,.55,1.55);cam.lookAt(0,.32,0);pv={r,sc,cam,holder:new THREE.Group(),run:false};sc.add(pv.holder)}
+    pv.holder.clear();pv.holder.add(buildBouquet(flowerBasket,bouquetLayout));
+    if(!pv.drag){pv.drag=true;let d=null;/* drag sideways to turn the bouquet; it stops spinning and keeps the angle you leave it at */
+      cv.style.touchAction='none';cv.style.cursor='grab';
+      cv.addEventListener('pointerdown',e=>{d={x:e.clientX,y:bouquetYaw};bqSpin=false;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';refreshYawUi()});
+      cv.addEventListener('pointermove',e=>{if(!d)return;bouquetYaw=d.y+(e.clientX-d.x)*.012});
+      const up=()=>{if(d){d=null;cv.style.cursor='grab'}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
+    if(!pv.run){pv.run=true;let last=performance.now();const spin=()=>{if(!pv||!pv.run)return;const now=performance.now();if(bqSpin)bouquetYaw+=(now-last)/1000*.6;last=now;pv.holder.rotation.y=bouquetYaw;pv.r.render(pv.sc,pv.cam);requestAnimationFrame(spin)};spin()}}
+  function refreshYawUi(){const b=document.getElementById('bqYawRow');if(b)b.innerHTML='<button type="button" class="fl-chip wide'+(bqSpin?' sel':'')+'" data-yaw="spin">⟳ Xoay 360°</button><button type="button" class="fl-chip wide'+(!bqSpin?' sel':'')+'" data-yaw="keep">📌 Giữ góc này</button><span class="fl-note" style="margin:0;flex-basis:100%">Kéo ngang bó hoa để xoay, chọn góc đẹp nhất; khi dâng, mặt này quay ra trước.</span>'}
+  function stopPreview(){if(pv)pv.run=false}
+  function renderBouquet(){document.getElementById('bouquetLayouts').innerHTML=Object.entries(BOUQUET_LAYOUTS).map(([k,l])=>'<button type="button" class="fl-chip wide'+(k===bouquetLayout?' sel':'')+'" data-layout="'+k+'">'+l+'</button>').join('');
+    document.getElementById('bouquetChips').innerHTML=chipsHtml(flowerBasket,true,swapPick);if(!document.getElementById('bqYawRow')){const r=document.createElement('div');r.id='bqYawRow';r.className='fl-row';r.style.cssText='flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0';const col=document.getElementById('bouquetLayouts').parentElement;col.insertBefore(r,col.firstChild)}refreshYawUi();bqBox.querySelector('[data-fl="ok"]').disabled=!flowerBasket.length;bqBox.querySelector('[data-fl="more"]').disabled=flowerBasket.length>=BOUQUET_MAX;startPreview();refreshFlowerPill()}
+  function openBouquet(){flSheet.hidden=true;swapPick=-1;bqSpin=true;bqBox.hidden=false;document.body.classList.add('flower-open');renderBouquet()}
+  bqBox.addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(x){flowerBasket.splice(Number(x.dataset.x),1);swapPick=-1;if(!flowerBasket.length){closeFlowerUi();refreshFlowerPill();hint('Giỏ hoa đã trống · Ghé các vườn hoa để hái lại');return}renderBouquet();return}
+    const yw=e.target.closest('[data-yaw]');if(yw){bqSpin=yw.dataset.yaw==='spin';refreshYawUi();return}
+    const ly=e.target.closest('[data-layout]');if(ly){bouquetLayout=ly.dataset.layout;renderBouquet();return}
+    const c=e.target.closest('.fl-chip[data-i]');if(c){const i=Number(c.dataset.i);if(swapPick<0)swapPick=i;else{if(swapPick!==i){const t=flowerBasket[swapPick];flowerBasket[swapPick]=flowerBasket[i];flowerBasket[i]=t}swapPick=-1}renderBouquet();return}
+    const a=e.target.closest('[data-fl]')?.dataset.fl;if(!a)return;
+    if(a==='later'||a==='more'){closeFlowerUi();refreshFlowerPill();if(a==='more')openOfferGuide()}
+    else if(a==='redo'){flowerBasket=[];closeFlowerUi();refreshFlowerPill();hint('🔁 Đã bỏ giỏ hoa · Ghé các vườn hoa để chọn lại')}
+    else if(a==='ok'&&flowerBasket.length){const yw=((bouquetYaw%(Math.PI*2))+Math.PI*2)%(Math.PI*2);carriedBouquet={flowers:flowerBasket.slice(),layout:bouquetLayout,yaw:yw};flowerBasket=[];closeFlowerUi();attachCarried();refreshFlowerPill();hint('💐 Bó hoa đã xong · Mang lên đồi dâng tượng Phật')}});
+  // carried bouquet in the avatar's hands
+  let carriedMesh=null;
+  function attachCarried(){if(carriedMesh){me.remove(carriedMesh);carriedMesh=null}if(!carriedBouquet)return;carriedMesh=buildBouquet(carriedBouquet.flowers,carriedBouquet.layout);carriedMesh.scale.setScalar(.6);carriedMesh.position.set(0,.8,.38);carriedMesh.rotation.set(.35,carriedBouquet.yaw||0,0,'XYZ');me.add(carriedMesh)}
+  // offering slots on the dais steps in front of the statue: centre on the upper step, then alternating left/right on the lower step
+  const offerSlotPos=k=>{if(k===0)return {x:STATUE.x,z:STATUE.z+1.78,y:TERRACE_TOP+.36,a:0};const a=[0,18,-18,38,-38,58,-58,78,-78][k]*Math.PI/180;return {x:STATUE.x+Math.sin(a)*2.13,z:STATUE.z+Math.cos(a)*2.13,y:TERRACE_TOP+.18,a}};
+  const OFFER_STAND=[STATUE.x,STATUE.z+4.1];
+  const offeredShown=new Map();
+  function showOfferings(rows,full){const keep=new Set(rows.map(r=>String(r.id)));if(full)for(const [k,o] of offeredShown)if(!keep.has(k)&&!String(k).startsWith('local-')){shrine.remove(o.g);offeredShown.delete(k)}
+    for(const r of rows){const key=String(r.id);if(offeredShown.has(key))continue;const used=new Set([...offeredShown.values()].map(o=>o.slot)),pref=(((Number(r.seq)-1)%OFFER_SLOTS)+OFFER_SLOTS)%OFFER_SLOTS;let slot=pref;if(used.has(pref)){for(let k=0;k<OFFER_SLOTS;k++)if(!used.has(k)){slot=k;break}}/* chỗ trống gần nhất; bệ đầy thì thay bó ở chỗ của mình */const p=offerSlotPos(slot);
+      for(const [k,o] of offeredShown)if(o.slot===slot){shrine.remove(o.g);offeredShown.delete(k)}
+      let g=buildBouquet((r.flowers||[]).filter(f=>FLOWER_KINDS[f]).slice(0,BOUQUET_MAX),BOUQUET_LAYOUTS[r.layout]?r.layout:'tron');g.scale.setScalar(1.3);g.position.set(p.x,p.y,p.z);g.rotation.set(-.22*Math.cos(p.a),p.a,.22*Math.sin(p.a));{const inner=g;const wrap=new THREE.Group();wrap.position.copy(inner.position);wrap.rotation.copy(inner.rotation);inner.position.set(0,0,0);inner.rotation.set(0,(Number(r.yaw)||0)*Math.PI/180,0);wrap.add(inner);wrap.scale.copy(inner.scale);inner.scale.setScalar(1);g=wrap}shrine.add(g);offeredShown.set(key,{g,slot})}
+    }
+  // Supabase: 9 bó trên bệ theo quy tắc kho 69/9 (6 được chọn nhiều nhất + 3 mới nhất). If the database is not reachable the offering still shows on this device.
+  const flowerDb=(()=>{const c=window.ANYEN_CONFIG||{};try{return window.supabase&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(c.supabaseUrl||'')?window.supabase.createClient(c.supabaseUrl,c.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'anyen-flowers'}}):null}catch(e){return null}})();
+  let localSeq=1;
+  async function loadOfferings(){if(!flowerDb)return;try{const q=c=>flowerDb.from('anyen_flower_offerings').select(c).order('seq',{ascending:false}).limit(STORE_FETCH);let {data,error}=await q('id,seq,flowers,layout,yaw,name,picks');if(error)({data,error}=await q('id,seq,flowers,layout,yaw,name'));if(error)({data,error}=await q('id,seq,flowers,layout,name'));if(!error&&data){for(const [k,o] of offeredShown)if(String(k).startsWith('local-')){shrine.remove(o.g);offeredShown.delete(k)}showOfferings(pickNine(data).reverse(),true)}}catch(e){}}
+  async function offerBouquet(){const b=carriedBouquet;if(!b)return;carriedBouquet=null;window.__bagTake&&window.__bagTake('flowers',{flowers:b.flowers,layout:b.layout},true);attachCarried();refreshFlowerPill();viewYaw=walkYaw=Math.PI;lookOffset=0;
+    window.dispatchEvent(new CustomEvent('anyen-gesture',{detail:{kind:'namaste'}}));hint('🙏 Đã dâng hoa lên Đức Phật · Nguyện an lành');
+    let name='Khách Yên';try{name=String(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||name).slice(0,24)}catch(e){}
+    let saved=false;if(flowerDb){try{const yawDeg=Math.round((b.yaw||0)*180/Math.PI)%360;let {error}=await flowerDb.from('anyen_flower_offerings').insert({flowers:b.flowers,layout:b.layout,yaw:yawDeg,name});if(error)({error}=await flowerDb.from('anyen_flower_offerings').insert({flowers:b.flowers,layout:b.layout,name}));saved=!error}catch(e){}}
+    if(saved)loadOfferings();else{const next=[...offeredShown.values()].length;showOfferings([{id:'local-'+Date.now(),seq:localSeq++,flowers:b.flowers,layout:b.layout,yaw:Math.round((b.yaw||0)*180/Math.PI)}]);hint('🙏 Đã dâng hoa · (chưa lưu được lên máy chủ, chỉ hiện trên máy này)')}}
+  function goOffer(){if(!carriedBouquet||bayMode||boatRide)return;if(Math.hypot(mePosition.x-OFFER_STAND[0],mePosition.z-OFFER_STAND[1])<1.8){offerBouquet();return}const p=nearestWalkable(...OFFER_STAND,Math.PI)||OFFER_STAND;if(navigateTo(...p)){pendingOffer=true;hint('💐 Đang mang bó hoa lên đồi…')}}
+  function goToGarden(gd){if(bayMode||boatRide)return;const stand=gd.pier?[gd.x,gd.z-.6]:[gd.x,gd.z];if(Math.hypot(mePosition.x-stand[0],mePosition.z-stand[1])<3.2){openGardenSheet(gd);return}const p=nearestWalkable(...stand)||stand;if(navigateTo(...p)){pendingGarden=gd;hint(FLOWER_KINDS[gd.kind].icon+' Đang đến '+FLOWER_KINDS[gd.kind].garden+'…')}}
+  flPill.addEventListener('click',()=>{if(carriedBouquet)goOffer();else if(flowerBasket.length)openBouquet()});
+  window.addEventListener('anyen-3d-exit',closeFlowerUi);
+  setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadOfferings();refreshFlowerPill()},12000);
+  window.addEventListener('anyen-3d-enter',()=>setTimeout(loadOfferings,800));loadOfferings();
+  // Nghi thức "Dâng hoa tượng Phật": a guide that starts the flower offering and shows where you are in it.
+  const offerGuide=document.createElement('section');offerGuide.id='offerGuide';offerGuide.setAttribute('role','dialog');offerGuide.setAttribute('aria-label','Nghi thức dâng hoa');offerGuide.hidden=true;document.body.appendChild(offerGuide);
+  function renderOfferGuide(){const step=carriedBouquet?3:flowerBasket.length?2:1,mark=n=>n<step?'✓':n===step?'●':'○';
+    const gardens=FLOWER_GARDENS.map((g,i)=>{const k=FLOWER_KINDS[g.kind];return '<div class="og-g"><span>'+k.icon+' '+(g.pier?'Hoa sen · Bến sen':k.name+' · Hồ '+(g.lake||''))+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>'}).join('');
+    offerGuide.innerHTML='<div class="fl-head"><strong>💐 Nghi thức dâng hoa tượng Phật</strong><button type="button" data-og="close">✕ Đóng</button></div>'
+      +'<p class="fl-note">Đi qua các vườn hoa, hái tối đa 9 bông, bó lại theo ý mình rồi mang lên đồi dâng Đức Phật. Hoa dâng được giữ trên bệ cho mọi người cùng thấy.</p>'
+      +'<ol class="og-steps"><li class="'+(step===1?'on':'')+'"><b>'+mark(1)+'</b> Hái hoa ở sáu vườn quanh các hồ'+(flowerBasket.length?' · giỏ '+flowerBasket.length+'/'+BOUQUET_MAX:'')+'</li><li class="'+(step===2?'on':'')+'"><b>'+mark(2)+'</b> Bấm Xong, xem trước và sắp xếp bó hoa</li><li class="'+(step===3?'on':'')+'"><b>'+mark(3)+'</b> Mang bó hoa lên đồi, dâng trước tượng Phật</li></ol>'
+      +(step===3?'<div class="fl-row"><button type="button" class="fl-gold" data-og="offer">🙏 Đi dâng hoa</button></div>':'<div class="og-list">'+gardens+'</div>'+(step===2?'<div class="fl-row"><button type="button" class="fl-gold" data-og="arrange">💐 Xong · bó hoa ('+flowerBasket.length+' bông)</button></div>':''))}
+  function openOfferGuide(){if(bayMode||!document.body.classList.contains('immersive'))return;closeFlowerUi();renderOfferGuide();offerGuide.hidden=false;document.body.classList.add('flower-open')}
+  function closeOfferGuide(){offerGuide.hidden=true;if(flSheet.hidden&&bqBox.hidden)document.body.classList.remove('flower-open')}
+  offerGuide.addEventListener('click',e=>{const w=e.target.closest('[data-og-walk]'),t=e.target.closest('[data-og-tp]'),a=e.target.closest('[data-og]')?.dataset.og;
+    if(w){closeOfferGuide();standUpForTravel();goToGarden(FLOWER_GARDENS[Number(w.dataset.ogWalk)]);return}
+    if(t){const gd=FLOWER_GARDENS[Number(t.dataset.ogTp)];closeOfferGuide();if(teleportTo(gd.x,gd.pier?gd.z-.6:gd.z,null))setTimeout(()=>openGardenSheet(gd),250);return}
+    if(a==='close')closeOfferGuide();else if(a==='arrange'){closeOfferGuide();openBouquet()}else if(a==='offer'){closeOfferGuide();goOffer()}});
+  window.addEventListener('anyen-flower-ritual',openOfferGuide);window.addEventListener('anyen-3d-exit',closeOfferGuide);
+  // 3.18: Không gian bên trong bốn nhà giác quan. Mỗi nhà mở một gian phòng 3D riêng (rừng tạm dừng vẽ) với một hoạt động:
+  // Nhà chuông gió: chạm chuông xoay, chiêng, chuông gió, và buổi thiền âm thanh 3 phút.
+  // Haromy (nhà xông hương): 18 mùi, nhỏ tinh dầu hoặc đốt thảo mộc, thở cùng hương, Lọ Ước / Túi thơm vào Túi An Yên.
+  // Quán trà: pha trà từng bước rồi mời trà, nhận một lời nhắn.
+  // Nhà gốm: nặn gốm Chăm đi lùi quanh đôn (không bàn xoay), chuốt, khắc hoa văn, phơi, rồi nung lộ thiên ngoài bãi.
+  let roomOpen=false,room=null;
+  const roomBox=document.createElement('section');roomBox.id='roomBox';roomBox.setAttribute('role','dialog');roomBox.hidden=true;
+  roomBox.innerHTML='<div class="rm-top"><strong id="roomTitle"></strong><button type="button" data-rm="back">← Trở về Rừng Yên</button></div><div class="rm-stage"><canvas id="roomCanvas"></canvas><div class="rm-hint" id="roomHint"></div><div class="rm-breath" id="roomBreath" hidden><div class="rm-orb"></div><span></span></div></div><div class="rm-panel" id="roomPanel"></div>';
+  document.body.appendChild(roomBox);
+  const rmCanvas=roomBox.querySelector('#roomCanvas'),rmPanel=roomBox.querySelector('#roomPanel'),rmHint=t=>{roomBox.querySelector('#roomHint').textContent=t};
+  // ---- sound: a small synth on the shared audio context (unlocked by the tap that opened the room)
+  function audio(){unlockChime();return chimeCtx}
+  function strike(freq,dur=6,gain=.12,partials=[[1,1],[2.76,.35],[5.4,.12]]){const ac=audio();if(!ac)return;const t0=ac.currentTime;
+    for(const [m,a] of partials){const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=freq*m;o.detune.value=(Math.random()-.5)*6;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(gain*a,t0+.015);g.gain.exponentialRampToValueAtTime(.0003,t0+dur/Math.sqrt(m));o.connect(g).connect(ac.destination);o.start(t0);o.stop(t0+dur)}}
+  // ---- shared room: wooden floor, three walls, warm light, slow orbit by dragging
+  let roomRenderer=null;
+  function makeRoom(wall,floor){const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
+    const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');sc.add(new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6));const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp);
+    const fl=new THREE.Mesh(new THREE.BoxGeometry(8,.1,7),mat(floor));fl.position.y=-.05;sc.add(fl);for(let i=-3;i<=3;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.02,.002,7),mat('#3a2a1e'));s.position.set(i*1.1,.001,0);sc.add(s)}
+    const back=new THREE.Mesh(new THREE.BoxGeometry(8,4,.12),mat(wall));back.position.set(0,2,-3.5);sc.add(back);for(const sx of [-4,4]){const w=new THREE.Mesh(new THREE.BoxGeometry(.12,4,7),mat(wall));w.position.set(sx,2,0);sc.add(w)}
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(8,.2,.2),mat('#4e3a2a'));beam.position.set(0,3.5,-3.3);sc.add(beam);
+    const cam=new THREE.PerspectiveCamera(50,1,.05,40);const st={r,sc,cam,yaw:0,pitch:.18,dist:4.6,target:new THREE.Vector3(0,.9,0),tick:[],picks:[],run:true};
+    let drag=null;rmCanvas.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,moved:false};rmCanvas.setPointerCapture(e.pointerId)};
+    rmCanvas.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>6)drag.moved=true;drag.x=e.clientX;drag.y=e.clientY;st.yaw=Math.max(-.9,Math.min(.9,st.yaw-dx*.006));st.pitch=Math.max(.02,Math.min(.6,st.pitch+dy*.004))};
+    rmCanvas.onpointerup=e=>{const d=drag;drag=null;if(!d||d.moved)return;const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
+      const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
+    rmCanvas.onpointercancel=()=>{drag=null};rmCanvas.onwheel=e=>{e.preventDefault();st.dist=Math.max(2.6,Math.min(6.5,st.dist*Math.exp(e.deltaY*.001)))};
+    const resize=()=>{const w=rmCanvas.clientWidth||600,h=rmCanvas.clientHeight||400;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};resize();st.resize=resize;
+    const t0=performance.now(),loop=()=>{if(!st.run)return;const t=(performance.now()-t0)/1000;for(const f of st.tick)f(t);cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target);r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
+    return st}
+  const rTap=(st,obj,fn)=>{st.picks.push({obj,fn});return obj};
+  const rAdd=(st,m,x,y,z)=>{m.position.set(x,y,z);st.sc.add(m);return m};
+  // ---------------------------------------------------------------- Nhà chuông gió
+  function roomChuongGio(st){rmHint('Chạm vào chuông xoay, chiêng hay chuông gió để nghe · Kéo để nhìn quanh');
+    const bowlM=new THREE.MeshStandardMaterial({color:'#b88d45',metalness:.6,roughness:.35});rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(2.4,.32,1),mat('#4e3a2a')),0,.16,0);
+    [[-.8,.26,196],[0,.32,147],[.8,.22,262]].forEach(([x,r,f],k)=>{const b=rAdd(st,new THREE.Mesh(new THREE.LatheGeometry([[0,0],[r*.6,.02],[r,.14],[r*1.05,.2]].map(([a,c])=>new THREE.Vector2(a,c)),24),bowlM),x,.33,0);
+      const cushion=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,.05,16),mat('#7a2f2f')),x,.33,0);rTap(st,b,()=>{strike(f,7,.14);b.userData.ring=performance.now()});st.tick.push(()=>{const u=(performance.now()-(b.userData.ring||0))/1000;b.scale.setScalar(u<1.2?1+Math.sin(u*40)*.012*(1.2-u):1)})});
+    const frame=new THREE.Group();frame.position.set(-2.4,0,-1.8);st.sc.add(frame);for(const x of [-.7,.7]){const p=new THREE.Mesh(new THREE.BoxGeometry(.1,2.2,.1),mat('#4e3a2a'));p.position.set(x,1.1,0);frame.add(p)}const tb=new THREE.Mesh(new THREE.BoxGeometry(1.6,.12,.12),mat('#4e3a2a'));tb.position.y=2.2;frame.add(tb);
+    const gong=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.05,32),new THREE.MeshStandardMaterial({color:'#a8823e',metalness:.65,roughness:.3}));gong.rotation.x=Math.PI/2;gong.position.y=1.35;frame.add(gong);const boss=new THREE.Mesh(new THREE.SphereGeometry(.12,12,8),bowlM);boss.position.set(0,1.35,.04);boss.scale.z=.5;frame.add(boss);
+    rTap(st,frame,()=>{strike(98,9,.18,[[1,1],[1.48,.5],[2.3,.3],[3.9,.12]]);gong.userData.ring=performance.now()});st.tick.push(()=>{const u=(performance.now()-(gong.userData.ring||0))/1000;frame.rotation.z=u<2?Math.sin(u*9)*.015*(2-u):0});
+    const metal=new THREE.MeshStandardMaterial({color:'#d2c49a',metalness:.6,roughness:.3}),chimes=[];
+    for(const [x,z] of [[-1.6,1.2],[1.6,1.2],[2.4,-1.4]]){const g=new THREE.Group();g.position.set(x,2.9,z);st.sc.add(g);const top=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.05,12),mat('#6b4a32'));g.add(top);for(let k=0;k<6;k++){const a=k*1.047,len=.5+k*.12,t=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,len,8),metal);t.position.set(Math.cos(a)*.14,-.1-len/2,Math.sin(a)*.14);g.add(t)}chimes.push(g);rTap(st,g,()=>{playChime();g.userData.ring=performance.now()})}
+    st.tick.push(t=>{for(const [i,g] of chimes.entries()){const u=(performance.now()-(g.userData.ring||0))/1000,k=u<3?(3-u)*.08:0;g.rotation.z=Math.sin(t*1.3+i)*(.04+k);g.rotation.x=Math.sin(t*.9+i*2)*(.03+k*.6)}});
+    for(let k=0;k<6;k++){const a=-1+k*.4,c=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.3,.32,.12,14),mat('#6e4a33')),Math.sin(a)*2,.06,1.3+Math.cos(a)*.6)}
+    let sess=null;
+    function render(){rmPanel.innerHTML='<p>Âm thanh là một cửa vào tĩnh lặng. Lắng nghe một tiếng chuông từ lúc ngân đến khi tắt hẳn.</p><div class="rm-row"><button data-cg="bowl0">🥣 Chuông trầm</button><button data-cg="bowl1">🥣 Chuông vừa</button><button data-cg="bowl2">🥣 Chuông thanh</button><button data-cg="gong">🔔 Chiêng</button><button data-cg="wind">🎐 Gió thổi</button></div><div class="rm-row"><button class="rm-gold" data-cg="sess">'+(sess?'⏹ Dừng thiền âm thanh · '+sess.left+'s':'🧘 Thiền âm thanh 3 phút')+'</button></div>'}
+    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-cg]')?.dataset.cg;if(!a)return;const fs=[147,196,262];
+      if(a.startsWith('bowl'))strike(fs[+a[4]],7,.14);else if(a==='gong')strike(98,9,.18,[[1,1],[1.48,.5],[2.3,.3],[3.9,.12]]);else if(a==='wind'){for(const g of chimes)g.userData.ring=performance.now();playChime();setTimeout(()=>{if(st.run)playChime()},900)}
+      else if(a==='sess'){if(sess){clearInterval(sess.id);sess=null;rmHint('Đã dừng buổi thiền âm thanh');render();return}sess={left:180,id:0};strike(98,9,.18,[[1,1],[1.48,.5],[2.3,.3]]);rmHint('Ngồi thẳng, thả lỏng vai · Mỗi tiếng chuông là một lần trở về hơi thở');
+        sess.id=setInterval(()=>{if(!roomOpen){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)strike([147,196,262][(sess.left/20)%3],7,.12);if(sess.left%45===0)playChime();if(sess.left<=0){clearInterval(sess.id);sess=null;strike(98,10,.18,[[1,1],[1.48,.5]]);setTimeout(()=>strike(98,10,.16,[[1,1],[1.48,.5]]),3500);rmHint('🙏 Buổi thiền âm thanh đã xong · Mang sự tĩnh lặng này theo bạn')}render()},1000)}};
+    st.cleanup=()=>{if(sess)clearInterval(sess.id)}}
+  // ---------------------------------------------------------------- Haromy · Ngôi nhà của mùi thơm Hạnh phúc
+  // Theo bản mô tả Haromy: tủ 18 thảo mộc khô (trái) và tủ 18 lọ tinh dầu (phải) khớp 1–1 theo 3 tầng hương,
+  // bàn thấp giữa nhìn ra cửa sổ Hồ Hương (đèn xông tinh dầu bên trái, lư đất nung bên phải), 4 tọa cụ, kệ Lưu Hương 3×3.
+  // Quy trình 6 bước: lắng nghe tâm trạng → chọn 1–3 mùi → nhỏ tinh dầu HOẶC đốt thảo mộc → thở cùng hương →
+  // Lọ Ước / Túi thơm vào Túi An Yên (và kệ chung, kho 69) → Nhật ký An Yên kèm gợi ý dùng tại nhà.
+  const AROMAS=[
+    ['sa_chanh','Sả chanh',0,'#C8DF8A','Tươi mát, ấm nhẹ, vị chanh rõ','Quét sạch bụi bặm, làm mới không gian','Giải tỏa uể oải, nặng đầu, xua cảm giác bí bách'],
+    ['bac_ha','Bạc hà',0,'#9BE2D8','Mát lạnh, sắc nét, bừng tỉnh','Sự minh mẫn và hanh thông','Giảm căng đầu, buồn ngủ, giúp đầu óc sáng rõ tức thì'],
+    ['vo_buoi','Vỏ bưởi',0,'#F2DC78','Thanh ngọt, thân thuộc mùi vườn nhà','Niềm vui giản dị, nhẹ lòng','Nâng tinh thần khi chùng xuống, giảm cảm giác nặng nề'],
+    ['cam_ngot','Cam ngọt',0,'#F5B06C','Ngọt dịu, ấm nắng, tươi vui','Năng lượng tích cực, sự cởi mở','Xoa dịu lo âu nhẹ, giúp trẻ hóa tâm trạng, dễ mỉm cười'],
+    ['chanh_xanh','Chanh xanh',0,'#A8DF76','Chua thanh, trong trẻo, sắc sảo','Khởi đầu mới, rũ bỏ cũ kỹ','Tăng tập trung, cắt dòng suy nghĩ rối rắm lặp đi lặp lại'],
+    ['bach_dan','Bạch đàn',0,'#A8D6CF','The mát, sạch sâu, mùi rừng sớm','Hơi thở rộng mở, tự do','Thông mũi, mở lồng ngực, giải tỏa ngột ngạt, áp lực'],
+    ['oai_huong','Oải hương',1,'#B59CE0','Dịu êm, hơi ngọt thảo mộc, thư thái','Sự an nghỉ và buông xuống','Hạ nhịp cảm xúc, giảm lo âu, hỗ trợ vào giấc ngủ sâu'],
+    ['hoa_sen','Hoa sen',1,'#F4A6C4','Thanh khiết, thoang thoảng, trong sáng','Tỉnh thức giữa đời thường, tâm không vướng bận','Làm lắng cơn nóng giận/bất an, đưa tâm về tĩnh lặng'],
+    ['hoa_nhai','Hoa nhài',1,'#F6F0DC','Ngọt mềm, thanh tao, ấm đêm','Sự dịu dàng và niềm tin vào bản thân','An ủi nỗi buồn sâu, khơi lại cảm giác yêu đời, bớt tự ti'],
+    ['hoa_hong','Hoa hồng',1,'#DC5B74','Nồng nàn mềm mại, ấm áp trái tim','Tình thương và sự tự trân trọng','Chữa lành tổn thương tình cảm, vỗ về cô đơn, tủi thân'],
+    ['huong_thao','Hương thảo',1,'#5C8E6B','Thảo mộc xanh ấm, sắc sảo, bền bỉ','Trí nhớ sáng và sự kiên định','Giảm kiệt sức tinh thần do làm việc lâu, tăng sáng suốt'],
+    ['ngai_cuu','Ngải cứu',1,'#7A8F5E','Đậm chất thảo dược, ấm nồng, thân quen','Sự che chở và bảo vệ','Làm dịu cảm giác bất an, lạnh người, giúp yên dạ'],
+    ['tram_huong','Trầm hương',2,'#B6894A','Trầm sâu, ngọt gỗ, linh thiêng','Sự tĩnh tại vượt thời gian','Định tâm khi ngồi thiền, cắt vọng tưởng, an thần sâu'],
+    ['go_thong','Gỗ thông',2,'#3E6E52','Mùi nhựa rừng, thanh sạch, vững vàng','Cây thông đứng thẳng giữa gió — nội lực','Giảm căng thẳng tích tụ, cảm giác được thiên nhiên ôm ấp'],
+    ['dan_huong','Đàn hương',2,'#D1B086','Mịn như kem gỗ, dịu ngọt, rất êm','Lòng từ hòa và sự sáng suốt trầm tĩnh','Xoa dịu bất an kéo dài, cân bằng cảm xúc khi nhạy cảm'],
+    ['que','Quế thanh',2,'#B85D38','Cay ngọt, nồng ấm mạnh mẽ','Ngọn lửa nhỏ sưởi ấm ngày lạnh','Đẩy lùi cảm giác lạnh lẽo, trì trệ, tiếp thêm sinh khí'],
+    ['hoa_hoi','Hoa hồi',2,'#9E6B40','Ngọt cay dịu, sâu lắng, nét cổ truyền','Sự đoàn tụ, ấm cúng','Thư giãn cơ thể mệt mỏi, giảm cảm giác trống trải'],
+    ['gung_kho','Gừng khô',2,'#D8A448','Ấm cay vừa, mùi đất vững chãi','Dũng khí bước tiếp từng bước nhỏ','Hồi sức khi kiệt quệ, ấm người, tăng ý chí bắt đầu']].map(([id,name,tier,c,feel,mean,heal],i)=>({id,name,tier,c,feel,mean,heal,i}));
+  const AR=id=>AROMAS.find(a=>a.id===id);
+  const AR_TIERS=['Hương đầu','Hương giữa','Hương nền'];
+  const AR_MOODS=[
+    {id:'ngu',label:'Khó ngủ · Đầu óc quay cuồng',mix:[['cam_ngot',1],['oai_huong',3],['dan_huong',1]],breath:[4,7,8],title:'Đêm An Giấc'},
+    {id:'tai',label:'Quá tải · Căng thẳng công việc',mix:[['vo_buoi',2],['oai_huong',2],['go_thong',1]],breath:[4,4,6],title:'Gió Rừng Thông'},
+    {id:'tinh',label:'Nặng đầu · Cần tỉnh táo tập trung',mix:[['bac_ha',2],['huong_thao',2],['chanh_xanh',1]],breath:[4,4,4],title:'Sáng Trong'},
+    {id:'buon',label:'Buồn bã · Cô đơn · Cần vỗ về',mix:[['cam_ngot',2],['hoa_hong',2],['hoa_nhai',1]],breath:[4,2,6],title:'Ôm Lòng Dịu Lại'},
+    {id:'met',label:'Mệt mỏi · Lạnh người · Hụt sức',mix:[['sa_chanh',2],['ngai_cuu',2],['gung_kho',1]],breath:[5,2,5],title:'Bếp Ấm Chiều Đông'},
+    {id:'thien',label:'Muốn tĩnh tâm · Ngồi thiền sâu',mix:[['bach_dan',1],['hoa_sen',2],['tram_huong',2]],breath:[4,4,8],title:'Sen Trầm Làng Yên'}];
+  // Drops by the golden ratio: 1 scent → 3 drops; 2 → 3:2 (more for the higher note); 3 → 2 top + 2 middle + 1 base.
+  function arRatio(ids){const a=ids.map(AR).sort((x,y)=>x.tier-y.tier);if(a.length===1)return [[a[0].id,3]];if(a.length===2)return [[a[0].id,3],[a[1].id,2]];return [[a[0].id,2],[a[1].id,2],[a[2].id,1]]}
+  function arBalanceHint(ids){const set=new Set(ids);if(['que','hoa_hoi','gung_kho'].every(x=>set.has(x)))return 'Ba mùi đều cay nóng · thử thêm Cam ngọt hoặc Vỏ bưởi để bài hương tròn dịu hơn.';if(ids.length===3&&ids.every(x=>AR(x).tier===0))return 'Toàn hương đầu nên mùi bay nhanh · thử thêm Gỗ thông hoặc Oải hương để hương lưu êm hơn.';return ''}
+  // ---- Lọ Ước (layered wish bottle) and Túi thơm (linen herb pouch), shared by the room, the shelf and the bag preview
+  function makeWishBottle(mix,s=1){const g=new THREE.Group(),glass=new THREE.MeshStandardMaterial({color:'#eef6f4',transparent:true,opacity:.32,roughness:.08,metalness:.1,side:THREE.DoubleSide,depthWrite:false});
+    const prof=[[0,0],[.12,0],[.14,.03],[.15,.12],[.14,.24],[.1,.3],[.05,.34],[.045,.4],[.052,.42]];g.add(new THREE.Mesh(new THREE.LatheGeometry(prof.map(([x,y])=>new THREE.Vector2(x,y)),24),glass));
+    const order=mix.map(([id,d])=>[AR(id),d]).filter(x=>x[0]).sort((a,b)=>b[0].tier-a[0].tier),tot=order.reduce((t,[,d])=>t+d,0)||1;let y=.012;
+    for(const [a,d] of order){const h=.22*d/tot,r=.138,m=new THREE.Mesh(new THREE.CylinderGeometry(r,r*(y<.03?.88:1),h,22),new THREE.MeshStandardMaterial({color:a.c,transparent:true,opacity:.78,roughness:.15,emissive:a.c,emissiveIntensity:.18}));m.position.y=y+h/2;g.add(m);y+=h}
+    for(let k=0;k<7;k++){const sp=new THREE.Mesh(new THREE.SphereGeometry(.006,6,4),new THREE.MeshBasicMaterial({color:'#fff6d0'}));const a=k*2.4;sp.position.set(Math.cos(a)*.08,.04+((k*37)%19)/19*Math.max(.02,y-.06),Math.sin(a)*.08);g.add(sp)}
+    const cork=new THREE.Mesh(new THREE.CylinderGeometry(.055,.045,.07,14),mat('#b08458'));cork.position.y=.44;g.add(cork);
+    const tw=new THREE.Mesh(new THREE.TorusGeometry(.05,.006,5,16),mat('#c8a96a'));tw.rotation.x=Math.PI/2;tw.position.y=.36;g.add(tw);
+    const tag=new THREE.Mesh(new THREE.BoxGeometry(.07,.045,.004),mat('#f2e6c8'));tag.position.set(.09,.31,.06);tag.rotation.set(0,-.4,.25);g.add(tag);g.scale.setScalar(s);return g}
+  function makeHerbPouch(mix,s=1){const g=new THREE.Group(),a=mix.map(([id])=>AR(id)).filter(Boolean),c0=(a[0]||AROMAS[12]).c,c1=(a[1]||a[0]||AROMAS[12]).c,c2=(a[2]||a[1]||a[0]||AROMAS[12]).c;
+    const base=new THREE.Color(c0).lerp(new THREE.Color('#f3ead8'),.45);
+    const prof=[[0,0],[.13,.005],[.17,.06],[.17,.16],[.13,.24],[.07,.27],[.08,.3],[.12,.34],[.1,.355]];g.add(new THREE.Mesh(new THREE.LatheGeometry(prof.map(([x,y])=>new THREE.Vector2(x,y)),18),new THREE.MeshStandardMaterial({color:base,roughness:.95,side:THREE.DoubleSide})));
+    const cord=new THREE.Mesh(new THREE.TorusGeometry(.075,.009,6,20),mat(c1));cord.rotation.x=Math.PI/2;cord.position.y=.265;g.add(cord);
+    for(const sx of [-1,1]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,.1,4),mat(c1));t.position.set(sx*.07,.2,.06);t.rotation.z=sx*.3;g.add(t);const ts=new THREE.Mesh(new THREE.ConeGeometry(.018,.05,8),mat(c1));ts.position.set(sx*.085,.14,.065);g.add(ts)}
+    for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.016,6,4),mat(c2));l.scale.set(1,.35,1.8);const a=k/6*Math.PI-.2;l.position.set(Math.cos(a)*.05,.1+Math.sin(a)*.05,.17);l.rotation.z=a;g.add(l)}
+    const stemE=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,.12,4),mat(c2));stemE.position.set(0,.08,.172);g.add(stemE);
+    const tag=new THREE.Mesh(new THREE.BoxGeometry(.07,.045,.004),mat('#f2e6c8'));tag.position.set(.1,.25,.09);tag.rotation.z=.3;g.add(tag);g.scale.setScalar(s);return g}
+  function makeAromaGift(r,s){const mix=(r.aromas||[]).map((id,i)=>[id,(r.drops||[])[i]||1]);return r.form==='tui'?makeHerbPouch(mix,s):makeWishBottle(mix,s)}
+  // ---- shared shelf (Supabase anyen_aroma_gifts: 9 shown, store of 69 with picks)
+  let aromaRows=[];
+  async function loadAromas(){if(typeof flowerDb==='undefined'||!flowerDb)return;try{let {data,error}=await flowerDb.from('anyen_aroma_gifts').select('id,seq,form,aromas,drops,title,wish,name,picks,created_at').order('seq',{ascending:false}).limit(STORE_FETCH);if(!error&&data){data=pickNine(data);const local=aromaRows.filter(r=>String(r.id).startsWith('local-')&&!data.some(d=>d.title===r.title&&d.name===r.name));aromaRows=[...local,...data].slice(0,9);if(room&&room.onAromas)room.onAromas()}}catch(e){}}
+  setTimeout(loadAromas,3000);
+  // ---- the room
+  // ---- Haromy: phong cách spa mộc — tường vữa kem, sàn sồi sáng, gỗ mật ong, rèm lanh, nắng qua cửa sổ, đèn mây, cây xanh, thảm cói, nến
+  function haromyTex(kind){const cv=document.createElement('canvas');cv.width=cv.height=512;const c=cv.getContext('2d');
+    if(kind==='plaster'){c.fillStyle='#ebe0cb';c.fillRect(0,0,512,512);for(let k=0;k<900;k++){const x=Math.random()*512,y=Math.random()*512,r=8+Math.random()*40;const g=c.createRadialGradient(x,y,0,x,y,r);const a=Math.random()*.05;g.addColorStop(0,Math.random()<.5?`rgba(255,250,238,${a})`:`rgba(190,165,130,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,2*r,2*r)}}
+    else{const base=kind==='ceil'?[150,112,78]:[192,150,106];for(let i=0;i<8;i++){const off=(i*173)%512;for(let s=-1;s<2;s++){const k=.9+((i*31+s*7)%9)/45;c.fillStyle=`rgb(${base[0]*k|0},${base[1]*k|0},${base[2]*k|0})`;c.fillRect(i*64,off+s*512,64,512);c.strokeStyle='rgba(90,60,35,.12)';for(let g=0;g<7;g++){c.beginPath();c.moveTo(i*64+5+g*8,off+s*512);c.bezierCurveTo(i*64+9+g*8,off+s*512+170,i*64+1+g*8,off+s*512+340,i*64+6+g*8,off+s*512+512);c.stroke()}c.fillStyle='rgba(70,45,25,.5)';c.fillRect(i*64,off+s*512,64,2)}c.fillStyle='rgba(70,45,25,.45)';c.fillRect(i*64,0,2,512)}}
+    const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
+  function haromyDecor(st){const W=st.sc,M=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.85,...o});
+    W.background=new THREE.Color('#2c241d');
+    // đổi bảng màu: nâu sẫm → gỗ mật ong sáng; tatami ẩn để thay bằng thảm cói tròn
+    const REMAP={'4e3a2a':'8f6d4e','6b4a32':'a67d54','5a3d2a':'9a6c43','4a3222':'7f5838','5b3d2a':'8c6646','7a5438':'b48d64','6a4630':'a07b55','5a3b24':'9c7450','6a7a5a':'9fae8f','3a2a1e':'8c6a4a'};
+    const plaster=haromyTex('plaster'),oak=haromyTex('floor');
+    W.traverse(o=>{if(!o.isMesh||!o.material||!o.material.color)return;const hx=o.material.color.getHexString();
+      if(hx==='4a3a2c'){o.material=M('#ffffff',{map:plaster.clone(),roughness:.95});o.material.map.repeat.set(2,1);o.material.map.needsUpdate=true}
+      else if(hx==='5e4a36'&&o.geometry?.parameters?.width===8){o.material=M('#ffffff',{map:oak,roughness:.7});oak.repeat.set(4,3)}
+      else if(hx==='b9a77a')o.visible=false;
+      else if(REMAP[hx]){o.material=o.material.clone();o.material.color.set('#'+REMAP[hx])}});
+    // ánh sáng: nắng chiều ấm từ cửa sổ, ánh sáng dịu toàn phòng
+    W.add(new THREE.HemisphereLight('#fff4e0','#7a5a3c',.9));const sun=new THREE.DirectionalLight('#ffe2b0',1.6);sun.position.set(-.6,3.2,-6);sun.target.position.set(.4,0,-.6);W.add(sun,sun.target);
+    // ốp gỗ chân tường + trần gỗ có xà
+    const wain=M('#b48a5e',{roughness:.7});for(const [x,z,w,d] of [[0,-3.42,7.9,.05],[-3.92,0,.05,6.9],[3.92,0,.05,6.9]]){const p=new THREE.Mesh(new THREE.BoxGeometry(w,.85,d),wain);p.position.set(x,.43,z);W.add(p);const cap=new THREE.Mesh(new THREE.BoxGeometry(w+.02,.05,d+.06),M('#8f6d4e'));cap.position.set(x,.87,z);W.add(cap)}
+    {const ct=haromyTex('ceil');ct.repeat.set(3,3);const ceil=new THREE.Mesh(new THREE.PlaneGeometry(8,7),M('#ffffff',{map:ct}));ceil.rotation.x=Math.PI/2;ceil.position.y=3.62;W.add(ceil);for(const z of [-2.4,-.8,.8]){const b=new THREE.Mesh(new THREE.BoxGeometry(8,.16,.18),M('#7d5a3c'));b.position.set(0,3.52,z);W.add(b)}}
+    // vệt nắng xiên qua cửa sổ xuống sàn
+    {const cv=document.createElement('canvas');cv.width=64;cv.height=256;const c=cv.getContext('2d'),g=c.createLinearGradient(0,0,0,256);g.addColorStop(0,'rgba(255,236,190,.55)');g.addColorStop(1,'rgba(255,236,190,0)');c.fillStyle=g;c.fillRect(0,0,64,256);const tx=new THREE.CanvasTexture(cv);
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute([-1.05,2.85,-3.35, 1.05,2.85,-3.35, -1.35,.03,-.9, 1.35,.03,-.9],3));geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,0,1,1,1],2));geo.setIndex([0,2,1,1,2,3]);
+      const shaft=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,opacity:.22}));W.add(shaft);
+      const pool=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.6),new THREE.MeshBasicMaterial({color:'#ffe9b8',transparent:true,opacity:.07,depthWrite:false,blending:THREE.AdditiveBlending}));pool.rotation.x=-Math.PI/2;pool.position.set(0,.025,-1.2);W.add(pool);
+      st.tick.push(t=>{shaft.material.opacity=.2+Math.sin(t*.4)*.04})}
+    // rèm lanh mỏng hai bên cửa sổ, thanh treo gỗ
+    {const rod=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,4.4,8),M('#7d5a3c'));rod.rotation.z=Math.PI/2;rod.position.set(0,3.15,-3.3);W.add(rod);
+      for(const sx of [-1,1]){const g=new THREE.PlaneGeometry(.8,2.7,16,1),p=g.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,Math.sin(p.getX(i)*18)*.05);g.computeVertexNormals();
+        const cur=new THREE.Mesh(g,M('#f4eddf',{transparent:true,opacity:.78,side:THREE.DoubleSide,roughness:1}));cur.position.set(sx*1.85,1.78,-3.26);W.add(cur);st.tick.push(t=>{cur.rotation.y=Math.sin(t*.6+sx)*.03})}}
+    // thảm cói tròn dưới bàn
+    {const rug=new THREE.Mesh(new THREE.CircleGeometry(1.75,48),M('#d6c49c',{roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.set(0,.012,-1.25);W.add(rug);
+      for(const r of [1.62,1.3,.9]){const ring=new THREE.Mesh(new THREE.RingGeometry(r-.035,r,64),M('#b39a6c',{roughness:1}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.014,-1.25);W.add(ring)}}
+    // hai đèn mây treo trên bàn xông
+    for(const x of [-.6,.6]){const g=new THREE.Group();g.position.set(x,2.45,-1.6);W.add(g);const cord=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.1,4),M('#3a2a1e'));cord.position.y=.62;g.add(cord);
+      const shade=new THREE.Mesh(new THREE.SphereGeometry(.26,18,10,0,Math.PI*2,0,Math.PI*.55),M('#c9a46c',{side:THREE.DoubleSide,roughness:1,emissive:'#5a3a14',emissiveIntensity:.35}));g.add(shade);
+      for(let k=0;k<5;k++){const band=new THREE.Mesh(new THREE.TorusGeometry(.262*Math.sin(Math.PI*(.12+k*.09)),.006,4,24),M('#9b7848'));band.rotation.x=Math.PI/2;band.position.y=.262*Math.cos(Math.PI*(.12+k*.09));g.add(band)}
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),new THREE.MeshBasicMaterial({color:'#ffe2a8'}));bulb.position.y=.02;g.add(bulb);const pl=new THREE.PointLight('#ffcf8a',2.2,4.5,1.6);pl.position.y=-.05;g.add(pl)}
+    // cây xanh: chậu lá lớn ở góc, dây trầu bà trên tủ, chậu nhỏ trên bệ cửa sổ
+    const leafMat=M('#4f7a4a',{side:THREE.DoubleSide,roughness:.7}),leafMat2=M('#6b9258',{side:THREE.DoubleSide,roughness:.7});
+    const plant=(x,z,s,n)=>{const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);W.add(g);const pot=new THREE.Mesh(new THREE.CylinderGeometry(.26,.2,.48,16),M('#e9e1d2',{roughness:.6}));pot.position.y=.24;g.add(pot);const soil=new THREE.Mesh(new THREE.CircleGeometry(.24,14),M('#4a3626'));soil.rotation.x=-Math.PI/2;soil.position.y=.47;g.add(soil);
+      for(let k=0;k<n;k++){const a=k*2.4,hgt=.9+(k%4)*.22,stem=new THREE.Mesh(new THREE.CylinderGeometry(.012,.016,hgt,5),M('#5d7a44'));stem.position.set(Math.cos(a)*.08,.48+hgt/2,Math.sin(a)*.08);stem.rotation.set(Math.sin(a)*.25,0,Math.cos(a)*.25);g.add(stem);
+        const leaf=new THREE.Mesh(new THREE.CircleGeometry(.22,14),k%2?leafMat:leafMat2);leaf.scale.set(.75,1.25,1);leaf.position.set(Math.cos(a)*(.12+hgt*.25),.48+hgt+.05,Math.sin(a)*(.12+hgt*.25));leaf.rotation.set(-1.1+(k%3)*.25,a,0);g.add(leaf)}
+      st.tick.push(t=>{g.rotation.y=Math.sin(t*.3+x)*.03});return g};
+    plant(-2.65,-2.95,1.15,11);plant(3.2,-2.95,.72,8);plant(.95,-3.05,.45,6).position.y=1.1;
+    for(const side of [-1,1])for(let k=0;k<7;k++){const lf=new THREE.Mesh(new THREE.CircleGeometry(.07,8),k%2?leafMat:leafMat2);lf.scale.set(.8,1.1,1);lf.position.set(side*3.5,3.02-k*.17-(k%2)*.04,-2.95+k*.42);lf.rotation.y=side*Math.PI/2;W.add(lf)}
+    // vòng hoa khô treo tường cạnh cửa sổ
+    {const wr=new THREE.Group();wr.position.set(-2.35,2.35,-3.38);W.add(wr);wr.add(new THREE.Mesh(new THREE.TorusGeometry(.28,.025,6,28),M('#b08a5a')));const cs=['#c9a1b8','#e8d9b0','#a8b88e','#d7b58a','#b7a0c9'];for(let k=0;k<16;k++){const a=k/16*Math.PI*2,f=new THREE.Mesh(new THREE.SphereGeometry(.045,6,5),M(cs[k%5]));f.position.set(Math.cos(a)*.28,Math.sin(a)*.28,.02);wr.add(f)}}
+    // cụm nến sáp ong trên sàn cạnh kệ, lửa nến lung linh
+    {const cg=new THREE.Group();cg.position.set(1.35,0,-3.0);W.add(cg);const flames=[];[[0,0,.38],[.18,.08,.26],[-.16,.1,.2],[.05,.2,.16]].forEach(([x,z,hh])=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,hh,14),M('#f3e6c6',{roughness:.6}));c.position.set(x,hh/2,z);cg.add(c);const fl=new THREE.Mesh(new THREE.SphereGeometry(.02,8,6),new THREE.MeshBasicMaterial({color:'#ffcf6a'}));fl.scale.y=1.8;fl.position.set(x,hh+.04,z);cg.add(fl);flames.push(fl)});
+      const cl=new THREE.PointLight('#ffb866',1.2,2.4,2);cl.position.set(0,.5,.1);cg.add(cl);st.tick.push(t=>{cl.intensity=1.1+Math.sin(t*9)*.12+Math.sin(t*13.7)*.08;flames.forEach((f,i)=>f.scale.y=1.6+Math.sin(t*10+i*2)*.25)})}
+    // biển tên Haromy trên cửa sổ
+    {const cv=document.createElement('canvas');cv.width=512;cv.height=96;const c=cv.getContext('2d');c.fillStyle='#8c6646';c.fillRect(0,0,512,96);c.fillStyle='#f6ead0';c.font='italic 600 52px Georgia, serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Haromy',256,50);const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;
+      const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.22),new THREE.MeshBasicMaterial({map:tx}));sign.position.set(0,3.32,-3.36);W.add(sign)}
+  }
+  function roomXongHuong(st){
+    const W=st.sc,amb=new THREE.PointLight('#ffcf8a',4,7,1.6);amb.position.set(0,2.2,-1.4);W.add(amb);
+    // window onto Hồ Hương: a painted view of the pond and pines, with open shutters
+    {const cv=document.createElement('canvas');cv.width=512;cv.height=384;const c=cv.getContext('2d');let gr=c.createLinearGradient(0,0,0,384);gr.addColorStop(0,'#cfe6dc');gr.addColorStop(.55,'#9cc6b4');gr.addColorStop(1,'#5f8f7c');c.fillStyle=gr;c.fillRect(0,0,512,384);
+      for(let k=0;k<26;k++){const x=k*21+(k%3)*5,h=120+((k*53)%70);c.fillStyle=k%2?'#2f5a46':'#3e6e52';c.beginPath();c.moveTo(x,250);c.lineTo(x+14,250-h);c.lineTo(x+28,250);c.fill()}
+      gr=c.createLinearGradient(0,250,0,384);gr.addColorStop(0,'#8fc0c0');gr.addColorStop(1,'#4f8a8a');c.fillStyle=gr;c.fillRect(0,250,512,134);c.fillStyle='rgba(255,250,220,.35)';for(let k=0;k<6;k++){c.beginPath();c.moveTo(220+k*12,0);c.lineTo(160+k*40,384);c.lineTo(175+k*40,384);c.lineTo(232+k*12,0);c.fill()}
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const view=new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.65),new THREE.MeshBasicMaterial({map:tex}));view.position.set(0,2.05,-3.43);W.add(view);
+      const fr=mat('#5b3d2a');for(const [x,y,w,h] of [[0,2.92,2.4,.12],[0,1.18,2.4,.12],[-1.16,2.05,.12,1.86],[1.16,2.05,.12,1.86],[0,2.05,.05,1.65]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.1),fr);b.position.set(x,y,-3.4);W.add(b)}
+      for(const sx of [-1,1]){const sh=new THREE.Group();sh.position.set(sx*1.2,2.05,-3.38);sh.rotation.y=-sx*1.0;W.add(sh);const p=new THREE.Mesh(new THREE.BoxGeometry(.62,1.6,.04),mat('#7a5438'));p.position.x=sx*.31;sh.add(p);for(let k=0;k<9;k++){const sl=new THREE.Mesh(new THREE.BoxGeometry(.54,.03,.05),mat('#6a4630'));sl.position.set(sx*.31,-.68+k*.17,.02);sh.add(sl)}}}
+    // tatami floor in front of the table
+    {const t=new THREE.Mesh(new THREE.BoxGeometry(3.6,.02,2.6),mat('#b9a77a'));t.position.set(0,.01,-.9);W.add(t)}
+    // cabinets: herbs on the left wall, amber bottles on the right wall; row 0 = hương đầu (top) … row 2 = hương nền (bottom)
+    const slotPos=(side,a)=>{const col=a.i%6,row=a.tier,y=[2.55,1.8,1.05][row],z=-2.75+col*.52;return [side*3.62,y,z]};
+    const herbMeshes={},bottleMeshes={},rings={};
+    for(const side of [-1,1]){const cab=new THREE.Group();W.add(cab);const wood=mat('#6b4a32'),dark=mat('#4e3a2a');
+      const back=new THREE.Mesh(new THREE.BoxGeometry(.06,2.75,3.3),dark);back.position.set(side*3.93,1.65,-1.45);cab.add(back);
+      for(const y of [.62,1.38,2.13,2.95]){const sh=new THREE.Mesh(new THREE.BoxGeometry(.5,.05,3.3),wood);sh.position.set(side*3.7,y,-1.45);cab.add(sh)}
+      for(const z of [-3.1,.2]){const p=new THREE.Mesh(new THREE.BoxGeometry(.5,2.75,.06),wood);p.position.set(side*3.7,1.65,z);cab.add(p)}
+      const strip=new THREE.Mesh(new THREE.BoxGeometry(.04,.02,3.2),new THREE.MeshBasicMaterial({color:'#ffd690'}));strip.position.set(side*3.47,2.93,-1.45);cab.add(strip)}
+    for(const a of AROMAS){
+      // left: hanging bunch (top row) or a rattan basket of dried herbs (rows below)
+      const [hx,hy,hz]=slotPos(-1,a),hm=new THREE.MeshStandardMaterial({color:new THREE.Color(a.c).lerp(new THREE.Color('#8a7a52'),.35),roughness:.95,emissive:'#000000'}),hg=new THREE.Group();hg.position.set(hx,hy,hz);W.add(hg);
+      if(a.tier===0){const b=new THREE.Mesh(new THREE.ConeGeometry(.12,.42,7),hm);b.rotation.x=Math.PI;b.position.y=.12;hg.add(b);const tie=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.05,8),mat('#c8a96a'));tie.position.y=.34;hg.add(tie);const str=new THREE.Mesh(new THREE.CylinderGeometry(.004,.004,.24,3),mat('#c8a96a'));str.position.y=.48;hg.add(str)}
+      else{const bk=new THREE.Mesh(new THREE.CylinderGeometry(.19,.15,.14,12,1,true),mat('#a8865a'));bk.position.y=-.36;hg.add(bk);const bot=new THREE.Mesh(new THREE.CircleGeometry(.15,12),mat('#8f6f48'));bot.rotation.x=-Math.PI/2;bot.position.y=-.43;hg.add(bot);
+        for(let k=0;k<9;k++){const p=new THREE.Mesh(a.tier===2&&k%2?new THREE.BoxGeometry(.09,.025,.025):new THREE.SphereGeometry(.045,6,4),hm);p.position.set(Math.cos(k*2.4)*.09*(k%3?1:.3),-.31+(k%3)*.015,Math.sin(k*2.4)*.09*(k%3?1:.3));p.rotation.y=k;hg.add(p)}}
+      herbMeshes[a.id]=hm;rTap(st,hg,()=>arTap(a.id));
+      // right: amber dropper bottle with a label
+      const [bx,by,bz]=slotPos(1,a),bg=new THREE.Group();bg.position.set(bx,by-.36,bz);W.add(bg);const bm=new THREE.MeshStandardMaterial({color:'#8a4a18',roughness:.25,metalness:.1,transparent:true,opacity:.92,emissive:'#000000'});
+      const body=new THREE.Mesh(new THREE.LatheGeometry([[0,0],[.07,0],[.075,.02],[.075,.16],[.05,.2],[.025,.22],[.025,.25]].map(([x,y])=>new THREE.Vector2(x,y)),14),bm);bg.add(body);
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.05,10),mat('#2b2420'));cap.position.y=.275;bg.add(cap);const bulb=new THREE.Mesh(new THREE.SphereGeometry(.028,8,6),mat('#1e1a18'));bulb.scale.y=1.4;bulb.position.y=.32;bg.add(bulb);
+      const lc=document.createElement('canvas');lc.width=128;lc.height=96;const lx=lc.getContext('2d');lx.fillStyle='#f3ead2';lx.fillRect(0,0,128,96);lx.fillStyle=a.c;lx.beginPath();lx.arc(64,36,22,0,7);lx.fill();lx.fillStyle='#3a2b1f';lx.font='bold 17px sans-serif';lx.textAlign='center';lx.fillText(a.name,64,84,120);
+      const lt=new THREE.CanvasTexture(lc);lt.colorSpace=THREE.SRGBColorSpace;const label=new THREE.Mesh(new THREE.PlaneGeometry(.12,.09),new THREE.MeshBasicMaterial({map:lt}));label.position.set(-.077,.09,0);label.rotation.y=-Math.PI/2;bg.add(label);
+      bottleMeshes[a.id]=bm;rTap(st,bg,()=>arTap(a.id));
+      for(const [side,x,y,z] of [[-1,hx,hy,hz],[1,bx,by,bz]]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.19,.01,6,24),new THREE.MeshBasicMaterial({color:'#ffd27a',transparent:true,opacity:0}));ring.position.set(x+side*-.12,y-.15,z);ring.rotation.y=Math.PI/2;W.add(ring);(rings[a.id]=rings[a.id]||[]).push(ring)}}
+    // low table, diffuser (left) and clay censer (right), four cushions
+    const table=new THREE.Group();table.position.set(0,0,-1.6);W.add(table);{const top=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.8),mat('#5a3d2a'));top.position.y=.42;table.add(top);for(const x of [-.85,.85])for(const z of [-.32,.32]){const l=new THREE.Mesh(new THREE.BoxGeometry(.07,.4,.07),mat('#4a3222'));l.position.set(x,.2,z);table.add(l)}}
+    const diff=new THREE.Group();diff.position.set(-.5,.46,0);table.add(diff);diff.add(new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.2,18),mat('#e8e0d2')));diff.children[0].position.y=.1;
+    const bowl=new THREE.Mesh(new THREE.SphereGeometry(.15,20,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:'#f4f1ea',transparent:true,opacity:.55,roughness:.3,side:THREE.DoubleSide}));bowl.rotation.x=Math.PI;bowl.position.y=.36;diff.add(bowl);
+    const water=new THREE.Mesh(new THREE.CircleGeometry(.14,22),new THREE.MeshStandardMaterial({color:'#bfe0e0',roughness:.1,transparent:true,opacity:.85}));water.rotation.x=-Math.PI/2;water.position.y=.33;diff.add(water);
+    const candle=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.04,10),new THREE.MeshBasicMaterial({color:'#ffcf6a'}));candle.position.y=.16;diff.add(candle);
+    const pip=new THREE.Group();pip.position.set(-.1,.75,.0);diff.add(pip);{const tube=new THREE.Mesh(new THREE.CylinderGeometry(.008,.012,.16,8),new THREE.MeshStandardMaterial({color:'#f6f6f2',transparent:true,opacity:.6}));pip.add(tube);const bulbP=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),mat('#2b2420'));bulbP.scale.y=1.4;bulbP.position.y=.1;pip.add(bulbP)}pip.visible=false;
+    const drop=new THREE.Mesh(new THREE.SphereGeometry(.014,8,6),new THREE.MeshStandardMaterial({color:'#f2c34a',emissive:'#a8781a',emissiveIntensity:.5}));drop.visible=false;diff.add(drop);
+    const ripple=new THREE.Mesh(new THREE.RingGeometry(.02,.03,24),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,side:THREE.DoubleSide}));ripple.rotation.x=-Math.PI/2;ripple.position.y=.335;diff.add(ripple);
+    const cen=new THREE.Group();cen.position.set(.5,.46,0);table.add(cen);cen.add(new THREE.Mesh(new THREE.LatheGeometry([[0,0],[.12,.01],[.17,.08],[.16,.16],[.18,.18]].map(([x,y])=>new THREE.Vector2(x,y)),18),mat('#9a5a38')));
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(.175,.012,6,24),new THREE.MeshStandardMaterial({color:'#c28a4a',metalness:.6,roughness:.35}));rim.rotation.x=Math.PI/2;rim.position.y=.18;cen.add(rim);
+    const coals=new THREE.Mesh(new THREE.CircleGeometry(.15,18),new THREE.MeshBasicMaterial({color:'#7a2a12'}));coals.rotation.x=-Math.PI/2;coals.position.y=.165;cen.add(coals);
+    const dish=new THREE.Mesh(new THREE.CylinderGeometry(.12,.1,.02,16),mat('#d8cba8'));dish.position.set(.35,.01,.12);cen.add(dish);const tongs=new THREE.Mesh(new THREE.BoxGeometry(.24,.01,.02),new THREE.MeshStandardMaterial({color:'#b07a3a',metalness:.6,roughness:.3}));tongs.position.set(.3,.02,-.12);tongs.rotation.y=.4;cen.add(tongs);
+    const pinch=[];for(let k=0;k<3;k++){const p=new THREE.Group();p.visible=false;cen.add(p);pinch.push(p)}
+    for(let k=0;k<4;k++){const a=[-.55,-.2,.2,.55][k],cu=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.12,16),mat('#6a7a5a'));cu.position.set(a*2,.06,-.5+(k===0||k===3?.15:0));W.add(cu)}
+    // mist / smoke above the two stations
+    const fogMat=()=>new THREE.MeshBasicMaterial({color:'#f2efe6',transparent:true,opacity:0,depthWrite:false});const mist=[],smoke=[];
+    for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),fogMat());m.userData.k=k;diff.add(m);mist.push(m);const s=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),fogMat());s.userData.k=k;cen.add(s);smoke.push(s)}
+    // Kệ Lưu Hương 3×3 at the corner of the window, with a candle and the An Yên journal below
+    const shelf=new THREE.Group();shelf.position.set(2.35,0,-3.25);W.add(shelf);{const wd=mat('#5a3b24');for(const y of [.55,1.15,1.75,2.35]){const b=new THREE.Mesh(new THREE.BoxGeometry(1.2,.05,.4),wd);b.position.y=y;shelf.add(b)}for(const x of [-.6,-.2,.2,.6]){const p=new THREE.Mesh(new THREE.BoxGeometry(.04,1.85,.4),wd);p.position.set(x,1.45,0);shelf.add(p)}
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.1,.015,.03),new THREE.MeshBasicMaterial({color:'#ffd690'}));lamp.position.set(0,2.33,.17);shelf.add(lamp);
+      const plinth=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.4),wd);plinth.position.y=.15;shelf.add(plinth);const book=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,.22),mat('#7a3f2a'));book.position.set(-.25,.325,.02);shelf.add(book);const cd=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.1,10),mat('#f2e6c8'));cd.position.set(.25,.35,.02);shelf.add(cd);const fl=new THREE.Mesh(new THREE.ConeGeometry(.012,.04,6),new THREE.MeshBasicMaterial({color:'#ffcf6a'}));fl.position.set(.25,.42,.02);shelf.add(fl)}
+    const shelfItems=new THREE.Group();shelf.add(shelfItems);
+    const drawShelf2=()=>{while(shelfItems.children.length)shelfItems.remove(shelfItems.children[0]);aromaRows.slice(0,9).forEach((r,i)=>{const m=makeAromaGift(r,.8);m.position.set(-.4+(i%3)*.4,[1.775,1.175,.575][Math.floor(i/3)],0);shelfItems.add(m)})};
+    drawShelf2();st.onAromas=drawShelf2;rTap(st,shelf,()=>openArchive('aromas'));loadAromas();
+    haromyDecor(st);
+    // ---- camera views (own drag handling so a view can face any wall)
+    const VIEWS={home:{t:[0,1.35,-1.2],yaw:0,pitch:.14,dist:4.4},left:{t:[-3.4,1.75,-1.45],yaw:Math.PI/2,pitch:.05,dist:2.6},right:{t:[3.4,1.75,-1.45],yaw:-Math.PI/2,pitch:.05,dist:2.6},
+      drip:{t:[-.5,.85,-1.6],yaw:.15,pitch:.42,dist:1.35},burn:{t:[.5,.75,-1.6],yaw:-.15,pitch:.42,dist:1.35},seat:{t:[0,1.6,-3.2],yaw:0,pitch:-.08,dist:3.9},shelf:{t:[2.35,1.6,-3.2],yaw:-.25,pitch:.05,dist:2.4}};
+    let view=VIEWS.home,base=view.yaw,tw=null;const goView=k=>{const v=VIEWS[k];tw={t0:performance.now(),from:{t:st.target.clone(),yaw:st.yaw,pitch:st.pitch,dist:st.dist},to:v};view=v;base=v.yaw};
+    st.target.set(...VIEWS.home.t);st.yaw=0;st.pitch=VIEWS.home.pitch;st.dist=VIEWS.home.dist;
+    let drag=null;rmCanvas.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,moved:false};rmCanvas.setPointerCapture(e.pointerId)};
+    rmCanvas.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>6)drag.moved=true;drag.x=e.clientX;drag.y=e.clientY;st.yaw=Math.max(base-.8,Math.min(base+.8,st.yaw-dx*.006));st.pitch=Math.max(-.2,Math.min(.7,st.pitch+dy*.004))};
+    rmCanvas.onpointerup=e=>{const d=drag;drag=null;if(!d||d.moved)return;const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,st.cam);
+      const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
+    rmCanvas.onwheel=e=>{e.preventDefault();st.dist=Math.max(.9,Math.min(6,st.dist*Math.exp(e.deltaY*.001)))};
+    // ---- state and flow
+    const S={step:'mood',sel:[],mood:null,info:null,method:null,drops:[],done:0,form:'lo',title:'',wish:'',breath:[4,4,6]};
+    const tier=id=>AR(id).tier,ordered=()=>S.sel.slice().sort((a,b)=>tier(a)-tier(b));
+    function arTap(id){if(S.step!=='pick'&&S.step!=='mood')return;if(S.step==='mood')S.step='pick';const i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=3){rmHint('Tối đa 3 mùi để bài hương thanh tao · bỏ bớt một mùi trước');S.info=id;render();return}S.sel.push(id)}S.mood=null;S.info=id;strike(660+AR(id).tier*-110,1.4,.03,[[1,1],[2,.25]]);render()}
+    let glowT=0;st.tick.push(t=>{
+      if(tw){const u=Math.min(1,(performance.now()-tw.t0)/900),q=u*u*(3-2*u);st.target.lerpVectors(tw.from.t,new THREE.Vector3(...tw.to.t),q);st.yaw=tw.from.yaw+(tw.to.yaw-tw.from.yaw)*q;st.pitch=tw.from.pitch+(tw.to.pitch-tw.from.pitch)*q;st.dist=tw.from.dist+(tw.to.dist-tw.from.dist)*q;if(u>=1)tw=null}
+      const pulse=.55+Math.sin(t*3)*.25;for(const a of AROMAS){const on=S.sel.includes(a.id),inf=S.info===a.id;const e=on?pulse:inf?.25:0;herbMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');herbMeshes[a.id].emissiveIntensity=e;bottleMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');bottleMeshes[a.id].emissiveIntensity=e;for(const r of rings[a.id])r.material.opacity=on?.85:inf?.35:0}
+      // mist above the diffuser and smoke over the censer, coloured by the recipe, breathing with the session
+      const mixC=new THREE.Color('#f2efe6');if(S.drops.length){const c=new THREE.Color(0,0,0);for(const id of S.drops)c.add(new THREE.Color(AR(id).c));c.multiplyScalar(1/S.drops.length);mixC.lerp(c,.7)}
+      const br=S.breathPhase||0,amp=S.method==='drip'?Math.min(1,S.done/3):0,amp2=S.method==='burn'?Math.min(1,S.done/2):0;
+      for(const m of mist){const u=((t*.16+m.userData.k/12)%1);m.position.set(Math.sin(t*.6+m.userData.k)*.08*u,.4+u*.9*(1+br*.3),Math.cos(t*.5+m.userData.k)*.08*u);m.scale.setScalar(1+u*2.2);m.material.opacity=.16*amp*(1-u)*(1-u);m.material.color.lerp(mixC,.05)}
+      for(const s of smoke){const u=((t*.2+s.userData.k/12)%1),w=Math.sin(t*1.3+u*6+s.userData.k);s.position.set(w*.05*u+u*.12,.22+u*1.2*(1+br*.3),Math.cos(t+s.userData.k)*.04*u);s.scale.set(.6+u*1.2,1.4+u*2,.6+u*1.2);s.material.opacity=.2*amp2*(1-u)*(1-u);s.material.color.lerp(mixC,.05)}
+      coals.material.color.setHSL(.03,.85,(S.method==='burn'&&S.done?.42:.25)+Math.sin(t*2.5)*.04+br*.08);candle.material.color.setHSL(.11,1,.62+Math.sin(t*9)*.05+br*.1);
+      if(drip){const u=(performance.now()-drip.t0)/700;if(u<1){drop.visible=true;drop.position.set(-.1,.67-u*.33,0)}else{drop.visible=false;const v=Math.min(1,(u-1)/1.2);ripple.material.opacity=.6*(1-v);ripple.scale.setScalar(1+v*5);if(v>=1)drip=null}}
+    });
+    let drip=null;
+    const card=id=>{const a=AR(id);return '<div class="ar-card"><span class="ar-dot" style="background:'+a.c+'"></span><b>'+a.name+'</b> · '+AR_TIERS[a.tier]+'<br><i>'+a.feel+'</i><br>✦ '+a.mean+'<br>🌿 '+a.heal+'</div>'};
+    const chips=ids=>ids.map(id=>'<span class="ar-chip" style="--c:'+AR(id).c+'">'+AR(id).name+'</span>').join(' ');
+    function render(){let h='';const s=S.step;
+      if(s==='mood'){h='<p><b>Hôm nay lòng và cơ thể bạn đang thế nào?</b></p><div class="rm-row">'+AR_MOODS.map(m=>'<button data-mood="'+m.id+'">'+m.label+'</button>').join('')+'</div><div class="rm-row"><button data-ar="self">🌿 Tự dạo hai tủ 18 mùi</button></div>'}
+      else if(s==='pick'){const ids=ordered(),hint=arBalanceHint(ids);h='<p>'+(S.mood?'Gợi ý cho <b>'+AR_MOODS.find(m=>m.id===S.mood).label+'</b>: ':'Chọn 1–3 mùi (chạm trên hai tủ hoặc bên dưới): ')+(ids.length?chips(ids):'<i>chưa chọn</i>')+'</p>'
+          +[0,1,2].map(ti=>'<div class="rm-row"><span class="rm-note" style="min-width:76px">'+AR_TIERS[ti]+'</span>'+AROMAS.filter(a=>a.tier===ti).map(a=>'<button data-sc="'+a.id+'"'+(S.sel.includes(a.id)?' class="sel"':'')+'><span class="rm-dot" style="background:'+a.c+'"></span>'+a.name+'</button>').join('')+'</div>').join('')
+          +(S.info?card(S.info):'')+(hint?'<p class="rm-note">💡 '+hint+'</p>':'')
+          +(ids.length?'<p class="rm-note">Tỷ lệ: '+arRatio(ids).map(([id,d])=>AR(id).name+' '+d+' giọt').join(' + ')+' (hoặc '+(ids.length===1?2:3)+' nhúm thảo mộc)</p><div class="rm-row"><button class="rm-gold" data-ar="drip">💧 Nhỏ tinh dầu vào đèn xông</button><button class="rm-gold" data-ar="burn">🔥 Đốt thảo mộc khô trên lư</button></div>':'')
+          +'<div class="rm-row"><button data-ar="look-left">👈 Nhìn tủ thảo mộc</button><button data-ar="look-right">Nhìn tủ tinh dầu 👉</button><button data-ar="look-home">⌂ Toàn cảnh</button><button data-ar="back">↺ Chọn lại tâm trạng</button></div>'}
+      else if(s==='drip'){const plan=S.plan,n=S.done;h='<p>💧 Nhỏ tinh dầu vào bát nước ấm · '+n+'/'+plan.length+' giọt</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><div class="rm-row">'+(n<plan.length?'<button class="rm-gold" data-ar="drop">💧 Nhỏ giọt</button>':'<button class="rm-gold" data-ar="sit">🧘 Ngồi thở cùng hương</button>')+'</div>'}
+      else if(s==='burn'){const plan=S.plan,n=S.done;h='<p>🔥 Đặt thảo mộc khô lên than hồng · '+n+'/'+plan.length+' nhúm</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><div class="rm-row">'+(n<plan.length?'<button class="rm-gold" data-ar="pinch">🔥 Đặt thảo mộc lên than</button>':'<button class="rm-gold" data-ar="sit">🧘 Ngồi thở cùng hương</button>')+'</div>'}
+      else if(s==='sit'){const b=S.breath;h='<p>🧘 Ngồi trên tọa cụ, nhìn ra Hồ Hương. Nhịp thở theo bài hương: hít '+b[0]+' · giữ '+b[1]+' · thở '+b[2]+'.</p><div class="rm-row">'+(S.br?'<button data-ar="stop">⏹ Dừng</button>':'<button class="rm-gold" data-ar="b6">🌬 6 nhịp (~'+Math.round(6*(b[0]+b[1]+b[2])/60*10)/10+' phút)</button><button data-ar="b3">🕯 3 phút tĩnh tâm</button><button data-ar="gift">Bỏ qua · làm quà mang về</button>')+'</div>'}
+      else if(s==='gift'){h='<p>🎁 Quà mang về Túi An Yên</p><div class="rm-row"><button data-form="lo"'+(S.form==='lo'?' class="sel"':'')+'>🫙 Lọ Ước tinh dầu</button><button data-form="tui"'+(S.form==='tui'?' class="sel"':'')+'>👝 Túi thảo mộc khô</button></div>'
+          +'<label class="kt-wish">Tên bài hương<input data-ti maxlength="40" value="'+escA(S.title)+'"></label><label class="kt-wish">Một dòng cảm nhận / điều ước (không bắt buộc)<input data-wi maxlength="80" value="'+escA(S.wish)+'" placeholder="Ví dụ: Nguyện đêm nay ngủ ngon"></label>'
+          +'<div class="rm-row"><button class="rm-gold" data-ar="keep">🎒 Cất vào Túi An Yên</button></div>'}
+      else if(s==='done'){const mix=S.mix;h='<p>🙏 <b>'+escA(S.title)+'</b> đã vào Túi An Yên, lên Kệ Lưu Hương và được ghi vào Nhật ký An Yên.</p>'
+          +'<p class="rm-note">Dùng tại nhà: '+(S.form==='lo'?'máy khuếch tán 100 ml nước, nhỏ '+mix.map(([id,d])=>d+' giọt '+AR(id).name.toLowerCase()).join(' + ')+'; xông 20–30 phút rồi nghỉ.':'cho '+mix.map(([id])=>AR(id).name.toLowerCase()).join(', ')+' khô vào túi vải, bóp nhẹ cho dậy mùi; hoặc đun một nồi nước lá với các vị này, xông hơi 5–10 phút.')+' Tinh dầu dùng ngoài, không uống; phụ nữ mang thai, trẻ nhỏ, người có bệnh hô hấp nên hỏi ý kiến bác sĩ.</p>'
+          +'<div class="rm-row"><button data-ar="again">🌿 Pha bài hương khác</button><button data-ar="shelf">🗄 Xem Kệ Lưu Hương</button><button data-ar="kho">📜 Kho Lọ Ước & Túi thơm</button></div>'}
+      rmPanel.innerHTML=h}
+    const escA=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const brEl=roomBox.querySelector('#roomBreath');
+    function startBreath(cycles,totalSec){const b=S.breath,ph=[['Hít vào',b[0],1.35],['Giữ hơi',b[1],1.35],['Thở ra',b[2],.75]].filter(p=>p[1]>0);let n=0;const t0=performance.now();brEl.hidden=false;S.br={t:0};render();goView('seat');
+      const step=i=>{if(!S.br||!roomOpen){brEl.hidden=true;S.breathPhase=0;return}if(i>=ph.length){n++;if((cycles&&n>=cycles)||(totalSec&&(performance.now()-t0)/1000>=totalSec)){S.br=null;brEl.hidden=true;S.breathPhase=0;strike(196,5,.08);rmHint('🙏 Phiên thở đã xong · Cảm nhận hơi thở nhẹ nhàng hơn');S.step='gift';render();return}i=0}
+        const [lab,sec,sc]=ph[i];brEl.querySelector('span').textContent=lab+(cycles?' · '+(n+1)+'/'+cycles:'');const orb=brEl.querySelector('.rm-orb');orb.style.transition='transform '+sec+'s ease-in-out';orb.style.transform='scale('+sc+')';S.breathPhase=i===2?0:1;if(i===0)strike(523,3,.03);S.br.t=setTimeout(()=>step(i+1),sec*1000)};step(0)}
+    function defaultTitle(){const m=S.mood&&AR_MOODS.find(x=>x.id===S.mood);if(m&&m.mix.every(([id])=>S.sel.includes(id))&&S.sel.length===m.mix.length)return m.title;return 'Hương '+ordered().map(id=>AR(id).name).join(' · ')}
+    async function keepGift(){S.title=String(S.title||defaultTitle()).trim().slice(0,40)||defaultTitle();S.wish=String(S.wish||'').trim().slice(0,80);const mix=S.method==='drip'?arRatio(ordered()):ordered().map(id=>[id,1]);S.mix=mix;
+      const now=new Date(),row={id:'local-'+Date.now(),form:S.form,aromas:mix.map(x=>x[0]),drops:mix.map(x=>x[1]),title:S.title,wish:S.wish,name:guestName(),picks:0,created_at:now.toISOString()};
+      aromaRows.unshift(row);aromaRows=aromaRows.slice(0,9);drawShelf2();goView('shelf');strike(784,3,.05,[[1,1],[2,.3]]);
+      window.__bagTake&&window.__bagTake('aromas',row,true);
+      const moodL=S.mood?AR_MOODS.find(m=>m.id===S.mood).label:'Tự chọn';
+      window.dispatchEvent(new CustomEvent('anyen-journal-add',{detail:{lake:'Hương · Haromy',quote:S.title+' — '+(S.form==='lo'?'Lọ Ước tinh dầu':'Túi thảo mộc khô')+' · Tâm trạng: '+moodL+' · Cách xông: '+(S.method==='drip'?'nhỏ tinh dầu':'đốt thảo mộc')+' · '+mix.map(([id,d])=>AR(id).name+(S.method==='drip'?' '+d+' giọt':'')).join(' + ')+(S.wish?' · “'+S.wish+'”':''),at:Date.now()}}));
+      S.step='done';render();
+      if(typeof flowerDb!=='undefined'&&flowerDb){try{const {error}=await flowerDb.from('anyen_aroma_gifts').insert({form:row.form,aromas:row.aromas,drops:row.drops,title:row.title,wish:row.wish,name:row.name,method:S.method});if(!error)loadAromas()}catch(e){}}}
+    rmPanel.oninput=e=>{if(e.target.matches('[data-ti]'))S.title=e.target.value;if(e.target.matches('[data-wi]'))S.wish=e.target.value};
+    rmPanel.onclick=e=>{const md=e.target.closest('[data-mood]');if(md){const m=AR_MOODS.find(x=>x.id===md.dataset.mood);S.mood=m.id;S.sel=m.mix.map(x=>x[0]);S.breath=m.breath;S.info=S.sel[0];S.step='pick';goView('home');strike(523,2,.04);render();return}
+      const sc=e.target.closest('[data-sc]');if(sc){arTap(sc.dataset.sc);return}
+      const fm=e.target.closest('[data-form]');if(fm){S.form=fm.dataset.form;render();return}
+      const a=e.target.closest('[data-ar]')?.dataset.ar;if(!a)return;
+      if(a==='self'){S.step='pick';S.mood=null;S.sel=[];S.breath=[4,4,6];goView('left');render()}
+      else if(a==='look-left')goView('left');else if(a==='look-right')goView('right');else if(a==='look-home')goView('home');
+      else if(a==='back'){S.step='mood';S.sel=[];S.mood=null;S.info=null;goView('home');render()}
+      else if(a==='drip'||a==='burn'){S.method=a;S.done=0;S.drops=[];S.form=a==='drip'?'lo':'tui';S.title=defaultTitle();const r=arRatio(ordered());S.plan=a==='drip'?r.flatMap(([id,d])=>Array(d).fill(id)):ordered().slice(0,3).concat(ordered().length===1?[ordered()[0]]:[]);S.step=a;goView(a);if(a==='drip')pip.visible=true;render()}
+      else if(a==='drop'){if(drip)return;const id=S.plan[S.done++];S.drops.push(id);drip={t0:performance.now()};drop.material.color.set(AR(id).c);setTimeout(()=>{strike(1568,.35,.05,[[1,1],[2.4,.4]]);strike(1046,.6,.025)},700);rmHint('💧 '+AR(id).name+' · giọt '+S.done+'/'+S.plan.length);render()}
+      else if(a==='pinch'){const id=S.plan[S.done],p=pinch[S.done];S.done++;S.drops.push(id);p.clear();for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.02,5,3),mat(new THREE.Color(AR(id).c).lerp(new THREE.Color('#6a5a3a'),.4)));l.scale.set(1.6,.4,1);l.position.set(Math.cos(k)*.04+(S.done-2)*.05,.175,Math.sin(k)*.04);p.add(l)}p.visible=true;if(typeof katSwish==='function')katSwish();setTimeout(()=>strike(1318,3,.04,[[1,1],[2.76,.3]]),300);rmHint('🔥 '+AR(id).name+' trên than hồng');render()}
+      else if(a==='sit'){pip.visible=false;S.step='sit';goView('seat');render()}
+      else if(a==='b6')startBreath(6,0);else if(a==='b3')startBreath(0,180);
+      else if(a==='stop'){if(S.br)clearTimeout(S.br.t);S.br=null;brEl.hidden=true;S.breathPhase=0;S.step='gift';render()}
+      else if(a==='gift'){S.step='gift';render()}
+      else if(a==='keep')keepGift();
+      else if(a==='again'){S.step='mood';S.sel=[];S.mood=null;S.info=null;S.method=null;S.done=0;S.drops=[];for(const p of pinch)p.visible=false;goView('home');render()}
+      else if(a==='shelf')goView('shelf');else if(a==='kho')openArchive('aromas')};
+    st.cleanup=()=>{if(S.br)clearTimeout(S.br.t);brEl.hidden=true;st.onAromas=null};
+    rmHint('Nhà Hương · Haromy, ngôi nhà của mùi thơm Hạnh phúc · chạm tủ để chọn mùi · kéo để nhìn quanh');render()}
+  // ---------------------------------------------------------------- Quán trà
+  const TEA_WORDS=['Uống trà là uống cái tĩnh lặng của lá.','Chén trà ấm nhất là chén trà được mời bằng cả tấm lòng.','Hãy uống trà chậm rãi, như thể trái đất đang xoay quanh chén trà của bạn.','Nước sôi rồi lặng, trà mới thơm. Lòng lặng rồi, lời mới hiền.','Một chén trà, một người bạn, đủ cho một buổi chiều an.','Rót trà cho người khác trước, lòng mình cũng ấm theo.'];
+  function roomQuanTra(st){rmHint('Pha một ấm trà theo từng bước · Kéo để nhìn quanh');st.target.set(0,.6,0);st.dist=3.6;
+    rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(1.8,.36,1.1),mat('#3e2c20')),0,.18,0);for(const z of [-.95,.95])rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.34,.36,.14,14),mat('#6e4a33')),0,.07,z*1.3);
+    const stove=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,.22,10),mat('#5a3a28')),-1.3,.11,0);const kettle=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.16,12,8),mat('#2f2a26')),-1.3,.36,0);kettle.scale.y=.8;
+    const pot=new THREE.Group();pot.position.set(-.35,.36,0);st.sc.add(pot);const body=new THREE.Mesh(new THREE.SphereGeometry(.13,14,10),mat('#6a3e2a'));body.scale.y=.8;body.position.y=.1;pot.add(body);const sp=new THREE.Mesh(new THREE.CylinderGeometry(.015,.028,.14,6),mat('#6a3e2a'));sp.position.set(.14,.13,0);sp.rotation.z=-1;pot.add(sp);const lid=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),mat('#6a3e2a'));lid.position.y=.2;pot.add(lid);
+    const cups=[],teas=[];for(const [x,z] of [[.3,-.2],[.3,.2],[.6,0]]){const c=rAdd(st,new THREE.Mesh(new THREE.LatheGeometry([[0,0],[.05,0],[.065,.07]].map(([a,b])=>new THREE.Vector2(a,b)),14),mat('#ece4d0')),x,.36,z);const t=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.055,.045,.01,14),new THREE.MeshStandardMaterial({color:'#a87a2a',roughness:.2})),x,.37,z);t.visible=false;cups.push(c);teas.push(t)}
+    const jar=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,.2,12),mat('#3f5f52')),-.6,.46,-.35);
+    const steam=[];const sm=new THREE.MeshBasicMaterial({color:'#efe9dc',transparent:true,opacity:.2,depthWrite:false});for(let k=0;k<8;k++){const p=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.04,6,4),sm.clone()),0,0,0);p.userData.k=k;steam.push(p)}
+    let step=0,boiling=false,pour=0;const STEPS=[['🔥 Đun nước','Nước đang sôi lăn tăn…'],['🫖 Tráng ấm','Tráng ấm bằng nước nóng cho ấm đều.'],['🍃 Cho trà','Một nhúm trà vào ấm, nghe mùi lá dậy lên.'],['⏳ Hãm trà','Chờ một hơi thở dài để trà ngấm.'],['🍵 Rót trà','Rót đều tay, mỗi chén một ít, xoay vòng.'],['🙏 Mời trà','Hai tay nâng chén, mời người đối diện.']];
+    st.tick.push(t=>{for(const p of steam){const u=((t*.4+p.userData.k/8)%1),src=step>=4?cups[0]:boiling?kettle:pot;p.visible=boiling||step>=3;p.position.set(src.position.x+Math.sin(t+p.userData.k)*.03*u,src.position.y+.15+u*.5,src.position.z);p.scale.setScalar(1+u*2);p.material.opacity=.2*(1-u)}
+      if(pour>0){pour=Math.max(0,pour-.01);pot.rotation.z=-Math.sin(Math.min(1,pour*2)*Math.PI/2)*.7}});
+    function render(){const s=STEPS[step];rmPanel.innerHTML='<p>'+(step<STEPS.length?'Bước '+(step+1)+'/'+STEPS.length+' · '+s[1]:'')+'</p><div class="rm-steps">'+STEPS.map((x,i)=>'<span class="'+(i<step?'done':i===step?'on':'')+'">'+x[0]+'</span>').join('')+'</div><div class="rm-row">'+(step<STEPS.length?'<button class="rm-gold" data-qt="next">'+s[0]+'</button>':'<button data-qt="again">🔁 Pha ấm mới</button>')+'</div><p class="rm-quote" id="teaQuote"></p>'}
+    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-qt]')?.dataset.qt;if(!a)return;
+      if(a==='again'){step=0;for(const t of teas)t.visible=false;render();return}
+      if(step===0){boiling=true;strike(523,2,.03,[[1,1]]);setTimeout(()=>{boiling=false},2600)}else if(step===1||step===3){pour=1}else if(step===2){jar.rotation.z=.6;setTimeout(()=>jar.rotation.z=0,700)}else if(step===4){pour=1;teas.forEach((t,i)=>setTimeout(()=>{if(!st.run)return;t.visible=true;strike(880,1.2,.02,[[1,1]])},300+i*350))}
+      step++;render();if(step>=STEPS.length){const q=TEA_WORDS[Math.floor(Math.random()*TEA_WORDS.length)];document.getElementById('teaQuote').textContent='🍵 '+q;rmHint('Mời bạn một chén trà · '+q)}}}
+  const ROOM_BUILDERS={chuong_gio:['#3f3424','#6b5238',roomChuongGio],xong_huong:['#4a3a2c','#5e4a36',roomXongHuong],quan_tra:['#3a3026','#6b5238',roomQuanTra],xuong_gom:['#6a5040','#5a4636',roomXuongGom]};
+  function openRoom(h){const b=ROOM_BUILDERS[h.id];if(!b||roomOpen||bayMode)return;if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'room:'+h.id}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
+    roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1]);b[2](room);room.resize();}
+  function closeRoom(){if(!roomOpen)return;roomOpen=false;{const bk=roomBox.querySelector('[data-rm="back"]');if(bk)bk.textContent='← Trở về Rừng Yên'}if(roomFromIsland){roomFromIsland=false;if(document.body.classList.contains('immersive'))setTimeout(()=>{if(!bayMode&&!roomOpen)enterBay()},60)}if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));if(room){room.run=false;room.cleanup&&room.cleanup();room.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()});room=null}roomBox.hidden=true;document.body.classList.remove('room-open');rmPanel.innerHTML='';lastWalkFrame=performance.now();document.getElementById('zenHint').textContent='Đã trở về Rừng Yên'}
+  roomBox.querySelector('[data-rm="back"]').addEventListener('click',closeRoom);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&roomOpen)closeRoom()});window.addEventListener('anyen-3d-exit',closeRoom);window.addEventListener('resize',()=>{if(room)room.resize()});
+  // 3.19: Nghi thức Dâng y. Mở quanh năm; mỗi khách tự may một tấm y.
+  // May y trên khung Kathina trong Tịnh thất (mảnh ghép như ruộng lúa) → đội y lên đầu → nhiễu Phật 3 vòng (tượng luôn bên phải)
+  // → lạy ba lạy, đặt y dưới chân tượng → ngồi niệm 5 phút → y được thỉnh vào kho y trong Tịnh thất.
+  // Y đã dâng lưu trên Supabase (anyen_kathina_robes): 5 phút đầu y nằm dưới chân tượng cho mọi khách cùng thấy, sau đó vào kho.
+  const KAT_COLORS=[['Vàng nghệ','#c98a1c'],['Vàng cam','#d4772a'],['Nâu đất','#8a5a32'],['Nâu đỏ','#8e3b26']],KAT_DIEU=[5,7,9],KAT_CHANT_SEC=300,KAT_ROUNDS=3,KAT_R=7.55;
+  // Tịnh thất: a small wooden hall on the east edge of the hilltop, facing the statue.
+  const TINH_THAT={id:'tinh_that',name:'Tịnh thất may y',icon:'🟧',x:TT_SPOT[0],z:TT_SPOT[1],W:7,D:6,note:'May y, rước y và dâng y'};
+  TINH_THAT.rot=Math.atan2(STATUE.x-TINH_THAT.x,STATUE.z-TINH_THAT.z);TINH_THAT.door=[TINH_THAT.x+Math.sin(TINH_THAT.rot)*(TINH_THAT.D/2+1.3),TINH_THAT.z+Math.cos(TINH_THAT.rot)*(TINH_THAT.D/2+1.3)];
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),W=TINH_THAT.W,D=TINH_THAT.D,dark=HOUSE_WALL_D,warm=HOUSE_WALL;
+    P(GB(W+.5,1.2,D+.5),'#5f5c4d',0,-.45,0);/* stone footing */P(GB(W+.3,.2,D+.3),'#6c695d',0,.1,0);
+    P(GB(W,3,.16),warm,0,1.7,-D/2);for(const s2 of [-1,1])P(GB(.16,3,D),warm,s2*W/2,1.7,0);for(const s2 of [-1,1])P(GB(W/2-.8,3,.16),warm,s2*(W/4+.4),1.7,D/2);P(GB(1.6,.8,.16),warm,0,2.8,D/2);
+    for(const x of [-W/2,W/2])for(const z of [-D/2,D/2])P(GC(.14,.16,3.2,8),dark,x,1.6,z);
+    P(GK(W*.9,2,4),HOUSE_ROOF,0,4.25,0,{ry:Math.PI/4});P(GB(W+1,.14,D+1),HOUSE_ROOF_D,0,3.25,0);P(GC(.06,.14,.5,6),'#c8a96a',0,5.4,0);
+    P(GB(1.5,2.4,.04),'#c98a1c',0,1.4,D/2-.08);/* saffron curtain in the doorway */
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('TỊNH THẤT · MAY Y',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.6,D/2+.12);g.add(board);
+    g.position.set(TINH_THAT.x,terrainHeight(TINH_THAT.x,TINH_THAT.z),TINH_THAT.z);g.rotation.y=TINH_THAT.rot;g.userData.house=TINH_THAT;scene.add(g);TINH_THAT.group=g}
+  // ===== Cổng Viverse (bên hông Nhà Hoa Lan, phía lối vào chính): vòm đá + màn cổng xoáy sáng; bước vào là mở thế giới ORCHID hoa lan
+  const vivU={t:{value:0}};
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),stoneC='#7a7466',stoneD='#5f5a4e',goldC='#c8a96a',R=2.25,PH=4.6;
+    P(GB(VIV.W,.3,VIV.D+.6),stoneD,0,.15,0);P(GB(VIV.W-.6,.12,VIV.D),stoneC,0,.36,0);
+    for(const s of [-1,1]){P(GB(.7,PH,.8),stoneC,s*(R+.35),.42+PH/2,0);P(GB(.9,.3,1),stoneD,s*(R+.35),.57,0);P(GB(.86,.22,.96),stoneD,s*(R+.35),.42+PH+.11,0);
+      for(let k=0;k<3;k++)P(GB(.74,.05,.84),goldC,s*(R+.35),1.3+k*1.25,0)}
+    {const arch=new THREE.TorusGeometry(R+.35,.36,8,28,Math.PI);P(arch,stoneC,0,.42+PH+.22,0);const trim=new THREE.TorusGeometry(R+.35,.06,6,28,Math.PI);P(trim,goldC,0,.42+PH+.22,.37)}
+    P(new THREE.OctahedronGeometry(.32,0),goldC,0,.42+PH+.22+R+.35+.5,0);
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    // màn cổng: xoáy ánh sáng xanh ngọc – tím, chuyển động chậm
+    const sh=new THREE.Shape();sh.moveTo(-R,0);sh.lineTo(-R,PH+.22);sh.absarc(0,PH+.22,R,Math.PI,0,true);sh.lineTo(R,0);sh.lineTo(-R,0);
+    const pm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{t:vivU.t,R:{value:R},H:{value:PH+.22+R}},
+      vertexShader:'varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:'uniform float t,R,H;varying vec2 vP;void main(){vec2 c=vec2(0.,H*.48);vec2 d=vP-c;float r=length(d)/(H*.55),a=atan(d.y,d.x);'+
+        'float sw=sin(a*3.+r*9.-t*1.6)*.5+.5,ring=sin(r*18.-t*2.4)*.5+.5;vec3 c1=vec3(.22,.78,.78),c2=vec3(.55,.36,.86),c3=vec3(1.,.93,.78);'+
+        'vec3 col=mix(c1,c2,sw);col=mix(col,c3,smoothstep(.35,0.,r)*.85+ring*.12);float al=.55+.35*smoothstep(1.,.2,r);gl_FragColor=vec4(col,al);}'});
+    const portal=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),pm);portal.position.set(0,.42,0);g.add(portal);
+    const cv=document.createElement('canvas');cv.width=512;cv.height=160;const cx=cv.getContext('2d');cx.fillStyle='#2c2238';cx.fillRect(0,0,512,160);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,148);
+    cx.fillStyle='#f4e2b9';cx.textAlign='center';cx.textBaseline='middle';cx.font='bold 54px sans-serif';cx.fillText('CỔNG VIVERSE',256,62);cx.font='30px sans-serif';cx.fillStyle='#d9c6ea';cx.fillText('🌸 ORCHID hoa lan · thế giới 3D',256,118);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.81),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));board.position.set(0,.42+PH+.22+R+.35+.05,.45);board.position.y=.42+PH-.7;board.position.z=.05;
+    board.position.set(0,.42+PH+.22+R*.58,.42);g.add(board);
+    g.position.set(VIV.x,terrainHeight(VIV.x,VIV.z),VIV.z);g.rotation.y=VIV.rot;g.userData.house=null;scene.add(g);window.__vivGroup=g;addFadeable(g,VIV.x,VIV.z,3.4)}
+  // ===== Tư Gia (bờ đông Hồ Sen): nhà gỗ mái ngói, hiên trước nhìn ra hồ sen; Góc Gieo Hạt ngay cạnh nhà
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),W=TU_GIA.W,D=TU_GIA.D,woodW='#8a6a48',woodD=HOUSE_WALL_D,roofC=HOUSE_ROOF,cream=HOUSE_WALL;
+    P(GB(W+.6,.9,D+2.2),'#6c695d',0,-.3,.8);P(GB(W+.4,.16,D+2),'#8a7e68',0,.2,.8);/* nền đá + hiên */
+    P(GB(W,2.8,.16),cream,0,1.68,-D/2);for(const s of [-1,1])P(GB(.16,2.8,D),cream,s*W/2,1.68,0);for(const s of [-1,1])P(GB(W/2-.75,2.8,.16),cream,s*(W/4+.38),1.68,D/2);P(GB(1.5,.7,.16),cream,0,2.73,D/2);
+    for(const s of [-1,1])P(GB(1.6,1.1,.06),'#9fc2c4',s*3.2,1.8,D/2+.06);/* cửa sổ */P(GB(1.4,2.3,.05),'#3b2619',0,1.4,D/2+.05);
+    for(const x of [-W/2,W/2])for(const z of [-D/2,D/2])P(GC(.13,.15,3,8),woodD,x,1.6,z);for(const x of [-W/2+.3,W/2-.3])P(GC(.1,.12,2.9,8),woodD,x,1.55,D/2+1.7);
+    P(GB(W+.2,.14,1.9),HOUSE_ROOF_D,0,3.05,D/2+.9);/* mái hiên */P(GK(W*.86,2.2,4),roofC,0,4.15,0,{ry:Math.PI/4,s:[1,1,D/W*1.05]});P(GB(W+1,.14,D+1),HOUSE_ROOF_D,0,3.1,0);
+    P(GB(1.6,.4,.7),woodW,-3.4,.48,D/2+1.3);/* ghế hiên */P(GL([[0,0],[.18,.04],[.22,.3],[.16,.42]],10),'#b0754f',3.6,.28,D/2+1.4);P(new THREE.IcosahedronGeometry(.42,0),'#4f7f4c',3.6,.95,D/2+1.4);
+    // Góc Gieo Hạt: luống đất viền gỗ, mầm non, bình tưới, rào thấp
+    const gx=TU_GIA.garden[0]-TU_GIA.x,gz=TU_GIA.garden[1]-TU_GIA.z,lc=Math.cos(-TU_GIA.rot),ls=Math.sin(-TU_GIA.rot),lx=gx*lc-gz*ls,lz=gx*ls+gz*lc;
+    P(GB(3.2,.3,2),woodD,lx,.15,lz);P(GB(3,.08,1.8),'#4a3526',lx,.32,lz);
+    for(let i=0;i<5;i++)for(let j=0;j<3;j++){const sx=lx-1.2+i*.6,sz=lz-.6+j*.6;P(GC(.015,.02,.22,4),'#5f8f45',sx,.45,sz);P(new THREE.SphereGeometry(.07,6,4),'#7fbf5a',sx+.04,.58,sz,{s:[1.4,.5,1]});P(new THREE.SphereGeometry(.06,6,4),'#8fcc62',sx-.04,.56,sz,{s:[1.4,.5,1]})}
+    P(GC(.16,.2,.34,10),'#5a7f8c',lx+2,.17,lz+.6);P(GC(.03,.03,.4,5),'#5a7f8c',lx+2.25,.34,lz+.6,{rz:-.8});
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 54px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🏡 TƯ GIA',256,66);
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2,.5),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.4,D/2+1.86);g.add(board);
+    const gcv=document.createElement('canvas');gcv.width=256;gcv.height=64;const gc=gcv.getContext('2d');gc.fillStyle='#3a2b1f';gc.fillRect(0,0,256,64);gc.fillStyle='#e6f0c8';gc.font='bold 26px sans-serif';gc.textAlign='center';gc.textBaseline='middle';gc.fillText('🌱 Góc Gieo Hạt',128,33);
+    const gt=new THREE.CanvasTexture(gcv);gt.colorSpace=THREE.SRGBColorSpace;const gb=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.3),new THREE.MeshBasicMaterial({map:gt,side:THREE.DoubleSide}));gb.position.set(lx-1.9,.75,lz);gb.rotation.y=Math.PI/2;g.add(gb);
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.6,5),mat('#5b3d2a'));post.position.set(lx-1.9,.3,lz);g.add(post);
+    g.position.set(TU_GIA.x,terrainHeight(TU_GIA.x,TU_GIA.z),TU_GIA.z);g.rotation.y=TU_GIA.rot;g.userData.house=TU_GIA;scene.add(g);TU_GIA.group=g;window.__homeGroup=g;addFadeable(g,TU_GIA.x,TU_GIA.z,4.5)}
+  // ===== Nhà Văn Hóa (bản vẽ ngoại thất v3.6): 16 × 11 m, cao 6,8 m, cửa quay Bắc. Bệ đá rộng với bậc đón 3,6 m, tường vôi ngà,
+  // ba gian cửa kính (gian giữa là cửa trượt đôi), hiên 6 cột gỗ tròn, ghế gỗ thấp, biển tên dưới xà; mái hai tầng chồng diêm
+  // có dải cửa sổ cổ diêm lấy sáng, nóc viền vàng đồng.
+  {const h=VAN_HOA,W=h.W,D=h.D,g=new THREE.Group(),parts=[],glassP=[],P=(...a)=>parts.push(HP(...a)),G=(...a)=>glassP.push(HP(...a));
+    const pb=.35,WH=3.2,top=pb+WH,fz=D/2-.75,lime=HOUSE_WALL,frame='#241a11',timber=HOUSE_WALL_D,mull='#2d2015';
+    P(GB(W+1.2,.18,D+1.2),'#46443e',0,.09,0);P(GB(W+.8,pb,D+.8),'#5a574f',0,pb/2,0);
+    P(GB(3.6,.24,.55),'#6e6a60',0,.12,D/2+.65);P(GB(4.1,.12,.55),'#7d786d',0,.06,D/2+1.15);/* bậc đón rộng 3,6 m */
+    // tường vôi: mặt tiền lùi vào làm hiên sâu 0,75 m
+    P(GB(W-1,WH,.24),lime,0,pb+WH/2,-D/2+.5);for(const sx of [-1,1])P(GB(.24,WH,D-1.25),lime,sx*(W/2-.5),pb+WH/2,-.12);P(GB(W-1,WH,.24),lime,0,pb+WH/2,fz-.12);
+    for(const y of [1.05,1.9,2.75]){P(GB(W-.98,.03,.02),'#2b2118',0,pb+y,-D/2+.37);for(const sx of [-1,1])P(GB(.02,.03,D-1.27),'#2b2118',sx*(W/2-.37),pb+y,-.12)}/* đường ván gỗ */
+    P(GB(W-1.2,.04,D-1.6),'#5a452f',0,pb+.02,-.1);
+    // ba gian kính: hai gian bên 3,5 m, gian giữa cửa trượt đôi 4,5 m
+    const bay=(cx,w,hh)=>{G(new THREE.PlaneGeometry(w,hh),'#8c6f42',cx,pb+hh/2,fz+.01);P(GB(w+.16,.12,.1),frame,cx,pb+hh,fz+.05);for(const sx of [-1,1])P(GB(.12,hh,.1),frame,cx+sx*w/2,pb+hh/2,fz+.05);P(GB(w+.16,.1,.1),frame,cx,pb+.05,fz+.05)};
+    for(const sx of [-1,1]){const cx=sx*5.08;bay(cx,3.5,2.9);for(const k of [-1,1])P(GB(.07,2.9,.08),mull,cx+k*3.5/6,pb+1.45,fz+.06);P(GB(3.5,.06,.08),mull,cx,pb+2.1,fz+.06)}
+    {const hh=3.0;P(GB(4.7,.16,.12),'#1e150d',0,pb+hh+.02,fz+.06);for(const sx of [-1,1]){P(GB(.14,hh,.12),'#1e150d',sx*2.3,pb+hh/2,fz+.06);G(new THREE.PlaneGeometry(1,hh-.15),'#8c6f42',sx*1.55,pb+(hh-.15)/2,fz+.03);P(GB(.06,hh-.15,.07),mull,sx*1.05,pb+(hh-.15)/2,fz+.07)}
+      G(new THREE.PlaneGeometry(2.1,hh-.15),'#e8c680',0,pb+(hh-.15)/2,fz+.012)}/* gian giữa mở, thấy bên trong ấm */
+    // hiên 6 cột gỗ tròn, ghế gỗ thấp trước hai gian kính bên
+    for(const [x,r] of [[-7.6,.19],[-2.9,.19],[-1.25,.15],[1.25,.15],[2.9,.19],[7.6,.19]])P(GC(r,r+.02,WH,12),timber,x,pb+WH/2,D/2-.15);
+    for(const sx of [-1,1]){P(GB(3.1,.08,.42),'#4e3a26',sx*5.08,pb+.45,fz+.4);for(const k of [-1,1])P(GB(.08,.41,.34),'#241a10',sx*5.08+k*1.4,pb+.21,fz+.4)}
+    // xà diềm thấp, mái tầng 1 che hiên, dải cổ diêm lấy sáng, mái tầng 2 và nóc viền vàng
+    P(GB(W+.6,.42,D+.3),'#231911',0,top+.21,0);
+    const r1=top+.42;P(frustumGeo(W/2+1.3,D/2+1.15,W/2-1.5,D/2-1.85,1.2),HOUSE_ROOF,0,r1,0);
+    const r2=r1+1.2;P(GB(W-3.3,.52,D-4),'#d4b06e',0,r2+.26,0);for(let k=0;k<=8;k++){const x=-(W-3.3)/2+k*(W-3.3)/8;for(const z of [-(D-4)/2-.02,(D-4)/2+.02])P(GB(.09,.52,.05),mull,x,r2+.26,z)}
+    for(let k=0;k<=5;k++){const z=-(D-4)/2+k*(D-4)/5;for(const x of [-(W-3.3)/2-.02,(W-3.3)/2+.02])P(GB(.05,.52,.09),mull,x,r2+.26,z)}
+    const r3=r2+.52;P(frustumGeo(W/2-1.4,D/2-1.7,3.6,.06,1.05),HOUSE_ROOF,0,r3,0);P(GB(7.5,.16,.28),'#826332',0,r3+1.1,0);
+    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
+    g.add(new THREE.Mesh(mergeColored(glassP),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.25,metalness:.1,emissive:'#b08949',emissiveIntensity:.32})));
+    const pl=plaqueMesh('NHÀ VĂN HÓA · LÀNG YÊN',4.6,.36,['#1f160f','#a6824b','#edd6a2']);pl.position.set(0,top+.21,D/2+.16);g.add(pl);
+    g.position.set(h.x,terrainHeight(h.x,h.z),h.z);g.rotation.y=h.rot;g.userData.house=h;scene.add(g);h.group=g;window.__vhGroup=g;addFadeable(g,h.x,h.z,6.5);
+    window.__vhHit=(x,z)=>rectHit(h.x,h.z,h.rot,W+.8,D+.8,x,z,.25)}
+  window.__homeHit=(x,z)=>rectHit(TU_GIA.x,TU_GIA.z,TU_GIA.rot,TU_GIA.W,TU_GIA.D,x,z,.3)||rectHit(VIV.x,VIV.z,VIV.rot,VIV.W,VIV.D,x,z,.1)||Math.hypot(x-TU_GIA.garden[0],z-TU_GIA.garden[1])<1.9;
+  function goHome(instant){if(bayMode||boatRide)return;if(instant){if(teleportTo(...TU_GIA.door,TU_GIA.rot+Math.PI))setTimeout(()=>openRoom(TU_GIA),300);return}standUpForTravel();goToHouse(TU_GIA)}
+  // Bên trong Tư Gia: bàn trà thấp 6 chỗ ngồi, Kệ Lưu Hương 9 ô trên tường, cửa sổ nhìn ra hồ sen; 3 phong cách đổi ngay
+  const HOME_STYLES={gian_di:{label:'Giản Dị',wall:'#d8cbb0',floor:'#8a6a48',acc:'#6b4a32'},sang_chanh:{label:'Sang Chảnh',wall:'#2f3a3a',floor:'#5a3a2a',acc:'#c8a96a'},hanh_phuc:{label:'Hạnh Phúc',wall:'#f1d6c8',floor:'#b98a5e',acc:'#e58aa6'}};
+  function roomTuGia(st){let sty='gian_di';try{const v=localStorage.getItem('yen_home_style');if(HOME_STYLES[v])sty=v}catch(e){}
+    rmHint('Tư Gia của bạn · Chỉ bạn thấy nhà mình · Kéo để nhìn quanh');st.target.set(0,.8,-.4);st.dist=4.4;st.pitch=.16;
+    const tint=[];const T=(m,k)=>{tint.push([m,k]);return m};
+    const table=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.75,.8,.08,24),T(mat('#6e4a33'),'acc')),0,.32,.3);rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,.28,10),mat('#4e3a2a')),0,.14,.3);
+    for(let k=0;k<6;k++){const a=k*Math.PI/3;rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.24,.26,.1,14),T(mat('#c9b38a'),'cush')),Math.sin(a)*1.25,.05,.3+Math.cos(a)*1.25)}
+    const pot=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.11,12,8),mat('#6a3e2a')),0,.44,.3);pot.scale.y=.8;
+    for(let k=0;k<6;k++){const a=k*Math.PI/3;rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.045,.035,.06,10),mat('#ece4d0')),Math.sin(a)*.5,.39,.3+Math.cos(a)*.5)}
+    // Kệ Lưu Hương 9 ô (3 × 3) trên tường sau
+    const shelf=new THREE.Group();shelf.position.set(-1.9,1.1,-3.38);st.sc.add(shelf);const sm=T(mat('#5b3d2a'),'acc');
+    for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.9,.05,.32),sm);b.position.set(0,i*.6,0);shelf.add(b);const v=new THREE.Mesh(new THREE.BoxGeometry(.05,1.85,.32),sm);v.position.set(-.95+i*.633,.9,0);shelf.add(v)}
+    const glowM=new THREE.MeshBasicMaterial({color:'#ffe7b8',transparent:true,opacity:.18});for(let r=0;r<3;r++)for(let c=0;c<3;c++){const q=new THREE.Mesh(new THREE.PlaneGeometry(.55,.5),glowM);q.position.set(-.633+c*.633,.3+r*.6,-.12);shelf.add(q)}
+    // cửa sổ lớn nhìn ra hồ sen
+    const win=rAdd(st,new THREE.Mesh(new THREE.PlaneGeometry(2.2,1.4),new THREE.MeshBasicMaterial({color:'#9fd0c4'})),1.6,1.7,-3.42);const fr=rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(2.36,1.56,.06),T(mat('#5b3d2a'),'acc')),1.6,1.7,-3.46);
+    for(let k=0;k<4;k++){const lo=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),mat('#ef9fb9')),.8+k*.5,1.25+(k%2)*.12,-3.4);lo.scale.y=.6}
+    const plant=rAdd(st,new THREE.Mesh(new THREE.IcosahedronGeometry(.32,0),mat('#4f7f4c')),3.2,.55,-2.8);rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.2,.16,.36,10),mat('#b0754f')),3.2,.18,-2.8);
+    function apply(k){sty=k;try{localStorage.setItem('yen_home_style',k)}catch(e){}const S=HOME_STYLES[k];
+      st.sc.traverse(o=>{if(!o.isMesh||!o.material||!o.material.color)return;const p=o.position;if(o.geometry.type==='BoxGeometry'){const g=o.geometry.parameters;if(g.width===8&&g.height===.1)o.material.color.set(S.floor);else if((g.width===8&&g.height===4)||(g.width===.12&&g.height===4))o.material.color.set(S.wall)}});
+      for(const [m,t] of tint)m.color.set(t==='acc'?S.acc:k==='sang_chanh'?'#c8a96a':k==='hanh_phuc'?'#f3c3cf':'#c9b38a');render()}
+    function render(){rmPanel.innerHTML='<p>🏡 <b>Tư Gia của bạn</b> · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'</div>'+
+      '<p class="rm-note">Bàn trà 6 chỗ · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà. Bày đồ từ Túi An Yên, gieo hạt và mời tối đa 5 khách sẽ mở ở bước tiếp theo.</p>'}
+    rmPanel.onclick=e=>{const b=e.target.closest('[data-hs]');if(b)apply(b.dataset.hs)};apply(sty)}
+  ROOM_BUILDERS.tu_gia_me=['#d8cbb0','#8a6a48',roomTuGia];
+  const TU_DAO_SPACE={id:'tu_dao_me',name:'Tư Đảo của bạn',icon:'🏝',note:''};let roomFromIsland=false;
+  ROOM_BUILDERS.tu_dao_me=['#d8cbb0','#8a6a48',st=>{roomTuGia(st);rmHint('🏝 Tư Đảo · '+(window.__tuDaoSpot||'Bãi đảo')+' · tạm dùng không gian Tư Gia · Trở về để xuống tàu ở cầu tàu')}];
+  function openTuDaoSpace(kind){TU_DAO_SPACE.name='Tư Đảo · '+(window.__tuDaoSpot||'Bãi đảo');roomFromIsland=true;openRoom(TU_DAO_SPACE);const bk=roomBox.querySelector('[data-rm="back"]');if(bk&&roomOpen)bk.textContent='← Xuống tàu · Vịnh Yên'}
+  // A folded robe on a wooden tray (used on the head, on the dais and on the shelves).
+  const katHex=i=>(KAT_COLORS[+i]||KAT_COLORS[0])[1];
+  function robeTray(color,scale=1,pieces=''){const g=new THREE.Group(),c=new THREE.Color(color),dark=c.clone().multiplyScalar(.78),multi=new Set(String(pieces||'')).size>1;
+    const tray=new THREE.Mesh(new THREE.BoxGeometry(.56,.04,.42),mat('#6b4a32'));g.add(tray);
+    for(let k=0;k<3;k++){const lc=multi?new THREE.Color(katHex(pieces[(k*5)%pieces.length])):k%2?dark:c;const f=new THREE.Mesh(new THREE.BoxGeometry(.46-k*.02,.05,.34-k*.015),new THREE.MeshStandardMaterial({color:lc,roughness:.9}));f.position.y=.045+k*.05;g.add(f)}
+    if(multi)for(let i=0;i<6;i++){/* the patchwork shows on the folded top: three columns by two rows */const t=new THREE.Mesh(new THREE.BoxGeometry(.13,.012,.14),new THREE.MeshStandardMaterial({color:katHex(pieces[i%pieces.length]),roughness:.9}));t.position.set(-.145+(i%3)*.145,.152,-.075+Math.floor(i/3)*.15);g.add(t)}
+    const band=new THREE.Mesh(new THREE.BoxGeometry(.04,.16,.35),new THREE.MeshStandardMaterial({color:dark,roughness:.9}));band.position.set(.12,.1,0);g.add(band);g.scale.setScalar(scale);return g}
+  // An open robe as it was sewn: dieu strips of two long pieces and one short, each piece in the colour it was sewn with.
+  function robeCloth(r,W,H){const g=new THREE.Group(),cols=[5,7,9].includes(Number(r.dieu))?Number(r.dieu):5,ps=String(r.pieces||''),gap=W*.017,cw=(W-gap*(cols+1))/cols;
+    const back=new THREE.Mesh(new THREE.PlaneGeometry(W+.04,H+.04),new THREE.MeshStandardMaterial({color:'#4a2e1e',roughness:.95,side:THREE.DoubleSide}));back.position.z=-.004;g.add(back);
+    for(let i=0;i<cols;i++){const longH=(H-gap*4)*.4,shortH=(H-gap*4)*.2,seq=i%2?[shortH,longH,longH]:[longH,longH,shortH];let y=H/2-gap;
+      seq.forEach((h,k)=>{const ci=ps[i*3+k],m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:ci!=null?katHex(ci):r.color,roughness:.9,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);g.add(m);y-=h+gap})}
+    for(const x of [-W*.35,W*.35]){const tie=new THREE.Mesh(new THREE.BoxGeometry(.03,.1,.01),mat('#3a2a1e'));tie.position.set(x,H/2+.05,0);g.add(tie)}
+    return g}
+  // ---- state
+  // Thuốc nhuộm y truyền thống cho từng màu (y cà-sa nhuộm từ cây cỏ, đất son).
+  const KAT_DYES=['củ nghệ','lõi mít','củ nâu','đất son'];
+  const KAT_DIEU_INFO={5:'An-đà-hội (y 5 điều): y mặc bên trong, dùng khi làm việc, đi đường.',7:'Uất-đa-la-tăng (y 7 điều): thượng y, đắp khi lễ Phật, tụng kinh, nghe pháp.',9:'Tăng-già-lê (y 9 điều trở lên): đại y, đắp trong những dịp trang trọng như vào làng khất thực, thuyết pháp.'};
+  const KAT_SEW_WORDS=['Một mũi chỉ, một nhịp thở an','Thở vào, tâm lắng · Thở ra, mỉm cười','Mỗi mảnh vải là một thửa ruộng phước','Đường may thẳng, lòng cũng thẳng','Biết ơn người trồng bông, dệt vải','Từng mũi kim, trở về hiện tại','Nguyện tấm y che chở người tu','Vải mộc, lòng thành','Gieo một hạt lành, gặt một mùa an'];
+  const KAT_WISHES=['Hồi hướng bình an cho cha mẹ','Nguyện cho muôn loài an vui','Hồi hướng cho người đã khuất','Nguyện gia đình an lạc'];
+  const KAT_ROUND_WORDS=['Niệm Phật','Niệm Pháp','Niệm Tăng'];
+  const KAT_GAP=1.7/KAT_R,KAT_ROUND_SEC=KAT_ROUNDS*Math.PI*2*KAT_R/1.25;
+  const kat={phase:'idle',color:KAT_COLORS[0][1],pieces:'',dieu:5,wish:'',robe:null,theta:0,t0:0,r0:0,from:null,chantLeft:0,chantTimer:0,leader:'',kj:0,mine:null};
+  let pendingKathina=null,katPeers={};
+  const katPill=document.createElement('button');katPill.type='button';katPill.id='katPill';katPill.hidden=true;document.body.appendChild(katPill);
+  const katJoin=document.createElement('button');katJoin.type='button';katJoin.id='katJoin';katJoin.hidden=true;document.body.appendChild(katJoin);
+  const katPanel=document.createElement('section');katPanel.id='katPanel';katPanel.hidden=true;document.body.appendChild(katPanel);
+  const say=t=>{document.getElementById('zenHint').textContent=t};
+  const katRound=()=>Math.min(KAT_ROUNDS,1+Math.floor(-kat.theta/(Math.PI*2)));
+  const katBreath=()=>(Date.now()/1000)%10<4?'Hít vào…':'Thở ra…';
+  function refreshKatPill(){const p=kat.phase;katPill.hidden=!['carry','round','offer','fetch','return','follow','join'].includes(p);
+    katPill.textContent=p==='carry'?'🟧 Rước y · nhiễu Phật 3 vòng':p==='round'?'🟧 Vòng '+katRound()+'/'+KAT_ROUNDS+' · '+KAT_ROUND_WORDS[katRound()-1]+' · '+katBreath():p==='offer'?'🙏 Đang dâng y…':p==='fetch'?'🟧 Thỉnh y về kho':p==='return'?'🟧 Đang đội y về kho…':p==='join'?'🟧 Đang đến đoàn rước y…':'🟧 Cùng nhiễu Phật · '+katBreath();
+    katPill.disabled=!(p==='carry'||p==='fetch')}
+  function setCarry(on){if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}if(on){kat.robe=robeTray(kat.color,.9,kat.pieces);kat.robe.position.set(0,2.12,0);me.add(kat.robe)}}
+  // ---- 1. intro (Nghi thức → Dâng y)
+  function openKathinaIntro(){if(bayMode||!document.body.classList.contains('immersive'))return;if(kat.phase!=='idle'&&kat.phase!=='done'){say('🟧 Bạn đang trong nghi thức dâng y');return}
+    katPanel.innerHTML='<div class="fl-head"><strong>🟧 Nghi thức dâng y</strong><button type="button" data-kt="close">✕ Đóng</button></div>'
+      +'<p class="fl-note">Lễ dâng y Kathina có từ thời Đức Phật, được cử hành sau ba tháng an cư mùa mưa. Tấm y được may từ nhiều mảnh ghép như những thửa ruộng xứ Magadha. Trong Rừng Yên, đây là nghi thức tưởng niệm và gieo duyên; xin bạn giữ tâm thành kính. Nếu có duyên, mời bạn tham dự lễ dâng y đến chư Tăng tại chùa.</p>'
+      +'<ol class="og-steps"><li>Nhuộm vải, may y trên khung Kathina trong Tịnh thất; có thể gửi một lời hồi hướng</li><li>Đội y lên đầu, nhiễu Phật ba vòng (khách khác có thể đi cùng)</li><li>Đặt y dưới chân tượng, lạy ba lạy</li><li>Ngồi niệm năm phút</li><li>Đội y về kho trong Tịnh thất</li></ol>'
+      +'<div class="fl-row"><button type="button" data-kt="walk">🚶 Đi bộ đến Tịnh thất</button><button type="button" class="fl-gold" data-kt="tp">✨ Đến ngay</button></div>';
+    katPanel.hidden=false;document.body.classList.add('flower-open')}
+  function closeKatPanel(){katPanel.hidden=true;if(document.getElementById('flowerSheet').hidden&&document.getElementById('bouquetBox').hidden&&document.getElementById('offerGuide').hidden)document.body.classList.remove('flower-open')}
+  katPanel.addEventListener('click',e=>{const a=e.target.closest('[data-kt]')?.dataset.kt;if(!a)return;
+    if(a==='close'){closeKatPanel();return}
+    if(a==='walk'){closeKatPanel();standUpForTravel();goToHouse(TINH_THAT);return}
+    if(a==='tp'){closeKatPanel();if(teleportTo(...TINH_THAT.door,TINH_THAT.rot+Math.PI))setTimeout(()=>openRoom(TINH_THAT),300);return}
+    if(a==='end'){endChant(true);return}
+    if(a==='fetch'){closeKatPanel();katPill.click()}
+    });
+  // a soft sound of thread pulled through cloth
+  function katSwish(){const ac=audio();if(!ac)return;const n=Math.floor(ac.sampleRate*.28),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.sin(i/n*Math.PI);
+    const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;f.type='bandpass';f.frequency.setValueAtTime(1800,ac.currentTime);f.frequency.linearRampToValueAtTime(3400,ac.currentTime+.28);f.Q.value=2.5;g.gain.value=.05;src.connect(f).connect(g).connect(ac.destination);src.start()}
+  // ---- 2. sewing room (opened like the other houses)
+  function roomTinhThat(st){rmHint('Nhuộm vải, chọn số điều, rồi khâu từng mảnh · Chạm mảnh đã khâu để đổi màu');st.target.set(0,1.2,0);st.dist=3.6;st.pitch=.08;
+    const fr=new THREE.Group();fr.position.set(0,0,-.6);st.sc.add(fr);const wood=mat('#5b3d2a');for(const x of [-1.5,1.5]){const l=new THREE.Mesh(new THREE.BoxGeometry(.1,2.3,.1),wood);l.position.set(x,1.15,0);fr.add(l)}for(const y of [.45,2.05]){const b=new THREE.Mesh(new THREE.BoxGeometry(3.1,.09,.09),wood);b.position.set(0,y,0);fr.add(b)}
+    // Kho y: the robes hang open on the back wall above the sewing frame (five over four), each showing its patchwork as it was sewn
+    const shelf=new THREE.Group();shelf.position.set(0,0,-3.38);st.sc.add(shelf);for(const y of [3.05,2.25]){const rod=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,7.4,8),mat('#4e3a2a'));rod.rotation.z=Math.PI/2;rod.position.set(0,y,.06);shelf.add(rod)}
+    const drawKho=()=>{while(shelf.children.length>3){const o=shelf.children[3];shelf.remove(o);o.traverse(q=>{if(q.geometry)q.geometry.dispose();if(q.material)q.material.dispose()})}katRows.filter(r=>katAge(r)>KAT_CHANT_SEC||katInKho(r)).slice(0,9).forEach((r,i)=>{const top=i<5,c=robeCloth(r,1.3,.62);c.position.set(top?-2.9+i*1.45:-2.175+(i-5)*1.45,top?3.05-.37:2.25-.37,.08);shelf.add(c)})};drawKho();
+    // dye tub: the strip of cloth dips into the dye of the chosen colour
+    const tub=new THREE.Group();tub.position.set(-2.05,0,.35);st.sc.add(tub);tub.add(new THREE.Mesh(new THREE.CylinderGeometry(.36,.3,.5,16,1,true),mat('#5b3d2a')));tub.children[0].position.y=.25;
+    const dye=new THREE.Mesh(new THREE.CircleGeometry(.34,20),new THREE.MeshStandardMaterial({color:kat.color,roughness:.3}));dye.rotation.x=-Math.PI/2;dye.position.y=.44;tub.add(dye);
+    const strip=new THREE.Mesh(new THREE.PlaneGeometry(.22,.55),new THREE.MeshStandardMaterial({color:'#efe4cf',roughness:.95,side:THREE.DoubleSide}));strip.position.set(0,1.05,0);tub.add(strip);
+    const bar=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.5,6),wood);bar.rotation.z=Math.PI/2;bar.position.y=1.34;tub.add(bar);
+    const kv={on:false,t0:0,from:null};/* camera: sewing frame, or up to the robe store on the back wall */
+    st.tick.push(()=>{if(!kv.from)return;const u=Math.min(1,(performance.now()-kv.t0)/900),q=u*u*(3-2*u),to=kv.on?[2.3,-3.3,4.3,.02]:[1.2,0,3.6,.08];st.target.y=kv.from[0]+(to[0]-kv.from[0])*q;st.target.z=kv.from[1]+(to[1]-kv.from[1])*q;st.dist=kv.from[2]+(to[2]-kv.from[2])*q;st.pitch=kv.from[3]+(to[3]-kv.from[3])*q;if(u>=1)kv.from=null});
+    let dip=null;const dipTo=c=>{dye.material.color.set(c);dip={t0:performance.now(),from:strip.material.color.clone(),to:new THREE.Color(c)};strike(240,1.2,.03,[[1,1]])};
+    const cloth=new THREE.Group();cloth.position.set(0,1.25,-.55);st.sc.add(cloth);let pieces=[],sewn=0;const stitches=[];
+    function layout(){const oldP=new Set(pieces);st.picks=st.picks.filter(x=>!oldP.has(x.obj));cloth.clear();pieces=[];sewn=0;stitches.length=0;const cols=kat.dieu,W=2.7,H=1.45,gap=.045,cw=(W-gap*(cols+1))/cols,c=new THREE.Color(kat.color),dark=new THREE.Color('#4a2e1e');
+      const back=new THREE.Mesh(new THREE.PlaneGeometry(W+.08,H+.08),new THREE.MeshStandardMaterial({color:dark,roughness:.95,side:THREE.DoubleSide}));back.position.z=-.005;cloth.add(back);
+      for(let i=0;i<cols;i++){/* each strip: two long pieces and one short, alternating up/down like rice-field plots */const longH=(H-gap*4)*.4,shortH=(H-gap*4)*.2,seq=i%2?[shortH,longH,longH]:[longH,longH,shortH];let y=H/2-gap;
+        for(const h of seq){const m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:c,roughness:.9,transparent:true,opacity:.12,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);m.userData.wh=[cw,h];cloth.add(m);pieces.push(m);rTap(st,m,()=>{if(m.userData.ci!=null){m.userData.ci=curIdx();m.material.color.set(kat.color);strike(620,.4,.02,[[1,1]]);render()}else sewNext()});y-=h+gap}}
+      render()}
+    const curIdx=()=>Math.max(0,KAT_COLORS.findIndex(x=>x[1]===kat.color));
+    function tintUnsewn(){for(const m of pieces)if(m.userData.ci==null)m.material.color.set(kat.color)}
+    // a running stitch drawn round the edge of the piece just sewn
+    function stitch(m){const [w,h]=m.userData.wh,iw=w/2-.03,ih=h/2-.03,pts=[];const per=2*(iw+ih)*2,n=Math.max(16,Math.round(per/.035));for(let k=0;k<=n;k++){let t=k/n*per,x,y;const e=2*iw,f=2*ih;if(t<e){x=-iw+t;y=ih}else if((t-=e)<f){x=iw;y=ih-t}else if((t-=f)<e){x=iw-t;y=-ih}else{t-=e;x=-iw;y=-ih+t}pts.push(new THREE.Vector3(x,y,.004))}
+      const g=new THREE.BufferGeometry().setFromPoints(pts),line=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:'#f3e2b0'}));line.position.copy(m.position);g.setDrawRange(0,0);cloth.add(line);stitches.push({g,n:pts.length,t0:performance.now()})}
+    st.tick.push(()=>{const now=performance.now();for(const s of stitches){const u=Math.min(1,(now-s.t0)/700);s.g.setDrawRange(0,Math.floor(u*s.n/2)*2)}
+      if(dip){const u=Math.min(1,(now-dip.t0)/1400);strip.position.y=1.05-Math.sin(u*Math.PI)*.6;if(u>.5)strip.material.color.copy(dip.from).lerp(dip.to,Math.min(1,(u-.5)*2.5));if(u>=1)dip=null}});
+    function sewNext(){if(kv.on){kv.on=false;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch]}if(sewn>=pieces.length)return;const m=pieces[sewn++];m.userData.ci=curIdx();m.material.color.set(kat.color);m.material.opacity=1;m.material.transparent=false;stitch(m);katSwish();
+      if(sewn%3===0){strike(1320,2.5,.025,[[1,1],[2.4,.3]]);rmHint('🪡 '+KAT_SEW_WORDS[(sewn/3-1)%KAT_SEW_WORDS.length])}render();if(sewn>=pieces.length){rmHint('Tấm y đã may xong · Gửi lời hồi hướng (nếu muốn) rồi gấp y');strike(196,4,.08)}}
+    const esc=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function render(){const done=sewn>=pieces.length;rmPanel.innerHTML='<p>Y được may từ nhiều mảnh ghép như ruộng lúa xứ Magadha, mỗi đường viền là một bờ ruộng. Mỗi mũi khâu là một hơi thở có mặt.</p>'
+      +'<p class="rm-note">Nhuộm vải: chọn một chậu thuốc nhuộm. Mỗi mảnh khâu nhận màu đang chọn, có thể may nhiều màu; chạm mảnh đã khâu để đổi màu.</p>'
+      +'<div class="rm-row">'+KAT_COLORS.map(([n,c],i)=>'<button data-kc="'+c+'"'+(kat.color===c?' class="sel"':'')+'><span class="rm-dot" style="background:'+c+'"></span>'+n+' · '+KAT_DYES[i]+'</button>').join('')+'</div>'
+      +'<div class="rm-row">'+KAT_DIEU.map(d=>'<button data-kd="'+d+'"'+(kat.dieu===d?' class="sel"':'')+'>'+d+' điều</button>').join('')+'<span class="rm-note">Đã khâu '+sewn+'/'+pieces.length+' mảnh</span></div>'
+      +'<p class="rm-note">'+KAT_DIEU_INFO[kat.dieu]+'</p>'
+      +(done?'<label class="kt-wish">Lời hồi hướng (không bắt buộc, sẽ hiện trong sổ kho y)<input data-kw maxlength="80" value="'+esc(kat.wish)+'" placeholder="Ví dụ: Hồi hướng bình an cho mẹ"></label><div class="rm-row">'+KAT_WISHES.map(w=>'<button data-kwt="'+esc(w)+'">'+w+'</button>').join('')+'</div>':'')
+      +'<div class="rm-row">'+(done?'<button class="rm-gold" data-ks="fold">🙏 Gấp y, đặt lên khay và đội lên đầu</button>':'<button class="rm-gold" data-ks="sew">🪡 Khâu mảnh tiếp</button>')+'</div>'
+      +'<div class="rm-row"><button data-ks="view">'+(kv.on?'🪡 Về khung may':'🧺 Nhìn kho y')+'</button><button data-ks="kho">📜 Sổ kho y</button></div><p class="rm-note">Kho y treo 9 tấm y gần nhất, trải đủ như lúc may · chạm vào tấm y hoặc Sổ kho y để xem đầy đủ.</p>'}
+    rmPanel.oninput=e=>{if(e.target.matches('[data-kw]'))kat.wish=e.target.value.slice(0,80)};
+    rmPanel.onclick=e=>{const c=e.target.closest('[data-kc]'),d=e.target.closest('[data-kd]'),s2=e.target.closest('[data-ks]'),wt=e.target.closest('[data-kwt]');if(c){kat.color=c.dataset.kc;tintUnsewn();dipTo(kat.color);render();return}if(d){kat.dieu=+d.dataset.kd;layout();return}
+      if(wt){kat.wish=wt.dataset.kwt;render();return}
+      if(s2?.dataset.ks==='kho'){openArchive('robes');return}if(s2?.dataset.ks==='view'){kv.on=!kv.on;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch];render();return}if(s2?.dataset.ks==='sew')sewNext();else if(s2?.dataset.ks==='fold'){kat.wish=String(kat.wish||'').trim().slice(0,80);kat.pieces=pieces.map(m=>m.userData.ci).join('');const cnt=[0,0,0,0];for(const ch of kat.pieces)cnt[+ch]++;kat.color=KAT_COLORS[cnt.indexOf(Math.max(...cnt))][1];kat.phase='carry';closeRoom();setCarry(true);refreshKatPill();say('🟧 Bạn đang đội y trên đầu · Bấm "Rước y" để nhiễu Phật ba vòng')}};
+    layout();strip.material.color.set(kat.color);st.onKho=drawKho;rTap(st,shelf,()=>openArchive('robes'))}
+  ROOM_BUILDERS.tinh_that=['#4a3a2a','#6b5238',roomTinhThat];
+  // ---- 3. procession: walk to the front of the terrace, then three rounds clockwise (statue on the right)
+  katPill.addEventListener('click',()=>{
+    if(kat.phase==='fetch'){fetchRobe();return}
+    if(kat.phase!=='carry')return;const start=[STATUE.x,STATUE.z+KAT_R];if(Math.hypot(mePosition.x-start[0],mePosition.z-start[1])<1){startRounds();return}if(navigateTo(...start)){pendingKathina='round';say('🟧 Đang đội y lên sân thiền…')}});
+  function startRounds(){kat.phase='round';kat.theta=0;kat.r0=Date.now();kat.lastRound=1;walkRoute.length=0;strike(98,8,.16,[[1,1],[1.48,.5],[2.3,.3]]);setTimeout(()=>strike(98,8,.14,[[1,1],[1.48,.5]]),2200);setTimeout(()=>strike(98,9,.14,[[1,1],[1.48,.5]]),4400);say('🟧 Vòng 1 · Niệm Phật · Đi chậm rãi, thở theo bước chân');refreshKatPill()}
+  // the offering, step by step: walk to the dais, lower the tray from the head to the chest, set it at the Buddha's feet, three bows with a bell each
+  const OFFER_T={walk:2.5,chest:1.4,set:1.6,bow:2.2};
+  const offerTimes=()=>{const a=OFFER_T.walk,b=a+OFFER_T.chest,c=b+OFFER_T.set,d=c+3*OFFER_T.bow;return {a,b,c,d}};
+  const v3=new THREE.Vector3(),v3b=new THREE.Vector3();
+  function updateKathina(dt){updatePetals(dt);
+    if(kat.phase==='round'){walkRoute.length=0;kat.theta=-(Date.now()-kat.r0)/1000*1.25/KAT_R;const th=kat.theta;
+      if(th<=-Math.PI*2*KAT_ROUNDS){kat.phase='offer';kat.t0=performance.now();kat.from=[mePosition.x,mePosition.z];kat.bows=0;kat.offerStep=0;say('🙏 Dâng y lên Đức Phật');refreshKatPill();return}
+      const rd=katRound();if(rd!==kat.lastRound){kat.lastRound=rd;strike(523,5,.06,[[1,1],[2.76,.3]]);say('🟧 Vòng '+rd+' · '+KAT_ROUND_WORDS[rd-1])}
+      mePosition.set(STATUE.x+Math.sin(th)*KAT_R,0,STATUE.z+Math.cos(th)*KAT_R);const hx=-Math.cos(th),hz=Math.sin(th);walkYaw=Math.atan2(hx,hz);viewYaw+=Math.atan2(Math.sin(walkYaw-viewYaw),Math.cos(walkYaw-viewYaw))*Math.min(1,dt*2);
+      if(Math.floor(Date.now()/1000)!==kat.tick){kat.tick=Math.floor(Date.now()/1000);refreshKatPill()}}
+    else if(kat.phase==='offer'){walkRoute.length=0;const u=(performance.now()-kat.t0)/1000,T=offerTimes(),[fx,fz]=kat.from,[tx,tz]=OFFER_STAND,e=Math.min(1,u/T.a),s=e*e*(3-2*e);mePosition.set(fx+(tx-fx)*s,0,fz+(tz-fz)*s);walkYaw=Math.PI;viewYaw+=Math.atan2(Math.sin(Math.PI-viewYaw),Math.cos(Math.PI-viewYaw))*Math.min(1,dt*3);
+      const robe=kat.robe;if(robe&&u>T.a&&u<=T.b){const k=(u-T.a)/OFFER_T.chest,q=k*k*(3-2*k);robe.position.set(0,2.12-.82*q,-.42*q)}/* from the head down to the chest, held out in front */
+      if(robe&&u>T.b&&kat.offerStep===0){kat.offerStep=1;robe.getWorldPosition(v3);me.remove(robe);scene.add(robe);robe.position.copy(v3);robe.rotation.set(0,0,0);kat.robeFrom=v3.clone();v3b.set(STATUE.x,TERRACE_TOP+.56,STATUE.z+1.62);shrine.localToWorld(v3b);kat.robeTo=v3b.clone()}
+      if(robe&&kat.offerStep===1){const k=Math.min(1,(u-T.b)/OFFER_T.set),q=k*k*(3-2*k);robe.position.lerpVectors(kat.robeFrom,kat.robeTo,q);robe.position.y+=Math.sin(q*Math.PI)*.15;robe.scale.setScalar(.9+.15*q)}
+      if(u>T.c){const b=Math.floor((u-T.c)/OFFER_T.bow);if(b<3&&b>=kat.bows){kat.bows=b+1;strike(196,5,.1)}}
+      if(u>T.d&&!kat.placed){kat.placed=true;placeRobe()}}
+    else if(kat.phase==='follow')updateFollow(dt);
+    else if(kat.phase==='idle'||kat.phase==='done'){/* nothing */}
+    if((kat.phase==='round'||kat.phase==='follow')&&Math.floor(Date.now()/1000)!==kat.tick2){kat.tick2=Math.floor(Date.now()/1000);refreshKatPill()}}
+  function kathinaPose(){if(kat.phase==='round'||kat.phase==='carry'||kat.phase==='follow'||kat.phase==='return'){me.rotation.y=walkYaw-Math.PI;}
+    if(kat.phase==='offer'){const T=offerTimes(),u=(performance.now()-kat.t0)/1000-T.c;me.rotation.y=0;me.rotation.x=u>0&&u<3*OFFER_T.bow?-Math.sin((u%OFFER_T.bow)/OFFER_T.bow*Math.PI)*.55:0}else me.rotation.x=0}
+  // ---- 4. offer: the robe rests at the Buddha's feet, saved for everyone; then step back to a cushion
+  async function placeRobe(){if(kat.robe){scene.remove(kat.robe);kat.robe=null}const now=new Date();const row={id:'local-'+Date.now(),color:kat.color,pieces:kat.pieces,dieu:kat.dieu,wish:kat.wish,name:guestName(),created_at:now.toISOString(),pendingKho:true};kat.mine={name:row.name,t:now.getTime()};kat.pendingRow=row;katRows.unshift(row);drawDais();/* chỉ lưu khi y đã vào kho (saveRobeToKho) */
+    say('🙏 Đã dâng y dưới chân tượng Phật · Mời bạn ngồi niệm năm phút');
+    kat.phase='chant';kat.placed=false;refreshKatPill();try{requestSeat(chooseSeat())}catch(e){}startChant();
+  }
+  // Y vào kho mới lưu (Túi An Yên + kho chung). Chưa vào kho mà tắt trang / mất kết nối thì tấm y bị bỏ.
+  async function saveRobeToKho(){const row=kat.pendingRow;if(!row)return;kat.pendingRow=null;row.pendingKho=false;katRows=katRows.filter(r=>r!==row);katKho.push({name:row.name,t:Date.now()});drawDais();
+    window.__bagTake&&window.__bagTake('robes',row,true);
+    if(katDb){try{const base={color:row.color,dieu:row.dieu,name:row.name},tries=[{...base,pieces:row.pieces,wish:row.wish},{...base,pieces:row.pieces},base];for(const t of tries){const {error}=await katDb.from('anyen_kathina_robes').insert(t);if(!error){loadRobes();break}}}catch(e){}}}
+  const guestName=()=>{try{return String(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name||'Khách Yên').slice(0,24)}catch(e){return 'Khách Yên'}};
+  // ---- 5. five minutes of recitation and silence
+  const RECITE={pali:['Namo tassa Bhagavato Arahato Sammāsambuddhassa','Namo tassa Bhagavato Arahato Sammāsambuddhassa','Namo tassa Bhagavato Arahato Sammāsambuddhassa','Kính lễ Đức Thế Tôn, bậc A-la-hán, đấng Chánh Biến Tri.']};
+  function renderChant(){const m=Math.floor(kat.chantLeft/60),s=String(kat.chantLeft%60).padStart(2,'0'),lines=RECITE.pali;
+    katPanel.innerHTML='<div class="fl-head"><strong>🙏 Niệm sau khi dâng y · '+m+':'+s+'</strong></div><div class="kt-recite">'+lines.map(l=>'<div>'+l+'</div>').join('')+'</div>'
+      +'<p class="fl-note">Đọc thầm ba lần, rồi ngồi yên lặng theo dõi hơi thở. Mỗi phút có một tiếng chuông.</p><div class="fl-row"><button type="button" data-kt="end" class="kt-quiet">Kết thúc sớm</button></div>'}
+  function startChant(){kat.chantLeft=KAT_CHANT_SEC;window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));katPanel.hidden=false;document.body.classList.add('kat-chant');renderChant();strike(196,7,.12);
+    clearInterval(kat.chantTimer);kat.chantTimer=setInterval(()=>{kat.chantLeft--;if(kat.chantLeft>0&&kat.chantLeft%60===0)strike(196,7,.1);if(kat.chantLeft<=0){endChant(false);return}renderChant()},1000)}
+  function endChant(early){clearInterval(kat.chantTimer);kat.phase='fetch';document.body.classList.remove('kat-chant');strike(98,9,.14,[[1,1],[1.48,.5]]);
+    katPanel.innerHTML='<div class="fl-head"><strong>🟧 Hồi hướng</strong><button type="button" data-kt="close">✕ Đóng</button></div><p class="kt-recite"><span>Nguyện công đức dâng y này lan tỏa đến muôn loài, cho mọi người được bình an, cho Phật pháp được trường tồn.</span></p>'+(kat.wish?'<p class="kt-recite"><span>'+String(kat.wish).replace(/[&<>"']/g,'')+'</span></p>':'')+'<p class="fl-note">'+(early?'Bạn đã kết thúc niệm sớm. ':'')+'Mời bạn thỉnh y, đội y về kho trong Tịnh thất.</p><div class="fl-row"><button type="button" class="fl-gold" data-kt="fetch">🟧 Thỉnh y về kho</button></div>';
+    katPanel.hidden=false;say('🙏 Hồi hướng · Mời thỉnh y về kho');refreshKatPill()}
+  // ---- 6. the leader carries the robe back to the robe store in the Tịnh thất
+  const katMine=r=>kat.mine&&r.name===kat.mine.name&&Math.abs(new Date(r.created_at).getTime()-kat.mine.t)<20000;
+  const katKho=[];const katInKho=r=>katKho.some(q=>q.name===r.name&&Math.abs(new Date(r.created_at).getTime()-q.t)<20000);
+  function fetchRobe(){if(kat.phase!=='fetch')return;standUpForTravel();kat.phase='return';if(kat.mine)katKho.push({...kat.mine});drawDais();setCarry(true);refreshKatPill();strike(196,4,.08);
+    if(navigateTo(...TINH_THAT.door)){pendingKathina='kho';say('🟧 Đội y về kho trong Tịnh thất…')}else arriveKho()}
+  function arriveKho(){if(kat.phase!=='return')return;setCarry(false);saveRobeToKho();kat.phase='done';refreshKatPill();strike(98,9,.12,[[1,1],[1.48,.5]]);say('🟧 Tấm y đã vào kho y · Nghi thức dâng y viên mãn');closeKatPanel();walkYaw=viewYaw=TINH_THAT.rot+Math.PI;setTimeout(()=>openRoom(TINH_THAT),500)}
+  // ---- 7. walking together: guests who see a procession can join it; each follower keeps a place behind the leader
+  const myUid=()=>window.anyenUid||'me';
+  function katLeaders(){return Object.entries(katPeers).filter(([id,p])=>p&&p.kr>0&&Date.now()-p.kr<KAT_ROUND_SEC*1000+30000)}
+  function refreshJoin(){const free=(kat.phase==='idle'||kat.phase==='done')&&!bayMode&&document.body.classList.contains('immersive');const L=free?katLeaders()[0]:null;katJoin.hidden=!L;if(L){katJoin.textContent='🟧 '+String(L[1].name||'Khách Yên').slice(0,24)+' đang rước y nhiễu Phật · Chạm để cùng đi';katJoin.dataset.leader=L[0]}}
+  katJoin.addEventListener('click',()=>{const id=katJoin.dataset.leader;if(!id||!katPeers[id])return;standUpForTravel();kat.leader=id;kat.kj=Date.now();kat.phase='join';katJoin.hidden=true;refreshKatPill();
+    const p=[STATUE.x,STATUE.z+KAT_R+1.2];if(Math.hypot(mePosition.x-p[0],mePosition.z-p[1])<1.5){kat.phase='follow';say('🟧 Cùng nhiễu Phật · đi sau người đội y');return}if(navigateTo(...p)){pendingKathina='follow';say('🟧 Đang đến đoàn rước y…')}else{kat.phase='idle';refreshKatPill()}});
+  function startFollow(){if(kat.phase!=='join')return;kat.phase='follow';refreshKatPill();say('🟧 Cùng nhiễu Phật · đi sau người đội y, giữ khoảng cách')}
+  function followRank(){const me0={id:myUid(),kj:kat.kj};const list=[me0,...Object.entries(katPeers).filter(([id,p])=>p&&p.kf===kat.leader&&id!==me0.id).map(([id,p])=>({id,kj:p.kj||0}))];list.sort((a,b)=>a.kj-b.kj||(a.id<b.id?-1:1));return list.findIndex(x=>x.id===me0.id)}
+  function updateFollow(dt){const L=katPeers[kat.leader];walkRoute.length=0;
+    if(!L||!(L.kr>0)){endFollow();return}
+    const thL=Math.atan2(L.x-STATUE.x,L.z-STATUE.z),target=thL+(followRank()+1)*KAT_GAP;/* behind the leader: the procession turns with decreasing angle */
+    const dx=mePosition.x-STATUE.x,dz=mePosition.z-STATUE.z;let a=Math.atan2(dx,dz),r=Math.hypot(dx,dz);const da=Math.atan2(Math.sin(target-a),Math.cos(target-a)),maxA=2.3*dt/KAT_R;a+=Math.max(-maxA,Math.min(maxA,da));r+=Math.max(-1.5*dt,Math.min(1.5*dt,KAT_R-r));
+    mePosition.set(STATUE.x+Math.sin(a)*r,0,STATUE.z+Math.cos(a)*r);walkYaw=Math.atan2(-Math.cos(a),Math.sin(a));viewYaw+=Math.atan2(Math.sin(walkYaw-viewYaw),Math.cos(walkYaw-viewYaw))*Math.min(1,dt*2)}
+  function endFollow(){const k=Math.max(0,followRank());kat.phase='idle';kat.leader='';kat.kj=0;refreshKatPill();say('🙏 Người dẫn đầu đang dâng y · Mời bạn lần lượt ngồi tọa thiền');
+    setTimeout(()=>{try{requestSeat(chooseSeat())}catch(e){}},600+k*1600)}
+  window.addEventListener('anyen-peers',e=>{katPeers=e.detail||{};refreshJoin()});setInterval(refreshJoin,3000);
+  // ---- 8. while a procession goes round, a few petals drift down over the terrace
+  const PETALS=40,petalMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(.07,.05),new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}),PETALS);
+  {const cols=['#f2c94c','#f6b6c8','#f4e2b9','#e9a23b'];for(let i=0;i<PETALS;i++)petalMesh.setColorAt(i,new THREE.Color(cols[i%cols.length]));petalMesh.instanceColor.needsUpdate=true}
+  petalMesh.visible=false;petalMesh.frustumCulled=false;scene.add(petalMesh);const petalState=Array.from({length:PETALS},(_,i)=>({a:Math.random()*Math.PI*2,r:2+Math.random()*7,h:Math.random()*6,s:.25+Math.random()*.3,sp:Math.random()*6}));const ptM=new THREE.Matrix4(),ptQ=new THREE.Quaternion(),ptE=new THREE.Euler(),ptV=new THREE.Vector3(),ptS=new THREE.Vector3(1,1,1);
+  function updatePetals(dt){const on=kat.phase==='round'||katLeaders().length>0;petalMesh.visible=on;if(!on)return;const t=performance.now()/1000,base=HILL.top+TERRACE_TOP;
+    petalState.forEach((p,i)=>{p.h-=p.s*dt;if(p.h<0){p.h=5+Math.random()*2;p.a=Math.random()*Math.PI*2;p.r=2+Math.random()*7}const a=p.a+Math.sin(t*.4+p.sp)*.15;ptV.set(STATUE.x+Math.sin(a)*p.r+Math.sin(t+p.sp)*.3,base+p.h,STATUE.z+Math.cos(a)*p.r);ptE.set(t*1.3+p.sp,t*.9+p.sp,0);ptQ.setFromEuler(ptE);ptM.compose(ptV,ptQ,ptS);petalMesh.setMatrixAt(i,ptM)});petalMesh.instanceMatrix.needsUpdate=true}
+  // ---- shared robes (Supabase): five minutes on the dais, then on the shelves of the robe store
+  const katDb=(typeof flowerDb!=='undefined')?flowerDb:null;let katRows=[];
+  const katAge=r=>(Date.now()-new Date(r.created_at).getTime())/1000;
+  const daisRobes=new Map();
+  function drawDais(){const on=katRows.filter(r=>katAge(r)<KAT_CHANT_SEC&&!katInKho(r)).slice(0,3),keep=new Set(on.map(r=>String(r.id)));
+    for(const [k,m] of daisRobes)if(!keep.has(k)){shrine.remove(m);daisRobes.delete(k)}
+    on.forEach((r,i)=>{const k=String(r.id);let m=daisRobes.get(k);if(!m){m=robeTray(r.color,1.05,r.pieces);shrine.add(m);daisRobes.set(k,m)}const x=[0,-.6,.6][i];m.position.set(STATUE.x+x,TERRACE_TOP+.56,STATUE.z+1.62)})}
+  async function loadRobes(){if(!katDb)return;try{const q=cols=>katDb.from('anyen_kathina_robes').select(cols).order('seq',{ascending:false}).limit(STORE_FETCH);let {data,error}=await q('id,seq,color,pieces,dieu,name,picks,created_at');if(error)({data,error}=await q('id,seq,color,pieces,dieu,name,created_at'));if(error)({data,error}=await q('id,seq,color,dieu,name,created_at'));if(!error&&data){data=pickNine(data);const local=katRows.filter(r=>String(r.id).startsWith('local-')&&(r.pendingKho||katAge(r)<20));katRows=[...local.filter(l=>!data.some(d=>d.name===l.name&&Math.abs(new Date(d.created_at)-new Date(l.created_at))<20000)),...data];drawDais();if(room&&room.onKho)room.onKho()}}catch(e){}}
+  setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadRobes();else drawDais()},12000);loadRobes();
+  window.addEventListener('anyen-kathina',openKathinaIntro);window.addEventListener('anyen-3d-exit',()=>{closeKatPanel();katJoin.hidden=true;if(kat.phase==='chant'){clearInterval(kat.chantTimer);document.body.classList.remove('kat-chant')}if(['chant','fetch','return','follow','join'].includes(kat.phase)){setCarry(false);kat.phase='done';kat.leader='';refreshKatPill()}});
+  window.__ttHit=(x,z)=>rectHit(TINH_THAT.x,TINH_THAT.z,TINH_THAT.rot,TINH_THAT.W,TINH_THAT.D,x,z,.3);
+  addFadeable(TINH_THAT.group,TINH_THAT.x,TINH_THAT.z,4);
+  // 3.21: Nhà gốm, theo gốm Chăm Bàu Trúc: không bàn xoay, không khuôn, không men, nung lộ thiên.
+  // Trong nhà: nhào đất, rắc cát lên đôn gỗ, đi lùi quanh đôn sáu vòng để vuốt thân gốm, chuốt láng, khắc hoa văn, phơi nắng.
+  // Đội gốm ra bãi nung bên hông nhà (phía rộng hơn): củi, rơm, trấu, lửa một phút (thực tế 4–6 giờ), phun nước tạo màu.
+  // Gốm lưu trên Supabase (anyen_pottery, giữ 36 chiếc gần nhất cho kệ 6 × 6): trong phút nung mọi khách thấy lửa khói, sau đó gốm lên kệ cạnh bãi nung.
+  const GOM_SHAPES=[{name:'Lu nước',pts:[[0,0],[.16,0],[.23,.07],[.28,.19],[.26,.31],[.17,.4],[.13,.43],[.15,.46]]},
+    {name:'Hũ',pts:[[0,0],[.12,0],[.17,.05],[.19,.15],[.17,.24],[.12,.27],[.115,.3],[.13,.31]]},
+    {name:'Bình cổ cao',pts:[[0,0],[.1,0],[.15,.06],[.17,.15],[.13,.25],[.065,.33],[.05,.43],[.075,.49]]},
+    {name:'Đèn gốm',pts:[[0,0],[.15,0],[.17,.04],[.17,.15],[.145,.27],[.09,.36],[.035,.41],[.012,.43],[0,.435]]}];
+  const GOM_TOOLS=[['Que tre','vạch chéo'],['Răng lược','sóng nước'],['Vỏ sò','vảy sò']];
+  const GOM_FIRE_SEC=60,GOM_ROUNDS=6,GOM_DRY_SEC=10;
+  const GOM_FIRED=[['đỏ hồng','#b8644c'],['vàng đỏ','#c4844c'],['đỏ cam','#bf6f45'],['nâu hồng','#a8644e']];
+  function gomProfile(shape,frac){const pts=GOM_SHAPES[shape].pts,H=pts[pts.length-1][1];if(frac>=.999)return pts;const cut=Math.max(.02,H*frac),out=[];
+    for(let i=0;i<pts.length;i++){const p=pts[i];if(p[1]<=cut){out.push(p);continue}const q=pts[i-1],u=(cut-q[1])/(p[1]-q[1]||1);out.push([q[0]+(p[0]-q[0])*u,cut]);break}
+    if(out.length<2)out.push([pts[1][0],cut]);return out}
+  const gomGeo=(shape,frac,seg=28)=>GL(gomProfile(shape,frac),seg);
+  // Texture: u runs round the pot, v from foot (bottom of canvas) to lip (top). Stage: wet, dry or fired (hỏa biến from the seed).
+  function gomCanvas(shape,pattern,seed,stage){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d');
+    const rng=seededRandom(seed*7+3),fired=stage==='fired',base=fired?GOM_FIRED[seed%GOM_FIRED.length][1]:stage==='dry'?'#b39479':'#7f604c';c.fillStyle=base;c.fillRect(0,0,256,128);
+    if(fired){for(let k=0,n=4+Math.floor(rng()*4);k<n;k++){const x=rng()*256,y=rng()*128,r=18+rng()*50,g=c.createRadialGradient(x,y,0,x,y,r),a=.35+rng()*.45;g.addColorStop(0,'rgba(38,32,29,'+a+')');g.addColorStop(1,'rgba(38,32,29,0)');c.fillStyle=g;c.fillRect(0,0,256,128)}
+      for(let k=0;k<3;k++){const x=rng()*256,y=rng()*128,r=20+rng()*30,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba(226,160,128,.35)');g.addColorStop(1,'rgba(226,160,128,0)');c.fillStyle=g;c.fillRect(0,0,256,128)}}
+    else{for(let k=0;k<60;k++){c.fillStyle='rgba(255,240,220,'+(rng()*.05)+')';c.fillRect(rng()*256,rng()*128,2+rng()*6,1)}}
+    if(pattern>=0){const ink=fired?'rgba(42,26,18,.6)':'rgba(48,32,22,.55)',hi='rgba(255,232,205,.22)';c.lineWidth=1.6;
+      const stroke=fn=>{c.strokeStyle=hi;c.save();c.translate(0,1.2);fn();c.restore();c.strokeStyle=ink;fn()};
+      if(pattern===0)stroke(()=>{c.beginPath();for(let x=0;x<256;x+=9){c.moveTo(x,42);c.lineTo(x+6,52);c.moveTo(x+6,56);c.lineTo(x,66)}c.stroke()});
+      else if(pattern===1)stroke(()=>{for(let i=0;i<4;i++){c.beginPath();for(let x=0;x<=256;x+=2){const y=44+i*6+Math.sin(x/256*Math.PI*2*6)*3.5;x?c.lineTo(x,y):c.moveTo(x,y)}c.stroke()}});
+      else stroke(()=>{for(let r=0;r<3;r++)for(let x=(r%2)*8;x<264;x+=16){c.beginPath();c.arc(x,42+r*8,7,0,Math.PI);c.stroke()}});
+      c.strokeStyle=ink;c.lineWidth=1.2;c.beginPath();c.moveTo(0,36);c.lineTo(256,36);c.moveTo(0,72);c.lineTo(256,72);c.stroke()}
+    if(shape===3){c.fillStyle=fired?'#1c1410':'#3b2a20';for(let r=0;r<2;r++)for(let x=(r%2)*16;x<256;x+=32){c.beginPath();c.arc(x+8,86+r*12,3.4,0,7);c.fill()}}
+    return cv}
+  function gomGlow(){const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#000';c.fillRect(0,0,256,128);c.fillStyle='#ffb35a';for(let r=0;r<2;r++)for(let x=(r%2)*16;x<256;x+=32){c.beginPath();c.arc(x+8,86+r*12,3.4,0,7);c.fill()}return cv}
+  function gomMaterial(shape,pattern,seed,stage,polish){const tex=new THREE.CanvasTexture(gomCanvas(shape,pattern,seed,stage));tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=THREE.RepeatWrapping;
+    const m=new THREE.MeshStandardMaterial({map:tex,roughness:polish?.55:.95,side:THREE.DoubleSide});
+    if(shape===3&&stage==='fired'){const g=new THREE.CanvasTexture(gomGlow());g.colorSpace=THREE.SRGBColorSpace;m.emissiveMap=g;m.emissive=new THREE.Color('#ffffff');m.emissiveIntensity=1}return m}
+  const gomDispose=(m,parent)=>{parent.remove(m);m.geometry.dispose();const mt=m.material;if(mt.map)mt.map.dispose();if(mt.emissiveMap)mt.emissiveMap.dispose();mt.dispose()};
+  const gomMesh=(r,scale=1)=>{const m=new THREE.Mesh(gomGeo(r.shape,1,16),gomMaterial(r.shape,r.pattern,r.seed,'fired',true));m.scale.setScalar(scale);return m};
+  const gom={phase:'idle',step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:0,carry:null};
+  // ---- the room: đôn gỗ in the middle, a guest bent over the clay, a shelf of the nine latest pots at the back
+  function roomXuongGom(st){st.target.set(0,.85,0);st.dist=3.5;st.pitch=.16;
+    if(gom.phase==='fire'||gom.phase==='spray'){rmHint('🔥 Gốm của bạn đang nung ngoài bãi bên hông nhà');rmPanel.innerHTML='<p>Gốm của bạn đang nằm trong lửa ở bãi nung bên hông nhà. Ra bãi nung để chờ lửa tàn và phun nước tạo màu.</p>';return}
+    if(gom.phase==='carry'){setGomCarry(false);refreshGomPill();gom.phase='room';gom.step='xong'}
+    if(gom.phase!=='room'){Object.assign(gom,{phase:'room',step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:Math.floor(Math.random()*9999)})}
+    rmHint('Nhà Chạm · gốm Chăm Bàu Trúc nặn tay, không bàn xoay · Kéo khung hình để nhìn quanh');
+    rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.32,.38,.55,12),mat('#6b4a32')),0,.275,0);const sand=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.36,.36,.02,18),mat('#d8cba8')),0,.56,0);sand.visible=false;
+    const lump=rAdd(st,new THREE.Mesh(new THREE.DodecahedronGeometry(.2,1),mat('#7f604c')),0,.72,0);lump.scale.set(1,.75,1);
+    const potMat=gomMaterial(gom.shape,-1,gom.seed,'wet',false);const pot=rAdd(st,new THREE.Mesh(gomGeo(gom.shape,.01),potMat),0,.57,0);pot.visible=false;
+    const guestColor=(()=>{try{return JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').color||'#687b48'}catch(e){return '#687b48'}})();
+    const potter=new THREE.Group();/* the guest, bent over the clay */{const body=new THREE.Mesh(new THREE.ConeGeometry(.24,.95,10),mat(guestColor));body.position.y=.48;potter.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),mat('#d9b48f'));head.position.set(0,1.02,0);potter.add(head);
+      for(const s of [-1,1]){const arm=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.42,6),mat(guestColor));arm.position.set(s*.13,.72,-.16);arm.rotation.x=.9;potter.add(arm)}}
+    st.sc.add(potter);let ang=1.9;const placePotter=()=>{potter.position.set(Math.sin(ang)*.95,0,Math.cos(ang)*.95);potter.rotation.set(0,ang,0);potter.rotateX(-.32)};placePotter();
+    const shelf=new THREE.Group();shelf.position.set(0,0,-3.05);st.sc.add(shelf);for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(4,.06,.45),mat('#4e3a2a'));b.position.y=.12+k*.44;shelf.add(b)}
+    const drawShelf=()=>{while(shelf.children.length>6)gomDispose(shelf.children[6],shelf);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,9).forEach((r,i)=>{const m=gomMesh(r,.72);m.position.set(-1.65+(i%6)*.66,.15+Math.floor(i/6)*.44,0);shelf.add(m)})};drawShelf();st.onPots=drawShelf;rTap(st,shelf,()=>openArchive('pots'));
+    let anim=null,dryT=null;
+    const setPot=frac=>{pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,frac);pot.visible=frac>0;lump.visible=frac<1;const k=Math.max(.15,1-frac);lump.scale.set(k,.75*k,k);lump.position.y=.57+.15*k};
+    const retex=stage=>{potMat.map.dispose();const t=new THREE.CanvasTexture(gomCanvas(gom.shape,['nhao','cat','dang','nan','chuot','hoavan'].includes(gom.step)?-1:gom.pattern,gom.seed,stage));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;potMat.map=t;potMat.roughness=gom.polish>=2?.55:gom.polish?.75:.95;potMat.needsUpdate=true};
+    // resume a half-made pot if the guest stepped out
+    if(['nan','chuot','hoavan','phoi','xong'].includes(gom.step)){sand.visible=true;setPot(gom.rounds/GOM_ROUNDS);retex(gom.step==='xong'?'dry':'wet')}else if(gom.step==='dang'||gom.step==='cat'){sand.visible=gom.step==='dang'}
+    st.tick.push(t=>{if(anim){const u=Math.min(1,(performance.now()-anim.t0)/anim.dur);if(anim.kind==='round'){ang=anim.a0+u*Math.PI*2;placePotter();potter.position.y=Math.abs(Math.sin(u*Math.PI*8))*.03;setPot((gom.rounds-1+u)/GOM_ROUNDS);const h=u<.5?'Hít vào…':'Thở ra…';if(anim.h!==h){anim.h=h;rmHint('🚶 Đi lùi quanh đôn · vòng '+gom.rounds+'/'+GOM_ROUNDS+' · '+h)}}
+        else if(anim.kind==='knead'){const s=1-Math.sin(u*Math.PI)*.25;lump.scale.set(1+(1-s)*.6,.75*s,1+(1-s)*.6)}
+        if(u>=1){const k=anim.kind;anim=null;if(k==='round'&&gom.rounds>=GOM_ROUNDS){gom.step='chuot';setPot(1)}render()}}});
+    st.cleanup=()=>{clearInterval(dryT);st.onPots=null};
+    const btn=(k,label,gold)=>'<button data-gm="'+k+'"'+(gold?' class="rm-gold"':'')+(anim?' disabled':'')+'>'+label+'</button>';
+    function render(){const s=gom.step;let h='';
+      if(s==='nhao')h='<p>Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.</p><div class="rm-row">'+btn('knead','👐 Nhào đất · '+gom.kneads+'/5',1)+'</div>';
+      else if(s==='cat')h='<p>Rắc một lớp cát trắng mỏng lên mặt đôn để đất không dính, rồi đặt khối đất lên.</p><div class="rm-row">'+btn('sand','🤲 Rắc cát, đặt đất lên đôn',1)+'</div>';
+      else if(s==='dang')h='<p>Chọn dáng gốm. Ở Bàu Trúc không dùng khuôn: mỗi món là một độc bản.</p><div class="rm-row">'+GOM_SHAPES.map((g,i)=>'<button data-gs="'+i+'"'+(gom.shape===i?' class="sel"':'')+'>'+g.name+'</button>').join('')+'</div><div class="rm-row">'+btn('start','🚶 Bắt đầu nặn',1)+'</div>';
+      else if(s==='nan')h='<p>Không có bàn xoay: người thợ cúi xuống, đôi tay vuốt đất, chân đi lùi quanh đôn. Mỗi vòng thân gốm cao thêm một chút. Bước theo hơi thở.</p><div class="rm-row">'+btn('round','🚶 Đi lùi một vòng · '+gom.rounds+'/'+GOM_ROUNDS,1)+'</div>';
+      else if(s==='chuot')h='<p>Chuốt láng thân gốm: vuốt bằng miếng vải ướt, rồi làm bóng bằng cật tre.</p><div class="rm-row">'+btn('polish0','💧 Vuốt vải ướt'+(gom.polish>=1?' ✓':''),!gom.polish)+btn('polish1','🎋 Làm bóng bằng cật tre',gom.polish===1)+'</div>';
+      else if(s==='hoavan')h='<p>Khắc hoa văn bằng những dụng cụ mộc mạc.</p><div class="rm-row">'+GOM_TOOLS.map((t,i)=>'<button data-gt="'+i+'"'+(gom.pattern===i?' class="sel"':'')+'>'+t[0]+' · '+t[1]+'</button>').join('')+'</div><div class="rm-row">'+btn('carve','✍️ Khắc hoa văn',1)+'</div>';
+      else if(s==='phoi')h='<p>Phơi gốm dưới nắng cho khô. <span class="rm-note">Thực tế ở Bàu Trúc gốm phơi nắng khoảng 4–6 giờ; trong Rừng Yên rút lại '+GOM_DRY_SEC+' giây.</span></p><div class="rm-row">'+(dryT?'<span class="rm-note">☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây</span>':btn('dry','☀️ Phơi nắng',1))+'</div>';
+      else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
+      rmPanel.innerHTML=h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>'}
+    render();
+    rmPanel.onclick=e=>{const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
+      const a=e.target.closest('[data-gm]')?.dataset.gm;if(a==='kho'){openArchive('pots');return}if(!a||anim)return;
+      if(a==='knead'){gom.kneads++;strike(82,.6,.1,[[1,1],[1.6,.3]]);anim={kind:'knead',t0:performance.now(),dur:600};if(gom.kneads>=5)gom.step='cat';render()}
+      else if(a==='sand'){sand.visible=true;strike(2400,.4,.012,[[1,1]]);gom.step='dang';render()}
+      else if(a==='start'){gom.step='nan';gom.rounds=0;pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,.01);render()}
+      else if(a==='round'){gom.rounds++;anim={kind:'round',t0:performance.now(),dur:4800,a0:ang};render()}
+      else if(a==='polish0'){gom.polish=Math.max(1,gom.polish);retex('wet');strike(520,.8,.02,[[1,1]]);render()}
+      else if(a==='polish1'){if(!gom.polish)return;gom.polish=2;retex('wet');strike(700,.8,.02,[[1,1]]);gom.step='hoavan';render()}
+      else if(a==='carve'){gom.step='phoi';retex('wet');strike(900,.5,.02,[[1,1],[2.2,.3]]);render()}
+      else if(a==='dry'){gom.dryLeft=GOM_DRY_SEC;dryT=setInterval(()=>{gom.dryLeft--;if(gom.dryLeft<=0){clearInterval(dryT);dryT=null;gom.step='xong';retex('dry');rmHint('☀️ Gốm mộc đã khô')}render()},1000);render()}
+      else if(a==='carry'){closeRoom();gom.phase='carry';setGomCarry(true);refreshGomPill();say('🏺 Đội gốm ra bãi nung · Chạm nút bên dưới để đi');}}}
+  // ---- the firing yard beside the workshop, on its wider side
+  const GOM_HOUSE=SENSE_HOUSES.find(h=>h.id==='xuong_gom');
+  const gomWorld=(lx,lz)=>[GOM_HOUSE.x+Math.cos(GOM_HOUSE.rot)*lx+Math.sin(GOM_HOUSE.rot)*lz,GOM_HOUSE.z-Math.sin(GOM_HOUSE.rot)*lx+Math.cos(GOM_HOUSE.rot)*lz];
+  const GOM_YARD=gomWorld(-GOM_HOUSE.W/2-5.2,-.4),GOM_STAND=gomWorld(-GOM_HOUSE.W/2-5.2,3.1),GOM_RACK=gomWorld(-GOM_HOUSE.W/2-5.2,-3.5),GOM_RACK_STAND=gomWorld(-GOM_HOUSE.W/2-5.2-2.7,-2.4);
+  const gomYard=new THREE.Group();gomYard.position.set(GOM_YARD[0],terrainHeight(...GOM_YARD),GOM_YARD[1]);gomYard.rotation.y=GOM_HOUSE.rot;scene.add(gomYard);
+  const gomFire=new THREE.Group(),gomRack=new THREE.Group(),gomFlames=[],gomSmoke=[];
+  {const parts=[],P=(geo,color,x,y,z,o={})=>{if(o.rz)geo.rotateZ(o.rz);if(o.ry)geo.rotateY(o.ry);if(o.s)geo.scale(...o.s);geo.translate(x,y,z);parts.push([geo,color])};
+    P(GC(2.05,2.15,.04,22),'#3e3833',0,.02,0);for(let k=0;k<14;k++){const a=k/14*Math.PI*2;P(new THREE.DodecahedronGeometry(.2,0),k%2?'#6c695d':'#5f5c4d',Math.cos(a)*2.2,.08,Math.sin(a)*2.2,{s:[1,.6,1]})}
+    for(let k=0;k<5;k++)P(GC(.07,.08,1.5,6),'#4a3424',-.6+k*.3,.1,0,{rz:Math.PI/2,ry:k*.15});P(GC(.06,.07,1.3,6),'#3a281c',0,.22,0,{rz:Math.PI/2,ry:Math.PI/2});
+    for(let r=0;r<2;r++)for(let k=0;k<4-r;k++)P(GC(.12,.12,1.3,7),'#6b4a32',2.9,.12+r*.22,-1+k*.26+r*.13,{rz:Math.PI/2});
+    for(let k=0;k<3;k++)P(GK(.45,.7,7),'#a8925a',-2.9,.35,-1+k*.95);/* straw and rice husk heaps */P(GC(.5,.55,.35,8),'#8a7a5a',-2.9,.17,1.9);
+    // rack for the nine latest fired pots, behind the yard
+    const rx=0,rz=-3.1;for(let k=0;k<6;k++)P(GB(3.5,.06,.45),'#4e3a2a',rx,.12+k*.5,rz);for(const x of [-1.76,1.76])for(const z of [-.2,.2])P(GB(.08,2.95,.08),'#3a2a1e',rx+x,1.47,rz+z);P(GB(3.6,.08,.08),'#3a2a1e',rx,2.95,rz-.2);
+    gomYard.add(new THREE.Mesh(mergeColored(parts),houseMat))}
+  gomYard.add(gomFire,gomRack);gomFire.visible=false;
+  {const mound=new THREE.Mesh(new THREE.ConeGeometry(1.45,1.05,12),new THREE.MeshStandardMaterial({color:'#8f7a4c',roughness:1,flatShading:true}));mound.position.y=.52;gomFire.add(mound);
+    const glow=new THREE.Mesh(new THREE.CircleGeometry(1.7,20),new THREE.MeshBasicMaterial({color:'#ff7a2a',transparent:true,opacity:.35,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.05;gomFire.add(glow);
+    for(let k=0;k<9;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(.2+(k%3)*.06,.9+(k%4)*.22,6),new THREE.MeshBasicMaterial({color:k%2?'#ffb347':'#ff7a2a',transparent:true,opacity:.85,depthWrite:false}));const a=k/9*Math.PI*2,r=.5+(k%3)*.35;f.position.set(Math.cos(a)*r,.75-r*.2,Math.sin(a)*r);f.userData={y:f.position.y,ph:k*1.7};gomFlames.push(f);gomFire.add(f)}
+    for(let k=0;k<10;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),new THREE.MeshBasicMaterial({color:'#8f8a82',transparent:true,opacity:.25,depthWrite:false}));s.userData={k};gomSmoke.push(s);gomFire.add(s)}}
+  function drawRack(){while(gomRack.children.length)gomDispose(gomRack.children[0],gomRack);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,36).forEach((r,i)=>{if(gom.hold&&gom.hold===r.seed+'|'+r.name)return;const m=gomMesh(r,.8);m.position.set(-1.45+(i%6)*.58,.155+Math.floor(i/6)*.5,-3.1);gomRack.add(m)})}
+  window.__gomHit=(x,z)=>Math.hypot(x-GOM_YARD[0],z-GOM_YARD[1])<2.4||Math.hypot(x-GOM_RACK[0],z-GOM_RACK[1])<2;
+  addFadeable(gomYard,GOM_YARD[0],GOM_YARD[1],2.2);
+  // ---- carrying, firing and the spray of colour
+  const gomPill=document.createElement('button');gomPill.type='button';gomPill.id='gomPill';gomPill.hidden=true;document.body.appendChild(gomPill);
+  const gomPanel=document.createElement('section');gomPanel.id='gomPanel';gomPanel.hidden=true;document.body.appendChild(gomPanel);
+  function refreshGomPill(){gomPill.hidden=!(gom.phase==='carry'||gom.phase==='toRack');gomPill.textContent=gom.phase==='toRack'?'🏺 Đội gốm lên kệ':'🏺 Đội gốm ra bãi nung'}
+  function setGomCarry(on){if(gom.carry){me.remove(gom.carry);gom.carry=null}if(on){gom.carry=new THREE.Mesh(gomGeo(gom.shape,1,16),gomMaterial(gom.shape,gom.pattern,gom.seed,on==='fired'?'fired':'dry',true));gom.carry.scale.setScalar(1.3);gom.carry.position.set(0,2.08,0);me.add(gom.carry)}}
+  gomPill.addEventListener('click',()=>{if(gom.phase==='toRack'){if(Math.hypot(mePosition.x-GOM_RACK_STAND[0],mePosition.z-GOM_RACK_STAND[1])<1.2){placeOnRack();return}standUpForTravel();if(navigateTo(...GOM_RACK_STAND)){pendingKathina='rack';say('🏺 Đang đội gốm tới kệ…')}return}if(gom.phase!=='carry')return;if(Math.hypot(mePosition.x-GOM_STAND[0],mePosition.z-GOM_STAND[1])<1.2){startKiln();return}standUpForTravel();if(navigateTo(...GOM_STAND)){pendingKathina='kiln';say('🏺 Đang đội gốm ra bãi nung…')}});
+  function startKiln(){if(gom.phase!=='carry')return;gom.phase='fire';setGomCarry(false);refreshGomPill();walkRoute.length=0;
+    walkYaw=Math.atan2(GOM_YARD[0]-mePosition.x,GOM_YARD[1]-mePosition.z);viewYaw=walkYaw;
+    const row={id:'local-'+Date.now(),shape:gom.shape,pattern:gom.pattern,seed:gom.seed,name:guestName(),created_at:new Date().toISOString()};gomRows.unshift(row);gom.row=row;gom.f0=performance.now();
+    if(gomDb){gomDb.from('anyen_pottery').insert({shape:row.shape,pattern:row.pattern,seed:row.seed,name:row.name}).then(({error})=>{if(!error)loadPots()},()=>{})}
+    strike(150,3,.05,[[1,1],[1.5,.3]]);gomPanel.hidden=false;renderKiln();clearInterval(gom.timer);gom.timer=setInterval(renderKiln,1000);syncGomYard()}
+  function renderKiln(){const left=Math.max(0,Math.ceil(GOM_FIRE_SEC-(performance.now()-gom.f0)/1000));
+    if(gom.phase==='fire'&&left>0){gomPanel.innerHTML='<div class="fl-head"><strong>🔥 Nung lộ thiên · 0:'+String(left).padStart(2,'0')+'</strong></div><p class="fl-note">Gốm mộc được xếp trên lớp củi, phủ rơm và trấu cho kín rồi châm lửa. Ở làng Bàu Trúc, mẻ nung lộ thiên kéo dài khoảng 4–6 giờ; trong Rừng Yên rút lại một phút.</p><p class="fl-note">Lửa và khói không đều tạo nên hỏa biến trên áo gốm: đỏ hồng, vàng đỏ, những vệt đen xám. Ngồi yên, nhìn lửa, theo dõi hơi thở.</p>';return}
+    if(gom.phase==='fire'){clearInterval(gom.timer);gom.phase='spray';gomPanel.innerHTML='<div class="fl-head"><strong>🔥 Lửa đã tàn</strong></div><p class="fl-note">Khi gốm còn nóng, người thợ phun nước để tạo màu cho áo gốm.</p><div class="fl-row"><button type="button" class="fl-gold" data-gp="spray">💧 Phun nước tạo màu</button></div>';syncGomYard();return}}
+  gomPanel.addEventListener('click',e=>{const a=e.target.closest('[data-gp]')?.dataset.gp;if(!a)return;
+    if(a==='spray'){strike(1900,1.2,.02,[[1,1],[1.3,.5]]);window.__bagTake&&window.__bagTake('pots',gom.row,true);const r=gom.row,fired=GOM_FIRED[r.seed%GOM_FIRED.length][0];gom.phase='toRack';gom.step='nhao';gom.hold=r.seed+'|'+r.name;setGomCarry('fired');refreshGomPill();
+      gomPanel.innerHTML='<div class="fl-head"><strong>🏺 '+GOM_SHAPES[r.shape].name+' · áo gốm '+fired+'</strong><button type="button" data-gp="close">✕ Đóng</button></div><div class="gom-preview"></div><p class="fl-note">Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Đội gốm lên đầu, mang tới kệ cạnh bãi nung (kệ 6 × 6 = 36 chỗ; khi đầy, chiếc cũ nhất nhường chỗ).</p><div class="fl-row"><button type="button" class="fl-gold" data-gp="rack">🏺 Đội gốm lên kệ</button></div>';
+      const img=gomSnapshot(r);if(img)gomPanel.querySelector('.gom-preview').appendChild(img);drawRack();say('🏺 Gốm nung xong · Đội gốm lên kệ');return}
+    if(a==='rack'){gomPanel.hidden=true;gomPill.click();return}
+    if(a==='close')gomPanel.hidden=true});
+  let gomSnapR=null;
+  function gomSnapshot(r){try{const R=gomSnapR||(gomSnapR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true}));R.setPixelRatio(1);R.setSize(360,300,false);R.outputColorSpace=THREE.SRGBColorSpace;R.toneMapping=THREE.ACESFilmicToneMapping;
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff1d6','#3a2c20',1.5));const k=new THREE.DirectionalLight('#ffd9a8',2.2);k.position.set(2,3,3);sc.add(k);const m=gomMesh(r,1);sc.add(m);const H=GOM_SHAPES[r.shape].pts.at(-1)[1];
+      const cam=new THREE.PerspectiveCamera(30,360/300,.01,10);cam.position.set(0,H*.75,1.55);cam.lookAt(0,H*.45,0);R.render(sc,cam);const img=new Image();img.src=R.domElement.toDataURL('image/png');img.className='gom-img';m.geometry.dispose();return img}catch(e){return null}}
+  function placeOnRack(){if(gom.phase!=='toRack')return;gom.phase='placing';refreshGomPill();walkRoute.length=0;walkYaw=Math.atan2(GOM_RACK[0]-mePosition.x,GOM_RACK[1]-mePosition.z);viewYaw=walkYaw;
+    const pot=gom.carry;gom.carry=null;me.remove(pot);const from=new THREE.Vector3(mePosition.x,groundHeight(mePosition.x,mePosition.z)+2.08,mePosition.z),slot=new THREE.Vector3(-1.45,.155,-3.1);gomYard.localToWorld(slot);pot.scale.setScalar(.8);scene.add(pot);
+    const t0=performance.now(),step=()=>{const u=Math.min(1,(performance.now()-t0)/1600),e=u*u*(3-2*u);pot.position.lerpVectors(from,slot,e);pot.position.y+=Math.sin(u*Math.PI)*.35;if(u<1){requestAnimationFrame(step);return}
+      scene.remove(pot);pot.geometry.dispose();gom.hold=null;gom.phase='idle';drawRack();strike(330,2.2,.05,[[1,1],[2.1,.3]]);say('🏺 Gốm của bạn đã nằm trên kệ, mọi khách đều thấy');refreshGomPill()};requestAnimationFrame(step)}
+  // ---- shared pots (Supabase): a minute in the fire for everyone to see, then on the rack
+  const gomDb=(typeof flowerDb!=='undefined')?flowerDb:null;let gomRows=[];
+  const gomAge=r=>(Date.now()-new Date(r.created_at).getTime())/1000;
+  let gomFiring=null;
+  function syncGomYard(){const on=gomRows.some(r=>gomAge(r)<GOM_FIRE_SEC)||gom.phase==='fire';if(on!==gomFiring){gomFiring=on;gomFire.visible=on;drawRack()}}
+  async function loadPots(){if(!gomDb)return;try{let {data,error}=await gomDb.from('anyen_pottery').select('id,seq,shape,pattern,seed,name,picks,created_at').order('seq',{ascending:false}).limit(STORE_FETCH);if(!error&&data)data=pickNine(data);
+      if(!error&&data){const local=gomRows.filter(r=>String(r.id).startsWith('local-')&&gomAge(r)<GOM_FIRE_SEC+20&&!data.some(d=>d.seed===r.seed&&d.name===r.name));gomRows=[...local,...data];gomFiring=null;syncGomYard();if(room&&room.onPots)room.onPots()}}catch(e){}}
+  setInterval(()=>{if(document.body.classList.contains('immersive')&&!bayMode&&!document.hidden)loadPots()},12000);loadPots();
+  let gomTick=0;
+  function updateGom(dt){const t=performance.now()/1000;gomTick+=dt;if(gomTick>1){gomTick=0;syncGomYard()}
+    if(!gomFire.visible)return;for(const f of gomFlames){const u=f.userData;f.scale.set(1,.75+Math.sin(t*7+u.ph)*.25+Math.sin(t*13+u.ph*2)*.12,1);f.position.y=u.y+Math.sin(t*5+u.ph)*.05}
+    for(const s of gomSmoke){const u=((t*.18+s.userData.k/gomSmoke.length)%1);s.position.set(Math.sin(t*.4+s.userData.k)*.4*u,1.1+u*5,Math.cos(t*.3+s.userData.k)*.3*u-u*.8);s.scale.setScalar(.6+u*2.2);s.material.opacity=.28*(1-u)}}
+  window.addEventListener('anyen-3d-exit',()=>{gomPanel.hidden=true;if(gom.phase==='carry'){setGomCarry(false);gom.phase='room';gom.step='xong';refreshGomPill()}if(gom.phase==='toRack'){setGomCarry(false);gom.hold=null;gom.phase='idle';drawRack();refreshGomPill()}});
+  // 3.22: Sổ lưu niệm. Kệ, bệ và kho chỉ bày tượng trưng những món gần nhất; chạm vào thì mở danh sách đầy đủ.
+  // Mỗi kho trên Supabase giữ 66 món gần nhất, đầy thì xoá dần từ món cũ nhất.
+  const ARCH_MAX=69;
+  const archPanel=document.createElement('section');archPanel.id='archPanel';archPanel.hidden=true;document.body.appendChild(archPanel);
+  const archDate=t=>{try{const d=new Date(t);return d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+  const archEsc=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ARCH={robes:{title:'🟧 Kho y',table:'anyen_kathina_robes',cols:['id,seq,color,pieces,wish,dieu,name,picks,created_at','id,seq,color,pieces,wish,dieu,name,created_at','id,seq,color,pieces,dieu,name,created_at','id,seq,color,dieu,name,created_at'],local:()=>katRows,unit:'tấm y',
+      row:r=>{const ps=String(r.pieces||'');const sw=ps.length>1?ps.split('').map(i=>'<i style="background:'+katHex(i)+'"></i>').join(''):'<i style="background:'+archEsc(r.color)+'"></i>';return '<span class="ar-sw">'+sw+'</span><span>'+(Number(r.dieu)||5)+' điều'+(ps&&new Set(ps).size>1?' · nhiều màu':' · '+((KAT_COLORS.find(c=>c[1]===r.color)||[''])[0]))+'</span>'+(r.wish?'<em class="ar-wish">“'+archEsc(r.wish)+'”</em>':'')}},
+    flowers:{title:'💐 Hoa đã dâng',table:'anyen_flower_offerings',cols:['id,seq,flowers,layout,yaw,name,picks,created_at','id,seq,flowers,layout,name,created_at'],local:()=>[],unit:'bó hoa',
+      row:r=>'<span class="ar-ic">'+(r.flowers||[]).map(f=>(FLOWER_KINDS[f]||{}).icon||'').join('')+'</span><span>'+((BOUQUET_LAYOUTS[r.layout]||'').replace(/^\S+\s/,'Bó '))+' · '+(r.flowers||[]).length+' bông</span>'},
+    aromas:{title:'🫙 Kho Lọ Ước & Túi thơm',table:'anyen_aroma_gifts',cols:['id,seq,form,aromas,drops,title,wish,name,picks,created_at'],local:()=>aromaRows,unit:'món',
+      row:r=>'<span class="ar-sw">'+(r.aromas||[]).map(id=>'<i style="background:'+((AR(id)||{}).c||'#ccc')+';border-radius:50%"></i>').join('')+'</span><span>'+(r.form==='tui'?'👝 Túi thơm':'🫙 Lọ Ước')+' · '+archEsc(r.title||'')+'</span>'+(r.wish?'<em class="ar-wish">“'+archEsc(r.wish)+'”</em>':'')},
+    pots:{title:'🏺 Kho gốm',table:'anyen_pottery',cols:['id,seq,shape,pattern,seed,name,picks,created_at','id,seq,shape,pattern,seed,name,created_at'],local:()=>gomRows,unit:'món gốm',
+      row:r=>'<span class="ar-sw"><i style="background:'+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][1]+';border-radius:50%"></i></span><span>'+(GOM_SHAPES[r.shape]||GOM_SHAPES[0]).name+' · '+(GOM_TOOLS[r.pattern]||GOM_TOOLS[0])[1]+' · áo gốm '+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][0]+'</span>'}};
+  async function openArchive(kind){const A=ARCH[kind];if(!A)return;archPanel.hidden=false;archPanel.innerHTML='<div class="fl-head"><strong>'+A.title+'</strong><button type="button" data-ar="close">✕ Đóng</button></div><p class="fl-note">Đang mở sổ…</p>';
+    let rows=null;if(flowerDb){for(const c of A.cols){try{const {data,error}=await Promise.race([flowerDb.from(A.table).select(c).order('seq',{ascending:false}).limit(ARCH_MAX),new Promise(r=>setTimeout(()=>r({error:'timeout'}),5000))]);if(!error&&data){rows=data;break}if(error==='timeout')break}catch(e){}}}
+    if(!rows)rows=A.local().slice(0,ARCH_MAX);archRows={kind,rows};
+    archPanel.innerHTML='<div class="fl-head"><strong>'+A.title+' · '+rows.length+' '+A.unit+'</strong><button type="button" data-ar="close">✕ Đóng</button></div>'
+      +'<p class="fl-note">Trong rừng chỉ bày tượng trưng những món gần nhất. Kho giữ '+ARCH_MAX+' món: 9 món mới nhất luôn được giữ, còn lại món được mang về nhiều sẽ ở lâu hơn, món ít được chọn nhất rời kho trước. Chạm 🎒 để mang một món về Túi An Yên.</p>'
+      +(rows.length?'<ol class="ar-list">'+rows.map((r,i)=>{const src=kind+':'+r.id,has=window.anyenBagHas&&window.anyenBagHas(src);return '<li>'+A.row(r)+'<b>'+archEsc(r.name||'Khách Yên')+'</b><small>'+archDate(r.created_at)+(Number(r.picks)?' · 🎒 '+Number(r.picks):'')+'</small><button type="button" data-take="'+i+'"'+(has?' disabled':'')+'>'+(has?'✓ Đã có trong túi':'🎒 Mang về túi')+'</button></li>'}).join('')+'</ol>':'<p class="fl-note">Chưa có món nào.</p>')}
+  let archRows=null;
+  archPanel.addEventListener('click',e=>{if(e.target.closest('[data-ar="close"]')){archPanel.hidden=true;return}const t=e.target.closest('[data-take]');if(!t||!archRows)return;const r=archRows.rows[+t.dataset.take];if(!r)return;
+    const kind=archRows.kind;bagTake(kind,r,false);t.disabled=true;t.textContent='✓ Đã có trong túi';
+    if(flowerDb&&!String(r.id).startsWith('local-')&&!String(r.id).startsWith('t'))flowerDb.rpc('anyen_take',{kind,item:r.id}).then(()=>{},()=>{})});
+  window.addEventListener('anyen-bag-note',e=>{const h=document.getElementById('zenHint');if(h)h.textContent=String(e.detail||'')});
+  // Put a made item into the Túi An Yên (own = made by this guest, straight after finishing it).
+  function bagTake(kind,r,own){const mk=kind==='robes'?'robe':kind==='flowers'?'flower':kind==='aromas'?'aroma':'pot';let label='',data={};
+    if(mk==='robe'){label=(Number(r.dieu)||5)+' điều';data={color:r.color,pieces:r.pieces||'',dieu:r.dieu}}
+    else if(mk==='flower'){label=(r.flowers||[]).length+' bông · '+String(BOUQUET_LAYOUTS[r.layout]||'').replace(/^\S+\s/,'');data={flowers:r.flowers,layout:r.layout}}
+    else if(mk==='aroma'){label=(r.form==='tui'?'Túi thơm':'Lọ Ước')+' · '+String(r.title||'');data={form:r.form,aromas:r.aromas,drops:r.drops,title:r.title,wish:r.wish}}
+    else{label=(GOM_SHAPES[r.shape]||GOM_SHAPES[0]).name+' · áo gốm '+GOM_FIRED[(Number(r.seed)||0)%GOM_FIRED.length][0];data={shape:r.shape,pattern:r.pattern,seed:r.seed}}
+    window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:mk,src:own?'':kind+':'+r.id,label,maker:r.name||'',data,own}}))}
+  window.__bagTake=bagTake;
+  window.addEventListener('anyen-3d-exit',()=>{archPanel.hidden=true});
+  // taps in the forest: the bouquets before the statue, the robes at its feet, the pottery rack and firing yard
+  window.__archTap=ray=>{const hit=(objs)=>objs.length&&ray.intersectObjects(objs,true).length;
+    if(hit([...offeredShown.values()].map(o=>o.g)))return openArchive('flowers'),true;
+    if(hit([...daisRobes.values()]))return openArchive('robes'),true;
+    if(hit([gomRack]))return openArchive('pots'),true;return false};
+  function bayHeld(on){try{if(kat.robe)kat.robe.visible=on;if(carriedMesh)carriedMesh.visible=on}catch(e){}}
+  function enterBay(){
+    if(bayMode)return;window.anyenPendingBay=false;saveForestState();setVillageActive(false);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'bay'}}));
+    bayStash={pos:mePosition.clone(),bg:scene.background,fog:scene.fog,yaw:viewYaw,pitch:walkPitch,far:camera.far,hemi:[hemiLight.color.clone(),hemiLight.groundColor.clone(),hemiLight.intensity],sun:[sun.color.clone(),sun.intensity,sun.position.clone()]};
+    if(meActivity==='sit')document.getElementById('realtimeSit')?.click();if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();clearPendingActions();
+    // đồ đang cầm/đội ở rừng (khay y Kathina, bó hoa) không mang theo lên tàu; về rừng thì hiện lại
+    bayHeld(false);
+    bayMode=true;walkRoute.length=0;pendingSeat=null;pendingBoat=false;wishDestination=null;walkingKeys.clear();
+    camera.far=2600;camera.updateProjectionMatrix();{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - VỊNH YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Về Làng Yên';ex.setAttribute('aria-label','Rời vịnh, về trang chính Làng Yên')}}scene.fog=null;viewYaw=0;walkPitch=.05;bayGroup.visible=true;document.body.classList.add('yen-bay');
+    const applyLight=d=>{const m=d.map;scene.background=new THREE.Color(m.sky_color);scene.fog=new THREE.FogExp2(m.fog_color,Number(m.fog_density));hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);sun.position.set(...m.sun_position)};
+    const ready=d=>{if(!bayMode)return;if(!bayBuilt)buildBay(d);restoreBayState();applyLight(d);updateBay(0);camera.position.copy(bayCam);refreshBayHud();let seenO=false;try{seenO=!!localStorage.getItem(BAY_OUTFIT_SEEN)}catch(e){seenO=true}if(!seenO)setTimeout(openBayOutfit,500);bayCaption('⛵ Du thuyền Yên · Vịnh Hạ Long · Chạm mặt nước để tàu đi tới, vuốt để nhìn quanh',6500)};
+    if(bayData)ready(bayData);else{bayCaption('Đang tải bản đồ vịnh…',8000);loadBayData().then(ready).catch(()=>bayCaption('Chưa tải được bản đồ vịnh, vui lòng thử lại',6000))}
+    document.getElementById('zenHint').textContent='⛵ Vịnh Hạ Long · Chạm mặt nước để tàu đi tới';
+  }
+  function exitBay(){
+    if(!bayMode)return;if(bayIsland)islandBoardNow();saveBayState();dropPause();setVillageActive(true);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:document.body.classList.contains('immersive')?'forest':'out'}}));if(meActivity==='sit')document.getElementById('realtimeSit')?.click();
+    bayMode=false;bayHeld(true);document.body.classList.remove('bay-clean');SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - RỪNG YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
+    if(bayStash){mePosition.copy(bayStash.pos);scene.background=bayStash.bg;scene.fog=bayStash.fog;viewYaw=bayStash.yaw;walkPitch=bayStash.pitch;camera.far=bayStash.far;camera.updateProjectionMatrix();
+      hemiLight.color.copy(bayStash.hemi[0]);hemiLight.groundColor.copy(bayStash.hemi[1]);hemiLight.intensity=bayStash.hemi[2];sun.color.copy(bayStash.sun[0]);sun.intensity=bayStash.sun[1];sun.position.copy(bayStash.sun[2]);bayStash=null}
+    window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
+  }
+  window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
+  // ---- Đang dở hoạt động (đi thuyền hồ sen, đội y / nghi thức dâng y): không thoát trang, không sang không gian khác.
+  // Bấm "Kết thúc ngay" thì hoạt động hoàn tất tức thì (thuyền về bến; y được dâng và đưa về kho) rồi làm tiếp việc vừa bấm.
+  const KAT_BUSY=['carry','round','offer','chant','fetch','return','join','follow'];
+  function activityBusy(){if(bayMode)return null;if(boatRide)return 'boat';if(KAT_BUSY.includes(kat.phase))return kat.phase==='join'||kat.phase==='follow'?'katFollow':'kat';return null}
+  function boatFinishNow(){const r=boatRide;if(!r)return;const g=r.b.group,[lx,lz]=r.b.slot.land;g.position.set(r.b.slot.x,.02,r.b.slot.z);g.rotation.set(0,Math.PI/2,0);
+    boatRide=null;pendingBoat=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));say('🚣 Thuyền đã về Bến sen')}
+  function katFinishNow(){const p=kat.phase;walkRoute.length=0;pendingKathina=null;
+    if(p==='join'||p==='follow'){kat.phase='idle';kat.leader='';refreshKatPill();say('🟧 Đã rời đoàn rước y');return}
+    if(p==='carry'||p==='round'||p==='offer'){me.rotation.x=0;kat.placed=true;if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}placeRobe()}/* dâng y ngay: lưu tấm y như khi đặt dưới chân tượng */
+    clearInterval(kat.chantTimer);if(kat.mine&&!katKho.some(q=>q.name===kat.mine.name&&q.t===kat.mine.t))katKho.push({...kat.mine});
+    setCarry(false);kat.phase='done';document.body.classList.remove('kat-chant');walkRoute.length=0;pendingSeat=null;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));
+    saveRobeToKho();drawDais();refreshKatPill();closeKatPanel();say('🟧 Nghi thức dâng y đã hoàn tất · tấm y đã vào kho')}
+  function finishActivityNow(){const k=activityBusy();if(k==='boat')boatFinishNow();else if(k)katFinishNow()}
+  const busyBox=document.createElement('div');busyBox.id='busyBox';busyBox.hidden=true;
+  busyBox.innerHTML='<div class="bb-card" role="dialog" aria-modal="true"><p class="bb-msg"></p><div class="bb-row"><button type="button" data-bb="stay">Ở lại tiếp tục</button><button type="button" class="bb-end" data-bb="end">⏹ Kết thúc ngay</button></div></div>';
+  {const st=document.createElement('style');st.textContent='#busyBox{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;background:#0008}#busyBox[hidden]{display:none}#busyBox .bb-card{max-width:min(380px,90vw);background:#0b2d28;border:1px solid #c8a96a88;border-radius:16px;padding:16px;color:#f3e7cc;font:15px/1.45 system-ui,sans-serif}#busyBox .bb-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}#busyBox button{border:1px solid #a18a5e;border-radius:999px;background:#19483b;color:#f5e6c9;padding:9px 14px;font-size:14px;cursor:pointer}#busyBox .bb-end{background:#c8a96a;color:#0b2824;font-weight:600;border-color:#c8a96a}';document.head.appendChild(st)}
+  document.body.appendChild(busyBox);let busyThen=null;
+  function askFinish(then){const k=activityBusy();if(!k){then&&then();return}busyThen=then;
+    busyBox.querySelector('.bb-msg').textContent=k==='boat'?'🚣 Bạn đang dạo thuyền trên hồ sen nên chưa thể rời đi. Kết thúc để thuyền về bến ngay?':k==='kat'?'🟧 Bạn đang trong nghi thức dâng y nên chưa thể rời đi. Kết thúc để hoàn tất ngay (dâng y và đưa y về kho)?':'🟧 Bạn đang đi cùng đoàn rước y. Rời đoàn để đi nơi khác?';
+    busyBox.hidden=false;busyBox.querySelector('.bb-end').focus()}
+  busyBox.addEventListener('click',e=>{const a=e.target.closest('[data-bb]')?.dataset.bb;if(!a&&e.target!==busyBox)return;busyBox.hidden=true;const t=busyThen;busyThen=null;if(a==='end'){finishActivityNow();if(t)setTimeout(t,60)}});
+  // chặn: Thoát 3D, sang Vịnh Yên, AnSense, liên kết mở trong cùng thẻ; phím Esc. Lệnh do máy gọi (khóa 1 hoạt động) thì kết thúc ngay rồi cho đi.
+  document.addEventListener('click',e=>{const el=e.target.closest('#exit3D,#enterBay,#ansenseBtn,a[href]');if(!el||!activityBusy())return;
+    if(el.tagName==='A'){const h=el.getAttribute('href')||'';if(h.startsWith('#')||h.startsWith('javascript')||el.target==='_blank')return}
+    if(!e.isTrusted){finishActivityNow();return}
+    e.preventDefault();e.stopImmediatePropagation();askFinish(()=>el.click())},true);
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!activityBusy()||!document.body.classList.contains('immersive'))return;e.preventDefault();e.stopImmediatePropagation();if(busyBox.hidden)askFinish(()=>document.getElementById('exit3D')?.click());else busyBox.hidden=true},true);
+  // Tắt trang / mất kết nối giữa chừng: coi như đã xong — thuyền về bến; nghi thức dâng y kết thúc, tấm y chưa vào kho bị xoá (kể cả y đã đặt dưới chân tượng).
+  function katDiscard(){clearInterval(kat.chantTimer);if(kat.pendingRow){const pr=kat.pendingRow;kat.pendingRow=null;katRows=katRows.filter(r=>r!==pr);drawDais()}if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}me.rotation.x=0;kat.phase='done';kat.leader='';pendingKathina=null;walkRoute.length=0;pendingSeat=null;
+    document.body.classList.remove('kat-chant');refreshKatPill();closeKatPanel()}
+  function dropActivity(){const k=activityBusy();if(k==='boat')boatFinishNow();else if(k){katDiscard();say('🟧 Mất kết nối · nghi thức dâng y đã kết thúc')}}
+  window.addEventListener('pagehide',dropActivity);window.addEventListener('offline',dropActivity);
+  try{localStorage.removeItem('yen_kat_pending')}catch(e){}
+  window.anyenActivityBusy=activityBusy;
+  // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Tư Đảo
+  {const hb=document.createElement('button');hb.type='button';hb.id='homeBtn';document.body.appendChild(hb);
+    const st=document.createElement('style');st.textContent='#homeBtn{display:none;position:fixed;z-index:72;left:calc(env(safe-area-inset-left,0px) + 12px);top:calc(env(safe-area-inset-top,0px) + 58px);border:1px solid #c8a96a;border-radius:999px;background:#19483bee;color:#f5e6c9;font-size:13px;padding:7px 12px;cursor:pointer}body.immersive #homeBtn{display:block}body.room-open #homeBtn,body.orchid-open #homeBtn,body.forest-map-open #homeBtn,body.bay-clean #homeBtn,body.bay-photo-open #homeBtn,body.bay-outfit-open #homeBtn,body.bay-map-open #homeBtn,body.kat-chant #homeBtn{display:none!important}body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 160px)}@media(max-width:800px){body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 150px)}}';document.head.appendChild(st);
+    const label=()=>{hb.textContent=bayMode?'🏝 Tư Đảo':'🏡 Tư Gia';hb.title=bayMode?'Đến Tư Đảo của bạn ngay':'Về Tư Gia của bạn ngay'};label();setInterval(label,800);
+    hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(true);return}askFinish(()=>goHome(true))})}
+  window.__forest={loop:()=>{let m=1e9,at=null;for(const [x,z] of BOAT_LOOP){const dx=Math.max(0,Math.abs(x-BEN_SEN.x)-BEN_SEN.w/2),dz=Math.max(0,BEN_SEN.z0-z,z-BEN_SEN.z1),d=Math.hypot(dx,dz);if(d<m){m=d;at=[x,z]}}return [m,at]},viverse:o=>o?openOrchid():closeOrchid(),tp:(x,z,y)=>teleportTo(x,z,y),viv:()=>VIV,home:()=>TU_GIA,katCarry:()=>{kat.phase='carry';kat.pieces='0123';setCarry(true);refreshKatPill();return kat.phase},katPhase:()=>kat.phase,robeOn:()=>!!kat.robe,dbg:()=>({act:meActivity,route:walkRoute.length,boat:!!boatRide,kat:kat.phase,n:onlineAvatars.size,gd:guestDist(mePosition.x,mePosition.z)}),katFill:n=>{const old=new Date(Date.now()-6e5).toISOString(),d=[5,7,9];katRows=Array.from({length:n},(_,i)=>{const dd=d[i%3];return {id:'t'+i,color:KAT_COLORS[i%4][1],dieu:dd,pieces:i%2?Array.from({length:dd*3},(_,k)=>(k+i)%4).join(''):'',name:'t'+i,created_at:old}});return katRows.length},route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([...SENSE_HOUSES,TINH_THAT].find(h=>h.id===id)),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomFill:n=>{const old=new Date(Date.now()-3e5).toISOString();gomRows=Array.from({length:n},(_,i)=>({id:'t'+i,shape:i%4,pattern:i%3,seed:i*37+5,name:'t',created_at:old}));gomFiring=null;drawRack();return gomRack.children.length},gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
+  window.__bay={island:()=>bayIsland&&{x:+bayIsland.x.toFixed(1),z:+bayIsland.z.toFixed(1),n:bayIsland.path.length,y:+tdGroundY(bayIsland.x,bayIsland.z).toFixed(2)},tdTap:k=>tuDaoTap(k),free:(x,z)=>navFree(x,z),tuDao:i=>goTuDao(i),vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),zoom:f=>{if(f)bayZoomBy(f);return {view:bayView,z:bayZoom,far:bayFarZoom,lift:+bayLift.toFixed(2),want:bayLiftWant}},camY:()=>+camera.position.y.toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},ship:bayShip,warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
+  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);vivU.t.value=performance.now()/1000;if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
+    const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
+    if(document.body.classList.contains('immersive')){
+      if(!bayMode)updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
+      if(walkingKeys.has('turnleft')){walkYaw+=dt*1.5;viewYaw+=dt*1.5;}if(walkingKeys.has('turnright')){walkYaw-=dt*1.5;viewYaw-=dt*1.5;}
+      let step=(walkingKeys.has('forward')?1:0)-(walkingKeys.has('back')?1:0);
+      if(window.anyenPendingBay&&!bayMode)enterBay();if(boatRide)updateBoatRide(performance.now());if(!bayMode){updateKathina(dt);updateGom(dt)}
+      if(step&&!boatRide&&meActivity!=='sit'&&meActivity!=='walk'){walkYaw=viewYaw;let nx=mePosition.x+Math.sin(walkYaw)*dt*4*step,nz=mePosition.z+Math.cos(walkYaw)*dt*4*step;if(walkable(nx,nz)&&guestStepOk(mePosition.x,mePosition.z,nx,nz)){mePosition.x=nx;mePosition.z=nz}}
+      if(meActivity==='walk'){if(!walkGoal){const a=walkSeed+(walkCount++*.87),r=5+(walkCount%4)*1.3;walkGoal=[Math.sin(a)*r,21+Math.cos(a)*r];}const dx=walkGoal[0]-mePosition.x,dz=walkGoal[1]-mePosition.z,dist=Math.hypot(dx,dz);if(dist<.35)walkGoal=null;else{const d=Math.min(dist,dt*1.35),nx=mePosition.x+dx/dist*d,nz=mePosition.z+dz/dist*d;if(walkable(nx,nz)&&guestStepOk(mePosition.x,mePosition.z,nx,nz)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(dx,dz);}else walkGoal=null;}}
+      unstackT+=dt;if(unstackT>.6){unstackT=0;if(!bayMode&&!boatRide&&meActivity!=='sit'&&(!walkRoute.length||(walkWaitStart&&performance.now()-walkWaitStart>1500))&&kat.phase==='idle'&&onlineAvatars.size&&guestDist(mePosition.x,mePosition.z)<.6){const q=freeSpotNear(mePosition.x,mePosition.z);if(q){mePosition.set(q[0],0,q[1]);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:q[0],z:q[1]}}))}}}
+      if(walkRoute.length){
+        if(meActivity!=='idle')meActivity='idle';
+        const goal=walkRoute[0],dx=goal[0]-mePosition.x,dz=goal[1]-mePosition.z,dist=Math.hypot(dx,dz);
+        if(dist<.16){walkRoute.shift();if(!walkRoute.length&&!pendingSeat&&!pendingBoat&&guestNear(mePosition.x,mePosition.z,GUEST_AVOID)){const q=nearestWalkable(mePosition.x,mePosition.z);if(q)mePosition.set(q[0],0,q[1]);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));}if(!walkRoute.length){const arrivedLake=wishDestination;if(wishDestination){wishDestination=null;}if(!boatRide)document.getElementById('zenHint').textContent=arrivedLake?'Đã đến Hồ '+arrivedLake+' · Bấm Ném xu để nguyện ước':'Chạm đất để đi · Chạm tọa cụ để ngồi · Chạm người để chào';if(pendingBoat){boardBoat();}else if(pendingOrchid){pendingOrchid=false;viewYaw=walkYaw=VIV.rot+Math.PI;lookOffset=0;openOrchid();}else if(pendingHouse){const h=pendingHouse;pendingHouse=null;viewYaw=walkYaw=h.rot+Math.PI;lookOffset=0;arriveHouse(h);}else if(pendingKathina){const pk=pendingKathina;pendingKathina=null;if(pk==='kiln')startKiln();else if(pk==='rack')placeOnRack();else if(pk==='follow')startFollow();else if(pk==='kho')arriveKho();else startRounds();}else if(pendingGarden){const gd=pendingGarden;pendingGarden=null;openGardenSheet(gd);}else if(pendingOffer){pendingOffer=false;offerBouquet();}else if(arriveYaw!=null){viewYaw=walkYaw=arriveYaw;lookOffset=0;arriveYaw=null;}else if(pendingSeat){const s=pendingSeat;pendingSeat=null;if(!seatAvailable(s)){window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));requestSeat(chooseSeat());}else{mePosition.set(s.x,0,s.z);window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:s.x,z:s.z}}));document.getElementById('realtimeSit')?.click();window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));}}}}
+        else{const step=Math.min(dist,dt*3.2);const ux=dx/dist,uz=dz/dist;
+          // A guest standing in the way: insert a detour point beside them (the side that is walkable), once per guest.
+          // If neither side is open (bridge, narrow path), just squeeze past at close range.
+          for(const p of onlineAvatars.values()){const g=p.group;if(!g||!g.visible||p===walkDetourFor)continue;const ox=g.position.x-mePosition.x,oz=g.position.z-mePosition.z,along=ox*ux+oz*uz,lat=Math.abs(ox*uz-oz*ux);
+            if(along<.2||along>Math.min(dist,3.2)||lat>GUEST_AVOID)continue;if(Math.hypot(goal[0]-g.position.x,goal[1]-g.position.z)<GUEST_AVOID&&walkRoute.length===1)continue;
+            const side=(ox*uz-oz*ux)>=0?-1:1;let det=null;for(const sd of [side,-side]){const q=[g.position.x+uz*sd*GUEST_AVOID*1.15,g.position.z-ux*sd*GUEST_AVOID*1.15];if(walkable(...q)&&clearWalk([mePosition.x,mePosition.z],q)&&!guestNear(q[0],q[1],GUEST_AVOID*.8)){det=q;break}}
+            walkDetourFor=p;if(det){walkRoute.unshift(det)}break}
+          const nx=mePosition.x+ux*step,nz=mePosition.z+uz*step;
+          /* someone right in front: wait a moment; on a narrow way (bridge, path between ponds) squeeze past after 1.2 s */
+          const squeeze=walkWaitStart&&performance.now()-walkWaitStart>900;
+          if(walkable(nx,nz)&&((squeeze?!guestNear(nx,nz,.55):!guestNear(nx,nz,GUEST_AVOID*.75))||guestDist(nx,nz)>guestDist(mePosition.x,mePosition.z)+1e-4)){mePosition.set(nx,0,nz);walkYaw=Math.atan2(ux,uz);if(!guestNear(nx,nz,GUEST_AVOID))walkWaitStart=0;}else if(walkable(nx,nz)){if(!walkWaitStart)walkWaitStart=performance.now();}else{walkRoute.length=0;document.getElementById('zenHint').textContent='Đường bị chắn, vui lòng chọn điểm khác';}}
+      }
+      let sittingNow=meActivity==='sit';const behind=(sittingNow?10.5:14)*camZoom,gy=bayMode?0:groundHeight(mePosition.x,mePosition.z),camX=mePosition.x-Math.sin(viewYaw)*behind,camZ=mePosition.z-Math.cos(viewYaw)*behind,up=Math.max((sittingNow?4.6:5.6)*camZoom*camLift+Math.max(0,camZoom-1.5)*7+gy,bayMode?0:terrainHeight(camX,camZ)+2.2);/* thu nhỏ quá 1.5: camera lên cao dần để thấy toàn cảnh rừng, như ở vịnh */if(!bayMode&&Math.hypot(camX-STATUE.x,camZ-STATUE.z)<6.8)up=Math.min(up,HILL.top+5);if(bayMode){}else if(onBoat()){/* behind the boat; swipe to look around (relative to the boat), pinch / ＋－ to zoom, swipe up/down for height */const h=boatRide.heading+(viewYaw-boatRide.heading0),bd=8*camZoom;camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(h)*bd,1.2+2.4*camZoom*camLift,mePosition.z-Math.cos(h)*bd),.08);camera.lookAt(mePosition.x,.75,mePosition.z);camera.rotateX(Math.atan(Math.tan(camera.fov*Math.PI/360)/3));/* avatar centred, on the lower third line */}else{camera.position.lerp(new THREE.Vector3(mePosition.x-Math.sin(viewYaw)*behind,up,mePosition.z-Math.cos(viewYaw)*behind),.13);camera.lookAt(mePosition.x,gy+1.05,mePosition.z);camera.rotateX(Math.atan(Math.tan(camera.fov*Math.PI/360)/3));/* avatar centred, on the lower third line */}if(!bayMode&&scene.fog&&scene.fog.isFogExp2){const f=scene.fog;if(f._base==null)f._base=f.density;f.density=f._base/(1+Math.max(0,camZoom-1.2)*.7)}/* thu nhỏ xa thì sương mỏng lại để thấy toàn cảnh */if(!bayMode)fadeBlockingTrees(camera.position,{x:mePosition.x+Math.sin(viewYaw)*5,z:mePosition.z+Math.cos(viewYaw)*5},dt);if(bayMode)updateBay(dt);
+    }else{camera.position.lerp(targetPosition,.035);currentLook.lerp(targetLook,.04);camera.lookAt(currentLook.x+Math.sin(lookOffset)*7,currentLook.y,currentLook.z)}
+    me.visible=document.body.classList.contains('immersive');me.position.copy(mePosition);me.position.y=groundHeight(mePosition.x,mePosition.z);me.rotation.y=0;me.rotation.z=0;const inBoat=onBoat();if(inBoat){me.position.y=boatRide.b.group.position.y+.33;me.rotation.y=boatRide.heading;}if(bayMode){me.position.copy(bayAvatar.pos);me.rotation.y=bayAvatar.yaw;if(bayPhoto){const p=bayPhoto.pose,sd=bayPhoto.side;me.rotation.y+=Math.PI+p.yaw*sd+sd*.32;me.rotation.z=p.lean*sd;meHead.rotation.set(0,-p.yaw*sd*.7,p.tilt*sd)}}if(!bayMode&&meActivity==='sit'){const seat=cushions.find(c=>Math.hypot(c.x-mePosition.x,c.z-mePosition.z)<.8);if(seat)seatOnCushion(me,seat);}if(gesture){const u=(performance.now()-gesture.start)/1100;if(u>=1){gesture=null;}else if(gesture.kind==='jump'){me.position.y+=Math.sin(Math.PI*u)*.8;}else if(gesture.kind==='spin'){me.rotation.y=u*Math.PI*2;}else if(gesture.kind==='namaste'){me.rotation.z=Math.sin(Math.PI*u)*.12;}else if(gesture.kind==='handshake'){me.rotation.z=Math.sin(u*Math.PI*6)*.09;}else if(gesture.kind==='hello'){me.rotation.z=Math.sin(u*Math.PI*4)*.07;}}poseAvatar(meTorso,meHead,meTag,meActivity==='sit'||inBoat);dressAvatar(meOutfit,meTorso,bayMode?bayOutfit.color:myColor,bayMode?bayBaseStyle():myStyle,meActivity==='sit'||inBoat);bayDress(meActivity==='sit');if(!bayMode)kathinaPose();
+    for(const peer of onlineAvatars.values()){
+      if(peer.boatTarget&&peer.boat&&peer.boat.group.visible){const g=peer.boat.group,k=Math.min(1,dt*5);g.position.x+=(peer.boatTarget[0]-g.position.x)*k;g.position.z+=(peer.boatTarget[1]-g.position.z)*k;g.position.y=.02+Math.sin(performance.now()/700+peer.boatIndex)*.025;peer.group.position.x=g.position.x;peer.group.position.z=g.position.z}
+      peer.group.rotation.set(0,peer.group.userData.yaw||0,0);
+      // Height comes from the ground / mat / boat each frame, so a jump never accumulates.
+      if(Number.isFinite(peer.baseY))peer.group.position.y=peer.baseY;
+      if(!peer.gesture)continue;
+      const u=(performance.now()-peer.gesture.start)/1100;
+      if(u>=1){peer.gesture=null;continue;}
+      if(peer.gesture.kind==='jump')peer.group.position.y=(Number.isFinite(peer.baseY)?peer.baseY:peer.group.position.y)+Math.sin(Math.PI*u)*.8;
+      else if(peer.gesture.kind==='spin')peer.group.rotation.y=u*Math.PI*2;
+      else if(peer.gesture.kind==='namaste')peer.group.rotation.z=Math.sin(Math.PI*u)*.12;
+      else if(peer.gesture.kind==='handshake')peer.group.rotation.z=Math.sin(u*Math.PI*6)*.09;
+      else if(peer.gesture.kind==='hello')peer.group.rotation.z=Math.sin(u*Math.PI*4)*.07;
+    }
+    if(document.body.classList.contains('immersive')){const near=[...onlineAvatars.values()].some(p=>p.group.position.distanceTo(me.position)<7);document.querySelector('#nearGuest').textContent=near?'Có một khách tham quan gần bạn':'Dạo gần một người để chào'};
+    markers.forEach((m,i)=>{m.rotation.y=t*.3;m.children[0].rotation.z=t*.35;m.position.y=(i===0?2.5:i===1?2.2:i===2?2.8:4)+Math.sin(t*1.2+i)*.13});
+    flowers.forEach((f,i)=>f.position.y=f.userData.y0+Math.sin(t*.8+i)*.02);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
+    water.material.color.setHSL(.48,.31,.27+Math.sin(t*.5)*.01);renderer.render(scene,camera)
+  }animate();
+
+ }catch(err){console.error('LÀNG YÊN 3D:',err,err?.cause||'');window.anyen3DLoading=false;document.querySelector('#sceneMode').textContent='3D chưa tải được';let message=String(err?.message||err||'Lỗi không xác định');if(!err?.kind&&/webgl/i.test(message))message='Thiết bị chưa tạo được WebGL nên chưa mở được 3D ('+message+')';message=message.slice(0,220);document.getElementById('zenHint').textContent='Lỗi 3D: '+message;window.anyen3DError=message;document.body.classList.add('yen-3d-error');return false}
+ window.anyen3DLoading=false;return true;
+};/* Chờ trang dựng xong mọi nút rồi mới khởi tạo 3D: khi thư viện 3D có sẵn trong bộ nhớ đệm, nó tải xong trước cả phần cuối trang. */const anyenStartWorld=()=>{window.anyenWorldReady=window.anyenRetry3D()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',anyenStartWorld,{once:true});else anyenStartWorld();

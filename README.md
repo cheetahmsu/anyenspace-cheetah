@@ -3,7 +3,7 @@
 ## Cập nhật GitHub → Netlify
 
 1. Sao lưu commit hiện tại của nhánh `main`.
-2. Thay **chỉ** `index.html` và `multiplayer.js` trong repository `koikoi369/anyenspace`.
+2. Thay `index.html`, `multiplayer.js`, `activity-lock.js`, `space-chat.js`, thư mục **`js/`** (`world3d.js`: toàn bộ thế giới 3D) và thư mục **`css/`** (`langyen.css`: toàn bộ CSS), cùng `data/` trong repository `koikoi369/anyenspace`. Từ bản tách mô-đun, `index.html` chỉ còn khung trang (~92 KB); thiếu `js/` hoặc `css/` thì trang hỏng giao diện hoặc không vào được 3D.
 3. **Giữ nguyên** `config.js`, SQL Supabase, hai mã QR và các file khác.
 4. Commit và đợi Netlify triển khai, sau đó thử trên iPhone (Safari) và laptop.
 
