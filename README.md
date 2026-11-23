@@ -65,6 +65,15 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới, chạm vào một nhà để đi tới trước cửa; chỗ đến luôn tránh khách khác (đến ngay mà chỗ đã có người thì đứng sang ô trống bên cạnh, cách 1,3 m); khi đi bộ, nhân vật vòng qua khách đang đứng trên đường, lối hẹp như cầu thì lách qua sát bên; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
 - Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
 
+## Lịch trị liệu · Healer tự mở lịch (Quy hoạch v3.3, Phần V)
+
+- Trang `lich.html` (nút **🗓 Lịch trị liệu** trên thanh trên cùng và trong trang Tài khoản). Cần đăng nhập thành viên.
+- **Healer** (tài khoản nhà trị liệu đã được Admin xác minh) mở khung 30 phút ở sáu Nhà của Rừng Yên (Hương, Sắc, Chạm, Vị, Thanh, Niệm), chọn một hoặc nhiều thứ trong tuần, lặp lại mỗi tuần. Lịch có hiệu lực ngay, không cần Admin duyệt. Các ô liền nhau ghép thành một phiên 60–180 phút. Hủy khung thì lịch khách đã đặt cho các ngày tới hủy theo.
+- **Đặt lịch hai chiều**: thành viên xin tham gia một phiên (kèm lời nhắn), Healer bấm Đồng ý; hoặc Healer mời bằng email, khách bấm Đồng ý. Mỗi phiên tối đa 5 khách (khóa cứng trên máy chủ).
+- **Phiên song song**: nhiều Healer có thể dẫn phiên cùng giờ ở cùng một Nhà. Mỗi phiên có `session_instance_id` và kênh trò chuyện riêng (`anyen:sp:<nhà>__s<phiên>`), tối đa 6 người. Người không có lịch vào Nhà đang có phiên thì trải nghiệm riêng.
+- **Vào đúng ca**: từ 15 phút trước giờ phiên, trang chính hiện nút **Vào phiên** (`lich-nhac.js`); bấm là vào Rừng Yên và tới thẳng cửa Nhà đã đăng ký. Liên kết `index.html?vao=<id Nhà>` làm việc tương tự.
+- Cần chạy `supabase_phase1c.sql` (sau `supabase_phase1.sql` và `supabase_phase1b.sql`). Chưa chạy thì trang Lịch báo "Máy chủ chưa có lịch trị liệu", các trang khác không bị ảnh hưởng.
+
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
 - Thiền đường cộng hưởng vẫn sử dụng SQL của phiên bản 3.4. Không chạy lại SQL nếu đã cấu hình.
