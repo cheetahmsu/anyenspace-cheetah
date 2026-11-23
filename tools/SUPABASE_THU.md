@@ -33,7 +33,7 @@ Workflow `.github/workflows/supabase-test-sync.yml` tự chạy mỗi khi có th
 
 1. Chép **cấu trúc** schema `public` của Supabase CHÍNH (bảng, hàm, RLS, quyền) sang Supabase THỬ.
 2. Chép danh sách Admin / Admin Gốc.
-3. Chạy các file SQL mới chưa đưa lên chính (hiện tại: `supabase_phase1.sql`).
+3. Chạy các file SQL mới chưa đưa lên chính (hiện tại: `supabase_phase1.sql`, `supabase_phase1b.sql`, `supabase_phase1c.sql`).
 
 Không chép dữ liệu và tài khoản thật. Người thử tự đăng ký tài khoản trên trang thử. Muốn chạy tay: tab **Actions › Đồng bộ Supabase thử › Run workflow**.
 

@@ -2,13 +2,13 @@
 # Đồng bộ Supabase THỬ theo Supabase CHÍNH rồi chạy các file SQL chưa đưa lên chính.
 #   1. Sao chép cấu trúc schema public của Supabase chính (bảng, hàm, chính sách RLS, quyền) sang Supabase thử.
 #      Dữ liệu và tài khoản KHÔNG sao chép (dữ liệu thật ở lại Supabase chính; người thử tự đăng ký trên trang thử).
-#   2. Chạy các file SQL mới (mặc định: supabase_phase1.sql) lên Supabase thử.
+#   2. Chạy các file SQL mới (mặc định: supabase_phase1.sql, supabase_phase1b.sql, supabase_phase1c.sql) lên Supabase thử.
 # Cần: PROD_DB_URL, TEST_DB_URL (chuỗi kết nối Postgres, lấy ở Supabase › Project Settings › Database › Connection string · Session pooler)
 # Dùng: PROD_DB_URL=... TEST_DB_URL=... bash tools/supabase-test-sync.sh [file.sql ...]
 set -euo pipefail
 : "${PROD_DB_URL:?Thiếu PROD_DB_URL}"; : "${TEST_DB_URL:?Thiếu TEST_DB_URL}"
 cd "$(dirname "$0")/.."
-FILES=("$@"); [ ${#FILES[@]} -eq 0 ] && FILES=(supabase_phase1.sql)
+FILES=("$@"); [ ${#FILES[@]} -eq 0 ] && FILES=(supabase_phase1.sql supabase_phase1b.sql supabase_phase1c.sql)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 echo "› Lấy cấu trúc schema public từ Supabase chính…"
 pg_dump "$PROD_DB_URL" --schema-only --schema=public --no-owner --no-comments > "$tmp/schema.sql"
