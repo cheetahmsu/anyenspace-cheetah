@@ -124,7 +124,7 @@ print('hoisted',hoist);print('funcs',need_f);print('block bytes',len(code.encode
 
 # ---- Phòng trong các nhà: các hàm dựng phòng chuyển sang js/rooms3d.js, nạp khi mở phòng đầu tiên.
 s=open(W,encoding='utf-8').read();L=s.split('\n')
-ROOMS=['roomChuongGio','roomXongHuong','roomQuanTra','roomTuGia','roomTinhThat','roomXuongGom']
+ROOMS=['roomChuongGio','roomXongHuong','roomQuanTra','roomTuGia','roomTinhThat','roomXuongGom','roomNhaNiem']
 parts=[];keep=[];i=0
 spans=[]
 for f in ROOMS:

@@ -65,6 +65,17 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **🗺 Bản đồ** (nút bên phải hoặc Menu → Bản đồ & điểm đến): chạm bản đồ để đi bộ tới, chạm vào một nhà để đi tới trước cửa; chỗ đến luôn tránh khách khác (đến ngay mà chỗ đã có người thì đứng sang ô trống bên cạnh, cách 1,3 m); khi đi bộ, nhân vật vòng qua khách đang đứng trên đường, lối hẹp như cầu thì lách qua sát bên; 14 điểm đến nhanh, mỗi điểm có 🚶 Đi bộ và ✨ Đến ngay.
 - Cao độ địa hình nằm trong `terrainHeight()`; dữ liệu bố cục ghi trong `data/world-pine_forest.json` (`nature` kind `pine_forest`, `buildings`, `props`).
 
+## Nhà Niệm · nội thất và 4 hoạt động (House of Mindfulness · Đ1)
+
+- Đi tới cửa Nhà Niệm (hoặc bấm **Vào phiên** của Lịch trị liệu) là mở gian bên trong 11 × 11 × 6,2 m: gỗ trầm `#4A3C2E`, cột `#261C14`, đá bazan `#4C4A43`, chiếu cói `#9E8969`. Cửa vòm Trăng (R 1,8 m) nhìn ra Hồ Niệm và sen trắng, giếng trời Oculus (R 1,8 m) rọi cột nắng xuống Đèn Thở. Vòng tọa cụ 1 Healer (vàng đồng) + 5 khách (xanh thông), bệ Chuông Đồng dưới bậu cửa.
+- Giới hạn kỹ thuật: **1 PointLight** duy nhất (Đèn Thở), nội thất **1.588 tam giác** (< 1.750; kiểm bằng `window.__niem.tris()` khi phòng đang mở), 108 hạt là 1 InstancedMesh, ván/lam/chiếu vẽ bằng texture canvas thay vì thêm lưới. Điện thoại dọc tự mở rộng góc nhìn.
+- **00 · Gột bụi**: chạm bồn đá (tiếng nước + chuông gió tre), rồi chọn **Solo** (không vào kênh nào, không ai thấy) hoặc **Phiên 1+5**. Phiên 1+5 dùng lại phần Lịch trị liệu: `anyen_space_enter` xếp vào kênh riêng `anyen:sp:nha_niem__s<phiên>`; không có phiên đang diễn ra thì báo nhẹ và ở lại Solo. Phiên hết giờ thì tự về Solo. Không cần chạy thêm SQL.
+- **01 · Thở cùng Đèn Thở** 4–4–6 hoặc 4–7–8, 3 · 6 · 10 phút: quả cầu, ánh đèn và cột nắng co giãn theo nhịp. Trong phiên, Healer có nút **Thỉnh chuông đồng** và bắt đầu nhịp thở cho cả phòng (khách vào trễ được đồng bộ lại).
+- **02 · Khoảng Lặng 18 phút**: ánh sáng dịu xuống tông ấm, chữ và nút tự ẩn sau 3 giây (chạm màn hình để hiện lại), chỉ còn gió thông và nước; chuông ở phút 0 · 9 · 18. Đọc trạng thái bài test AnSense (`anyen-ansense-v1`) nếu có; kết thúc gợi ý Khoảng Lặng sáu chặng của AnSense hoặc ghi Nhật ký An Yên.
+- **03 · Lần chuỗi 108 hạt** (tường trái): chạm bảng hạt hoặc phím Space, tiếng gỗ gõ; mốc 18 · 54 · 108 vòng sáng đồng bừng lên và ghi nhẹ một dòng vào Nhật ký An Yên trên máy. Không streak.
+- **04 · Bát Buông Bỏ & Kệ 9 thẻ** (tường phải): nỗi lo ≤ 80 ký tự được vẽ lên mặt nước rồi tan trong khoảng 5 giây; chữ chỉ nằm trong bộ nhớ tạm của trang, **không lưu, không gửi Supabase, không gửi vào kênh phiên**. Kệ thẻ rút 1 thẻ mỗi ngày (lưu số thẻ và ngày trên máy), ưu tiên thẻ khớp trạng thái AnSense.
+- Không tạo kho vật phẩm mới. Giai đoạn 2 (3 phong cách trong nhà) chưa làm.
+
 ## Lịch trị liệu · Healer tự mở lịch (Quy hoạch v3.3, Phần V)
 
 - Trang `lich.html` (nút **🗓 Lịch trị liệu** trên thanh trên cùng và trong trang Tài khoản). Cần đăng nhập thành viên.
