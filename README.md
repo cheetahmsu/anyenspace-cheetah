@@ -3,7 +3,7 @@
 ## Cập nhật GitHub → Netlify
 
 1. Sao lưu commit hiện tại của nhánh `main`.
-2. Thay `index.html`, `multiplayer.js`, `activity-lock.js`, `space-chat.js`, thư mục **`js/`** (`world3d.js`: Rừng Yên và lõi 3D; `bay3d.js`: Vịnh Yên và `rooms3d.js`: không gian trong các nhà, hai tệp này được tải lười khi cần hoặc lúc trình duyệt rảnh — sinh bằng `tools/split_lazy.py` + `tools/patch_lazy.py`, không sửa tay) và thư mục **`css/`** (`langyen.css`: toàn bộ CSS), cùng `data/` trong repository `koikoi369/anyenspace`. Từ bản tách mô-đun, `index.html` chỉ còn khung trang (~92 KB); thiếu `js/` hoặc `css/` thì trang hỏng giao diện hoặc không vào được 3D.
+2. Thay `index.html`, `multiplayer.js`, `activity-lock.js`, `space-chat.js`, thư mục **`js/`** (`world3d.js`: Rừng Yên và lõi 3D; `bay3d.js`: Vịnh Yên và `rooms3d.js`: không gian trong các nhà, hai tệp này được tải lười khi cần hoặc lúc trình duyệt rảnh; từ nay sửa trực tiếp trong hai tệp đó, nhớ đổi số `?v=` trong `world3d.js` khi sửa) và thư mục **`css/`** (`langyen.css`: toàn bộ CSS), cùng `data/` trong repository `koikoi369/anyenspace`. Từ bản tách mô-đun, `index.html` chỉ còn khung trang (~92 KB); thiếu `js/` hoặc `css/` thì trang hỏng giao diện hoặc không vào được 3D.
 3. **Giữ nguyên** `config.js`, SQL Supabase, hai mã QR và các file khác.
 4. Commit và đợi Netlify triển khai, sau đó thử trên iPhone (Safari) và laptop.
 
