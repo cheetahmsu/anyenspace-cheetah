@@ -811,7 +811,7 @@
   const BZ_MIN=.8,BZ_MAX=4,BF_MIN=.55,BF_MAX=1.8;let bayZoomS=bayZoom,bayFarZoomS=bayFarZoom,bayLimitAt=0,bayBurst=0,bayZoomEvt=0;
   // Zoom quá giới hạn mới đổi sang/khỏi góc "toàn cảnh từ xa", nhưng chỉ ở một lần vuốt/cuộn MỚI bắt đầu khi đã ở giới hạn
   // (nghỉ tay ≥ 0,35 s): một lần vuốt/cuộn liền tay chạm giới hạn thì dừng ở đó, không nhảy cảnh. Nút ＋/－ (btn) thì đổi ngay.
-  function bayZoomBy(f,force,btn){if(!bayMode||(bayPhoto&&!force)||bayOutfitOpen)return;const far=bayView==='far',now=performance.now();
+  function bayZoomBy(f,force,btn){if(!bayMode||(bayPhoto&&!force))return;const far=bayView==='far',now=performance.now();
     if(now-bayZoomEvt>350)bayBurst=now;bayZoomEvt=now;
     const atLim=far?(f<1&&bayFarZoom<=BF_MIN+1e-3):(f>1&&bayZoom>=BZ_MAX-1e-3);
     if(atLim){if(!bayLimitAt)bayLimitAt=now;if(!btn)return;if(btn)bayZoomOver=Math.max(bayZoomOver,.25)}else bayLimitAt=0;
@@ -845,6 +845,7 @@
     box.innerHTML='';for(const it of items){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=it.name;b.setAttribute('aria-selected',String(it.id===mapRegion));b.onclick=()=>{mapRegion=it.id;try{localStorage.setItem('yen_bay_region',it.id)}catch(e){}renderRegions();renderPlaces();drawBayMap()};box.appendChild(b)}}
   function closeMapBox(){bayMapBox.classList.remove('open');document.body.classList.remove('bay-map-open')}
   function renderPlaces(){const places=document.getElementById('bayMapPlaces');places.innerHTML='';
+    {const w=document.createElement('span');w.className='bay-place';const btn=document.createElement('button');btn.type='button';btn.textContent='🏝 Tư Đảo của bạn';btn.title='Đến ngay Tư Đảo của bạn';btn.onclick=()=>{goTuDao(true);closeMapBox()};w.append(btn);places.appendChild(w)}
     const groups=mapRegion==='all'?['halong','lanha','btl']:[mapRegion];
     for(const g of groups){const ps=bayData.props.filter(p=>p.kind==='landmark'&&lmRegion(p)===g);if(!ps.length)continue;
       if(groups.length>1){const hd=document.createElement('div');hd.className='bay-place-head';hd.textContent=REGION_NAME[g];places.appendChild(hd)}
@@ -1308,7 +1309,7 @@
       {const W=BAY_WATER[bayWaterRegion],td=W?bayTmpC1.set(W[0]):bayWaterBase.d,tsh=W?bayTmpC2.set(W[1]):bayWaterBase.s,kk=Math.min(1,dt*.35);bayU.deep.value.lerp(td,kk);bayU.shallow.value.lerp(tsh,kk)}
     }
     // người đứng ở mũi tàu, quay mặt theo hướng tàu
-    const view=bayPhoto?'photo':bayOutfitOpen?'outfit':bayView,wide=camera.aspect<1?1.25:1;
+    const view=bayPhoto?'photo':bayView,wide=camera.aspect<1?1.25:1;
     if(bayIsland){updateIslandWalk(dt);}if(bayIsland){islandWorld(bayTmp);bayAvatar.pos.copy(bayTmp);bayAvatar.yaw=bayIsland.yaw}else{bayTmp.copy(view==='sundeck'&&bayShip.deck?bayShip.deck:(bayShip.bow||new THREE.Vector3(0,2.62,18.8)));bayShip.group.localToWorld(bayTmp);bayAvatar.pos.copy(bayTmp);bayAvatar.yaw=S.heading;}mePosition.set(bayTmp.x,0,bayTmp.z);
     if(view==='spin'&&!bayPause)viewYaw+=dt*.12;
     if(bayPause&&bayPause.bow){S.heading+=bayPause.bow*dt*.45}

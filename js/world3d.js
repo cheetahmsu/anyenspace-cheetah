@@ -1154,7 +1154,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=192ca2c0').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=86bc1f62').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -2176,8 +2176,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Tư Đảo
   {const hb=document.createElement('button');hb.type='button';hb.id='homeBtn';document.body.appendChild(hb);
     const st=document.createElement('style');st.textContent='#homeBtn{display:none;position:fixed;z-index:72;left:calc(env(safe-area-inset-left,0px) + 12px);top:calc(env(safe-area-inset-top,0px) + 58px);border:1px solid #c8a96a;border-radius:999px;background:#19483bee;color:#f5e6c9;font-size:13px;padding:7px 12px;cursor:pointer}body.immersive #homeBtn{display:block}body.room-open #homeBtn,body.orchid-open #homeBtn,body.forest-map-open #homeBtn,body.bay-clean #homeBtn,body.bay-photo-open #homeBtn,body.bay-outfit-open #homeBtn,body.bay-map-open #homeBtn,body.kat-chant #homeBtn{display:none!important}body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 160px)}@media(max-width:800px){body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 150px)}}';document.head.appendChild(st);
-    const label=()=>{hb.textContent=bayMode?'🏝 Tư Đảo':'🏡 Tư Gia';hb.title=bayMode?'Đến Tư Đảo của bạn ngay':'Về Tư Gia của bạn ngay'};label();setInterval(label,800);
-    hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(true);return}askFinish(()=>goHome(true))})}
+    const label=()=>{hb.textContent=bayMode?'🏝 Tư Đảo':'🏡 Tư Gia';hb.title=bayMode?'Đi từ từ tới Tư Đảo của bạn (muốn tới liền: chọn Tư Đảo trong Bản đồ)':'Về Tư Gia của bạn ngay'};label();setInterval(label,800);
+    hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(false);return}askFinish(()=>goHome(true))})}
   // Lịch trị liệu: vào thẳng Nhà đã đăng ký (Healer đến giờ phiên, khách đã được nhận). Nhà có phòng bên trong thì mở phòng;
   // Nhà chưa có phòng thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.
   function goSchedHouse(id){if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id)||(id==='nha_van_hoa'?VAN_HOA:id==='nha_hoa_lan'?NHA_SAC:null);let door,yaw;
