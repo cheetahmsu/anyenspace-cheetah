@@ -1031,10 +1031,15 @@
     const rugT=tex(128,128,(c,w,h)=>{c.fillStyle='#c9ab7c';c.fillRect(0,0,w,h);for(let i=0;i<64;i++){c.fillStyle=i%2?'rgba(110,80,40,.2)':'rgba(255,240,200,.15)';c.fillRect(i*2,0,1,h);c.fillRect(0,i*2,w,1)}},[4,3]);
     add(new THREE.PlaneGeometry(4.8,3.9),M('#fff',{map:rugT,roughness:1}),-1.3,.012,.5,0,-Math.PI/2);
     const SF={x0:-3.6,x1:.3,zb:-1.25,z1:2.5};/* sofa: lưng dọc theo z=zb (x0..x1), cánh trái dọc x=x0 (zb..z1) */
-    B(SF.x1-SF.x0,.12,.95,woodL,(SF.x0+SF.x1)/2,.08,SF.zb);B(SF.x1-SF.x0,.26,.9,cream,(SF.x0+SF.x1)/2,.3,SF.zb+.02);B(SF.x1-SF.x0,.55,.22,cream,(SF.x0+SF.x1)/2,.62,SF.zb-.36);
-    B(.95,.12,SF.z1-SF.zb-.5,woodL,SF.x0,.08,(SF.zb+SF.z1)/2+.25);B(.9,.26,SF.z1-SF.zb-.5,cream,SF.x0+.02,.3,(SF.zb+SF.z1)/2+.25);B(.22,.55,SF.z1-SF.zb+.4,cream,SF.x0-.36,.62,(SF.zb+SF.z1)/2-.2);
+    B(SF.x1-SF.x0,.12,.95,woodL,(SF.x0+SF.x1)/2,.08,SF.zb);B(SF.x1-SF.x0,.2,.9,cream,(SF.x0+SF.x1)/2,.24,SF.zb+.02);B(SF.x1-SF.x0,.55,.22,cream,(SF.x0+SF.x1)/2,.62,SF.zb-.36);
+    B(.95,.12,SF.z1-SF.zb-.5,woodL,SF.x0,.08,(SF.zb+SF.z1)/2+.25);B(.9,.2,SF.z1-SF.zb-.5,cream,SF.x0+.02,.24,(SF.zb+SF.z1)/2+.25);B(.22,.55,SF.z1-SF.zb+.4,cream,SF.x0-.36,.62,(SF.zb+SF.z1)/2-.2);
     B(.25,.42,.9,cream,SF.x1+.12,.42,SF.zb);B(.9,.42,.25,cream,SF.x0,.42,SF.z1+.12);
-    {const P=[[-3.1,-1.42,0],[-2.5,-1.42,1],[-1.8,-1.42,0],[-1,-1.42,1],[-.3,-1.42,0],[-3.78,-.5,1],[-3.78,.3,0],[-3.78,1.1,1],[-3.78,1.8,0]];for(const [x,z,k] of P){const p=B(x<-3.7?.18:.5,.42,x<-3.7?.5:.18,k?pillowB:pillowA,x+(x<-3.7?.18:0),.62,z+(x<-3.7?0:.15));p.rotation.z=x<-3.7?0:.06}}
+    /* 3.40: đệm và gối mềm: khối bo tròn, mép mỏng giữa phồng; đệm ngồi nằm phẳng trên khung, gối tựa nghiêng ngả vào lưng ghế */
+    const softGeo=(w,h,d,puff)=>{const g=new THREE.SphereGeometry(1,18,12),P=g.attributes.position;for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const f=v=>Math.sign(v)*Math.pow(Math.abs(v),.42);x=f(x);y=f(y);z=f(z);const e=1-puff*(x*x+y*y)*.5;P.setXYZ(i,x*w/2,y*h/2,z*d/2*e)}g.computeVertexNormals();return g};
+    {const cush=softGeo(.78,.8,.16,.6);for(const x of [-3.0,-2.2,-1.4,-.6]){const c=add(cush,cream,x,.42,SF.zb+.1);c.rotation.x=-Math.PI/2}
+      for(const z of [-.2,.6,1.4,2.1]){const c=add(cush,cream,SF.x0+.07,.42,z);c.rotation.x=-Math.PI/2;c.rotation.z=Math.PI/2}
+      const pg=softGeo(.48,.44,.2,.9);const P=[[-3.1,0],[-2.45,1],[-1.75,0],[-1.0,1],[-.3,0]];for(const [x,k] of P){const p=add(pg,k?pillowB:pillowA,x,.7,SF.zb-.17);p.rotation.set(-.42,0,(k?.05:-.04))}
+      for(const [z,k] of [[-.55,1],[.25,0],[1.05,1],[1.8,0]]){const p=add(pg,k?pillowB:pillowA,SF.x0-.17,.7,z);p.rotation.order='YXZ';p.rotation.set(-.42,Math.PI/2,(k?.05:-.04))}}
     B(1.3,.4,1,stone,-1.4,.2,.75);{const v=add(new THREE.CylinderGeometry(.08,.1,.22,10),glass,-1.4,.51,.75);v.material=M('#dfece4',{transparent:true,opacity:.6});for(let k=0;k<9;k++){const f=add(new THREE.IcosahedronGeometry(.075,0),white,-1.4+Math.cos(k*.7)*.12*(k%3?1:.3),.7+(k%3)*.05,.75+Math.sin(k*.7)*.12*(k%3?1:.3))}
       B(.18,.03,.18,woodD,-1.75,.415,1.0);B(.2,.05,.14,woodD,-1.05,.42,.95);add(new THREE.CylinderGeometry(.04,.04,.06,8),M('#fff2d2',{emissive:'#ffcf80',emissiveIntensity:.6}),-1.05,.47,.95)}
     {const p=add(new THREE.SphereGeometry(.34,14,10),M('#fff',{map:rattanT}),.2,.24,2.05);p.scale.y=.7}
@@ -1053,8 +1058,8 @@
     st.blocks=[[SF.x0-.6,SF.zb-.6,SF.x1+.3,SF.zb+.5],[SF.x0-.6,SF.zb-.6,SF.x0+.5,SF.z1+.3],[-2.1,.25,-.75,1.25],[-.15,1.7,.55,2.4],[DT.x-1.2,DT.z-1.6,DT.x+1.2,DT.z+1.6],[-HW,-2.6-.6,-HW+.75,-2.6+.6],[HW-1,-HD,HW,-HD+1.1],[-1.2,-HD,1.2,-HD+.75],[-HW,-HD,-1.8,-HD+.65],[1.8,-HD,HW,-HD+.65]];
     const seatHit=new THREE.BoxGeometry(.6,.6,.6),seatM=new THREE.MeshBasicMaterial({visible:false});
     const seat=(x,z,a,y,ax,az,lab)=>{const h=add(seatHit,seatM,x,y,z);rTap(st,h,()=>{const W=st.walk;if(!W||!W.goSeat)return;W.goSeat({x,z,a,y,ax,az});rmHint('🛋 '+lab)})};
-    for(const x of [-3.0,-2.2,-1.4,-.6])seat(x,SF.zb+.05,0,.42,x,SF.zb+1.05,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
-    for(const z of [-.2,.6,1.4,2.1])seat(SF.x0+.05,z,Math.PI/2,.42,SF.x0+1.05,z,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
+    for(const x of [-3.0,-2.2,-1.4,-.6])seat(x,SF.zb+.12,0,.5,x,SF.zb+1.05,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
+    for(const z of [-.2,.6,1.4,2.1])seat(SF.x0+.12,z,Math.PI/2,.5,SF.x0+1.05,z,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
     for(const [x,z,sx] of chairs)seat(x,z,-sx*Math.PI/2,.46,x+sx*.75,z,'Ngồi bên bàn ăn gỗ · ngắm bình hoa thiên điểu');
     rmHint('🏡 Nhà chính Đảo Yên · chạm sàn để đi, chạm sofa hoặc ghế để ngồi · 🚪 Ra cửa để ra hiên');
     st.cleanup=()=>{for(const t of texs)t.dispose()}}
