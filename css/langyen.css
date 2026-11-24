@@ -245,3 +245,8 @@ body.niem-quiet #yenChat,body.niem-quiet #yenChatPill,body.niem-quiet #yenSessio
 .vh-mode{font-size:13px;color:#f2dca8}.vh-tabs button{padding:7px 10px}.vh-keys button{min-width:54px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:18px!important}.vh-keys small{font-size:11px;opacity:.8}
 .vh-in{flex:1;min-width:0;border:1px solid #a18a5e;border-radius:10px;background:#0b2d28;color:#f6e3b4;padding:8px 10px;font-size:16px}.vh-opts button{flex:1 1 40%;text-align:left}.vh-arch{display:flex;gap:8px;align-items:center;font-size:13px}.vh-arch .ar-sw i{display:inline-block;width:14px;height:14px;margin-right:2px;border-radius:3px}
 body.room-open.zen-sheet-bag #zenBagSheet{z-index:97}
+/* Chống zoom khi bấm: tắt zoom chạm đúp trên mọi bảng và nút, vẫn giữ zoom bằng hai ngón tay. Quy tắc dùng * (độ ưu tiên 0) nên các chỗ đã đặt touch-action:none/pan-y vẫn giữ nguyên. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*{touch-action:manipulation}
+button,a,label,summary,select,input,textarea,[role=button],[onclick]{-webkit-tap-highlight-color:transparent}
+@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:max(16px,1em)!important}}
