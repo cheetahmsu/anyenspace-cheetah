@@ -955,4 +955,86 @@
           if(sess.left<=0){clearInterval(sess.id);sess=null;sky.intensity=1.1;strike(196,8,.1,[[1,1],[2.76,.3]]);rmHint('🙏 Buổi thiền ngắm hoa đã xong · Mang ánh nhìn dịu dàng này ra ngoài kia')}
           const p=rmPanel.querySelector('p');if(p&&sess)p.textContent='🧘 '+KINDS[sess.i].look+' · còn '+sess.left+'s';else render()},1000)}};
     st.cleanup=()=>{if(sess)clearInterval(sess.id)}}
-  __roomsExport({roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa});
+  // ---------------------------------------------------------------- Nhà chính Đảo Yên (theo phối cảnh: nhà gỗ mái dốc, trần đan mây, sofa chữ L, bàn ăn 6 ghế, kệ san hô)
+  function roomDaoYen(st){
+    const sc=st.sc,texs=[],HW=6,HD=4,EAVE=3.3,RIDGE=5.4;
+    const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.85},o||{}));
+    const tex=(w,h,draw,rep)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');draw(c,w,h);const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}texs.push(t);return t};
+    const add=(geo,m,x,y,z,ry,rx)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);if(ry)o.rotation.y=ry;if(rx)o.rotation.x=rx;sc.add(o);return o};
+    const B=(w,h,d,m,x,y,z,ry)=>add(new THREE.BoxGeometry(w,h,d),m,x,y,z,ry);
+    sc.background=new THREE.Color('#a9c08e');sc.fog=new THREE.Fog('#b9c99a',14,30);
+    st.hemi.color.set('#fff0d8');st.hemi.groundColor.set('#6a4a30');st.hemi.intensity=1.35;st.key.color.set('#ffd49a');st.key.intensity=1.5;st.key.position.set(5,8,6);
+    // ---- vật liệu
+    const plank=(base,line,rep)=>tex(256,256,(c,w,h)=>{c.fillStyle=base;c.fillRect(0,0,w,h);for(let i=0;i<8;i++){c.fillStyle=line;c.fillRect(0,i*32,w,2);for(let k=0;k<3;k++){c.fillStyle='rgba(255,230,190,'+(.03+Math.random()*.04)+')';c.fillRect(Math.random()*w,i*32+4+Math.random()*24,40+Math.random()*80,2)}c.fillStyle=line;c.fillRect(((i*97)%w),i*32,2,32)}},rep);
+    const floorM=M('#fff',{map:plank('#a8754a','rgba(60,30,12,.45)',[3,2]),roughness:.6});
+    const deckM=M('#fff',{map:plank('#9a6a42','rgba(50,25,10,.5)',[2,1])});
+    const wood=M('#8a5a34'),woodD=M('#5e3c22'),woodL=M('#b98250');
+    const rattanT=tex(128,128,(c,w,h)=>{c.fillStyle='#c9a46a';c.fillRect(0,0,w,h);for(let i=0;i<16;i++){c.fillStyle=i%2?'rgba(120,80,40,.35)':'rgba(255,235,190,.25)';c.fillRect(i*8,0,4,h);c.fillRect(0,i*8+2,w,3)}},[6,3]);
+    const rattan=M('#fff',{map:rattanT,emissive:'#7a4a1a',emissiveIntensity:.35});
+    const plaster=M('#efe6d6'),stoneT=tex(128,128,(c,w,h)=>{c.fillStyle='#e9e2d4';c.fillRect(0,0,w,h);for(let i=0;i<260;i++){c.fillStyle='rgba(150,135,110,'+Math.random()*.18+')';c.fillRect(Math.random()*w,Math.random()*h,2+Math.random()*3,1+Math.random()*2)}}),stone=M('#fff',{map:stoneT,roughness:.5});
+    const cream=M('#ece3d2',{roughness:.95}),pillowA=M('#d9ccb2',{roughness:.95}),pillowB=M('#b8ab88',{roughness:.95}),black=M('#2a2622',{roughness:.5}),white=M('#f7f3ea'),leaf=M('#5f8a3a'),leafD=M('#3f6a2a');
+    const glass=new THREE.MeshStandardMaterial({color:'#dfeee8',transparent:true,opacity:.12,roughness:.1,metalness:.2,depthWrite:false});
+    const glow=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false});
+    // ---- sàn trong nhà, hiên gỗ bao quanh, bậc đá
+    add(new THREE.PlaneGeometry(HW*2,HD*2),floorM,0,0,0,0,-Math.PI/2);
+    {const d=add(new THREE.PlaneGeometry(HW*2+4.4,HD*2+5),deckM,0,-.02,.5,0,-Math.PI/2);d.receiveShadow=false}
+    B(3.2,.16,.7,stone,0,-.1,6.8);add(new THREE.PlaneGeometry(40,40),M('#6f8f4a'),0,-.25,0,0,-Math.PI/2);
+    // lan can hành lang hai bên và phía sau
+    for(const sx of [-1,1]){B(.08,.08,HD*2+4,woodD,sx*(HW+2.1),.9,.5);B(.08,.08,HD*2+4,woodD,sx*(HW+2.1),.5,.5);for(let k=0;k<=8;k++)B(.1,1,.1,woodD,sx*(HW+2.1),.5,-HD-1.5+k*(HD*2+4)/8)}
+    // cây xanh nhiệt đới ngoài hiên
+    {const g=new THREE.IcosahedronGeometry(1,0);for(let i=0;i<22;i++){const sx=i%2?1:-1,z=-6+(i>>1)*1.25,s=.9+Math.random()*1.1;const m=add(g,Math.random()<.5?leaf:leafD,sx*(HW+3.4+Math.random()*1.8),s*.8,z);m.scale.set(s,s*1.3,s)}
+      for(let i=0;i<9;i++){const s=1+Math.random()*.9;const m=add(g,leafD,-7+i*1.75,s,-HD-3.2-Math.random());m.scale.set(s,s*1.4,s)}}
+    // ---- khung gỗ, cột, mái dốc trần đan mây có đèn hắt
+    for(const x of [-HW,0,HW])for(const z of [-HD,HD])if(x||z<0)B(.28,EAVE,.28,wood,x,EAVE/2,z);/* mặt trước để trống giữa: cửa kính trượt mở rộng */for(const x of [-HW,HW])B(.28,EAVE,.28,wood,x,EAVE/2,0);
+    for(const z of [-HD,HD])B(HW*2+.5,.26,.3,wood,0,EAVE,z);for(const x of [-HW,HW])B(.3,.26,HD*2+.4,wood,x,EAVE,0);
+    {const SL=Math.hypot(HW+1.6,RIDGE-EAVE+.5),th=Math.atan2(RIDGE-EAVE+.5,HW+1.6),Lz=HD*2+3.6;for(const sx of [-1,1]){const r=B(SL,.04,Lz,rattan,sx*(HW+1.6)/2,(EAVE-.5+RIDGE)/2,.5);r.rotation.z=-sx*th;
+        for(let k=0;k<=6;k++){const b=B(SL,.16,.14,woodD,sx*(HW+1.6)/2,(EAVE-.5+RIDGE)/2-.1,-HD-1.3+k*(Lz-.2)/6);b.rotation.z=-sx*th}}
+      B(.24,.3,Lz,woodD,0,RIDGE-.05,.5);/* xà nóc */for(const sx of [-1,1])B(.12,.05,HD*2+3.4,glow('#ffc070',.55),sx*(HW-.2),EAVE+.18,0);/* đèn hắt dọc mái */}
+    {const s=new THREE.Shape();s.moveTo(-HW,0);s.lineTo(HW,0);s.lineTo(0,RIDGE-EAVE);s.lineTo(-HW,0);add(new THREE.ShapeGeometry(s),M('#fff',{map:plank('#a06a3c','rgba(60,30,12,.4)',[.3,1])}),0,EAVE,-HD+.02)}
+    // ---- tường sau: tường trát trắng, giữa là mảng đá, kệ gỗ hai bên trưng san hô và vỏ sò, vách nan gỗ
+    B(HW*2,EAVE,.14,plaster,0,EAVE/2,-HD-.05);B(3,2.3,.06,stone,0,1.45,-HD+.06);B(3.1,.06,.12,glow('#ffd590',.6),0,2.62,-HD+.1);
+    const coralG=new THREE.IcosahedronGeometry(.09,0),shellG=new THREE.SphereGeometry(.08,8,6,0,Math.PI*2,0,Math.PI/2);
+    for(const sx of [-1,1]){const cx=sx*2.65;B(1.7,2.5,.04,woodL,cx,1.25,-HD+.06);for(const ex of [-.83,.83])B(.06,2.5,.42,woodL,cx+ex,1.25,-HD+.25);B(1.7,.06,.42,woodL,cx,2.5,-HD+.25);for(let r=0;r<4;r++){const y=.35+r*.58;B(1.62,.05,.4,woodL,cx,y,-HD+.25);B(1.6,.03,.04,glow('#ffd28a',.5),cx,y+.5,-HD+.1);for(let k=0;k<3;k++){const x=cx-.5+k*.5;if((r+k)%2){for(let j=0;j<4;j++){const m=add(coralG,white,x+(Math.random()-.5)*.14,y+.1+j*.06,-HD+.32);m.scale.set(.7,1.3,.7)}}else{const m=add(shellG,M('#f2e4cf'),x,y+.04,-HD+.32);m.scale.set(1.3,.7,1)}}}
+      for(let k=0;k<7;k++)B(.05,2.6,.08,woodD,sx*(1.62+k*.06)+(sx<0?0:0),1.3,-HD+.3);for(let k=0;k<7;k++)B(.05,2.6,.08,woodD,cx+sx*(.95+k*.07),1.3,-HD+.3)}
+    B(2.2,.12,.5,stone,0,.82,-HD+.4);B(.2,.8,.4,stone,-.9,.4,-HD+.4);B(.2,.8,.4,stone,.9,.4,-HD+.4);
+    {/* vỏ sò điệp lớn */const g=new THREE.Group();for(let k=0;k<9;k++){const a=-1.2+k*.3,f=add(new THREE.ConeGeometry(.09,.62,6),M(k%2?'#f6ecdd':'#ead8c0'),0,0,0);sc.remove(f);f.position.set(Math.sin(a)*.3,Math.cos(a)*.3,0);f.rotation.z=-a;g.add(f)}g.position.set(0,.95,-HD+.45);g.scale.set(1.15,1,1);sc.add(g)}
+    for(const sx of [-1,1]){const p=add(new THREE.IcosahedronGeometry(.14,0),leaf,sx*.75,1.0,-HD+.42);p.scale.y=.8}
+    // ---- hai bên hông: vách kính khung đen, rèm trắng
+    for(const sx of [-1,1]){add(new THREE.PlaneGeometry(HD*2,EAVE),glass,sx*HW,EAVE/2,0,sx*Math.PI/2);for(let k=0;k<=4;k++)B(.06,EAVE,.06,black,sx*HW,EAVE/2,-HD+k*HD/2);
+      for(const z of [-HD+.6,HD-.7]){const c=B(.08,EAVE-.3,1.1,M('#f6f1e6',{transparent:true,opacity:.88}),sx*(HW-.15),EAVE/2-.1,z);c.scale.x=1}}
+    // ---- mặt trước: cửa kính trượt khung đen, hiên gỗ có 2 chậu cây tròn và 2 đèn trụ
+    add(new THREE.PlaneGeometry(HW*2,EAVE),glass,0,EAVE/2,HD);for(const x of [-HW,-4,-2,2,4,HW])B(.06,EAVE-.1,.06,black,x,EAVE/2,HD);B(HW*2,.06,.06,black,0,EAVE-.1,HD);B(HW*2,.05,.08,black,0,.03,HD);
+    for(const sx of [-1,1]){const x=sx*2.1;add(new THREE.CylinderGeometry(.38,.3,.75,10),M('#ece6da'),x,.37,HD+1.2);const b=add(new THREE.IcosahedronGeometry(.55,1),leaf,x,1.15,HD+1.2);b.scale.y=.9;
+      const lx=sx*4.6;B(.06,1.1,.06,black,lx,.55,HD+1.9);B(.3,.36,.3,black,lx,1.25,HD+1.9);B(.24,.3,.24,glow('#ffe4a8',.9),lx,1.25,HD+1.9)}
+    // ---- phòng khách: thảm cói lớn, sofa chữ L màu kem nhiều gối, bàn đá trắng có bình hoa trắng, đôn mây
+    const rugT=tex(128,128,(c,w,h)=>{c.fillStyle='#c9ab7c';c.fillRect(0,0,w,h);for(let i=0;i<64;i++){c.fillStyle=i%2?'rgba(110,80,40,.2)':'rgba(255,240,200,.15)';c.fillRect(i*2,0,1,h);c.fillRect(0,i*2,w,1)}},[4,3]);
+    add(new THREE.PlaneGeometry(4.8,3.9),M('#fff',{map:rugT,roughness:1}),-1.3,.012,.5,0,-Math.PI/2);
+    const SF={x0:-3.6,x1:.3,zb:-1.25,z1:2.5};/* sofa: lưng dọc theo z=zb (x0..x1), cánh trái dọc x=x0 (zb..z1) */
+    B(SF.x1-SF.x0,.12,.95,woodL,(SF.x0+SF.x1)/2,.08,SF.zb);B(SF.x1-SF.x0,.26,.9,cream,(SF.x0+SF.x1)/2,.3,SF.zb+.02);B(SF.x1-SF.x0,.55,.22,cream,(SF.x0+SF.x1)/2,.62,SF.zb-.36);
+    B(.95,.12,SF.z1-SF.zb-.5,woodL,SF.x0,.08,(SF.zb+SF.z1)/2+.25);B(.9,.26,SF.z1-SF.zb-.5,cream,SF.x0+.02,.3,(SF.zb+SF.z1)/2+.25);B(.22,.55,SF.z1-SF.zb+.4,cream,SF.x0-.36,.62,(SF.zb+SF.z1)/2-.2);
+    B(.25,.42,.9,cream,SF.x1+.12,.42,SF.zb);B(.9,.42,.25,cream,SF.x0,.42,SF.z1+.12);
+    {const P=[[-3.1,-1.42,0],[-2.5,-1.42,1],[-1.8,-1.42,0],[-1,-1.42,1],[-.3,-1.42,0],[-3.78,-.5,1],[-3.78,.3,0],[-3.78,1.1,1],[-3.78,1.8,0]];for(const [x,z,k] of P){const p=B(x<-3.7?.18:.5,.42,x<-3.7?.5:.18,k?pillowB:pillowA,x+(x<-3.7?.18:0),.62,z+(x<-3.7?0:.15));p.rotation.z=x<-3.7?0:.06}}
+    B(1.3,.4,1,stone,-1.4,.2,.75);{const v=add(new THREE.CylinderGeometry(.08,.1,.22,10),glass,-1.4,.51,.75);v.material=M('#dfece4',{transparent:true,opacity:.6});for(let k=0;k<9;k++){const f=add(new THREE.IcosahedronGeometry(.075,0),white,-1.4+Math.cos(k*.7)*.12*(k%3?1:.3),.7+(k%3)*.05,.75+Math.sin(k*.7)*.12*(k%3?1:.3))}
+      B(.18,.03,.18,woodD,-1.75,.415,1.0);B(.2,.05,.14,woodD,-1.05,.42,.95);add(new THREE.CylinderGeometry(.04,.04,.06,8),M('#fff2d2',{emissive:'#ffcf80',emissiveIntensity:.6}),-1.05,.47,.95)}
+    {const p=add(new THREE.SphereGeometry(.34,14,10),M('#fff',{map:rattanT}),.2,.24,2.05);p.scale.y=.7}
+    // ba đèn mây tròn treo
+    const pend=[[-1.9,2.55,-.55],[-1.2,2.35,-.05],[-.6,2.6,-.7]];for(const [x,y,z] of pend){B(.01,EAVE+1.2-y,.01,black,x,(y+EAVE+1.2)/2,z);const s=add(new THREE.SphereGeometry(.3,12,10),M('#fff',{map:rattanT,emissive:'#ffb860',emissiveIntensity:.9,transparent:true,opacity:.93}),x,y,z);s.scale.y=1.05;add(new THREE.SphereGeometry(.1,8,6),glow('#fff0c0',.9),x,y-.02,z)}
+    {const L=new THREE.PointLight('#ffc77a',7,11,1.5);L.position.set(-1.2,2.2,-.3);sc.add(L);const L2=new THREE.PointLight('#ffd39a',4,9,1.6);L2.position.set(3.3,2.4,.2);sc.add(L2)}
+    // ---- bàn ăn gỗ dài 6 ghế đệm, bình hoa thiên điểu
+    const DT={x:3.3,z:.25};B(1.05,.08,2.7,wood,DT.x,.76,DT.z);for(const sx of [-1,1])for(const sz of [-1,1])B(.08,.72,.08,woodD,DT.x+sx*.42,.36,DT.z+sz*1.2);B(.36,.005,2.4,M('#efe7d6'),DT.x,.805,DT.z);
+    const chairs=[];for(const sx of [-1,1])for(const dz of [-.85,0,.85]){const x=DT.x+sx*.88,z=DT.z+dz;B(.5,.42,.46,woodL,x,.21,z);B(.48,.08,.44,cream,x,.46,z);chairs.push([x,z,sx])}
+    {add(new THREE.CylinderGeometry(.07,.09,.3,10),M('#dfece4',{transparent:true,opacity:.6}),DT.x,.95,DT.z);const bird=M('#f08a2a',{emissive:'#a04010',emissiveIntensity:.25});for(let k=0;k<5;k++){const a=k*1.25;const st2=B(.02,.45+k%2*.15,.02,leafD,DT.x+Math.cos(a)*.05,1.2+k%2*.07,DT.z+Math.sin(a)*.05);st2.rotation.z=Math.cos(a)*.25;st2.rotation.x=Math.sin(a)*.25;const f=add(new THREE.ConeGeometry(.04,.22,4),bird,DT.x+Math.cos(a)*.17,1.45+k%2*.12,DT.z+Math.sin(a)*.17);f.rotation.z=Math.PI/2.4*Math.sign(Math.cos(a)||1)}
+      B(.22,.04,.22,woodD,DT.x,.82,DT.z-.85);B(.22,.04,.22,woodD,DT.x,.82,DT.z+.85);add(new THREE.SphereGeometry(.05,8,6),white,DT.x,.87,DT.z+.85)}
+    // góc phòng: bàn console nhỏ có chậu cây (trái), chậu monstera (phải)
+    B(.45,.8,1.1,stone,-HW+.45,.4,-2.6);add(new THREE.IcosahedronGeometry(.2,0),leaf,-HW+.45,1.0,-2.6);
+    add(new THREE.CylinderGeometry(.28,.22,.45,10),white,HW-.6,.22,-HD+.65);for(let k=0;k<7;k++){const a=k*.9,l=add(new THREE.CircleGeometry(.32,7),leafD,HW-.6+Math.cos(a)*.3,.75+k*.08,-HD+.65+Math.sin(a)*.3);l.rotation.set(-1+Math.random()*.6,a,0);l.material.side=THREE.DoubleSide}
+    // ---- đi lại tránh đồ vật, chỗ ngồi trên sofa và ghế ăn
+    st.blocks=[[SF.x0-.6,SF.zb-.6,SF.x1+.3,SF.zb+.5],[SF.x0-.6,SF.zb-.6,SF.x0+.5,SF.z1+.3],[-2.1,.25,-.75,1.25],[-.15,1.7,.55,2.4],[DT.x-1.2,DT.z-1.6,DT.x+1.2,DT.z+1.6],[-HW,-2.6-.6,-HW+.75,-2.6+.6],[HW-1,-HD,HW,-HD+1.1],[-1.2,-HD,1.2,-HD+.75],[-HW,-HD,-1.8,-HD+.65],[1.8,-HD,HW,-HD+.65]];
+    const seatHit=new THREE.BoxGeometry(.6,.6,.6),seatM=new THREE.MeshBasicMaterial({visible:false});
+    const seat=(x,z,a,y,ax,az,lab)=>{const h=add(seatHit,seatM,x,y,z);rTap(st,h,()=>{const W=st.walk;if(!W||!W.goSeat)return;W.goSeat({x,z,a,y,ax,az});rmHint('🛋 '+lab)})};
+    for(const x of [-3.0,-2.2,-1.4,-.6])seat(x,SF.zb+.05,0,.42,x,SF.zb+1.05,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
+    for(const z of [-.2,.6,1.4,2.1])seat(SF.x0+.05,z,Math.PI/2,.42,SF.x0+1.05,z,'Ngồi nghỉ trên sofa · bấm Đứng lên hoặc đi để rời ghế');
+    for(const [x,z,sx] of chairs)seat(x,z,-sx*Math.PI/2,.46,x+sx*.75,z,'Ngồi bên bàn ăn gỗ · ngắm bình hoa thiên điểu');
+    rmHint('🏡 Nhà chính Đảo Yên · chạm sàn để đi, chạm sofa hoặc ghế để ngồi · 🚪 Ra cửa để ra hiên');
+    st.cleanup=()=>{for(const t of texs)t.dispose()}}
+  __roomsExport({roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen});
