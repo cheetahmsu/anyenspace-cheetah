@@ -172,7 +172,7 @@
       if(step===0){boiling=true;strike(523,2,.03,[[1,1]]);setTimeout(()=>{boiling=false},2600)}else if(step===1||step===3){pour=1}else if(step===2){jar.rotation.z=.6;setTimeout(()=>jar.rotation.z=0,700)}else if(step===4){pour=1;teas.forEach((t,i)=>setTimeout(()=>{if(!st.run)return;t.visible=true;strike(880,1.2,.02,[[1,1]])},300+i*350))}
       step++;render();if(step>=STEPS.length){const q=TEA_WORDS[Math.floor(Math.random()*TEA_WORDS.length)];document.getElementById('teaQuote').textContent='🍵 '+q;rmHint('Mời bạn một chén trà · '+q)}}}
   function roomTuGia(st){let sty='gian_di';try{const v=localStorage.getItem('yen_home_style');if(HOME_STYLES[v])sty=v}catch(e){}
-    rmHint('Tư Gia của bạn · Chỉ bạn thấy nhà mình · Kéo để nhìn quanh');st.target.set(0,.8,-.4);st.dist=4.4;st.pitch=.16;
+    rmHint('Tư Gia Rừng Yên · Chỉ bạn thấy nhà mình · Kéo để nhìn quanh');st.target.set(0,.8,-.4);st.dist=4.4;st.pitch=.16;
     const tint=[];const T=(m,k)=>{tint.push([m,k]);return m};
     const table=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.75,.8,.08,24),T(mat('#6e4a33'),'acc')),0,.32,.3);rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,.28,10),mat('#4e3a2a')),0,.14,.3);
     for(let k=0;k<6;k++){const a=k*Math.PI/3;rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.24,.26,.1,14),T(mat('#c9b38a'),'cush')),Math.sin(a)*1.25,.05,.3+Math.cos(a)*1.25)}
@@ -189,7 +189,7 @@
     function apply(k){sty=k;try{localStorage.setItem('yen_home_style',k)}catch(e){}const S=HOME_STYLES[k];
       st.sc.traverse(o=>{if(!o.isMesh||!o.material||!o.material.color)return;const p=o.position;if(o.geometry.type==='BoxGeometry'){const g=o.geometry.parameters;if(g.width===8&&g.height===.1)o.material.color.set(S.floor);else if((g.width===8&&g.height===4)||(g.width===.12&&g.height===4))o.material.color.set(S.wall)}});
       for(const [m,t] of tint)m.color.set(t==='acc'?S.acc:k==='sang_chanh'?'#c8a96a':k==='hanh_phuc'?'#f3c3cf':'#c9b38a');render()}
-    function render(){rmPanel.innerHTML='<p>🏡 <b>Tư Gia của bạn</b> · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'</div>'+
+    function render(){rmPanel.innerHTML='<p>🏡 <b>Tư Gia Rừng Yên</b> · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'</div>'+
       '<p class="rm-note">Bàn trà 6 chỗ · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà. Bày đồ từ Túi An Yên, gieo hạt và mời tối đa 5 khách sẽ mở ở bước tiếp theo.</p>'}
     rmPanel.onclick=e=>{const b=e.target.closest('[data-hs]');if(b)apply(b.dataset.hs)};apply(sty)}
   function roomTinhThat(st){rmHint('Nhuộm vải, chọn số điều, rồi khâu từng mảnh · Chạm mảnh đã khâu để đổi màu');st.target.set(0,1.2,0);st.dist=3.6;st.pitch=.08;
@@ -483,7 +483,7 @@
       return '<p class="nm-mode">🧘 Solo · yên tĩnh, không ai thấy bạn <button type="button" data-nm="session">Vào Phiên 1+5</button></p>'}
     function render(){let h='';const t=S.tab,a=S.act;
       if(!S.entered){h='<p><b>00 · Nghi thức Gột bụi</b> · Trước khi bước qua cửa vòm Trăng, chạm bồn đá bazan để rửa tay và nghe một tiếng chuông gió tre.</p>'+
-        (S.washed?'<p class="rm-quote">Bụi đường đã lắng. Mời bạn chọn cách bước vào.</p><div class="rm-row"><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'':'rm-gold')+'" data-nm="go-solo">🧘 Đi Solo · hoàn toàn yên tĩnh</button><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'rm-gold':'')+'" data-nm="go-session">🌿 Vào Phiên 1+5 cùng Healer</button></div><p class="rm-note">Phiên 1+5 là phiên bạn đã đặt ở Lịch trị liệu. Mỗi phiên có kênh riêng; các phiên chạy song song không thấy nhau.</p>'
+        (S.washed?'<p class="rm-quote">Bụi đường đã lắng. Mời bạn chọn cách bước vào.</p><div class="rm-row"><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'':'rm-gold')+'" data-nm="go-solo">🧘 Đi Solo · hòan toàn yên tĩnh</button><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'rm-gold':'')+'" data-nm="go-session">🌿 Vào Phiên 1+5 cùng Healer</button></div><p class="rm-note">Phiên 1+5 là phiên bạn đã đặt ở Lịch trị liệu. Mỗi phiên có kênh riêng; các phiên chạy song song không thấy nhau.</p>'
         :'<div class="rm-row"><button type="button" class="rm-gold" data-nm="wash">💧 Chạm bồn đá · rửa tay</button></div>');rmPanel.innerHTML=h;return}
       h=modeBadge()+(S.sessNote&&!inSession()?'<p class="rm-note">'+esc(S.sessNote)+(/Lịch trị liệu|đặt lịch/.test(S.sessNote)?' · <a href="lich.html" style="color:#f2dca8">Mở Lịch trị liệu</a>':'')+'</p>':'');
       h+='<div class="rm-row nm-tabs">'+[['breath','🕯️ 01 Thở'],['silence','🌙 02 Khoảng Lặng'],['beads','📿 03 Chuỗi 108'],['bowl','💧 04 Buông Bỏ'],['cards','🃏 Kệ 9 thẻ']].map(([k,l])=>'<button type="button" data-tab="'+k+'"'+(t===k||t===k+'Done'?' class="sel"':'')+'>'+l+'</button>').join('')+'</div>';
@@ -902,7 +902,7 @@
     const KINDS=[
       {id:'ho_diep',name:'Lan Hồ Điệp',sci:'Phalaenopsis',col:'#f6f0f4',lip:'#d0507a',n:5,size:.065,arch:1.6,note:'Cánh tròn, xếp như đàn bướm đậu trên một cành cong.',look:'Nhìn đường cong của cành hoa, từ gốc ra đến nụ cuối.'},
       {id:'dia_lan',name:'Địa lan',sci:'Cymbidium',col:'#d9cf7a',lip:'#a0402e',n:8,size:.06,arch:.25,note:'Lan đất, lá dài như lá kiếm, ngồng hoa thẳng mọc từ gốc; được trồng nhiều ở Đà Lạt.',look:'Nhìn màu chuyển từ cánh sang môi hoa, nhìn chấm đỏ nhỏ ở giữa.'},
-      {id:'hoang_thao',name:'Lan Hoàng thảo',sci:'Dendrobium',col:'#c78bc9',lip:'#7a2c78',n:6,size:.05,arch:.6,cane:true,note:'Thân có đốt như đốt trúc, hoa mọc dọc theo đốt.',look:'Nhìn từng đốt thân, đếm chậm các đốt như đếm hơi thở.'},
+      {id:'hoang_thao',name:'Lan Hòang thảo',sci:'Dendrobium',col:'#c78bc9',lip:'#7a2c78',n:6,size:.05,arch:.6,cane:true,note:'Thân có đốt như đốt trúc, hoa mọc dọc theo đốt.',look:'Nhìn từng đốt thân, đếm chậm các đốt như đếm hơi thở.'},
       {id:'lan_hai',name:'Lan Hài',sci:'Paphiopedilum',col:'#c7b27a',lip:'#7c4a2a',n:1,size:.085,arch:.15,slipper:true,note:'Môi hoa phồng thành túi như chiếc hài; Việt Nam có nhiều loài lan hài quý.',look:'Nhìn chiếc túi của môi hoa, nhìn ánh sáng trượt trên bề mặt bóng.'},
       {id:'vu_nu',name:'Lan Vũ nữ',sci:'Oncidium',col:'#f0c93a',lip:'#e6b21e',n:14,size:.035,arch:.9,spray:true,note:'Chùm hoa vàng nhỏ, mỗi bông như một vũ công xoè váy.',look:'Nhìn cả chùm như một đám mây vàng, rồi chọn một bông nhỏ nhất.'},
       {id:'vanda',name:'Lan Vanda',sci:'Vanda',col:'#7f6ac0',lip:'#5a3f9a',n:6,size:.075,arch:.2,hang:true,note:'Treo trong giỏ, rễ khí sinh buông dài hút hơi ẩm từ không khí.',look:'Nhìn những sợi rễ buông xuống, nhìn khoảng trống giữa chúng.'}];

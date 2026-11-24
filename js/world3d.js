@@ -90,7 +90,7 @@ for(const l of wishLakes){
  lakeVisuals.set(l.name,group);
 }}
 function animateCoin(lake,remote){const l=wishLakes.find(v=>v.name===lake);if(!l)return;const coin=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,24),new THREE.MeshStandardMaterial({color:'#e5c178',metalness:.8,roughness:.2}));const from=remote?new THREE.Vector3(l.x+5,1.7,l.z+5):mePosition.clone().add(new THREE.Vector3(0,1.7,0));scene.add(coin);const start=performance.now();function frame(now){const t=Math.min(1,(now-start)/1400);coin.position.set(from.x+(l.x-from.x)*t,from.y+(.12-from.y)*t+Math.sin(Math.PI*t)*2.8,from.z+(l.z-from.z)*t);coin.rotation.z=t*15;if(t<1)requestAnimationFrame(frame);else{scene.remove(coin);coin.geometry.dispose();coin.material.dispose()}}requestAnimationFrame(frame)}
-const wishQuotes={"Sắc":["Thịnh vượng là biết điều gì thật sự đủ.","Giá trị hôm nay tạo nên cơ hội ngày mai.","Kiên nhẫn cũng là một hình thức đầu tư.","Hãy chăm sóc nền móng trước khi xây thêm tầng.","Một quyết định sáng suốt cần ít vội vàng hơn.","Tài sản quý nhất là khả năng bắt đầu lại.","Đừng so tốc độ của mình với người khác.","Dành chỗ cho cả tích lũy và tận hưởng.","Điều bền vững thường lớn lên trong im lặng.","Thành công có ý nghĩa khi bạn vẫn là chính mình.","Hôm nay, hãy tạo ra một giá trị thật.","Không phải cánh cửa nào mở ra cũng cần bước vào."],"Thanh":["Làm việc quan trọng trước khi làm việc khẩn cấp.","Bạn không cần giỏi mọi thứ để tạo khác biệt.","Một lời nói rõ ràng có thể tháo gỡ hiểu lầm.","Đừng nhầm bận rộn với tiến bộ.","Có những bước lùi giúp nhìn rõ đường đi.","Tài năng nở rộ trong đúng môi trường.","Hãy xin giúp đỡ trước khi kiệt sức.","Tập trung là món quà dành cho mục tiêu.","Một ngày làm việc tốt vẫn cần điểm dừng.","Bạn được phép học trong lúc đang làm.","Lắng nghe đồng đội là một năng lực lãnh đạo.","Cơ hội đôi khi đến từ cuộc trò chuyện chân thành."],"Hương":["Cơ thể không phải cỗ máy chạy hết công suất.","Một giấc ngủ đủ là quyết định khôn ngoan.","Chăm sóc bản thân không cần đợi lúc mệt.","Hãy uống nước và trở về với hiện tại.","Nghỉ ngơi cũng là một phần của phát triển.","Mỗi hơi thở chậm là một lời nhắc dịu dàng.","Đừng dùng một ngày khó để đánh giá cả đời.","Đi bộ vài phút cũng giúp tâm trí rộng mở.","Lắng nghe cơ thể trước khi nó lên tiếng lớn.","Một bữa ăn thong thả đáng được trân trọng.","Sức khỏe đến từ điều nhỏ được lặp lại.","Cân bằng là điều được điều chỉnh mỗi ngày."],"Vị":["Tình yêu đẹp không khiến bạn đánh mất mình.","Một câu hỏi chân thành hơn mười lời đoán.","Hãy yêu bằng sự hiện diện, không chỉ lời hứa.","Bền lâu cần cả gần gũi lẫn khoảng riêng.","Đừng mong người khác đọc điều bạn chưa nói.","Sự dịu dàng có sức mạnh riêng.","Yêu thương không phải cuộc thi hy sinh.","Một lời xin lỗi đúng lúc có thể mở cửa.","Lắng nghe là cách ôm nhau bằng tâm trí.","Bạn xứng đáng với sự tôn trọng.","Đừng kết luận khi trái tim còn đang nóng.","Tình cảm cần được tưới bằng hành động."],"Chạm":["Kết nối thật bắt đầu khi ta hiện diện thật.","Một lời hỏi thăm có thể thay đổi một ngày.","Hãy tìm người để cùng đi, không chỉ cùng đến.","Không phải cuộc gặp nào cũng cần mục đích.","Được lắng nghe là một dạng được yêu thương.","Tình bạn lớn lên từ những lần có mặt.","Bạn có thể chủ động mở lời trước.","Khác biệt không nhất thiết là khoảng cách.","Hãy giữ lời hứa nhỏ để nuôi niềm tin.","Mỗi người mang theo câu chuyện chưa kể.","Hãy tập hiểu người trước khi mong được hiểu.","Chân thành là chiếc cầu không cần trang trí."],"Niệm":["Mỗi hơi thở tỉnh thức là một lần trở về nhà.","Làm chậm một việc nhỏ, bạn sẽ thấy nó trọn vẹn.","Chánh niệm là biết mình đang làm gì khi đang làm điều đó.","Hãy để tâm nghỉ một chút như mặt hồ lặng.","Sen trắng nở giữa bùn mà không nhiễm bùn.","Một ngọn đèn nhỏ đủ soi một bước chân.","Lắng nghe hơi thở vào, mỉm cười với hơi thở ra.","Điều đang có mặt bây giờ là đủ để bắt đầu."],"Sen":["Bạn không cần giải quyết cả tương lai hôm nay.","Trở về với hơi thở, trở về với chính mình.","Bình an không đợi mọi việc hoàn tất.","Một khoảnh khắc tỉnh thức cũng đáng quý.","Hãy để suy nghĩ đi qua mà không chạy theo.","Bạn có thể bắt đầu lại từ phút này.","Im lặng là khoảng trống để lắng nghe.","Chậm một nhịp để nhìn rõ điều đang xảy ra.","Có câu trả lời đến khi ta ngừng ép tìm.","Một ngày bình thường vẫn chứa điều kỳ diệu.","Bạn được phép chưa biết bước tiếp theo.","Hãy đối xử với mình bằng sự tử tế."]};
+const wishQuotes={"Sắc":["Thịnh vượng là biết điều gì thật sự đủ.","Giá trị hôm nay tạo nên cơ hội ngày mai.","Kiên nhẫn cũng là một hình thức đầu tư.","Hãy chăm sóc nền móng trước khi xây thêm tầng.","Một quyết định sáng suốt cần ít vội vàng hơn.","Tài sản quý nhất là khả năng bắt đầu lại.","Đừng so tốc độ của mình với người khác.","Dành chỗ cho cả tích lũy và tận hưởng.","Điều bền vững thường lớn lên trong im lặng.","Thành công có ý nghĩa khi bạn vẫn là chính mình.","Hôm nay, hãy tạo ra một giá trị thật.","Không phải cánh cửa nào mở ra cũng cần bước vào."],"Thanh":["Làm việc quan trọng trước khi làm việc khẩn cấp.","Bạn không cần giỏi mọi thứ để tạo khác biệt.","Một lời nói rõ ràng có thể tháo gỡ hiểu lầm.","Đừng nhầm bận rộn với tiến bộ.","Có những bước lùi giúp nhìn rõ đường đi.","Tài năng nở rộ trong đúng môi trường.","Hãy xin giúp đỡ trước khi kiệt sức.","Tập trung là món quà dành cho mục tiêu.","Một ngày làm việc tốt vẫn cần điểm dừng.","Bạn được phép học trong lúc đang làm.","Lắng nghe đồng đội là một năng lực lãnh đạo.","Cơ hội đôi khi đến từ cuộc trò chuyện chân thành."],"Hương":["Cơ thể không phải cỗ máy chạy hết công suất.","Một giấc ngủ đủ là quyết định khôn ngoan.","Chăm sóc bản thân không cần đợi lúc mệt.","Hãy uống nước và trở về với hiện tại.","Nghỉ ngơi cũng là một phần của phát triển.","Mỗi hơi thở chậm là một lời nhắc dịu dàng.","Đừng dùng một ngày khó để đánh giá cả đời.","Đi bộ vài phút cũng giúp tâm trí rộng mở.","Lắng nghe cơ thể trước khi nó lên tiếng lớn.","Một bữa ăn thong thả đáng được trân trọng.","Sức khỏe đến từ điều nhỏ được lặp lại.","Cân bằng là điều được điều chỉnh mỗi ngày."],"Vị":["Tình yêu đẹp không khiến bạn đánh mất mình.","Một câu hỏi chân thành hơn mười lời đoán.","Hãy yêu bằng sự hiện diện, không chỉ lời hứa.","Bền lâu cần cả gần gũi lẫn khoảng riêng.","Đừng mong người khác đọc điều bạn chưa nói.","Sự dịu dàng có sức mạnh riêng.","Yêu thương không phải cuộc thi hy sinh.","Một lời xin lỗi đúng lúc có thể mở cửa.","Lắng nghe là cách ôm nhau bằng tâm trí.","Bạn xứng đáng với sự tôn trọng.","Đừng kết luận khi trái tim còn đang nóng.","Tình cảm cần được tưới bằng hành động."],"Chạm":["Kết nối thật bắt đầu khi ta hiện diện thật.","Một lời hỏi thăm có thể thay đổi một ngày.","Hãy tìm người để cùng đi, không chỉ cùng đến.","Không phải cuộc gặp nào cũng cần mục đích.","Được lắng nghe là một dạng được yêu thương.","Tình bạn lớn lên từ những lần có mặt.","Bạn có thể chủ động mở lời trước.","Khác biệt không nhất thiết là khoảng cách.","Hãy giữ lời hứa nhỏ để nuôi niềm tin.","Mỗi người mang theo câu chuyện chưa kể.","Hãy tập hiểu người trước khi mong được hiểu.","Chân thành là chiếc cầu không cần trang trí."],"Niệm":["Mỗi hơi thở tỉnh thức là một lần trở về nhà.","Làm chậm một việc nhỏ, bạn sẽ thấy nó trọn vẹn.","Chánh niệm là biết mình đang làm gì khi đang làm điều đó.","Hãy để tâm nghỉ một chút như mặt hồ lặng.","Sen trắng nở giữa bùn mà không nhiễm bùn.","Một ngọn đèn nhỏ đủ soi một bước chân.","Lắng nghe hơi thở vào, mỉm cười với hơi thở ra.","Điều đang có mặt bây giờ là đủ để bắt đầu."],"Sen":["Bạn không cần giải quyết cả tương lai hôm nay.","Trở về với hơi thở, trở về với chính mình.","Bình an không đợi mọi việc hòan tất.","Một khoảnh khắc tỉnh thức cũng đáng quý.","Hãy để suy nghĩ đi qua mà không chạy theo.","Bạn có thể bắt đầu lại từ phút này.","Im lặng là khoảng trống để lắng nghe.","Chậm một nhịp để nhìn rõ điều đang xảy ra.","Có câu trả lời đến khi ta ngừng ép tìm.","Một ngày bình thường vẫn chứa điều kỳ diệu.","Bạn được phép chưa biết bước tiếp theo.","Hãy đối xử với mình bằng sự tử tế."]};
 function wishQuote(lake){const arr=wishQuotes[lake]||wishQuotes.Sen;window.anyenLastQuote=window.anyenLastQuote||{};let index=Math.floor(Math.random()*arr.length);if(arr.length>1&&index===window.anyenLastQuote[lake])index=(index+1)%arr.length;window.anyenLastQuote[lake]=index;
  let toast=document.getElementById('anyenWishQuoteToast');if(!toast){toast=document.createElement('div');toast.id='anyenWishQuoteToast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.append(toast);}toast.textContent='✧ Hồ '+lake+' · '+arr[index];toast.classList.add('show');window.dispatchEvent(new CustomEvent('anyen-journal-add',{detail:{lake,quote:arr[index],at:Date.now()}}));clearTimeout(window.anyenQuoteTimer);window.anyenQuoteTimer=setTimeout(()=>toast.classList.remove('show'),6500);}
 window.addEventListener('anyen-item-receive',e=>{const {id,emoji,name,source,from}=e.detail||{};if(!id)return;
@@ -131,7 +131,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Mặt bậc đá lên tượng Phật: mỗi phiến đá phẳng (bậc thang), không trượt theo dốc đất nên chân không chìm vào phiến đá.
   function stairStepY(x,z){let y=null;for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),dx=(bx-ax)/len,dz=(bz-az)/len,t=(x-ax)*dx+(z-az)*dz,d=Math.abs((x-ax)*dz-(z-az)*dx);
     if(d>1.45||t<-.32||t>len+.32)continue;const k=Math.max(0,Math.min(Math.floor(len/.62),Math.round(t/.62))),cx=ax+dx*k*.62,cz=az+dz*k*.62,h=terrainHeight(cx,cz)+.14;y=y==null?h:Math.max(y,h)}return y}
-  // Bến sen (cầu tàu gỗ, x -9 ± .85, z .6 → 8.8): đứng trên mặt ván, không lọt xuống nước
+  // Bến Sen (cầu tàu gỗ, x -9 ± .85, z .6 → 8.8): đứng trên mặt ván, không lọt xuống nước
   const PIER_TOP=.27,onPier=(x,z)=>Math.abs(x+9)<.95&&z>.5&&z<8.9;
   const groundHeight=(x,z)=>{if(Math.abs(x)<=1.8&&z>BRIDGE_ARCH[0]&&z<BRIDGE_ARCH[1])return bridgeHeight(z);const t=terrainHeight(x,z);if(onPier(x,z))return Math.max(PIER_TOP,t);const st=stairStepY(x,z);return st==null?t:Math.max(t,st)};const terrace=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R,TERRACE_R+.05,.3,64),terraceMat);terrace.position.set(STATUE.x,.15,STATUE.z);shrine.add(terrace);const kerb=new THREE.Mesh(new THREE.CylinderGeometry(TERRACE_R+.2,TERRACE_R+.25,.12,64),terraceEdge);kerb.position.set(STATUE.x,.04,STATUE.z);shrine.add(kerb);
   // Round three-step dais for the statue.
@@ -214,10 +214,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const ORCHID_DOOR=[ORCHID.x+Math.sin(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2),ORCHID.z+Math.cos(ORCHID.rot)*(ORCHID.d/2+HOUSE_GAP/2)];
   // Bấm Nhà Sắc thì vào không gian bên trong nhà hoa lan (rooms3d.js); Viverse chỉ mở từ Cổng Viverse bên hông.
   const NHA_SAC={id:'nha_hoa_lan',name:'Nhà Sắc · hoa lan',short:'Nhà Sắc',icon:'🌸',x:ORCHID.x,z:ORCHID.z,rot:ORCHID.rot,door:ORCHID_DOOR,note:'House of Sight · sáu dòng lan · Thiền ngắm hoa'};
-  // Cổng Viverse: dời ra bên hông Nhà Hoa Lan, phía lối vào chính (đứng ở cửa nhà nhìn ra Hồ Sắc thì ở bên phải), mặt cổng cùng hướng mặt nhà.
+  // Cổng Viverse: dời ra bên hông Nhà hoa lan, phía lối vào chính (đứng ở cửa nhà nhìn ra Hồ Sắc thì ở bên phải), mặt cổng cùng hướng mặt nhà.
   const VIV={rot:ORCHID.rot,W:6.2,D:1.6};{const ex=-Math.cos(ORCHID.rot),ez=Math.sin(ORCHID.rot),fx=Math.sin(ORCHID.rot),fz=Math.cos(ORCHID.rot);VIV.x=ORCHID.x+ex*(ORCHID.w/2+5)+fx*3;VIV.z=ORCHID.z+ez*(ORCHID.w/2+5)+fz*3;VIV.door=[VIV.x+fx*2.4,VIV.z+fz*2.4]}
   // Tư Gia: bờ đông Hồ Sen, nhìn qua hồ sen và cầu vòm lên tượng Phật. Cùng một toạ độ cho mọi người, mỗi người thấy nhà của mình.
-  /* rộng bằng nhà trị liệu (11 × 11 m); mặt nhà cách mép Hồ Sen 16 m, cách Nhà Vị 11 m */const TU_GIA={id:'tu_gia_me',name:'Tư Gia của bạn',icon:'🏡',x:31+16+POND_R,z:.5,W:2*POND_R,D:2*POND_R,note:'Không gian riêng · bàn trà 6 chỗ, Kệ Lưu Hương 9 ô, Góc Gieo Hạt',rot:-Math.PI/2};
+  /* rộng bằng nhà trị liệu (11 × 11 m); mặt nhà cách mép Hồ Sen 16 m, cách Nhà Vị 11 m */const TU_GIA={id:'tu_gia_me',name:'Tư Gia Rừng Yên',icon:'🏡',x:31+16+POND_R,z:.5,W:2*POND_R,D:2*POND_R,note:'Không gian riêng · bàn trà 6 chỗ, Kệ Lưu Hương 9 ô, Góc Gieo Hạt',rot:-Math.PI/2};
   TU_GIA.door=[TU_GIA.x+Math.sin(TU_GIA.rot)*(TU_GIA.D/2+1.4),TU_GIA.z+Math.cos(TU_GIA.rot)*(TU_GIA.D/2+1.4)];TU_GIA.garden=[TU_GIA.x-1,TU_GIA.z+TU_GIA.D/2+3.2];
   const TT_SPOT=[11,-110.5];/* Tịnh thất may y (bản đồ v3.6): phía Tây Nhà Niệm, phía Bắc Đồi Tượng Phật */
   // Nhà Văn Hóa (bản đồ v3.6): 16 × 11 m, phía Tây Nam cạnh Sân đón, cửa quay Bắc ra đường lát đá từ trục chính (z = 16).
@@ -419,7 +419,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
    // Cầu vòm gỗ: mặt cầu ván gỗ xếp ngang theo đường vòng cung, hai dầm cong ôm dưới mặt cầu, lan can gỗ nâu cùng màu thân thông
    // (trụ vuông, đầu trụ phẳng), tay vịn cong theo vòm, chấn song chữ thập; mố đá có bậc, bốn cột đèn đá ở hai đầu cầu.
    // Cả cầu gộp thành một khối hình (một lần vẽ). Lòng vòm giữ trống cho thuyền chui qua.
-   {const parts=[],P=(...a)=>parts.push(HP(...a)),span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0],N=40,HW=1.75,red='#6e4632',redD='#5a3a2a',gold='#c8a96a',/* nâu cùng màu thân thông */plank=['#6d4d2f','#624a33','#684a31']/* cùng màu gỗ thuyền và Bến sen, trầm hơn chút */,dark='#4e3424',stoneC='#7a7466';
+   {const parts=[],P=(...a)=>parts.push(HP(...a)),span=BRIDGE_ARCH[1]-BRIDGE_ARCH[0],N=40,HW=1.75,red='#6e4632',redD='#5a3a2a',gold='#c8a96a',/* nâu cùng màu thân thông */plank=['#6d4d2f','#624a33','#684a31']/* cùng màu gỗ thuyền và Bến Sen, trầm hơn chút */,dark='#4e3424',stoneC='#7a7466';
     const Y=z=>bridgeHeight(z),zAt=k=>BRIDGE_ARCH[0]+span*k/N;
     for(let k=0;k<N;k++){const z0=zAt(k),z1=zAt(k+1),y0=Y(z0),y1=Y(z1),mz=(z0+z1)/2,my=(y0+y1)/2,len=Math.hypot(z1-z0,y1-y0),tilt=-Math.atan2(y1-y0,z1-z0);
       // ván mặt cầu (2 tấm mỗi đoạn, có khe nhỏ)
@@ -546,7 +546,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(i%2===0){const leaf=raisedLeaf(.45+Math.random()*.4);leaf.position.set(.45,0,-.3);clump.add(leaf)}
     if(i%3!==2){const fl=lotusFlower(.35+Math.random()*.35);fl.position.set(-.2,0,.15);clump.add(fl)}else{const bud=lotusBud(.4+Math.random()*.3);bud.position.set(-.1,0,.1);clump.add(bud)}
     scene.add(clump);flowers.push(clump)}
-  // 3.15: Ba thuyền ngắm cảnh trên hồ sen. Thuyền neo ở Bến sen (cầu gỗ bờ nam, phía tây cầu vòm). Chạm thuyền để lên;
+  // 3.15: Ba thuyền ngắm cảnh trên hồ sen. Thuyền neo ở Bến Sen (cầu gỗ bờ nam, phía tây cầu vòm). Chạm thuyền để lên;
   // thuyền tự đi một vòng hình số 8 qua hai cánh hồ, chui gầm cầu vòm hai lần, rồi về đúng chỗ neo. Mỗi thuyền một người;
   // thuyền đang có người thì người khác thấy thuyền đi trên hồ và chờ chiếc khác.
   const BOAT_SPEED=2.25,BOAT_STEP_MS=900;/* one loop (about 135 m from the pier and back) in about 60 s */
@@ -558,7 +558,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
    const rim=new THREE.Mesh(new THREE.ExtrudeGeometry((()=>{const r=outline(1.03);r.holes.push(outline(.9));return r})(),{depth:.05,bevelEnabled:false,curveSegments:10}),trim);rim.rotation.x=-Math.PI/2;rim.position.y=.36;g.add(rim);
    const bench=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,1.12),trim);bench.position.set(-.55,.3,0);g.add(bench);
    return {group:g};}
-  // Bến sen: a wooden pier from the south shore into the west lobe; three moorings, two on its west side, one on the east.
+  // Bến Sen: a wooden pier from the south shore into the west lobe; three moorings, two on its west side, one on the east.
   const BOAT_SLOTS=[{x:-10.75,z:4.7,land:[-9.4,4.7]},{x:-10.75,z:1.9,land:[-9.4,1.9]},{x:-7.25,z:3.2,land:[-8.6,3.2]}];
   {const deckM=mat('#684a31'),postM=mat('#5a3a2a'),len=BEN_SEN.z1-BEN_SEN.z0;
     const deck=new THREE.Mesh(new THREE.BoxGeometry(BEN_SEN.w,.14,len),deckM);deck.position.set(BEN_SEN.x,.18,(BEN_SEN.z0+BEN_SEN.z1)/2);scene.add(deck);
@@ -579,7 +579,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     boatHud.querySelector('[data-boat="pause"]').textContent=r.phase==='pause'?'▶ Đi tiếp':'⏸ Dừng ngắm';boatHud.querySelector('[data-boat="pause"]').hidden=!!r.home;}
   boatHud.addEventListener('click',e=>{const a=e.target.closest('[data-boat]')?.dataset.boat,r=boatRide;if(!a||!r||!onBoat())return;
     if(a==='pause'){r.phase=r.phase==='pause'?'row':'pause';document.getElementById('zenHint').textContent=r.phase==='pause'?'⏸ Thuyền đang dừng · Vuốt để nhìn quanh':'🚣 Thuyền đi tiếp…'}
-    else if(a==='home'){r.home=true;r.phase='row';document.getElementById('zenHint').textContent='🚣 Thuyền đang về Bến sen…'}refreshBoatHud()});
+    else if(a==='home'){r.home=true;r.phase='row';document.getElementById('zenHint').textContent='🚣 Thuyền đang về Bến Sen…'}refreshBoatHud()});
   function boardBoat(b=pendingBoat){pendingBoat=null;if(!b)return;if(b.busy){document.getElementById('zenHint').textContent='🚣 Thuyền vừa có người lên, mời bạn chọn chiếc khác';return;}
     walkRoute.length=0;pendingSeat=null;const route=boatRoute(b);let total=0,px=b.slot.x,pz=b.slot.z;for(const [x,z] of route){total+=Math.hypot(x-px,z-pz);px=x;pz=z}
     boatRide={b,phase:'board',start:performance.now(),x0:mePosition.x,z0:mePosition.z,heading:Math.PI,path:route,total,travelled:0,heading0:Math.PI,home:false}}
@@ -588,12 +588,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(meActivity==='sit'){document.getElementById('realtimeSit')?.click();setTimeout(()=>tapBoat(i),60);return;}
     if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();
     const [lx,lz]=b.slot.land;if(Math.hypot(mePosition.x-lx,mePosition.z-lz)<1.3){pendingBoat=b;boardBoat();return;}
-    if(navigateTo(lx,lz)){pendingBoat=b;document.getElementById('zenHint').textContent='🚣 Đang ra Bến sen…';}}
-  function boatTap(){if(!boatRide)return false;document.getElementById('zenHint').textContent=boatRide.home?'🚣 Thuyền đang về Bến sen…':'🚣 Thuyền đang dạo hồ · Dùng nút Dừng ngắm hoặc Về bến';return true;}
+    if(navigateTo(lx,lz)){pendingBoat=b;document.getElementById('zenHint').textContent='🚣 Đang ra Bến Sen…';}}
+  function boatTap(){if(!boatRide)return false;document.getElementById('zenHint').textContent=boatRide.home?'🚣 Thuyền đang về Bến Sen…':'🚣 Thuyền đang dạo hồ · Dùng nút Dừng ngắm hoặc Về bến';return true;}
   let lastBoatFrame=0;
   function updateBoatRide(now){
     const r=boatRide,dt=Math.min(.25,(now-(lastBoatFrame||now))/1000);lastBoatFrame=now;walkRoute.length=0;const g=r.b.group;
-    if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1){r.phase='row';viewYaw=r.heading;r.heading0=r.heading;document.getElementById('zenHint').textContent='🚣 Thuyền rời Bến sen, dạo một vòng hồ sen…';refreshBoatHud()}}
+    if(r.phase==='board'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u);mePosition.set(r.x0+(g.position.x-r.x0)*e,0,r.z0+(g.position.z-r.z0)*e);if(u>=1){r.phase='row';viewYaw=r.heading;r.heading0=r.heading;document.getElementById('zenHint').textContent='🚣 Thuyền rời Bến Sen, dạo một vòng hồ sen…';refreshBoatHud()}}
     else if(r.phase==='row'){
       // Give way: another boat close ahead (or meeting us under the bridge) and we pause until it has passed.
       {const fx=Math.sin(r.heading),fz=Math.cos(r.heading);let wait=false;for(const p of onlineAvatars.values()){if(!p.boat||!p.boat.group.visible)continue;const q=p.boat.group.position,ox=q.x-g.position.x,oz=q.z-g.position.z,d=Math.hypot(ox,oz);if(d>4.5||d<.01)continue;const ahead=(ox*fx+oz*fz)/d;if(ahead>.35&&!(ahead<.8&&r.b.i<p.boatIndex)){wait=true;break}}
@@ -608,7 +608,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     else if(r.phase==='pause'){mePosition.set(g.position.x,0,g.position.z)}
     else if(r.phase==='dock'){let dh=Math.PI-r.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));r.heading+=dh*Math.min(1,dt*3);if(Math.abs(dh)<.05||now-r.start>1500){r.phase='ashore';r.start=now;boatHud.hidden=true}}
     else if(r.phase==='ashore'){const u=Math.min(1,(now-r.start)/BOAT_STEP_MS),e=u*u*(3-2*u),[lx,lz]=r.b.slot.land;mePosition.set(g.position.x+(lx-g.position.x)*e,0,g.position.z+(lz-g.position.z)*e);
-      if(u>=1){g.position.set(r.b.slot.x,.02,r.b.slot.z);r.heading=Math.PI;g.rotation.set(0,Math.PI/2,0);boatRide=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã về Bến sen · Chạm thuyền để dạo thêm vòng nữa';return}}
+      if(u>=1){g.position.set(r.b.slot.x,.02,r.b.slot.z);r.heading=Math.PI;g.rotation.set(0,Math.PI/2,0);boatRide=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));document.getElementById('zenHint').textContent='Đã về Bến Sen · Chạm thuyền để dạo thêm vòng nữa';return}}
     g.rotation.y=(r.heading||0)-Math.PI/2;g.position.y=.02+Math.sin(now/700)*.025;g.rotation.z=Math.sin(now/900)*.02;
   }
   // 3.8: Rừng thông kiểu Đà Lạt. Thân cao thẳng màu nâu đỏ, tán xếp thành nhiều tầng mỏng ở phần ngọn,
@@ -850,7 +850,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
     if(boatRide){if(!boatTap())document.getElementById('zenHint').textContent='🚣 Chờ một chút nhé';return;}
     {const bh=raycaster.intersectObjects(boats.filter(b=>b.group.visible).map(b=>b.group),true);if(bh.length){tapBoat(bh[0].object.userData.boatIndex);return;}}
-    const peerBoats=[...onlineAvatars.values()].filter(p=>p.boat&&p.boat.group.visible).map(p=>p.boat.group);if(peerBoats.length&&raycaster.intersectObjects(peerBoats,true).length){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người dạo hồ, mời bạn chọn chiếc khác ở Bến sen';return;}
+    const peerBoats=[...onlineAvatars.values()].filter(p=>p.boat&&p.boat.group.visible).map(p=>p.boat.group);if(peerBoats.length&&raycaster.intersectObjects(peerBoats,true).length){document.getElementById('zenHint').textContent='🚣 Thuyền đang có người dạo hồ, mời bạn chọn chiếc khác ở Bến Sen';return;}
     {const fh=raycaster.intersectObjects(FLOWER_GARDENS.flatMap(g=>[g.sign,g.mesh].filter(Boolean)),false);if(fh.length){goToGarden(fh[0].object.userData.garden);return;}}
     if(window.__archTap&&window.__archTap(raycaster))return;
     if(window.__vivGroup&&raycaster.intersectObjects([window.__vivGroup],true).length){goToOrchid();return;}
@@ -917,7 +917,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(Math.abs(x)>=72||z>=36||z<=-124)return false;
     if(inFrontStrip(x,z))return !wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.6)&&!treeBlocked(x,z);
     // Hồ sen: only the bridge crosses the water.
-    if(Math.abs(x-BEN_SEN.x)<BEN_SEN.w/2-.15&&z>BEN_SEN.z0+.3&&z<BEN_SEN.z1)return true;/* Bến sen pier */
+    if(Math.abs(x-BEN_SEN.x)<BEN_SEN.w/2-.15&&z>BEN_SEN.z0+.3&&z<BEN_SEN.z1)return true;/* Bến Sen pier */
     if(lakeSDF(x,z)<.8)return Math.abs(x)<=1.7&&z>=BRIDGE_ARCH[0]-1.4&&z<=BRIDGE_ARCH[1]+1.4;
     if(wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.6))return false;
     if(houseHit(x,z,.25))return false;
@@ -1122,7 +1122,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   document.querySelector('#sendGreeting').onclick=()=>{window.dispatchEvent(new Event('anyen-greet'));document.querySelector('#greetingStatus').textContent='🙏 Đã gửi lời chào tới khách trong cùng phòng (nếu đang kết nối).'};
   // Vuốt một ngón: xoay / nâng camera. Khi có từ hai ngón trở lên (đang zoom) thì không xoay; nhấc bớt ngón thì lấy mốc mới.
   const swipePts=new Map();
-  // Khoá trục: mỗi lần vuốt chỉ xoay (ngang) hoặc chỉ nâng/hạ (dọc) theo hướng vuốt ban đầu, để vuốt chéo trên điện thoại không làm camera lắc.
+  // Khóa trục: mỗi lần vuốt chỉ xoay (ngang) hoặc chỉ nâng/hạ (dọc) theo hướng vuốt ban đầu, để vuốt chéo trên điện thoại không làm camera lắc.
   let swipeAxis=null,swipeAcc=[0,0];
   renderer.domElement.addEventListener('pointerdown',e=>{swipePts.set(e.pointerId,[e.clientX,e.clientY]);swipeAxis=null;swipeAcc=[0,0];if(swipePts.size>1)moved=true});
   for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{swipePts.delete(e.pointerId);swipeAxis=null;swipeAcc=[0,0];if(!swipePts.size)dragging3d=false});
@@ -1144,7 +1144,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   let bayModuleReady=false,bayModuleP=null;
   function __bayExport(o){bayCaption=o.bayCaption;bayDress=o.bayDress;bayTap=o.bayTap;bayZoomBy=o.bayZoomBy;buildBay=o.buildBay;closeBayOutfit=o.closeBayOutfit;closePhoto=o.closePhoto;dropPause=o.dropPause;endTour=o.endTour;goLandmark=o.goLandmark;goTuDao=o.goTuDao;islandBoardNow=o.islandBoardNow;loadBayData=o.loadBayData;openBayMap=o.openBayMap;openBayOutfit=o.openBayOutfit;pauseShip=o.pauseShip;pines=o.pines;refreshBayHud=o.refreshBayHud;resumeShip=o.resumeShip;sailToStop=o.sailToStop;setDestination=o.setDestination;startTour=o.startTour;stopBaySound=o.stopBaySound;tdGroundY=o.tdGroundY;tuDaoTap=o.tuDaoTap;updateBay=o.updateBay;viewPoint=o.viewPoint;bayModuleReady=true}
   // Lưu bản đồ Vịnh Yên trên máy người dùng (Cache Storage): chỉ tải từ mạng lần đầu, các lần sau đọc từ máy.
-  // Khoá theo đường dẫn kèm ?v=; khi đổi số ?v= (có bản mới) thì tải một lần nữa và xoá bản cũ.
+  // Khóa theo đường dẫn kèm ?v=; khi đổi số ?v= (có bản mới) thì tải một lần nữa và xoá bản cũ.
   const BAY_CACHE='anyen-vinh-yen';
   async function cachedText(url){const full=new URL(url,document.baseURI).href;let c=null;
     try{if(window.caches)c=await caches.open(BAY_CACHE)}catch(e){}
@@ -1154,7 +1154,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=e463bfd8').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=b5c93ff1').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1213,9 +1213,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const fmX=x=>(x-FM.x0)/(FM.x1-FM.x0)*FM.w,fmY=z=>(z-FM.z0)/(FM.z1-FM.z0)*FM.h,fmS=m=>m/(FM.x1-FM.x0)*FM.w;
   function lakeApproach(l){const dx=FOOT.x-l.x,dz=FOOT.z-l.z,d=Math.hypot(dx,dz)||1,px=l.x+dx/d*(POND_R+1.6),pz=l.z+dz/d*(POND_R+1.6);return [px,pz,Math.atan2(l.x-px,l.z-pz)]}
   function quickPlaces(){const out=[['⛩','Cổng Yên',0,31,Math.PI],['🌿','Sân đón',0,20.5,Math.PI],['🪷','Hồ sen · bờ nam',8,11.5,Math.PI],
-      ['🚣','Bến sen · thuyền ngắm cảnh',BEN_SEN.x,BEN_SEN.z1+1.2,Math.PI],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
+      ['🚣','Bến Sen · thuyền ngắm cảnh',BEN_SEN.x,BEN_SEN.z1+1.2,Math.PI],['🌉','Cầu vòm',0,BRIDGE_ARCH[1]+1.8,Math.PI],
       ['🪨','Sân chân đồi',0,FOOT.z+4.5,Math.PI],['🪜','Bậc đá lên đồi',STAIRS[STAIRS.length-1][0],STAIRS[STAIRS.length-1][1]+.5,Math.PI],['🙏','Tượng Phật trên đồi',STATUE.x,STATUE.z+7.2,Math.PI],
-      ['🏡','Tư Gia của bạn',TU_GIA.door[0],TU_GIA.door[1],TU_GIA.rot+Math.PI,'tu_gia'],['🌀','Cổng Viverse · ORCHID hoa lan',VIV.door[0],VIV.door[1],VIV.rot+Math.PI,'orchid'],['🌸','Nhà Sắc · hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'nha_hoa_lan'],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id]),['🟧','Tịnh thất may y',TINH_THAT.door[0],TINH_THAT.door[1],TINH_THAT.rot+Math.PI,'tinh_that'],[VAN_HOA.icon,VAN_HOA.name,VAN_HOA.door[0],VAN_HOA.door[1],VAN_HOA.rot+Math.PI,'van_hoa'],...FLOWER_GARDENS.map((g,i)=>[FLOWER_KINDS[g.kind].icon,g.pier?'Hái sen ở Bến sen':FLOWER_KINDS[g.kind].garden,g.x,g.pier?g.z-.6:g.z,null,'garden:'+i])];
+      ['🏡','Tư Gia Rừng Yên',TU_GIA.door[0],TU_GIA.door[1],TU_GIA.rot+Math.PI,'tu_gia'],['🌀','Cổng Viverse · ORCHID hoa lan',VIV.door[0],VIV.door[1],VIV.rot+Math.PI,'orchid'],['🌸','Nhà Sắc · hoa lan',ORCHID_DOOR[0],ORCHID_DOOR[1],ORCHID.rot+Math.PI,'nha_hoa_lan'],...SENSE_HOUSES.map(h=>[h.icon,h.name,h.door[0],h.door[1],h.rot+Math.PI,h.id]),['🟧','Tịnh thất may y',TINH_THAT.door[0],TINH_THAT.door[1],TINH_THAT.rot+Math.PI,'tinh_that'],[VAN_HOA.icon,VAN_HOA.name,VAN_HOA.door[0],VAN_HOA.door[1],VAN_HOA.rot+Math.PI,'van_hoa'],...FLOWER_GARDENS.map((g,i)=>[FLOWER_KINDS[g.kind].icon,g.pier?'Hái sen ở Bến Sen':FLOWER_KINDS[g.kind].garden,g.x,g.pier?g.z-.6:g.z,null,'garden:'+i])];
     for(const l of wishLakes){if(l.lotus)continue;const [x,z,yaw]=lakeApproach(l);out.push(['💧','Hồ '+l.name+' · '+l.theme,x,z,yaw])}
     return out}
   // A free spot: walkable and at least 1.2 m from any other guest, so arrivals never land on top of someone.
@@ -1296,12 +1296,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Hái hoa ở sáu vườn quanh các hồ Lục Căn (sen trắng ở luống cạnh Hồ Niệm), tối đa 9 bông; bấm Xong để xem trước bó hoa, tự sắp xếp, ưng ý thì mang lên đồi
   // đặt trước tượng Phật. Bệ có 9 chỗ; bó mới nhất thay bó cũ nhất. Hoa lưu trên Supabase nên mọi khách đều thấy và hoa không tự mất.
   const FLOWER_KINDS={
-    hong:{name:'Hồng đỏ ruby',icon:'🌹',garden:'Vườn hồng đỏ'},
-    cam_tu_cau:{name:'Cẩm tú cầu lam',icon:'💠',garden:'Vườn cẩm tú cầu'},
-    nhai:{name:'Huệ cam đào',icon:'🧡',garden:'Vườn huệ cam đào'},
-    cuc:{name:'Cúc vàng',icon:'🌼',garden:'Vườn cúc vàng'},
-    lan:{name:'Oải hương tím',icon:'🪻',garden:'Vườn oải hương'},
-    sen:{name:'Sen trắng',icon:'🪷',garden:'Luống sen trắng'}};
+    hong:{name:'Hoa Hồng Đỏ Ruby',icon:'🌹',garden:'Vườn hồng đỏ'},
+    cam_tu_cau:{name:'Cẩm Tú Cầu Lam',icon:'💠',garden:'Vườn cẩm tú cầu'},
+    nhai:{name:'Huệ Cam Đào',icon:'🧡',garden:'Vườn huệ cam đào'},
+    cuc:{name:'Hoa Cúc Vàng',icon:'🌼',garden:'Vườn cúc vàng'},
+    lan:{name:'Oải Hương Tím',icon:'🪻',garden:'Vườn oải hương'},
+    sen:{name:'Sen Trắng',icon:'🪷',garden:'Luống sen trắng'}};
   const BOUQUET_MAX=9,OFFER_SLOTS=9;
   // Quy hoạch v3.3 · kho 69/9: 9 món trưng bày = 6 món được chọn (mang về túi) nhiều nhất + 3 món mới nhất còn lại.
   // Trả về theo thứ tự mới → cũ. Khi chưa ai chọn món nào, kết quả chính là 9 món mới nhất.
@@ -1495,9 +1495,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function chipsHtml(list,removable,sel){return list.map((k,i)=>'<button type="button" class="fl-chip'+(i===sel?' sel':'')+'" data-i="'+i+'" aria-label="'+FLOWER_KINDS[k].name+'">'+FLOWER_KINDS[k].icon+(removable?'<span data-x="'+i+'">✕</span>':'')+'</button>').join('')||'<span class="fl-note">Giỏ còn trống</span>'}
   let sheetGarden=null;
   function openGardenSheet(gd){sheetGarden=gd;document.getElementById('flowerOthers').hidden=true;flSheet.querySelector('[data-fl="others"]').textContent='🌸 Hoa khác';const k=FLOWER_KINDS[gd.kind];document.getElementById('flowerSheetTitle').textContent=k.icon+' '+k.garden;
-    document.getElementById('flowerSheetNote').textContent=gd.pier?'Hái sen ở Bến sen để thêm vào bó hoa dâng Phật.':'Hái '+k.name.toLowerCase()+' để thêm vào bó hoa dâng Phật. Có thể hái ở nhiều vườn.';renderGardenSheet();flSheet.hidden=false;document.body.classList.add('flower-open')}
+    document.getElementById('flowerSheetNote').textContent=gd.pier?'Hái sen ở Bến Sen để thêm vào bó hoa dâng Phật.':'Hái '+k.name.toLowerCase()+' để thêm vào bó hoa dâng Phật. Có thể hái ở nhiều vườn.';renderGardenSheet();flSheet.hidden=false;document.body.classList.add('flower-open')}
   function renderGardenSheet(){document.getElementById('flowerCount').textContent='Giỏ: '+flowerBasket.length+'/'+BOUQUET_MAX;
-    document.getElementById('flowerOthers').innerHTML=FLOWER_GARDENS.map((g,i)=>g===sheetGarden?'':'<div class="og-g"><span>'+FLOWER_KINDS[g.kind].icon+' '+(g.pier?'Hoa sen · Bến sen':FLOWER_KINDS[g.kind].garden)+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>').join('');document.getElementById('flowerChips').innerHTML=chipsHtml(flowerBasket,true);
+    document.getElementById('flowerOthers').innerHTML=FLOWER_GARDENS.map((g,i)=>g===sheetGarden?'':'<div class="og-g"><span>'+FLOWER_KINDS[g.kind].icon+' '+(g.pier?'Hoa sen · Bến Sen':FLOWER_KINDS[g.kind].garden)+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>').join('');document.getElementById('flowerChips').innerHTML=chipsHtml(flowerBasket,true);
     flSheet.querySelector('[data-fl="pick"]').disabled=flowerBasket.length>=BOUQUET_MAX||!!carriedBouquet;flSheet.querySelector('[data-fl="done"]').disabled=!flowerBasket.length;refreshFlowerPill()}
   function closeFlowerUi(){flSheet.hidden=true;bqBox.hidden=true;document.body.classList.remove('flower-open');stopPreview()}
   flSheet.addEventListener('click',e=>{const ow=e.target.closest('[data-og-walk]'),ot=e.target.closest('[data-og-tp]');if(ow||ot){const gd=FLOWER_GARDENS[Number((ow||ot).dataset[ow?'ogWalk':'ogTp'])];closeFlowerUi();if(ow){standUpForTravel();goToGarden(gd)}else if(teleportTo(gd.x,gd.pier?gd.z-.6:gd.z,null))setTimeout(()=>openGardenSheet(gd),250);return}const x=e.target.closest('[data-x]');if(x){flowerBasket.splice(Number(x.dataset.x),1);renderGardenSheet();return}const a=e.target.closest('[data-fl]')?.dataset.fl;if(!a)return;
@@ -1558,7 +1558,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Nghi thức "Dâng hoa tượng Phật": a guide that starts the flower offering and shows where you are in it.
   const offerGuide=document.createElement('section');offerGuide.id='offerGuide';offerGuide.setAttribute('role','dialog');offerGuide.setAttribute('aria-label','Nghi thức dâng hoa');offerGuide.hidden=true;document.body.appendChild(offerGuide);
   function renderOfferGuide(){const step=carriedBouquet?3:flowerBasket.length?2:1,mark=n=>n<step?'✓':n===step?'●':'○';
-    const gardens=FLOWER_GARDENS.map((g,i)=>{const k=FLOWER_KINDS[g.kind];return '<div class="og-g"><span>'+k.icon+' '+(g.pier?'Hoa sen · Bến sen':k.name+' · Hồ '+(g.lake||''))+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>'}).join('');
+    const gardens=FLOWER_GARDENS.map((g,i)=>{const k=FLOWER_KINDS[g.kind];return '<div class="og-g"><span>'+k.icon+' '+(g.pier?'Hoa sen · Bến Sen':k.name+' · Hồ '+(g.lake||''))+'</span><button type="button" data-og-walk="'+i+'">🚶 Đi bộ</button><button type="button" data-og-tp="'+i+'">✨ Đến ngay</button></div>'}).join('');
     offerGuide.innerHTML='<div class="fl-head"><strong>💐 Nghi thức dâng hoa tượng Phật</strong><button type="button" data-og="close">✕ Đóng</button></div>'
       +'<p class="fl-note">Đi qua các vườn hoa, hái tối đa 9 bông, bó lại theo ý mình rồi mang lên đồi dâng Đức Phật. Hoa dâng được giữ trên bệ cho mọi người cùng thấy.</p>'
       +'<ol class="og-steps"><li class="'+(step===1?'on':'')+'"><b>'+mark(1)+'</b> Hái hoa ở sáu vườn quanh các hồ'+(flowerBasket.length?' · giỏ '+flowerBasket.length+'/'+BOUQUET_MAX:'')+'</li><li class="'+(step===2?'on':'')+'"><b>'+mark(2)+'</b> Bấm Xong, xem trước và sắp xếp bó hoa</li><li class="'+(step===3?'on':'')+'"><b>'+mark(3)+'</b> Mang bó hoa lên đồi, dâng trước tượng Phật</li></ol>'
@@ -1573,7 +1573,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // 3.18: Không gian bên trong bốn nhà giác quan. Mỗi nhà mở một gian phòng 3D riêng (rừng tạm dừng vẽ) với một hoạt động:
   // Nhà chuông gió: chạm chuông xoay, chiêng, chuông gió, và buổi thiền âm thanh 3 phút.
   // Haromy (nhà xông hương): 18 mùi, nhỏ tinh dầu hoặc đốt thảo mộc, thở cùng hương, Lọ Ước / Túi thơm vào Túi An Yên.
-  // Quán trà: pha trà từng bước rồi mời trà, nhận một lời nhắn.
+  // Nhà Vị (Ngũ Thiên Trà): pha trà từng bước rồi mời trà, nhận một lời nhắn.
   // Nhà gốm: nặn gốm Chăm đi lùi quanh đôn (không bàn xoay), chuốt, khắc hoa văn, phơi, rồi nung lộ thiên ngoài bãi.
   let roomOpen=false,room=null;
   const roomBox=document.createElement('section');roomBox.id='roomBox';roomBox.setAttribute('role','dialog');roomBox.hidden=true;
@@ -1589,7 +1589,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=263d6726').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=d531b16a').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   function makeRoom(wall,floor,opt){const bare=!!(opt&&opt.bare);const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}
@@ -1734,7 +1734,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
    if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:b[3]&&b[3].solo?'solo:'+h.id:'room:'+((b[3]&&b[3].venue)||h.id)}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
     roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);room.resize();}
-  function closeRoom(){if(!roomOpen)return;roomOpen=false;{const bk=roomBox.querySelector('[data-rm="back"]');if(bk)bk.textContent='← Trở về Rừng Yên'}if(roomFromIsland){roomFromIsland=false;const door=window.__tdExitDoor;window.__tdExitDoor=false;if(document.body.classList.contains('immersive'))setTimeout(()=>{if(!bayMode&&!roomOpen)enterBay();/* Rời nhà ở Tư Đảo: ra đứng trước cửa nhà, không về tàu */if(door){let n=0;const t=setInterval(()=>{if(++n>80||(window.__tdAtDoor&&window.__tdAtDoor()))clearInterval(t)},150)}},60)}if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));if(room){room.run=false;room.cleanup&&room.cleanup();room.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()});room=null}roomBox.hidden=true;document.body.classList.remove('room-open');rmPanel.innerHTML='';lastWalkFrame=performance.now();document.getElementById('zenHint').textContent='Đã trở về Rừng Yên'}
+  function closeRoom(){if(!roomOpen)return;roomOpen=false;{const bk=roomBox.querySelector('[data-rm="back"]');if(bk)bk.textContent='← Trở về Rừng Yên'}if(roomFromIsland){roomFromIsland=false;const door=window.__tdExitDoor;window.__tdExitDoor=false;if(document.body.classList.contains('immersive'))setTimeout(()=>{if(!bayMode&&!roomOpen)enterBay();/* Rời nhà ở Đảo Yên: ra đứng trước cửa nhà, không về tàu */if(door){let n=0;const t=setInterval(()=>{if(++n>80||(window.__tdAtDoor&&window.__tdAtDoor()))clearInterval(t)},150)}},60)}if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));if(room){room.run=false;room.cleanup&&room.cleanup();room.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()});room=null}roomBox.hidden=true;document.body.classList.remove('room-open');rmPanel.innerHTML='';lastWalkFrame=performance.now();document.getElementById('zenHint').textContent='Đã trở về Rừng Yên'}
   roomBox.querySelector('[data-rm="back"]').addEventListener('click',closeRoom);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&roomOpen)closeRoom()});window.addEventListener('anyen-3d-exit',closeRoom);window.addEventListener('resize',()=>{if(room)room.resize()});
   // 3.19: Nghi thức Dâng y. Mở quanh năm; mỗi khách tự may một tấm y.
   // May y trên khung Kathina trong Tịnh thất (mảnh ghép như ruộng lúa) → đội y lên đầu → nhiễu Phật 3 vòng (tượng luôn bên phải)
@@ -1754,7 +1754,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('TỊNH THẤT · MAY Y',256,66);
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tex,transparent:true}));board.position.set(0,3.6,D/2+.12);g.add(board);
     g.position.set(TINH_THAT.x,terrainHeight(TINH_THAT.x,TINH_THAT.z),TINH_THAT.z);g.rotation.y=TINH_THAT.rot;g.userData.house=TINH_THAT;scene.add(g);TINH_THAT.group=g}
-  // ===== Cổng Viverse (bên hông Nhà Hoa Lan, phía lối vào chính): vòm đá + màn cổng xoáy sáng; bước vào là mở thế giới ORCHID hoa lan
+  // ===== Cổng Viverse (bên hông Nhà hoa lan, phía lối vào chính): vòm đá + màn cổng xoáy sáng; bước vào là mở thế giới ORCHID hoa lan
   const vivU={t:{value:0}};
   {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),stoneC='#7a7466',stoneD='#5f5a4e',goldC='#c8a96a',R=2.25,PH=4.6;
     P(GB(VIV.W,.3,VIV.D+.6),stoneD,0,.15,0);P(GB(VIV.W-.6,.12,VIV.D),stoneC,0,.36,0);
@@ -1831,9 +1831,9 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Bên trong Tư Gia: bàn trà thấp 6 chỗ ngồi, Kệ Lưu Hương 9 ô trên tường, cửa sổ nhìn ra hồ sen; 3 phong cách đổi ngay
   const HOME_STYLES={gian_di:{label:'Giản Dị',wall:'#d8cbb0',floor:'#8a6a48',acc:'#6b4a32'},sang_chanh:{label:'Sang Chảnh',wall:'#2f3a3a',floor:'#5a3a2a',acc:'#c8a96a'},hanh_phuc:{label:'Hạnh Phúc',wall:'#f1d6c8',floor:'#b98a5e',acc:'#e58aa6'}};
   ROOM_BUILDERS.tu_gia_me=['#d8cbb0','#8a6a48',st=>roomTuGia(st)];
-  const TU_DAO_SPACE={id:'tu_dao_me',name:'Tư Đảo của bạn',icon:'🏝',note:''};let roomFromIsland=false;
-  ROOM_BUILDERS.tu_dao_me=['#d8cbb0','#8a6a48',st=>{roomTuGia(st);rmHint('🏝 Tư Đảo · '+(window.__tuDaoSpot||'Bãi đảo')+' · tạm dùng không gian Tư Gia · Trở về để xuống tàu ở cầu tàu')}];
-  function openTuDaoSpace(kind){TU_DAO_SPACE.name='Tư Đảo · '+(window.__tuDaoSpot||'Bãi đảo');roomFromIsland=true;window.__tdExitDoor=kind==='house';Promise.resolve(openRoom(TU_DAO_SPACE)).then(()=>{const bk=roomBox.querySelector('[data-rm="back"]');if(bk&&roomOpen)bk.textContent=kind==='house'?'🚪 Rời nhà':'← Xuống tàu · Vịnh Yên'})}
+  const TU_DAO_SPACE={id:'tu_dao_me',name:'Đảo Yên của bạn',icon:'🏝',note:''};let roomFromIsland=false;
+  ROOM_BUILDERS.tu_dao_me=['#d8cbb0','#8a6a48',st=>{roomTuGia(st);rmHint('🏝 Đảo Yên · '+(window.__tuDaoSpot||'Bãi đảo')+' · tạm dùng không gian Tư Gia · Trở về để xuống tàu ở cầu tàu')}];
+  function openTuDaoSpace(kind){TU_DAO_SPACE.name='Đảo Yên · '+(window.__tuDaoSpot||'Bãi đảo');roomFromIsland=true;window.__tdExitDoor=kind==='house';Promise.resolve(openRoom(TU_DAO_SPACE)).then(()=>{const bk=roomBox.querySelector('[data-rm="back"]');if(bk&&roomOpen)bk.textContent=kind==='house'?'🚪 Rời nhà':'← Xuống tàu · Vịnh Yên'})}
   // A folded robe on a wooden tray (used on the head, on the dais and on the shelves).
   const katHex=i=>(KAT_COLORS[+i]||KAT_COLORS[0])[1];
   function robeTray(color,scale=1,pieces=''){const g=new THREE.Group(),c=new THREE.Color(color),dark=c.clone().multiplyScalar(.78),multi=new Set(String(pieces||'')).size>1;
@@ -2133,34 +2133,34 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   function exitBay(){
     if(!bayMode)return;if(bayIsland)islandBoardNow();saveBayState();dropPause();setVillageActive(true);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:document.body.classList.contains('immersive')?'forest':'out'}}));if(meActivity==='sit')document.getElementById('realtimeSit')?.click();
-    bayMode=false;bayHeld(true);document.body.classList.remove('bay-clean');SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - RỪNG YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thoát 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
+    bayMode=false;bayHeld(true);document.body.classList.remove('bay-clean');SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - RỪNG YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thóat 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
     if(bayStash){mePosition.copy(bayStash.pos);scene.background=bayStash.bg;scene.fog=bayStash.fog;viewYaw=bayStash.yaw;walkPitch=bayStash.pitch;camera.far=bayStash.far;camera.updateProjectionMatrix();
       hemiLight.color.copy(bayStash.hemi[0]);hemiLight.groundColor.copy(bayStash.hemi[1]);hemiLight.intensity=bayStash.hemi[2];sun.color.copy(bayStash.sun[0]);sun.intensity=bayStash.sun[1];sun.position.copy(bayStash.sun[2]);bayStash=null}
     window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:mePosition.x,z:mePosition.z}}));
   }
   window.addEventListener('anyen-3d-exit',()=>{window.anyenPendingBay=false;exitBay()});
-  // ---- Đang dở hoạt động (đi thuyền hồ sen, đội y / nghi thức dâng y): không thoát trang, không sang không gian khác.
-  // Bấm "Kết thúc ngay" thì hoạt động hoàn tất tức thì (thuyền về bến; y được dâng và đưa về kho) rồi làm tiếp việc vừa bấm.
+  // ---- Đang dở hoạt động (đi thuyền hồ sen, đội y / nghi thức dâng y): không thóat trang, không sang không gian khác.
+  // Bấm "Kết thúc ngay" thì hoạt động hòan tất tức thì (thuyền về bến; y được dâng và đưa về kho) rồi làm tiếp việc vừa bấm.
   const KAT_BUSY=['carry','round','offer','chant','fetch','return','join','follow'];
   function activityBusy(){if(bayMode)return null;if(boatRide)return 'boat';if(KAT_BUSY.includes(kat.phase))return kat.phase==='join'||kat.phase==='follow'?'katFollow':'kat';return null}
   function boatFinishNow(){const r=boatRide;if(!r)return;const g=r.b.group,[lx,lz]=r.b.slot.land;g.position.set(r.b.slot.x,.02,r.b.slot.z);g.rotation.set(0,Math.PI/2,0);
-    boatRide=null;pendingBoat=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));say('🚣 Thuyền đã về Bến sen')}
+    boatRide=null;pendingBoat=null;mePosition.set(lx,0,lz);viewYaw=walkYaw=0;boatHud.hidden=true;window.dispatchEvent(new CustomEvent('anyen-position',{detail:{x:lx,z:lz}}));say('🚣 Thuyền đã về Bến Sen')}
   function katFinishNow(){const p=kat.phase;walkRoute.length=0;pendingKathina=null;
     if(p==='join'||p==='follow'){kat.phase='idle';kat.leader='';refreshKatPill();say('🟧 Đã rời đoàn rước y');return}
     if(p==='carry'||p==='round'||p==='offer'){me.rotation.x=0;kat.placed=true;if(kat.robe){kat.robe.parent&&kat.robe.parent.remove(kat.robe);kat.robe=null}placeRobe()}/* dâng y ngay: lưu tấm y như khi đặt dưới chân tượng */
     clearInterval(kat.chantTimer);if(kat.mine&&!katKho.some(q=>q.name===kat.mine.name&&q.t===kat.mine.t))katKho.push({...kat.mine});
     setCarry(false);kat.phase='done';document.body.classList.remove('kat-chant');walkRoute.length=0;pendingSeat=null;window.dispatchEvent(new CustomEvent('anyen-seat-intent',{detail:{clear:true}}));
-    saveRobeToKho();drawDais();refreshKatPill();closeKatPanel();say('🟧 Nghi thức dâng y đã hoàn tất · tấm y đã vào kho')}
+    saveRobeToKho();drawDais();refreshKatPill();closeKatPanel();say('🟧 Nghi thức dâng y đã hòan tất · tấm y đã vào kho')}
   function finishActivityNow(){const k=activityBusy();if(k==='boat')boatFinishNow();else if(k)katFinishNow()}
   const busyBox=document.createElement('div');busyBox.id='busyBox';busyBox.hidden=true;
   busyBox.innerHTML='<div class="bb-card" role="dialog" aria-modal="true"><p class="bb-msg"></p><div class="bb-row"><button type="button" data-bb="stay">Ở lại tiếp tục</button><button type="button" class="bb-end" data-bb="end">⏹ Kết thúc ngay</button></div></div>';
   {const st=document.createElement('style');st.textContent='#busyBox{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;background:#0008}#busyBox[hidden]{display:none}#busyBox .bb-card{max-width:min(380px,90vw);background:#0b2d28;border:1px solid #c8a96a88;border-radius:16px;padding:16px;color:#f3e7cc;font:15px/1.45 system-ui,sans-serif}#busyBox .bb-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}#busyBox button{border:1px solid #a18a5e;border-radius:999px;background:#19483b;color:#f5e6c9;padding:9px 14px;font-size:14px;cursor:pointer}#busyBox .bb-end{background:#c8a96a;color:#0b2824;font-weight:600;border-color:#c8a96a}';document.head.appendChild(st)}
   document.body.appendChild(busyBox);let busyThen=null;
   function askFinish(then){const k=activityBusy();if(!k){then&&then();return}busyThen=then;
-    busyBox.querySelector('.bb-msg').textContent=k==='boat'?'🚣 Bạn đang dạo thuyền trên hồ sen nên chưa thể rời đi. Kết thúc để thuyền về bến ngay?':k==='kat'?'🟧 Bạn đang trong nghi thức dâng y nên chưa thể rời đi. Kết thúc để hoàn tất ngay (dâng y và đưa y về kho)?':'🟧 Bạn đang đi cùng đoàn rước y. Rời đoàn để đi nơi khác?';
+    busyBox.querySelector('.bb-msg').textContent=k==='boat'?'🚣 Bạn đang dạo thuyền trên hồ sen nên chưa thể rời đi. Kết thúc để thuyền về bến ngay?':k==='kat'?'🟧 Bạn đang trong nghi thức dâng y nên chưa thể rời đi. Kết thúc để hòan tất ngay (dâng y và đưa y về kho)?':'🟧 Bạn đang đi cùng đoàn rước y. Rời đoàn để đi nơi khác?';
     busyBox.hidden=false;busyBox.querySelector('.bb-end').focus()}
   busyBox.addEventListener('click',e=>{const a=e.target.closest('[data-bb]')?.dataset.bb;if(!a&&e.target!==busyBox)return;busyBox.hidden=true;const t=busyThen;busyThen=null;if(a==='end'){finishActivityNow();if(t)setTimeout(t,60)}});
-  // chặn: Thoát 3D, sang Vịnh Yên, AnSense, liên kết mở trong cùng thẻ; phím Esc. Lệnh do máy gọi (khóa 1 hoạt động) thì kết thúc ngay rồi cho đi.
+  // chặn: Thóat 3D, sang Vịnh Yên, AnSense, liên kết mở trong cùng thẻ; phím Esc. Lệnh do máy gọi (khóa 1 hoạt động) thì kết thúc ngay rồi cho đi.
   document.addEventListener('click',e=>{const el=e.target.closest('#exit3D,#enterBay,#ansenseBtn,a[href]');if(!el||!activityBusy())return;
     if(el.tagName==='A'){const h=el.getAttribute('href')||'';if(h.startsWith('#')||h.startsWith('javascript')||el.target==='_blank')return}
     if(!e.isTrusted){finishActivityNow();return}
@@ -2173,10 +2173,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.addEventListener('pagehide',dropActivity);window.addEventListener('offline',dropActivity);
   try{localStorage.removeItem('yen_kat_pending')}catch(e){}
   window.anyenActivityBusy=activityBusy;
-  // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Tư Đảo
+  // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Đảo Yên
   {const hb=document.createElement('button');hb.type='button';hb.id='homeBtn';document.body.appendChild(hb);
     const st=document.createElement('style');st.textContent='#homeBtn{display:none;position:fixed;z-index:72;left:calc(env(safe-area-inset-left,0px) + 12px);top:calc(env(safe-area-inset-top,0px) + 58px);border:1px solid #c8a96a;border-radius:999px;background:#19483bee;color:#f5e6c9;font-size:13px;padding:7px 12px;cursor:pointer}body.immersive #homeBtn{display:block}body.room-open #homeBtn,body.orchid-open #homeBtn,body.forest-map-open #homeBtn,body.bay-clean #homeBtn,body.bay-photo-open #homeBtn,body.bay-outfit-open #homeBtn,body.bay-map-open #homeBtn,body.kat-chant #homeBtn{display:none!important}body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 160px)}@media(max-width:800px){body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 150px)}}';document.head.appendChild(st);
-    const label=()=>{hb.textContent=bayMode?'🏝 Tư Đảo':'🏡 Tư Gia';hb.title=bayMode?'Đi từ từ tới Tư Đảo của bạn (muốn tới liền: chọn Tư Đảo trong Bản đồ)':'Về Tư Gia của bạn ngay'};label();setInterval(label,800);
+    const label=()=>{hb.textContent=bayMode?'🏝 Đảo Yên':'🏡 Tư Gia';hb.title=bayMode?'Đi từ từ tới Đảo Yên của bạn (muốn tới liền: chọn Đảo Yên trong Bản đồ)':'Về Tư Gia Rừng Yên ngay'};label();setInterval(label,800);
     hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(false);return}askFinish(()=>goHome(true))})}
   // Lịch trị liệu: vào thẳng Nhà đã đăng ký (Healer đến giờ phiên, khách đã được nhận). Nhà có phòng bên trong thì mở phòng;
   // Nhà chưa có phòng thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.

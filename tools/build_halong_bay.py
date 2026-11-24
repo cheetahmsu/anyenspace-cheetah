@@ -322,7 +322,7 @@ def main():
     bridge = next(l for l in landmark_rows if l["id"] == "cau_bai_chay")
     bridge["approach"] = [bridge["x"] - 20, bridge["z"] + 190]
 
-    # Thuyền gỗ nhỏ chạy vòng trong vùng nước thoáng; phao vịnh dọc luồng.
+    # Thuyền gỗ nhỏ chạy vòng trong vùng nước thóang; phao vịnh dọc luồng.
     junks, buoys = [], []
     # Không còn thuyền chạy vòng hay phao trên luồng (từng đi xuyên qua du thuyền).
     # Chỉ vài thuyền gỗ neo yên sát chân các đảo lớn, nằm trong vùng đảo nên tàu không bao giờ đi qua.
@@ -354,7 +354,7 @@ def main():
                 "morning": {"status": "live", "label": "Buổi sáng", "sky_top": "#7fb6dc", "sky_horizon": "#dfeef2", "haze": "#cfe0e6",
                             "sun_elevation": 0.55, "sun_azimuth": 2.4, "water_deep": "#1f7f74", "water_shallow": "#47b39d",
                             "cloud_cover": 0.42},
-                "dawn_dusk": {"status": "draft", "label": "Bình minh / Hoàng hôn"},
+                "dawn_dusk": {"status": "draft", "label": "Bình minh / Hòang hôn"},
                 "night": {"status": "draft", "label": "Buổi tối", "lights": ["den_du_thuyen"]}
             },
             "active_time_slot": "morning",

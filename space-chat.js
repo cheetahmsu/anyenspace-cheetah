@@ -1,6 +1,6 @@
 // LÀNG YÊN · Không gian chung theo 3 tầng + Khung chat chung ẩn/hiện
 // - Solo (mặt vịnh, Cabin): không vào kênh chung.
-// - Nhóm 1+5 (Nhà trị liệu, Đảo, Tư Gia, Tư Đảo) tối đa 6 · Cộng đồng (Du thuyền 5 sao, Nhà Văn Hóa) tối đa 36.
+// - Nhóm 1+5 (Nhà trị liệu, Đảo, Tư Gia, Đảo Yên) tối đa 6 · Cộng đồng (Du thuyền 5 sao, Nhà Văn Hóa) tối đa 36.
 // Vào không gian → xin chỗ trên Supabase (anyen_space_enter: kiểm tra vai trò, phiên trị liệu đang diễn ra, sức chứa),
 // được chỗ mới vào kênh anyen:sp:<id>. Không được chỗ thì vẫn trải nghiệm riêng, có lời báo nhẹ.
 // Kết quả xin chỗ phát ra sự kiện anyen-space-result (phòng Nhà Niệm dùng để biết có phiên 1+5 và ai là Healer);
@@ -81,7 +81,7 @@
   function emitPeople(){if(!channel||!venue)return;emit('anyen-space-people',{id:venue.id,n:count(),me:uid,healer:!!(info&&info.therapist&&people[info.therapist]),
     list:Object.entries(people).map(([id,p])=>({id,name:String(p.name||'').replace(/[<>]/g,'').slice(0,24),t:+p.t||0,host:p.host===true,c:Number.isInteger(p.c)&&p.c>=0&&p.c<6?p.c:null,s:Number.isInteger(p.s)&&p.s>=0&&p.s<36?p.s:null,col:typeof p.col==='string'&&/^#[0-9a-f]{6}$/i.test(p.col)?p.col:null}))})}
   window.addEventListener('anyen-space-ask',()=>{if(!channel)return;if(lastResult)emit('anyen-space-result',lastResult);emitPeople()});
-  function spaceName(id){const m={xong_huong:'Nhà Hương · Haromy',nha_hoa_lan:'Nhà Sắc',xuong_gom:'Nhà Chạm',quan_tra:'Nhà Vị',chuong_gio:'Nhà Thanh',nha_niem:'Nhà Niệm',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Tư Đảo',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
+  function spaceName(id){const m={xong_huong:'Nhà Hương · Haromy',nha_hoa_lan:'Nhà Sắc',xuong_gom:'Nhà Chạm',quan_tra:'Nhà Vị',chuong_gio:'Nhà Thanh',nha_niem:'Nhà Niệm',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Đảo Yên',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
 
   // Không gian đang ở (phát từ index.html): 'forest' | 'bay' | 'room:<id>' | 'space:<id>' | 'out'
   window.addEventListener('anyen-space',e=>{const sp=String(e.detail?.space||'');const m=/^(?:room|space):([a-z0-9_]{1,40})$/.exec(sp);
