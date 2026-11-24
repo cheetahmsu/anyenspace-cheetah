@@ -286,10 +286,10 @@ def main():
             karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), shape])
             made += 1
 
-    # Chỉ giữ khoảng 1/3 số đảo: ưu tiên đảo lớn (bề ngang × chiều cao), danh thắng biểu tượng dựng riêng nên luôn còn.
-    KEEP_RATIO = 1 / 3
+    # Chỉ giữ 99 đảo lớn nhất (bề ngang × chiều cao); danh thắng, điểm check-in và điểm trong tour dựng riêng nên luôn còn.
+    KEEP_COUNT = 99
     vol = lambda k: k[2] * (1.9 if k[4] == 3 else 1) * k[3]
-    keep = sorted(karsts, key=vol, reverse=True)[:max(1, round(len(karsts) * KEEP_RATIO))]
+    keep = sorted(karsts, key=vol, reverse=True)[:KEEP_COUNT]
     keep_ids = {id(k) for k in keep}
     karsts = [k for k in karsts if id(k) in keep_ids]
 
