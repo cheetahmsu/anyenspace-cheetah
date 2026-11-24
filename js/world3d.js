@@ -1168,7 +1168,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=a71863cb').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=4073005d').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1631,7 +1631,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
-    const parts=outfitParts(g,torso);dressAvatar(parts,torso,myColor,myStyle,false);g.scale.setScalar(.8);sc.add(g);
+    const parts=outfitParts(g,torso),BW=roomFromIsland&&window.__bayWear,sw=BW?BW.make(g,head):null;/* vào nhà từ Đảo Yên: giữ nguyên bộ đồ đang mặc ngoài đảo */
+    const dress=on=>{if(BW){const o=BW.outfit();dressAvatar(parts,torso,o.color,BW.base(),on);BW.wear(sw,parts,torso,o,on,true)}else dressAvatar(parts,torso,myColor,myStyle,on)};dress(false);g.scale.setScalar(.8);sc.add(g);
     const W={x:cfg.start[0],z:cfg.start[1],a:Math.PI,cy:0,dest:null,keys:new Set(),zf:1,yo:0,yoT:0,yv:0,pl:0,stride:0,fov:50,lt:null};
     W.cy=W.cy0=W.a+Math.PI;
     const clampP=()=>{if(cfg.R){const d=Math.hypot(W.x-cfg.cx,W.z-cfg.cz);if(d>cfg.R){W.x=cfg.cx+(W.x-cfg.cx)/d*cfg.R;W.z=cfg.cz+(W.z-cfg.cz)/d*cfg.R}}
@@ -1646,7 +1647,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const dn=e=>{e.preventDefault();e.stopPropagation();W.keys.add(k);W.dest=null;try{b.setPointerCapture(e.pointerId)}catch(_){}},up=e=>{e.stopPropagation();W.keys.delete(k)};b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault());pad.appendChild(b)}
     // ngồi xuống / đứng lên tại chỗ; chạm sàn hay bấm nút đi thì tự đứng lên rồi đi
     const sitB=document.createElement('button');sitB.type='button';sitB.style.cssText='grid-column:4;grid-row:1 / span 2;border-radius:12px;border:1px solid #c8a96a;background:rgba(20,16,12,.6);color:#f4e2b9;font-size:13px;line-height:1.2;width:58px;touch-action:none';pad.style.gridTemplateColumns='repeat(3,44px) 58px';
-    const setSit=on=>{if(!on&&W.seat){W.x=W.seat.ax;W.z=W.seat.az;W.seat=null;W.seatY=0}/* đứng lên khỏi ghế: bước ra phía trước ghế */W.sit=on;dressAvatar(parts,torso,myColor,myStyle,on);torso.scale.set(1,on?.6:1,1);torso.position.y=on?.42:1.05;head.position.y=on?1.06:1.85;sitB.innerHTML=on?'🚶<br>Đứng lên':'🧘<br>Ngồi';if(on){W.dest=null;W.keys.clear()}};
+    const setSit=on=>{if(!on&&W.seat){W.x=W.seat.ax;W.z=W.seat.az;W.seat=null;W.seatY=0}/* đứng lên khỏi ghế: bước ra phía trước ghế */W.sit=on;torso.scale.set(1,on?.6:1,1);torso.position.y=on?.42:1.05;head.position.y=on?1.06:1.85;dress(on);sitB.innerHTML=on?'🚶<br>Đứng lên':'🧘<br>Ngồi';if(on){W.dest=null;W.keys.clear()}};
     sitB.addEventListener('pointerdown',e=>e.stopPropagation());sitB.addEventListener('click',e=>{e.stopPropagation();setSit(!W.sit)});sitB.innerHTML='🧘<br>Ngồi';pad.appendChild(sitB);W.setSit=setSit;W.goSeat=S=>{if(W.sit)setSit(false);W.seat=S;W.keys.clear();W.dest={x:S.ax,z:S.az}};
     const stage=rmCanvas.parentNode;stage.style.position=stage.style.position||'relative';stage.appendChild(pad);
     // chạm: vật tương tác thì mở, sàn thì bước tới; kéo một ngón để xoay nhìn quanh; chụm/lăn để zoom
@@ -1672,7 +1673,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(W.keys.has('l'))W.a+=1.9*dt;if(W.keys.has('r'))W.a-=1.9*dt;if(W.keys.has('f'))mv=1;if(W.keys.has('b'))mv=-.6;
       if(W.dest){const dx=W.dest.x-W.x,dz=W.dest.z-W.z,dist=Math.hypot(dx,dz);if(dist<.12)W.dest=null;else{const df=sa(Math.atan2(dx,dz)-W.a),mx=2.6*dt;W.a+=Math.max(-mx,Math.min(mx,df));if(Math.abs(df)<.9)mv=Math.min(1,dist*1.5)}}
       if(mv){const sp=2.1*mv*dt,ox=W.x,oz=W.z;W.x+=Math.sin(W.a)*sp;W.z+=Math.cos(W.a)*sp;clampP();if(blk(W.x,W.z)&&!blk(ox,oz)){let ok=false;if(!W.side){const tx=W.dest?W.dest.x:ox+Math.sin(W.a),tz=W.dest?W.dest.z:oz+Math.cos(W.a),f=(d)=>{let x=ox,z=oz,n=0;for(;n<40;n++){const nx=x+Math.sin(W.a+d)*.15,nz=z+Math.cos(W.a+d)*.15;if(blk(nx,nz))break;x=nx;z=nz;const bx=x+Math.sin(W.a)*.3,bz=z+Math.cos(W.a)*.3;if(!blk(bx,bz))break}return n+Math.hypot(tx-x,tz-z)};W.side=f(1.5)<=f(-1.5)?1:-1}/* chọn phía vòng ngắn hơn */
-        for(const d of [.5,1,1.5,2]){const a2=W.a+d*W.side;W.x=ox+Math.sin(a2)*sp;W.z=oz+Math.cos(a2)*sp;clampP();if(!blk(W.x,W.z)){ok=true;W.sideT=.35;break}}/* gặp đồ vật: lách men theo mép để đi vòng */if(!ok){W.x=ox;W.z=oz;if(W.dest&&!W.keys.size)W.dest=null}}else if(W.side&&(W.sideT-=dt)<0)W.side=0;W.stride+=Math.abs(mv)*dt*7}
+        for(const d of [.5,1,1.5,2]){const a2=W.a+d*W.side;W.x=ox+Math.sin(a2)*sp;W.z=oz+Math.cos(a2)*sp;clampP();if(!blk(W.x,W.z)){ok=true;W.sideT=.35;break}}/* gặp đồ vật: lách men theo mép để đi vòng */if(!ok){W.x=ox;W.z=oz;const s0=W.stuck||0;W.stuck=s0+dt;if(s0<.5&&W.stuck>=.5)W.side=-W.side;if(W.stuck>1.5&&W.dest&&!W.keys.size){W.dest=null;W.stuck=0}}else W.stuck=0}else if(W.side&&(W.sideT-=dt)<0)W.side=0;W.stride+=Math.abs(mv)*dt*7}
       if(W.seat&&!W.sit){const S=W.seat,d=Math.hypot(W.x-S.ax,W.z-S.az);if(d<.45){W.dest=null;W.x=S.x;W.z=S.z;W.a=S.a;W.seatY=S.y;W.setSit(true)}else if(!W.dest)W.seat=null}
       g.position.set(W.x,0,W.z);g.rotation.y=W.a;g.position.y=(W.sit?W.seatY||0:0)+(mv?Math.abs(Math.sin(W.stride))*.04:0);
       // camera: không tự xoay theo nhân vật, chỉ dời theo; chỉ vuốt mới xoay góc nhìn

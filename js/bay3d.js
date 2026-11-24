@@ -1579,6 +1579,7 @@
     const acc=active?o.acc:[];w.hat.visible=acc.includes('hat');w.glasses.visible=acc.includes('glasses');w.scarf.visible=acc.includes('scarf');
   }
   function bayDress(sitting){wearSea(bw,meOutfit,meTorso,bayOutfit,sitting,bayMode)}
+  window.__bayWear={make:makeSeaWear,wear:wearSea,outfit:()=>bayOutfit,base:()=>bayBaseStyle()};/* phòng trong nhà trên Đảo Yên mặc cùng bộ đồ đi biển */
   // Xem trước trong bảng trang phục: một người đứng, một người ngồi thiền trên tọa cụ, xoay nhẹ.
   let bayPrev=null;
   function bayPreview(open){
