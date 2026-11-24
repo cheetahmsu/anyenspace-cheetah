@@ -616,7 +616,11 @@
     return withTrip?tdTripResume(P.trip):false}
   window.__bayResumeSnap=()=>tdSnapRestore(true);window.__bayIslandTrip=()=>bayIsland&&tdSnap?.trip||null;
   // Đầu cầu tàu (mút ngoài cùng của cầu tàu, phía biển): mũi tàu cập đúng điểm này, thân tàu nằm hướng nào cũng được.
-  const tdPierHead=()=>[TU_DAO.x+TD_PIER_END[0]-1.2,TU_DAO.z+TD_PIER_END[1]],tdDockOpt=()=>{const [x,z]=tdPierHead();return {bow:true,approach:[x-36,z]}};
+  const tdPierHead=()=>[TU_DAO.x+TD_PIER_END[0]-1.2,TU_DAO.z+TD_PIER_END[1]],tdDockOpt=()=>{const [x,z]=tdPierHead(),[bx,bz]=shipBow(bayShip);
+    /* điểm chờ đặt về phía tàu đang tới (trong khoảng ±70° quanh hướng tây của cầu tàu), để tàu chọn hướng cập từ xa, chỉ xoay tối đa nửa vòng */
+    let a=Math.atan2(bz-z,bx-x),d=Math.atan2(Math.sin(a-Math.PI),Math.cos(a-Math.PI));d=Math.max(-1.22,Math.min(1.22,d));
+    for(const k of [1,.66,.33,0]){const aa=Math.PI+d*k,ax=x+Math.cos(aa)*36,az=z+Math.sin(aa)*36;if(navFree(ax,az)&&lineFree(ax,az,x,z))return {bow:true,approach:[ax,az]}}
+    return {bow:true,approach:[x-36,z]}};
   function tuDaoTap(kind){if(bayIsland){islandGo(kind);return}tdTripMemo();const [x,z]=tdPierHead(),[bx,bz]=shipBow(bayShip);if(Math.hypot(bx-x,bz-z)>5||bayShip.path.length){tuDaoPending=kind;setDestination(x,z,'Đảo Yên của bạn',false,tdDockOpt());if(bayShip.path.length)bayCaption('🏝 Đang tới Đảo Yên · mũi tàu sẽ cập đầu cầu tàu rồi lên '+TU_DAO_SPOTS[kind].toLowerCase(),5000);else tuDaoPending=null;return}dockAtTuDao();islandGo(kind)}
   function dockAtTuDao(){dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayShip.speed=0;bayShip.yawRate=0;saveBayState()}
   function stepOnIsland(kind){if(!bayMode)return;const [x,z]=TU_DAO.dock;dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayShip.x=x;bayShip.z=z;bayShip.speed=0;bayShip.heading=TU_DAO.heading;saveBayState();
@@ -835,7 +839,7 @@
   bayMarker.visible=false;bayGroup.add(bayMarker);
   // ---- Đường đi vẽ trên mặt nước: các vạch sáng nối mũi tàu tới đích, vòng qua các đảo (cập nhật khi tàu chạy) ----
   const bayRoute=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:'#fff1c9',transparent:true,opacity:.62,depthWrite:false,side:THREE.DoubleSide}));bayRoute.frustumCulled=false;bayRoute.visible=false;bayRoute.renderOrder=2;bayGroup.add(bayRoute);
-  function updateRoute(){const S=bayShip;if(!S.path.length||bayIsland||bayPhoto){bayRoute.visible=false;return}
+  function updateRoute(){const S=bayShip;bayRoute.visible=false;return;/* không vẽ vạch đường đi trên mặt biển */if(!S.path.length||bayIsland||bayPhoto){bayRoute.visible=false;return}
     const pts=[shipBow(S)].concat(S.path),pos=[],idx=[],W=.8,ON=6,OFF=4,MAX=1600;let along=0,total=0;
     for(let i=0;i<pts.length-1&&total<MAX;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],L=Math.hypot(bx-ax,bz-az);if(L<.01)continue;const ux=(bx-ax)/L,uz=(bz-az)/L,nx=-uz*W,nz=ux*W;
       for(let t=(along%(ON+OFF))?(ON+OFF)-(along%(ON+OFF)):0;t<L&&total+t<MAX;t+=ON+OFF){const e=Math.min(L,t+ON),x0=ax+ux*t,z0=az+uz*t,x1=ax+ux*e,z1=az+uz*e,b=pos.length/3;
