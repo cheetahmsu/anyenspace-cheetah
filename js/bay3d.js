@@ -704,12 +704,12 @@
       {const n0=sg.children.length,[x,z]=find(1,2.1),y0=tdTerrainY(x,z);
         const rg=[];for(let r=.3;r<=1.62;r+=.22){const ring=new THREE.RingGeometry(r-.025,r+.025,56,1).rotateX(-Math.PI/2),p=ring.attributes.position;for(let k=0;k<p.count;k++)p.setY(k,tdTerrainY(x+p.getX(k),z+p.getZ(k))-y0+.012);rg.push(ring)}
         for(const ring of rg){const o=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color:'#b89f72',transparent:true,opacity:.45,depthWrite:false}));o.position.set(x,y0,z);sg.add(o)}
-        stack([5],x,z,y0);[[10,0],[6,1],[11,2],[16,3]].forEach(([id,k])=>{const a=k/4*Math.PI*2+.4,px=x+Math.cos(a)*.55,pz=z+Math.sin(a)*.55;stack([id],px,pz,tdTerrainY(px,pz))});
+        stack([5],x,z,y0);[[10,0],[20,1],[11,2],[16,3]].forEach(([id,k])=>{const a=k/4*Math.PI*2+.4,px=x+Math.cos(a)*.55,pz=z+Math.sin(a)*.55;stack([id],px,pz,tdTerrainY(px,pz))});
         [19,23,26,32,34].forEach((id,k)=>{const a=k/5*Math.PI*2,px=x+Math.cos(a)*1.05,pz=z+Math.sin(a)*1.05;stack([id],px,pz,tdTerrainY(px,pz))});tag('Vòng tròn đá thiền · 10 viên',n0);ARTS.push(['circle',x,z]);TD_COLL.push([x,z,1.3])}
       // (4) Con đường đá cân bằng · 7 viên, 3 cụm 3–2–2 dọc bãi
-      {const n0=sg.children.length,[x,z]=find(5.5,1),a=a0+5.5/(.86*tdR(a0)),tx=-Math.sin(a),tz=Math.cos(a);[[[1,7,14],-1.3],[[17,24],0],[[27,33],1.2]].forEach(([ids,o])=>{const px=x+tx*o,pz=z+tz*o;stack(ids,px,pz,tdTerrainY(px,pz));TD_COLL.push([px,pz,.45])});tag('Con đường đá cân bằng · 7 viên',n0);ARTS.push(['path',x,z])}
+      {const n0=sg.children.length,[x,z]=find(5.5,1),a=a0+5.5/(.86*tdR(a0)),tx=-Math.sin(a),tz=Math.cos(a);[[[7,9,14],-1.3],[[17,24],0],[[27,33],1.2]].forEach(([ids,o])=>{const px=x+tx*o,pz=z+tz*o;stack(ids,px,pz,tdTerrainY(px,pz));TD_COLL.push([px,pz,.45])});tag('Con đường đá cân bằng · 7 viên',n0);ARTS.push(['path',x,z])}
       // (5) Tác phẩm đá trên nền đá tự nhiên · 6 viên, điểm nhận diện của bãi
-      {const n0=sg.children.length,[x,z]=find(9.5,1.2),top=boulder(x,z,.85,.45,.7,0);stack([2,8,18,25,35,36],x,z,top,{dx:[0,.02,-.02,.015,-.01,0]});tag('Tác phẩm đá trên nền đá tự nhiên · 6 viên',n0);ARTS.push(['base',x,z]);TD_COLL.push([x,z,1.3])}
+      {const n0=sg.children.length,[x,z]=find(9.5,1.2),top=boulder(x,z,.85,.45,.7,0);stack([8,18,25,30,35,36],x,z,top,{dx:[0,.02,-.02,.015,-.01,0]});tag('Tác phẩm đá trên nền đá tự nhiên · 6 viên',n0);ARTS.push(['base',x,z]);TD_COLL.push([x,z,1.3])}
       TD_ACT.stoneArts=ARTS}
      TD_ACT.g=g;TD_ACT.clear=clear;const hitM=SH_HIT_M;
      /* 3 mẫu Khay / Giỏ đặt sẵn trên bãi cạnh Chòi ngắm cảnh */
