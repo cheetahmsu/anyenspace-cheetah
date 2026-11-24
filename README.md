@@ -74,6 +74,7 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **02 · Khoảng Lặng 18 phút**: ánh sáng dịu xuống tông ấm, chữ và nút tự ẩn sau 3 giây (chạm màn hình để hiện lại), chỉ còn gió thông và nước; chuông ở phút 0 · 9 · 18. Đọc trạng thái bài test AnSense (`anyen-ansense-v1`) nếu có; kết thúc gợi ý Khoảng Lặng sáu chặng của AnSense hoặc ghi Nhật ký An Yên.
 - **03 · Lần chuỗi 108 hạt** (tường trái): chạm bảng hạt hoặc phím Space, tiếng gỗ gõ; mốc 18 · 54 · 108 vòng sáng đồng bừng lên và ghi nhẹ một dòng vào Nhật ký An Yên trên máy. Không streak.
 - **04 · Bát Buông Bỏ & Kệ 9 thẻ** (tường phải): nỗi lo ≤ 80 ký tự được vẽ lên mặt nước rồi tan trong khoảng 5 giây; chữ chỉ nằm trong bộ nhớ tạm của trang, **không lưu, không gửi Supabase, không gửi vào kênh phiên**. Kệ thẻ rút 1 thẻ mỗi ngày (lưu số thẻ và ngày trên máy), ưu tiên thẻ khớp trạng thái AnSense.
+- **Ngồi tọa thiền**: mỗi người hiện thành một nhân vật ngồi kiết già trên tọa cụ, mặt hướng Đèn Thở (68 tam giác/người; đủ 6 người là 1.692 tam giác). Solo chỉ thấy mình (mặc định K3, chạm tọa cụ khác để đổi). Trong Phiên 1+5, Healer luôn ngồi tọa cụ vàng đồng; khách vào sau tự ngồi vào chỗ trống đầu tiên hoặc chạm một tọa cụ trống để ngồi. Chỗ ngồi đi qua presence của kênh phiên (`anyenSpaceChat.meta({c})`), kèm màu áo mỗi người tự chọn (`col`), nên chỉ người trong cùng phiên thấy nhau; hai người chọn trùng chỗ thì ai vào trước giữ chỗ.
 - Không tạo kho vật phẩm mới. Giai đoạn 2 (3 phong cách trong nhà) chưa làm.
 
 ## Nhà Văn Hóa · 36 người · Ca Múa Nhạc và 5 hoạt động tập thể

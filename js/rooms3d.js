@@ -309,8 +309,8 @@
     add(new THREE.PlaneGeometry(2*R,H),M('#fff',{map:lamT}),0,H/2,R,0,Math.PI);
     // mặt tường Tây-Nam có lỗ tròn cửa vòm Trăng
     const MY=2.2,MR=1.8;{const s=new THREE.Shape();s.moveTo(-R,0);s.lineTo(R,0);s.lineTo(R,H);s.lineTo(-R,H);s.lineTo(-R,0);const hole=new THREE.Path();hole.absarc(0,MY,MR,0,Math.PI*2,true);s.holes.push(hole);
-      const t=boards('#231910',1,1);t.repeat.set(1,1);add(new THREE.ShapeGeometry(s,12),M('#fff',{map:t}),0,0,-R)}
-    add(new THREE.RingGeometry(MR,MR+.18,32),M(C.col),0,MY,-R+.02);add(new THREE.RingGeometry(MR-.02,MR+.02,32),M(C.brass,{metalness:.5,roughness:.4}),0,MY,-R+.04);
+      const t=boards('#231910',1,1);t.repeat.set(1,1);add(new THREE.ShapeGeometry(s,8),M('#fff',{map:t}),0,0,-R)}
+    add(new THREE.RingGeometry(MR,MR+.18,32),M(C.col),0,MY,-R+.02);
     // khung nhìn ra Hồ Niệm: mặt nước phẳng gương, rừng thông, sen trắng
     const viewT=tex(512,512,(c,w,h)=>{let g=c.createLinearGradient(0,0,0,h*.52);g.addColorStop(0,'#cfdcd6');g.addColorStop(1,'#f1e6cb');c.fillStyle=g;c.fillRect(0,0,w,h);
       c.fillStyle='#8fa596';c.beginPath();c.moveTo(0,250);for(let x=0;x<=w;x+=32)c.lineTo(x,226+Math.sin(x*.02)*14);c.lineTo(w,262);c.lineTo(0,262);c.fill();
@@ -321,27 +321,33 @@
     add(new THREE.PlaneGeometry(4.4,4.4),new THREE.MeshBasicMaterial({map:viewT}),0,MY,-R-.4);
     add(new THREE.BoxGeometry(3.8,.4,.5),M(C.basalt),0,.2,-R+.25);/* bậu cửa đá bazan */
     // trần gỗ tối mở giếng trời tròn, đĩa trời sáng phía trên, xà và cột góc
-    {const s=new THREE.Shape();s.moveTo(-R,-R);s.lineTo(R,-R);s.lineTo(R,R);s.lineTo(-R,R);s.lineTo(-R,-R);const hole=new THREE.Path();hole.absarc(0,0,MR,0,Math.PI*2,true);s.holes.push(hole);add(new THREE.ShapeGeometry(s,12),M(C.col),0,H,0,Math.PI/2)}
-    add(new THREE.CircleGeometry(MR,24),new THREE.MeshBasicMaterial({color:'#fbf1d4'}),0,H+.35,0,Math.PI/2);
+    {const s=new THREE.Shape();s.moveTo(-R,-R);s.lineTo(R,-R);s.lineTo(R,R);s.lineTo(-R,R);s.lineTo(-R,-R);const hole=new THREE.Path();hole.absarc(0,0,MR,0,Math.PI*2,true);s.holes.push(hole);add(new THREE.ShapeGeometry(s,8),M(C.col),0,H,0,Math.PI/2)}
+    add(new THREE.CircleGeometry(MR,16),new THREE.MeshBasicMaterial({color:'#fbf1d4'}),0,H+.35,0,Math.PI/2);
     for(const [w,d,x,z] of [[2*R,.35,0,-R+.18],[2*R,.35,0,R-.18],[.35,2*R,-R+.18,0],[.35,2*R,R-.18,0]])add(new THREE.BoxGeometry(w,.4,d),M(C.col),x,H-.2,z);
     for(const [x,z] of [[-R+.2,-R+.2],[R-.2,-R+.2],[-R+.2,R-.2],[R-.2,R-.2],[-2.6,-R+.2],[2.6,-R+.2]])add(new THREE.BoxGeometry(.4,H,.4),M(C.col),x,H/2,z);
     // ---- tâm phòng: chiếu cói, vũng nắng, cột nắng giếng trời, Đèn Thở trên bệ đá
     const matT=tex(64,64,(c,w,h)=>{c.fillStyle=C.mat;c.fillRect(0,0,w,h);c.strokeStyle='rgba(60,45,25,.25)';for(let y=0;y<h;y+=4){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke()}c.fillStyle='rgba(255,240,200,.08)';for(let x=0;x<w;x+=8)c.fillRect(x,0,3,h)},[7,7]);
-    add(new THREE.CircleGeometry(3.3,32),M('#fff',{map:matT}),0,.012,0,-Math.PI/2);
-    const pool=add(new THREE.CircleGeometry(2.1,24),glow('#ffe2a0',.12),0,.022,0,-Math.PI/2);
-    const beamCol=add(new THREE.CylinderGeometry(MR*.95,2.1,H,20,1,true),glow('#ffe6a8',.07),0,H/2,0);
-    add(new THREE.CylinderGeometry(.32,.42,.55,10),M(C.basalt),0,.275,0);
-    const lamp=add(new THREE.SphereGeometry(.2,12,8),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:C.lampW,emissiveIntensity:.85,roughness:.4}),0,.86,0);
+    add(new THREE.CircleGeometry(3.3,24),M('#fff',{map:matT}),0,.012,0,-Math.PI/2);
+    const pool=add(new THREE.CircleGeometry(2.1,16),glow('#ffe2a0',.12),0,.022,0,-Math.PI/2);
+    const beamCol=add(new THREE.CylinderGeometry(MR*.95,2.1,H,16,1,true),glow('#ffe6a8',.07),0,H/2,0);
+    add(new THREE.CylinderGeometry(.32,.42,.55,8),M(C.basalt),0,.275,0);
+    const lamp=add(new THREE.SphereGeometry(.2,10,7),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:C.lampW,emissiveIntensity:.85,roughness:.4}),0,.86,0);
     const haloT=tex(64,64,(c,w)=>{const g=c.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,240,200,.9)');g.addColorStop(.35,'rgba(217,163,56,.35)');g.addColorStop(1,'rgba(217,163,56,0)');c.fillStyle=g;c.fillRect(0,0,w,w)});
     const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:haloT,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));halo.position.copy(lamp.position);halo.scale.setScalar(1.7);sc.add(halo);
     const light=new THREE.PointLight(C.lampG,LIGHT.lamp,12,1.5);light.position.set(0,1.05,0);sc.add(light);
     // ---- vòng tọa cụ 1 + 5: Healer (vàng đồng trầm) quay lưng ra cửa vòm Trăng, 5 khách (xanh thông trầm)
     const seats=[];for(let k=0;k<6;k++){const a=Math.PI+k*Math.PI/3,x=Math.sin(a)*2.4,z=Math.cos(a)*2.4,healer=k===0;
-      const m=M(healer?C.brass:C.pine,{emissive:healer?'#7a5a24':'#1f4a3a',emissiveIntensity:0,roughness:.85});const s=add(new THREE.CylinderGeometry(.36,.4,.14,10),m,x,.08,z);s.userData={k,healer};seats.push(s)}
+      const m=M(healer?C.brass:C.pine,{emissive:healer?'#7a5a24':'#1f4a3a',emissiveIntensity:0,roughness:.85});const s=add(new THREE.CylinderGeometry(.36,.4,.14,8),m,x,.08,z);s.userData={k,healer};seats.push(s)}
+    const seatA=k=>Math.PI+k*Math.PI/3;
+    // nhân vật ngồi tọa thiền (kiết già) trên tọa cụ: thân áo + vạt chân là 1 Lathe, đầu là khối 20 mặt; mỗi người 68 tam giác
+    const ROBE=['#b8873f','#5b7f6b','#8a6a8e','#4f6f86','#9a6b4f','#6f7d52'],SKIN=new THREE.Color('#e2b98f');
+    const bodyG=new THREE.LatheGeometry([[.34,0],[.36,.08],[.2,.17],[.22,.42],[.07,.5]].map(([a,b])=>new THREE.Vector2(a,b)),6);
+    const bodies=new THREE.InstancedMesh(bodyG,new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.85,side:THREE.DoubleSide,emissive:'#2a1d10',emissiveIntensity:.35}),6),heads=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.11,0),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.7,flatShading:true}),6);
+    bodies.count=heads.count=0;sc.add(bodies,heads);
     // bệ Chuông Đồng ngay dưới bậu cửa, cạnh tọa cụ Healer
     add(new THREE.BoxGeometry(.5,.18,.5),M(C.basalt),.85,.09,-3.05);
-    const bell=add(new THREE.LatheGeometry([[0,0],[.13,.01],[.21,.08],[.23,.19],[.215,.21]].map(([a,b])=>new THREE.Vector2(a,b)),10),M('#b88d45',{metalness:.65,roughness:.32}),.85,.18,-3.05);
-    const wave=add(new THREE.RingGeometry(.95,1,32),glow('#ffd88a',0),0,.03,0,-Math.PI/2);
+    const bell=add(new THREE.LatheGeometry([[0,0],[.13,.01],[.21,.08],[.23,.19],[.215,.21]].map(([a,b])=>new THREE.Vector2(a,b)),8),M('#b88d45',{metalness:.65,roughness:.32}),.85,.18,-3.05);
+    const wave=add(new THREE.RingGeometry(.95,1,24),glow('#ffd88a',0),0,.03,0,-Math.PI/2);
     // ---- Tường trái · Trạm 3: bảng lần chuỗi 108 hạt (1 InstancedMesh), số đếm giữa vòng, vòng sáng đồng
     const BY=2.35,BR=1.02,bx=-R+.08;
     add(new THREE.BoxGeometry(.06,2.9,2.9),M(C.col),-R+.03,BY,0);const board=add(new THREE.PlaneGeometry(2.66,2.66),M('#e9dcc0',{roughness:1}),bx,BY,0,0,Math.PI/2);
@@ -349,7 +355,7 @@
     const beads=new THREE.InstancedMesh(new THREE.PlaneGeometry(.09,.09),new THREE.MeshBasicMaterial({map:beadT,alphaTest:.5,side:THREE.DoubleSide}),108);sc.add(beads);
     const dummy=new THREE.Object3D(),cDone=new THREE.Color('#f1c98a'),cTodo=new THREE.Color('#7a5638');
     const countT=tex(256,256,()=>{});const counter=add(new THREE.PlaneGeometry(1.1,1.1),new THREE.MeshBasicMaterial({map:countT,transparent:true}),bx+.01,BY,0,0,Math.PI/2);
-    const beadRing=add(new THREE.RingGeometry(BR+.09,BR+.15,48),glow('#f2c46a',.12),bx+.02,BY,0,0,Math.PI/2);
+    const beadRing=add(new THREE.RingGeometry(BR+.09,BR+.15,28),glow('#f2c46a',.12),bx+.02,BY,0,0,Math.PI/2);
     // ---- Tường phải · Trạm 4: kệ 9 thẻ, Bát Nước Buông Bỏ bằng đá bazan
     add(new THREE.BoxGeometry(.06,1.75,2.7),M(C.col),R-.03,3.0,0);
     const cardT=tex(128,72,(c,w,h)=>{c.fillStyle='#f4ead6';c.fillRect(0,0,w,h);c.fillStyle='rgba(120,90,50,.35)';c.fillRect(22,26,84,4);c.fillRect(32,42,64,4);c.strokeStyle='#c8a96a';c.lineWidth=3;c.strokeRect(4,4,w-8,h-8)});
@@ -357,7 +363,7 @@
     const cardPos=k=>[R-.09,3.45-Math.floor(k/3)*.5,(k%3-1)*.82];
     const drawCards=pick=>{for(let k=0;k<9;k++){const [x,y,z]=cardPos(k);dummy.position.set(x-(k===pick?.08:0),y,z);dummy.rotation.set(0,-Math.PI/2,0);dummy.scale.setScalar(k===pick?1.12:1);dummy.updateMatrix();cards.setMatrixAt(k,dummy.matrix);cards.setColorAt(k,new THREE.Color(k===pick?'#fff8e2':pick==null?'#b8ab92':'#6e6555'))}cards.instanceMatrix.needsUpdate=true;cards.instanceColor.needsUpdate=true};
     add(new THREE.BoxGeometry(1.1,.72,.9),M(C.col),R-.8,.36,0);
-    const bowl=add(new THREE.LatheGeometry([[0,0],[.3,.02],[.46,.14],[.52,.3],[.5,.32]].map(([a,b])=>new THREE.Vector2(a,b)),12),M(C.basalt,{roughness:.75}),R-.8,.72,0);
+    const bowl=add(new THREE.LatheGeometry([[0,0],[.3,.02],[.46,.14],[.52,.3],[.5,.32]].map(([a,b])=>new THREE.Vector2(a,b)),10),M(C.basalt,{roughness:.75}),R-.8,.72,0);
     const waterT=tex(256,256,()=>{});const water=add(new THREE.CircleGeometry(.47,20),new THREE.MeshBasicMaterial({map:waterT}),R-.8,.72+.27,0);water.rotation.set(-Math.PI/2,0,-Math.PI/2);
     const ripple=add(new THREE.RingGeometry(.9,1,24),glow('#d8f0ee',0),R-.8,.72+.28,0,-Math.PI/2);
     // ---- âm thanh
@@ -375,11 +381,11 @@
       const drip=setInterval(()=>{if(Math.random()<.5)strike(1700+Math.random()*900,.3,.006,[[1,1]])},2600);amb={g,srcs:[wind.s,wat.s,lfo],drip}}
     function ambientOff(){if(!amb)return;const a=amb;amb=null;clearInterval(a.drip);try{const t=ac.currentTime;a.g.gain.cancelScheduledValues(t);a.g.gain.setValueAtTime(a.g.gain.value,t);a.g.gain.linearRampToValueAtTime(0,t+1.2)}catch(e){}setTimeout(()=>{for(const s of a.srcs)try{s.stop()}catch(e){}a.g.disconnect()},1400)}
     // ---- góc nhìn từng trạm (trượt mềm)
-    const VIEWS={overview:[0,1.4,.6,0,.2,4.3],gate:[0,2.1,-3.2,0,.06,3.6],seat:[0,1.25,0,0,.2,3.2],seatH:[0,1.25,0,Math.PI,.2,3.2],beads:[-R+.1,BY,0,Math.PI/2,.02,2.9],cards:[R-.1,2.95,0,-Math.PI/2,.04,2.7],bowl:[R-.8,1.0,0,-Math.PI/2,.62,2.1]};
-    let tw=null;function goView(k){const v=VIEWS[k];tw={a:[st.target.x,st.target.y,st.target.z,st.yaw,st.pitch,st.dist],b:v,t0:performance.now()};st.yawC=v[3]}
+    const VIEWS={overview:[0,1.4,.6,0,.2,4.3],gate:[0,2.1,-3.2,0,.06,3.6],beads:[-R+.1,BY,0,Math.PI/2,.02,2.9],cards:[R-.1,2.95,0,-Math.PI/2,.04,2.7],bowl:[R-.8,1.0,0,-Math.PI/2,.62,2.1]};
+    let tw=null;function goView(k){if(k==='seat'||k==='seatH'){const a=seatA(S.mySeat==null?3:S.mySeat);VIEWS.seat=[0,.45,0,a,.62,4.4];/* sau lưng mình, cao vừa đủ thấy cả vòng tọa cụ */k='seat'}const v=VIEWS[k];tw={a:[st.target.x,st.target.y,st.target.z,st.yaw,st.pitch,st.dist],b:v,t0:performance.now()};st.yawC=v[3]}
     st.minD=1.8;st.maxD=4.5;st.target.set(0,1.6,-1.2);st.yaw=0;st.pitch=.1;st.dist=4.4;goView('gate');
     // ---- trạng thái
-    const S={entered:false,mode:'solo',pending:false,healer:false,healerHere:false,people:0,act:null,tab:'home',beads:0,mark:{},card:null,rel:null,dim:0,quiet:false};
+    const S={entered:false,mode:'solo',pending:false,healer:false,healerHere:false,people:0,mySeat:3,occ:{},therapist:null,me:null,list:[],act:null,tab:'home',beads:0,mark:{},card:null,rel:null,dim:0,quiet:false};
     const BREATH={'446':[4,4,6],'478':[4,7,8]};
     const STATE_LINES={khoi:['Khởi','Hôm nay cần một cú đẩy nhẹ để bắt đầu.'],giao:['Giao','Hôm nay cần sự ấm áp và kết nối.'],an:['An','Hôm nay cần buông căng thẳng và ngủ yên.'],hoa:['Hoa','Hôm nay đang ổn, hãy sáng tạo và lan toả.'],tinh:['Tịnh','Hôm nay cần lắng xuống và hạ nhiệt.']};
     const ansense=()=>{try{const r=JSON.parse(localStorage.getItem('anyen-ansense-v1')||'{}').result;return r&&STATE_LINES[r.state]?r.state:null}catch(e){return null}};
@@ -429,29 +435,49 @@
     on(roomBox,'pointerdown',()=>{if(S.quiet)peek()});
     // ---- Phiên 1+5: dùng kênh phiên riêng của Lịch trị liệu (space-chat.js xin chỗ anyen_space_enter → anyen:sp:nha_niem__s<phiên>)
     let pendT=0;
-    function chooseSolo(note){S.mode='solo';S.pending=false;S.healer=false;S.healerHere=false;S.people=0;clearTimeout(pendT);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'solo:nha_niem'}}));if(note)rmHint(note);litSeats();render()}
+    function chooseSolo(note){S.mode='solo';S.pending=false;S.healer=false;S.healerHere=false;S.people=0;S.list=[];S.therapist=null;if(S.mySeat==null||S.mySeat===0)S.mySeat=3;clearTimeout(pendT);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'solo:nha_niem'}}));if(note)rmHint(note);litSeats();render()}
     function chooseSession(){S.pending=true;render();window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'room:nha_niem'}}));clearTimeout(pendT);pendT=setTimeout(()=>{if(S.pending)chooseSolo('Chưa kết nối được phiên 1+5 · bạn đang ở chế độ Solo')},12000)}
     on(window,'anyen-space-result',e=>{const d=e.detail||{};if(d.id!=='nha_niem'||!S.entered)return;
-      if(d.ok&&d.session){const was=inSession();S.mode='session';S.pending=false;clearTimeout(pendT);S.healer=!!d.healer;if(!was){rmHint(S.healer?'🌿 Bạn dẫn phiên 1+5 · chuông và nhịp thở của bạn vang tới cả phòng':'🌿 Đã vào phiên 1+5 cùng Healer');goView(S.healer?'seatH':'seat')}litSeats();render();return}
+      if(d.ok&&d.session){const was=inSession();S.mode='session';S.pending=false;clearTimeout(pendT);S.healer=!!d.healer;S.therapist=d.therapist||null;if(d.me)S.me=d.me;if(!was){S.list=[];S.colSent=false;S.mySeat=S.healer?0:null}if(!was){rmHint(S.healer?'🌿 Bạn dẫn phiên 1+5 · chuông và nhịp thở của bạn vang tới cả phòng':'🌿 Đã vào phiên 1+5 cùng Healer');goView(S.healer?'seatH':'seat')}litSeats();render();return}
       if(!S.pending&&!inSession())return;const was=inSession();
       const why=d.ok?(was?'Phiên 1+5 đã kết thúc · bạn tiếp tục Solo':'Bạn chưa có phiên 1+5 nào đang diễn ra ở Nhà Niệm · đặt lịch Healer ở trang Lịch trị liệu'):d.reason==='guest'||d.reason==='auth'?'Đăng nhập thành viên và đặt lịch Healer để vào phiên 1+5':d.reason==='session'?'Đang có phiên riêng ở đây · bạn trải nghiệm Solo, không phiên nào thấy bạn':d.reason==='full'?'Phiên đã đủ người · bạn trải nghiệm Solo':'Chưa vào được phiên · bạn đang ở chế độ Solo';
       if(was&&S.act&&!S.act.shared)stopAct(true,true);chooseSolo(why);S.sessNote=why;render()});
-    on(window,'anyen-space-people',e=>{const d=e.detail||{};if(d.id!=='nha_niem'||!inSession())return;const grew=(d.n||0)>S.people;S.people=d.n||0;S.healerHere=!!d.healer;litSeats();
+    on(window,'anyen-space-people',e=>{const d=e.detail||{};if(d.id!=='nha_niem'||!inSession())return;const grew=(d.n||0)>S.people;S.people=d.n||0;S.healerHere=!!d.healer;if(d.me)S.me=d.me;if(Array.isArray(d.list))S.list=d.list.slice(0,8);litSeats();if(S.tab!=='bowl')render();
       if(grew&&S.healer&&S.act&&S.act.shared){const el=(Date.now()-S.act.t0)/1000;send(S.act.kind==='breath'?{k:'breath',p:S.act.p,m:S.act.m,el}:{k:'silence',el})}});
     on(window,'anyen-space-room',e=>{const m=e.detail||{};if(!inSession()||!m.fromHealer)return;const el=Math.max(0,Math.min(1200,+m.el||0));
       if(m.k==='bell')bellSound();else if(m.k==='breath')startBreath(String(m.p),+m.m,el,true);else if(m.k==='silence')startSilence(el,true);else if(m.k==='stop')stopAct(true)});
-    function litSeats(){const guests=Math.max(0,S.people-(S.healerHere?1:0));seats.forEach(s=>{const k=s.userData.k;s.material.emissiveIntensity=inSession()?(k===0?(S.healerHere||S.healer?.9:0):(k<=guests?.7:0)):0})}
+    // Healer luôn ở tọa cụ 0. Khách giữ chỗ bằng cờ c; hai người cùng chọn một chỗ thì ai vào trước giữ chỗ, người sau tự sang chỗ trống kế tiếp.
+    function claim(k){S.mySeat=k;if(inSession()&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k,col:myRobe()})}
+    function seatPeople(){const occ={};if(!S.entered){S.occ=occ;drawPeople();return}
+      if(!inSession()){occ[S.mySeat==null?3:S.mySeat]={id:'me',name:'Bạn',me:true}}
+      else{const list=S.list.slice().sort((x,y)=>(x.t||0)-(y.t||0)||String(x.id).localeCompare(String(y.id)));
+        for(const p of list){const healer=S.therapist&&p.id===S.therapist,k=healer?0:p.c;if(k==null||(k===0&&!healer)||occ[k])continue;occ[k]={id:p.id,name:p.name||'Một người bạn',healer,me:p.id===S.me,col:p.col||null}}
+        if(S.healer){if(!occ[0]||!occ[0].me){occ[0]={id:S.me,name:'Bạn',healer:true,me:true}}if(S.mySeat!==0||!S.colSent){S.colSent=true;claim(0)}}
+        else{const mine=Object.entries(occ).find(([k,o])=>o.me);if(mine)S.mySeat=+mine[0];else if(S.list.length){/* chờ danh sách có mặt rồi mới chọn chỗ */const free=[1,2,3,4,5].filter(k=>!occ[k]),k=free.includes(S.mySeat)?S.mySeat:free[0];if(k!=null){claim(k);occ[k]={id:S.me,name:'Bạn',me:true}}}}}
+      S.occ=occ;drawPeople()}
+    function drawPeople(){let n=0;for(let k=0;k<6;k++){const o=S.occ[k];seats[k].material.emissiveIntensity=o?(o.me?.9:.45):0;if(!o)continue;const a=seatA(k);
+        dummy.position.set(Math.sin(a)*2.4,.15,Math.cos(a)*2.4);dummy.rotation.set(0,a+Math.PI,0);dummy.scale.set(1.2,1,.95);dummy.updateMatrix();bodies.setMatrixAt(n,dummy.matrix);bodies.setColorAt(n,new THREE.Color(o.me?myRobe():o.col||(o.healer||k===0?ROBE[0]:ROBE[k])));/* màu áo mỗi người tự chọn, gửi qua presence */
+        dummy.position.y=.15+.6;dummy.scale.set(1,1.12,1);dummy.updateMatrix();heads.setMatrixAt(n,dummy.matrix);heads.setColorAt(n,SKIN);n++}
+      bodies.count=heads.count=n;bodies.instanceMatrix.needsUpdate=heads.instanceMatrix.needsUpdate=true;if(n){bodies.instanceColor.needsUpdate=heads.instanceColor.needsUpdate=true}}
+    const myRobe=()=>{try{const c=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').color;return /^#[0-9a-f]{6}$/i.test(c)?c:ROBE[3]}catch(e){return ROBE[3]}};
+    function litSeats(){seatPeople()}
+    function tapSeat(k){if(!S.entered)return;const o=S.occ[k];
+      if(o&&o.me){goView('seat');return}
+      if(k===0&&!S.healer){rmHint('Tọa cụ vàng đồng dành cho Healer dẫn phiên');return}
+      if(S.healer&&inSession()){rmHint('Healer ngồi ở tọa cụ vàng đồng, quay lưng ra cửa vòm Trăng');return}
+      if(o){rmHint('Chỗ này đã có '+o.name+' ngồi · chạm một tọa cụ còn trống');return}
+      claim(k);seatPeople();goView('seat');rmHint('🧘 Đã ngồi vào tọa cụ K'+k);if(S.tab!=='bowl')render()}
     // ---- chạm vào vật trong phòng
-    rTap(st,lamp,()=>{if(!S.entered)return;S.tab='breath';goView('seat');render()});
+    rTap(st,lamp,()=>{if(!S.entered)return;S.tab='breath';goView('seat');render()});/* ngồi tại tọa cụ của mình */
     rTap(st,board,()=>{if(!S.entered)return;if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()});rTap(st,counter,()=>{if(S.entered){if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()}});
     rTap(st,cards,()=>{if(!S.entered)return;S.tab='cards';drawCard();render()});
     rTap(st,bowl,()=>{if(!S.entered)return;S.tab='bowl';goView('bowl');render()});rTap(st,water,()=>{if(!S.entered)return;S.tab='bowl';goView('bowl');render()});
     rTap(st,bell,()=>{if(!S.entered)return;bellSound();if(inSession()&&S.healer)send({k:'bell'})});
-    seats.forEach(s=>rTap(st,s,()=>{if(S.entered)goView(s.userData.healer?'seatH':'seat')}));
+    seats.forEach(s=>rTap(st,s,()=>tapSeat(s.userData.k)));
     const spaceKey=e=>{if(e.code!=='Space'||!S.entered||S.tab!=='beads')return false;const t=e.target;return !(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))};
     on(document,'keydown',e=>{if(!spaceKey(e))return;e.preventDefault();if(!e.repeat)bead()});on(document,'keyup',e=>{if(spaceKey(e))e.preventDefault()});/* nút đang được chọn không nhận thêm một lần bấm */
     // ---- bảng điều khiển
-    const ritualDone=()=>{S.entered=true;goView('overview');rmHint('Kéo để nhìn quanh · chạm Đèn Thở, bảng 108 hạt, Bát Buông Bỏ hay Kệ thẻ');const fromSched=window.__anyenSchedHouse==='nha_niem';window.__anyenSchedHouse=null;S.suggest=fromSched;render()};
+    const ritualDone=()=>{S.entered=true;seatPeople();goView('overview');rmHint('Kéo để nhìn quanh · chạm Đèn Thở, bảng 108 hạt, Bát Buông Bỏ hay Kệ thẻ');const fromSched=window.__anyenSchedHouse==='nha_niem';window.__anyenSchedHouse=null;S.suggest=fromSched;render()};
     function modeBadge(){if(S.pending)return '<p class="nm-mode">⏳ Đang vào phiên 1+5…</p>';
       if(inSession())return '<p class="nm-mode">🌿 Phiên 1+5'+(S.healer?' · bạn là Healer dẫn phiên':' · cùng Healer')+' · '+Math.max(1,S.people)+'/6 người · phiên khác không thấy phiên này <button type="button" data-nm="solo">Chuyển Solo</button></p>';
       return '<p class="nm-mode">🧘 Solo · yên tĩnh, không ai thấy bạn <button type="button" data-nm="session">Vào Phiên 1+5</button></p>'}
@@ -462,6 +488,7 @@
       h=modeBadge()+(S.sessNote&&!inSession()?'<p class="rm-note">'+esc(S.sessNote)+(/Lịch trị liệu|đặt lịch/.test(S.sessNote)?' · <a href="lich.html" style="color:#f2dca8">Mở Lịch trị liệu</a>':'')+'</p>':'');
       h+='<div class="rm-row nm-tabs">'+[['breath','🕯️ 01 Thở'],['silence','🌙 02 Khoảng Lặng'],['beads','📿 03 Chuỗi 108'],['bowl','💧 04 Buông Bỏ'],['cards','🃏 Kệ 9 thẻ']].map(([k,l])=>'<button type="button" data-tab="'+k+'"'+(t===k||t===k+'Done'?' class="sel"':'')+'>'+l+'</button>').join('')+'</div>';
       if(inSession()&&S.healer)h+='<div class="rm-row"><button type="button" class="rm-gold" data-nm="bell">🔔 Thỉnh chuông đồng · cả phòng cùng nghe</button></div>';
+      {const names=Object.entries(S.occ).filter(([k,o])=>!o.me).map(([k,o])=>(+k===0?'Healer ':'K'+k+' ')+esc(o.name));h+='<p class="rm-note">🧘 Bạn ngồi ở '+(S.mySeat===0?'tọa cụ Healer':'K'+(S.mySeat==null?'…':S.mySeat))+(names.length?' · cùng ngồi: '+names.join(' · '):'')+' · chạm một tọa cụ trống để đổi chỗ</p>'}
       if(t==='home')h+='<p>Chạm Đèn Thở ở tâm phòng, bảng 108 hạt ở tường trái, Bát Buông Bỏ và Kệ thẻ ở tường phải. Kéo để nhìn quanh.</p>';
       else if(t==='breath'){if(a&&a.kind==='breath')h+='<p>Quả cầu sáng và cột nắng giếng trời co giãn theo nhịp '+a.p.split('').join('–')+' · '+a.m+' phút. Không chấm điểm, chỉ cần có mặt.</p><div class="rm-row"><button type="button" data-nm="stop">⏹ Dừng</button></div>';
         else{const sel=S.bp||'446',sm=S.bm||3,follow=inSession()&&!S.healer;h+='<p><b>01 · Thở Chánh Niệm cùng Đèn Thở</b>'+(follow?' · Healer sẽ bắt đầu cho cả phòng; bạn cũng có thể thở riêng.':'')+'</p><div class="rm-row">Nhịp: '+[['446','4–4–6'],['478','4–7–8']].map(([k,l])=>'<button type="button" data-bp="'+k+'"'+(k===sel?' class="sel"':'')+'>'+l+'</button>').join('')+'</div><div class="rm-row">Thời gian: '+[3,6,10].map(m=>'<button type="button" data-bm="'+m+'"'+(m===sm?' class="sel"':'')+'>'+m+' phút</button>').join('')+'</div><div class="rm-row"><button type="button" class="rm-gold" data-nm="breathe">🕯️ '+(inSession()&&S.healer?'Bắt đầu cho cả phòng':'Bắt đầu thở')+'</button></div>'}}
@@ -491,7 +518,7 @@
       if(tw){const u=Math.min(1,(now-tw.t0)/1200),k=u*u*(3-2*u),A=tw.a,B=tw.b;st.target.set(A[0]+(B[0]-A[0])*k,A[1]+(B[1]-A[1])*k,A[2]+(B[2]-A[2])*k);st.yaw=A[3]+(B[3]-A[3])*k;st.pitch=A[4]+(B[4]-A[4])*k;st.dist=A[5]+(B[5]-A[5])*k;if(u>=1)tw=null}
       fade=Math.min(1,fade+.012);const want=S.act&&S.act.kind==='silence'?1:0;S.dim+=(want-S.dim)*.006;
       let b=tickAct();if(!S.act)b=.5+.5*Math.sin(t*2*Math.PI/14);const amp=S.act?1:.45;
-      lamp.scale.setScalar(1+.38*b*amp);halo.scale.setScalar(1.1+.9*b*amp);
+      lamp.scale.setScalar(1+.38*b*amp);bodies.scale.y=1+.025*b*amp;halo.scale.setScalar(1.1+.9*b*amp);
       st.hemi.intensity=LIGHT.hemi*fade*(1-.7*S.dim);st.key.intensity=LIGHT.key*fade*(1-.8*S.dim);light.intensity=LIGHT.lamp*fade*(.75+.5*b*amp)*(1-.45*S.dim);light.color.copy(cLamp).lerp(cWarm,S.dim);sc.background.copy(bgA).lerp(bgB,S.dim);
       beamCol.material.opacity=(.04+.07*b*amp)*(1-.6*S.dim);pool.material.opacity=(.03+.07*b*amp)*(1-.5*S.dim);
       const ub=(now-(bell.userData.ring||0))/1000;bell.rotation.z=ub<2.5?Math.sin(ub*30)*.03*(2.5-ub):0;
@@ -506,8 +533,9 @@
       for(const f of offs)f();for(const t of texs)t.dispose();sc.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});delete window.__niem};
     // kiểm tra: số tam giác nội thất, số PointLight, trạng thái; tua nhanh hoạt động
     window.__niem={tris:()=>{let n=0;sc.traverse(o=>{if(!o.isMesh&&!o.isSprite)return;const g=o.geometry;if(!g)return;const c=(g.index?g.index.count:g.attributes.position.count)/3;n+=c*(o.isInstancedMesh?o.count:1)});return n},
-      points:()=>{let n=0;sc.traverse(o=>{if(o.isPointLight)n++});return n},state:()=>({entered:S.entered,mode:S.mode,healer:S.healer,people:S.people,act:S.act&&S.act.kind,tab:S.tab,beads:S.beads,card:S.card,rel:!!S.rel,quiet:S.quiet}),
-      skip:sec=>{if(S.act)S.act.t0-=sec*1000},enter:mode=>{S.washed=true;if(mode==='session'){ritualDone();chooseSession()}else{chooseSolo();ritualDone()}}};
+      points:()=>{let n=0;sc.traverse(o=>{if(o.isPointLight)n++});return n},state:()=>({mySeat:S.mySeat,entered:S.entered,mode:S.mode,healer:S.healer,people:S.people,act:S.act&&S.act.kind,tab:S.tab,beads:S.beads,card:S.card,rel:!!S.rel,quiet:S.quiet}),
+      skip:sec=>{if(S.act)S.act.t0-=sec*1000},seats:()=>Object.fromEntries(Object.entries(S.occ).map(([k,o])=>[k,(o.me?'*':'')+o.name])),tap:k=>tapSeat(k),
+      people:(list,me)=>window.dispatchEvent(new CustomEvent('anyen-space-people',{detail:{id:'nha_niem',n:list.length,me,healer:list.some(p=>p.id===S.therapist),list}})),enter:mode=>{S.washed=true;if(mode==='session'){ritualDone();chooseSession()}else{chooseSolo();ritualDone()}}};
   }
   // ---------------------------------------------------------------- Nhà Văn Hóa · 36 người · Ca Múa Nhạc & 5 hoạt động tập thể
   // Khối 16 × 11 × 6,8 m gỗ trầm. Đồng bộ qua kênh cộng đồng anyen:sp:nha_van_hoa (space-chat.js, tối đa 36 người); không cần SQL mới, không tạo kho mới.
