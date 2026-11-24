@@ -775,7 +775,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const hang=new THREE.Group();hang.add(new THREE.Mesh(mergeColored(strands),forestMat));hang.position.y=0;g.add(hang);w.hang=hang;
       scene.add(g);w.group=g}}
   function updateWillows(t){for(const w of WILLOWS)if(w.hang){w.hang.rotation.z=Math.sin(t*.7+w.x)*.025;w.hang.rotation.x=Math.sin(t*.53+w.z)*.02}}
-  buildForest(FOREST_DEFAULT);
+  /* Rừng thông (cây + bản đồ data/world-pine_forest.json) chỉ dựng khi vào Rừng Yên; vào thẳng Vịnh Yên thì không tải */
+  let forestBuilt=false,forestWant=FOREST_DEFAULT,forestMapLoader=null;
+  function ensureForest(){if(forestBuilt)return;forestBuilt=true;buildForest(forestWant);if(forestMapLoader)forestMapLoader()}
+  if(!window.anyenPendingBay)ensureForest();
+  window.addEventListener('anyen-3d-enter',()=>{if(!window.anyenPendingBay)ensureForest()});
   // Obstacles between the camera and the avatar fade to see-through (never removed): pines via their ghost copies,
   // buildings and large props via their own materials.
   const hiddenMatrix=new THREE.Matrix4().makeScale(0,0,0),tmpColor=new THREE.Color(),tmpMatrix=new THREE.Matrix4(),FADE_MIN=.2;
@@ -1060,7 +1064,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     }
     hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);
     sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);if(Array.isArray(m.sun_position))sun.position.set(...m.sun_position);
-    for(const n of w.nature||[]){if(n.kind==='pine_forest'){const key=JSON.stringify(n.params);if(key!==forestKey){forestKey=key;buildForest(n.params)}}}
+    for(const n of w.nature||[]){if(n.kind==='pine_forest'){const key=JSON.stringify(n.params);if(key!==forestKey){forestKey=key;forestWant=n.params;if(forestBuilt)buildForest(n.params)}}}
     for(const r of w.rooms||[])if(r.name&&r.palette_color)roomPalettes[r.name]=r.palette_color;
     for(const pr of w.props||[]){if(pr.kind!=='wish_lake')continue;const l=wishLakes.find(v=>v.name===pr.name);if(!l)continue;
       l.x=Number(pr.x);l.z=Number(pr.z);if(pr.params?.color)l.color=pr.params.color;if(pr.params?.theme)l.theme=pr.params.theme;
@@ -1069,7 +1073,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     window.dispatchEvent(new CustomEvent('anyen-world-loaded',{detail:{id:WORLD_ID,source}}));
     return true;
   }
-  (async()=>{try{const r=await fetch('data/world-'+WORLD_ID+'.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');applyWorld(data,'file')}catch(e){window.anyenWorldError=String(e&&e.message||e)}})();
+  let forestMapP=null;forestMapLoader=()=>forestMapP||(forestMapP=(async()=>{try{const r=await fetch('data/world-'+WORLD_ID+'.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();if(!data||!data.map)throw Error('no map');applyWorld(data,'file')}catch(e){window.anyenWorldError=String(e&&e.message||e)}})());if(forestBuilt)forestMapLoader();
   window.addEventListener('anyen-room-scene',e=>{const r=e.detail?.room||'Sảnh chung';scene.background=new THREE.Color(roomPalettes[r]||roomPalettes['Sảnh chung']);document.body.dataset.yenRoom=r==='Phòng Riêng'?'private':r.includes('Sen')?'lotus':r.includes('Trúc')?'bamboo':'lobby';});
   paintMe();window.addEventListener('yen-profile',paintMe);
   // Small turning preview of the guest's avatar on the profile/welcome screen.
@@ -1164,7 +1168,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=903b04d6').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=b089530c').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -2207,7 +2211,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(bayData)ready(bayData);else{bayCaption('Đang tải bản đồ vịnh…',8000);loadBayData().then(ready).catch(()=>bayCaption('Chưa tải được bản đồ vịnh, vui lòng thử lại',6000))}
     document.getElementById('zenHint').textContent='⛵ Vịnh Hạ Long · Chạm mặt nước để tàu đi tới';
   }
-  function exitBay(){
+  function exitBay(){ensureForest();
     if(!bayMode)return;if(bayIsland)islandBoardNow();saveBayState();dropPause();setVillageActive(true);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:document.body.classList.contains('immersive')?'forest':'out'}}));if(meActivity==='sit')document.getElementById('realtimeSit')?.click();
     bayMode=false;bayHeld(true);document.body.classList.remove('bay-clean');SEE.on.value=0;SEE.onShip.value=0;meTag.visible=true;bayGroup.visible=false;document.body.classList.remove('yen-bay');{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - RỪNG YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Thóat 3D';ex.setAttribute('aria-label','Quay lại trang chính')}}endTour(false);closeSheet();closePhoto();(bayMapBox.classList.remove('open'),document.body.classList.remove('bay-map-open'));if(bayOutfitOpen)closeBayOutfit(false);stopBaySound();
     if(bayStash){mePosition.copy(bayStash.pos);scene.background=bayStash.bg;scene.fog=bayStash.fog;viewYaw=bayStash.yaw;walkPitch=bayStash.pitch;camera.far=bayStash.far;camera.updateProjectionMatrix();

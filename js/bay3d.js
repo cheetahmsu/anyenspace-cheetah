@@ -523,6 +523,8 @@
   function shMesh(s,t,sandy){const m=new THREE.Mesh(shGeo(s,t),sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
   const BIN_INFO=[{name:'Giỏ Mây Đan Mắt Cáo',short:'Giỏ Mây',ic:'🧺',style:'Giản Dị'},{name:'Khay Gốm Sóng Biển',short:'Khay Sóng Ngọc',ic:'🌊',style:'Sang Chảnh'},{name:'Đĩa Sứ Vỏ Sò Hồng Đào',short:'Đĩa Sò Hồng',ic:'🐚',style:'Hạnh Phúc'}];
+  const SH_CAP=36;/* mỗi khay / giỏ đựng được cả 36 vỏ */
+  function binSock(k,i){if(i<5)return BIN_SOCK[k][i];const j=i-5,ring=j%9,layer=Math.floor(j/9),a=ring/9*TAU+layer*.35,r=.15-.02*layer;return [Math.cos(a)*r,.12+.045*layer+(ring%2)*.015,Math.sin(a)*r*.85]}
   const BIN_SOCK=[[[0,.07,0],[.12,.08,.06],[-.12,.08,.05],[.05,.09,-.12],[-.06,.1,-.1]],[[-.2,.07,.02],[-.07,.07,-.06],[.06,.07,.05],[.19,.07,-.03],[0,.07,.12]],[[0,.11,.02],[.13,.1,.1],[-.13,.1,.1],[.1,.1,-.08],[-.1,.1,-.08]]];
   function buildBin(k){const g2=new THREE.Group(),M=(c,r=.85,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:r,...o});
     if(k===0){/* Giỏ Mây Đan Mắt Cáo: thân đan mắt cáo thưa, 2 quai mây cong bọc đai xanh ngọc, thẻ vỏ sò bên hông */
@@ -720,7 +722,7 @@
   // bấm nhà → xuống tàu, đi hết cầu tàu, lên dốc rồi vào nhà. Bấm mặt nước / nút Về tàu → đi về cầu tàu và lên tàu.
   // Tàu vẫn neo ở cầu tàu (đã lưu), nên rời đi hay tắt trang thì lần sau trở lại đúng chỗ tàu đang neo ở Đảo Yên.
   function tdGroundY(x,z){// toạ độ địa phương của Đảo Yên
-    const PIER_X0=-TU_DAO.r-17.5,/* gồm cả chỗ mũi tàu ghé sát đầu cầu */PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
+    const PIER_X0=-TU_DAO.r-14.8,/* đúng mép ván đầu cầu */PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
     if(x>=PIER_X0&&x<=PIER_X1&&Math.abs(z)<2.5)y=Math.max(y,2);/* mặt cầu tàu */
     if(x>PIER_X1&&x<PIER_X1+6&&Math.abs(z)<2.2)y=Math.max(y,2-(x-PIER_X1)*.25);/* ván dốc xuống bãi */
     if(x>=TD_H.x0&&x<=TD_H.x1&&Math.abs(z)<=TD_H.z)y=Math.max(y,TD_FY);/* sàn nhà chính và hiên */
@@ -732,8 +734,7 @@
   /* Dạo quanh Đảo Yên: từ đầu cầu tàu theo lối đá sang phòng thiền, quay lại ngã ba, sang chân cầu thang chòi ngắm biển, rồi men bãi cát về cầu tàu. */
   function tdLoop(){return [TD_JUNC].concat(TD_LEFT.slice(1),TD_LEFT.slice(0,-1).reverse(),TD_RIGHT.slice(1),TD_BEACH.slice(1))}
   function tdIslandCam(){/* đang ngắm toàn cảnh / tự xoay thì khi bước lên đảo chuyển về camera sau lưng người; Về tàu sẽ trả lại góc cũ */if(bayView==='far'||bayView==='spin'){const v=bayView;setBayView('bow');try{localStorage.setItem('yen_bay_view',v)}catch(e){}}bayZoom=bayZoomS=Math.min(bayZoom,1.6)}
-  function islandGo(kind){if(!bayIsland){tdSnapTake();tdIslandCam();tdShellsRefresh();islandName(true);const b=tdBowLocal();bayIsland={x:b[0],z:b[1],yaw:Math.atan2(TD_PIER_END[0]-b[0],TD_PIER_END[1]-b[1]),path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;
-      bayIsland.path.push(TD_PIER_END)}
+  function islandGo(kind){if(!bayIsland){tdSnapTake();tdIslandCam();tdShellsRefresh();islandName(true);const b=tdBowLocal();bayIsland={x:TD_PIER_MID[0],z:TD_PIER_MID[1],yaw:Math.PI/2,path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;/* chuyển cảnh: xuất hiện ngay giữa cầu tàu, quay mặt vào đảo */}
     const I=bayIsland;I.then=null;const onPier=I.x<TD_PIER_START[0]+1,atHouse=Math.hypot(I.x-TD_DOOR[0],I.z-TD_DOOR[1])<9,base=I.x<TD_PIER_END[0]-.5?[TD_PIER_END]:atHouse?[TD_STEP]:[];I.path=base;
     if(kind==='pier'){I.path=base.concat([TD_PIER_MID]);bayCaption('🏝 Bạn đã lên Đảo Yên · đi bằng W A S D hoặc nút mũi tên, chạm đất để đi tới, chạm nhà để vào nhà',6500)}
     else if(kind==='island'){I.path=(onPier?base.concat([TD_PIER_START]):atHouse?[TD_STEP,TD_PIER_START]:[]);bayCaption('🏝 Bạn đã lên Đảo Yên · đi bằng W A S D hoặc nút mũi tên, chạm đất để đi tới, chạm nhà để vào nhà',6500)}
@@ -748,7 +749,7 @@
   function islandBoardNow(back){if(!bayIsland)return;if(TD_ACT.mode){TD_ACT.leaveCont=null;shEnd(true)}tdBinsHome();TD_ACT.seq=null;if(bayAvatar)bayAvatar.crouch=0;bayIsland=null;shPills();shPanel(null);document.body.classList.remove('bay-island');viewYaw=0;islandName(false);refreshIslandHud();
     if(back==='new'){tdSnapDrop();return}if(!back)return;const resumed=tdSnapRestore(true);if(back&&!resumed)bayCaption('⛵ Đã về tàu · tàu neo ở cầu tàu Đảo Yên',3500);refreshBayHud();drawBayMap()}
   // Đi tự do trên đảo như ở Rừng Yên: không xuống nước, không xuyên nhà / chòi; bước vào cửa nhà thì vào nhà.
-  const tdOk=(x,z)=>{if(tdGroundY(x,z)<-.12)return false;if(x>TD_H.x0-.4&&x<TD_H.x1+.5&&Math.abs(z)<TD_H.z+.4&&!(x<TD_H.x0+1.9&&Math.abs(z)<2.4))return false;if(Math.hypot(x-TD_GAZ.x,z-TD_GAZ.z)<TD_GAZ.r+.3)return false;return true};
+  const tdOk=(x,z)=>{if(tdGroundY(x,z)<-.03)return false;if(x>-TU_DAO.r-15.5&&x<-TU_DAO.r+10.5&&Math.abs(z)>(x>-TU_DAO.r+4?2.1:2.15)&&Math.abs(z)<4.5&&tdTerrainY(x,z)<.35)return false;/* lan can cầu tàu và mép ván dốc: không bước ra ngoài rơi xuống biển */if(x>TD_H.x0-.4&&x<TD_H.x1+.5&&Math.abs(z)<TD_H.z+.4&&!(x<TD_H.x0+1.9&&Math.abs(z)<2.4))return false;if(Math.hypot(x-TD_GAZ.x,z-TD_GAZ.z)<TD_GAZ.r+.3)return false;return true};
   // ---- Đi bộ trên Đảo Yên: A* trên lưới 0,7 m, tránh nước, nhà, phòng thiền, chòi, đá, gốc cây, bụi cây, ghế;
   // chi phí: lối đá / cầu tàu / hiên = 1, bãi cát = 2, bãi cỏ = 3, nên luôn ưu tiên đi đường lát đá trước rồi mới lên cỏ.
   const tdWalkable=(x,z)=>{if(!tdOk(x,z))return false;if(Math.abs(x-TD_MED.x)<TD_MED.h+.4&&Math.abs(z-TD_MED.z)<TD_MED.h+.4)return false;
@@ -814,12 +815,12 @@
       if(Math.abs(z)<5||!tdWalkable(x,z)||!A.clear(x,z,.5))continue;if(A.cairn&&Math.hypot(x-A.cairn.x,z-A.cairn.z)<3)continue;if(A.beach.some(q=>Math.hypot(q.x-x,q.z-z)<(F!=null?1.3:2.2))||A.decor.some(q=>Math.hypot(q.x-x,q.z-z)<1.2)||A.bins.some(b=>Math.hypot(b.x-x,b.z-z)<1.5)||(F!=null&&bayIsland&&Math.hypot(bayIsland.x-x,bayIsland.z-z)<1.6))continue;
       const [s,t]=shRandKind(),g=new THREE.Group();g.position.set(x,tdTerrainY(x,z)+.01,z);g.rotation.y=Math.random()*TAU;const m=shMesh(s,t,false);g.add(m);const h=new THREE.Mesh(SH_HIT_G,SH_HIT_M);h.position.y=.15;g.add(h);
       const q={id:++shId,s,t,x,z,g,m,clean:true};g.traverse(o=>{o.userData.tuDao='shell';o.userData.shell=q.id});A.g.add(g);A.beach.push(q);A.spawned++;return}}
-  function tdGoShell(id){const q=TD_ACT.beach.find(b=>b.id===id);if(!q||!bayIsland)return;if(TD_ACT.mode!=='pick'){shIntro();return}if(TD_ACT.art||TD_ACT.artCam)return;if(TD_ACT.carry!=null&&TD_ACT.bins[TD_ACT.carry].items.length>=5){bayCaption(BIN_INFO[TD_ACT.carry].short+' đã đầy 5 vỏ · bấm Ngừng nhặt để chọn nơi gửi vỏ',3500);shPanel('picked');return}if(TD_ACT.hand){bayCaption('🐚 Tay đang cầm một vỏ · chọn cách lưu giữ ở bảng bên dưới trước nhé',3000);shPanel();return}const [sx,sz]=tdNearStand(q.x,q.z,.6);tdGoTo(sx,sz,'shell:'+id,'🐚 Đang tới chỗ vỏ sò lấp ló trên cát…')}
+  function tdGoShell(id){const q=TD_ACT.beach.find(b=>b.id===id);if(!q||!bayIsland)return;if(TD_ACT.mode!=='pick'){shIntro();return}if(TD_ACT.art||TD_ACT.artCam)return;if(TD_ACT.carry!=null&&TD_ACT.bins[TD_ACT.carry].items.length>=SH_CAP){bayCaption(BIN_INFO[TD_ACT.carry].short+' đã đầy '+SH_CAP+' vỏ · bấm Ngừng nhặt để chọn nơi gửi vỏ',3500);shPanel('picked');return}if(TD_ACT.hand){bayCaption('🐚 Tay đang cầm một vỏ · chọn cách lưu giữ ở bảng bên dưới trước nhé',3000);shPanel();return}const [sx,sz]=tdNearStand(q.x,q.z,.6);tdGoTo(sx,sz,'shell:'+id,'🐚 Đang tới chỗ vỏ sò lấp ló trên cát…')}
   function tdGoBin(k){if(!bayIsland)return;if(TD_ACT.mode!=='pick'){shIntro();return}const q=TD_ACT.bins[k];if(!q)return;if(TD_ACT.carry===k){bayCaption(BIN_INFO[k].ic+' Bạn đang cầm '+BIN_INFO[k].name,3000);return}const [sx,sz]=tdNearStand(q.x,q.z,.75,true);tdGoTo(sx,sz,'bin:'+k,BIN_INFO[k].ic+' Đang tới lấy '+BIN_INFO[k].name+'…')}
   function binHold(q,on){if(on){TU_DAO.group.remove(q.g);me.add(q.g);q.g.position.set(.42,.62,.18);q.g.rotation.set(0,0,0);q.g.scale.setScalar(.8)}else{if(q.g.parent)q.g.parent.remove(q.g);TU_DAO.group.add(q.g);q.g.position.copy(q.home);q.g.rotation.set(0,q.homeR,0);q.g.scale.setScalar(1)}}
   function takeBin(k){const q=TD_ACT.bins[k];if(!q)return;const I=bayIsland;if(I)I.yaw=Math.atan2(q.x-I.x,q.z-I.z);const old=TD_ACT.carry;if(old!=null&&old!==k)binHold(TD_ACT.bins[old],false);TD_ACT.carry=k;
     shSeq(.9,(u,T,S)=>{if(T>=.45&&!S.held){S.held=true;binHold(q,true)}},()=>{shPills();if(TD_ACT.mode==='go'){shBegin();return}if(TD_ACT.hand)shPanel()});
-    if(TD_ACT.mode!=='go')bayCaption(BIN_INFO[k].ic+' Đã cầm '+BIN_INFO[k].name+' (phong cách '+BIN_INFO[k].style+') · xếp 3–5 vỏ để cất cả khay vào Túi An Yên'+(old!=null&&old!==k?' · đã đặt '+BIN_INFO[old].short+' về chỗ cũ':''),4500)}
+    if(TD_ACT.mode!=='go')bayCaption(BIN_INFO[k].ic+' Đã cầm '+BIN_INFO[k].name+' (phong cách '+BIN_INFO[k].style+') · đựng được tới '+SH_CAP+' vỏ'+(old!=null&&old!==k?' · đã đặt '+BIN_INFO[old].short+' về chỗ cũ':''),4500)}
   function tdBinsHome(){if(TD_ACT.carry!=null){binHold(TD_ACT.bins[TD_ACT.carry],false);TD_ACT.carry=null}if(TD_ACT.hand)shDrop(false);shPanel(null);shPills()}
   /* một chuỗi động tác ngắn: ngồi xuống (crouch theo hình sin) rồi đứng lên */
   function shSeq(dur,step,done,crouch=true){TD_ACT.seq={t:0,dur,step,done,crouch,S:{}}}
@@ -828,7 +829,7 @@
     A.beach=A.beach.filter(b=>b!==q);A.focus=Math.atan2(q.z-TD_O[1],q.x-TD_O[0]);A.queue=Math.min(A.queue+2,Math.max(0,36-A.spawned));A.nextSpawn=performance.now()+2500;/* nhặt thì sóng mới từ từ dạt thêm vỏ; ngừng nhặt thì ngừng hiện */const from=q.g.position.clone();q.g.traverse(o=>{o.userData.tuDao=null});
     shSeq(1.4,(u,T)=>{if(T>.45&&T<1){const w=new THREE.Vector3().copy(shHandLocal);me.localToWorld(w);TU_DAO.group.worldToLocal(w);const e=(T-.45)/.55;q.g.position.lerpVectors(from,w,e*e*(3-2*e))}},()=>{q.g.parent&&q.g.parent.remove(q.g);me.add(q.g);q.g.position.copy(shHandLocal);q.g.rotation.set(0,0,0);A.hand=q;q.clean=true;q.msg=SH_SEA[Math.floor(Math.random()*SH_SEA.length)];
       const B=shBook(),k=shKey(q.s,q.t),isNew=!B[k];if(isNew){B[k]={at:Date.now(),where:'Đảo Yên'};try{localStorage.setItem(SH_BOOK_KEY,JSON.stringify(B))}catch(e){}}q.isNew=isNew;
-      if(A.carry!=null&&A.bins[A.carry].items.length<5)shIntoBin(true);else shPanel()})}
+      if(A.carry!=null&&A.bins[A.carry].items.length<SH_CAP)shIntoBin(true);else shPanel()})}
   /* tìm mép sóng gần nhất: đi thẳng ra phía biển tới chỗ cuối cùng còn đứng được */
   function shWetPoint(){const I=bayIsland,a=Math.atan2(I.z-TD_O[1],I.x-TD_O[0]);let p=[I.x,I.z];for(let d=0;d<25;d+=.3){const x=I.x+Math.cos(a)*d,z=I.z+Math.sin(a)*d;if(!tdWalkable(x,z))break;p=[x,z]}return p}
   function shRinse(){const A=TD_ACT;if(!A.hand||A.hand.clean)return;const [x,z]=shWetPoint();shPanel(null);tdGoTo(x,z,'rinse','🌊 Đang ra mép sóng nhúng rửa cát…')}
@@ -838,8 +839,8 @@
       const B=shBook(),k=shKey(q.s,q.t),isNew=!B[k];if(isNew){B[k]={at:Date.now(),where:'Đảo Yên'};try{localStorage.setItem(SH_BOOK_KEY,JSON.stringify(B))}catch(e){}}
       q.msg=SH_SEA[Math.floor(Math.random()*SH_SEA.length)];bayCaption('✨ '+shName(q.s,q.t)+' · '+SH_TONE_IC[q.t]+' '+SH_TONE[q.t]+(isNew?' · ô mới trong Sổ Sưu Tập ('+Object.keys(B).length+'/36)':''),5000);shPanel();shPills()})}
   function shFinish(){TD_ACT.hand=null;shPanel(null);shPills()}
-  function shIntoBin(auto){const A=TD_ACT,q=A.hand,b=A.bins[A.carry];if(!q||!b)return;if(b.items.length>=5){bayCaption(BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].short+' đã đủ 5 vỏ',3000);return}const sk=BIN_SOCK[A.carry][b.items.length];
-    q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...sk);q.g.rotation.set(0,Math.random()*TAU,0);q.g.scale.setScalar(.55);q.g.traverse(o=>{o.userData.tuDao='bin';o.userData.bin=A.carry});b.items.push(q);
+  function shIntoBin(auto){const A=TD_ACT,q=A.hand,b=A.bins[A.carry];if(!q||!b)return;if(b.items.length>=SH_CAP){bayCaption(BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].short+' đã đầy '+SH_CAP+' vỏ',3000);return}const sk=binSock(A.carry,b.items.length);
+    q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...sk);q.g.rotation.set(0,Math.random()*TAU,0);q.g.scale.setScalar(b.items.length<5?.55:.4);q.g.traverse(o=>{o.userData.tuDao='bin';o.userData.bin=A.carry});b.items.push(q);
     bayCaption(BIN_INFO[A.carry].ic+' '+shName(q.s,q.t)+' · '+SH_TONE_IC[q.t]+' '+SH_TONE[q.t]+(q.isNew?' · ô mới trong Sổ Sưu Tập':''),4000);A.last=q;A.hand=null;shPills();if(A.mode==='pick')shPanel('picked');else shPanel(null)}
   function shToBag(){const q=TD_ACT.hand;if(!q||!q.clean)return;const n=shDayCount();if(n>=3){bayCaption('🎒 Hôm nay đã cất đủ 3 vỏ vào Túi An Yên · nhịp chậm an yên, mai lại ghé nhé',4000);return}
     try{localStorage.setItem(SH_DAY_KEY,JSON.stringify({d:shToday(),n:n+1}))}catch(e){}window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:'shell',label:shName(q.s,q.t),own:true,data:{s:q.s,t:q.t,where:'Đảo Yên'}}}));
@@ -865,10 +866,10 @@
     const h=document.createElement('h4'),p=document.createElement('p'),row=document.createElement('div');row.className='row';shUI.append(h,p,row);const A=TD_ACT,q=A.hand;
     if(mode==='hand'&&q){shUI.insertBefore(shPreview(q),h);if(!q.clean){h.textContent='🐚 '+SH_SHAPE[q.s]+' phủ cát ẩm';p.textContent='Chưa thấy hết sắc màu thật bên dưới lớp cát. Nhúng qua làn nước trong ở mép sóng để cát tan ra.';row.append(shBtn('🌊 Nhúng rửa cát',shRinse,true),shBtn('↩ Đặt lại',()=>shDrop()))}
       else{h.textContent='✨ '+shName(q.s,q.t)+' · '+SH_TONE_IC[q.t]+' '+SH_TONE[q.t];p.textContent='«'+q.msg+'»';const left=3-shDayCount();
-        if(A.carry!=null&&A.bins[A.carry].items.length<5)row.append(shBtn(BIN_INFO[A.carry].ic+' Xếp vào '+BIN_INFO[A.carry].short,shIntoBin,true));
-        else if(A.carry!=null)row.append(shBtn('⏹ '+BIN_INFO[A.carry].short+' đã đủ 5 vỏ · Dừng nhặt',()=>shPanel('stop'),true));
+        if(A.carry!=null&&A.bins[A.carry].items.length<SH_CAP)row.append(shBtn(BIN_INFO[A.carry].ic+' Xếp vào '+BIN_INFO[A.carry].short,shIntoBin,true));
+        else if(A.carry!=null)row.append(shBtn('⏹ '+BIN_INFO[A.carry].short+' đã đầy · Ngừng nhặt',()=>shPanel('stop'),true));
         if(A.mode!=='pick')row.append(shBtn('🎒 Cất Túi An Yên ('+Math.max(0,left)+'/3)',shToBag,A.carry==null),shBtn('🎨 Xếp hình trên cát',()=>shPanel('art')));row.append(shBtn('🌊 Thả biển',shToSea),shBtn('↩ Đặt lại cho biển',()=>shDrop()));if(q.s===5)row.append(shBtn('👂 Áp tai nghe sóng',shListen))}}
-    else if(mode==='tray'){const b=A.bins[A.carry];if(!b){shPanel(null);return}h.textContent=BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].name+' · '+b.items.length+'/5';p.textContent=b.items.length?b.items.map(q=>shName(q.s,q.t)).join(' · '):'Chưa có vỏ nào. Nhặt và rửa vỏ rồi chọn «Xếp vào» để bày lên khay.';
+    else if(mode==='tray'){const b=A.bins[A.carry];if(!b){shPanel(null);return}h.textContent=BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].name+' · '+b.items.length+'/'+SH_CAP;p.textContent=b.items.length?b.items.map(q=>shName(q.s,q.t)).join(' · '):'Chưa có vỏ nào. Nhặt và rửa vỏ rồi chọn «Xếp vào» để bày lên khay.';
       if(b.items.length>=3){const inp=document.createElement('input');inp.maxLength=40;inp.placeholder='Tên kỷ niệm (≤ 40 ký tự), ví dụ: Chiều nắng Đảo Yên';inp.addEventListener('keydown',e=>e.stopPropagation());shUI.insertBefore(inp,row);row.append(shBtn('🎒 Cất cả khay vào Túi An Yên',()=>shTrayToBag(inp.value),true))}
       if(b.items.length)row.append(shBtn('🎨 Xếp hình trên cát',()=>shPanel('art')));row.append(shBtn('↩ Đặt khay về chỗ cũ',()=>{binHold(b,false);A.carry=null;shPanel(null);shPills()}),shBtn('✕ Đóng',()=>shPanel(null)))}
     else if(mode==='art'){h.textContent='🎨 Xếp vỏ sò thành hình trên cát';p.textContent='Chọn kiểu xếp cho '+(A.art?A.art.list.length:shPending())+' vỏ sò. Vỏ sẽ tự xếp trên nền cát cao trước mặt bạn.';for(const k in SH_ART)row.append(shBtn(SH_ART[k],()=>A.mode==='pick'?shArtLay(k,0):shArrange(k),k==='hoa'));row.append(shBtn('← Quay lại',()=>{if(A.art)shArtUnlay();shPanel(A.mode==='pick'?'stop':A.leaveCont?'leave':undefined)}))}
@@ -876,12 +877,12 @@
       if(q&&q.clean&&shDayCount()<3)row.append(shBtn('🎒 Cất '+shName(q.s,q.t),shToBag));if(q&&!q.clean)row.append(shBtn('🌊 Nhúng rửa cát vỏ trên tay',()=>{A.leaveCont=null;shRinse()}));
       if(A.carry!=null&&A.bins[A.carry].items.length>=3)row.append(shBtn('🎒 Cất cả '+BIN_INFO[A.carry].short+' vào Túi',()=>shPanel('tray')));
       row.append(shBtn('🎨 Xếp hình trên cát',()=>shPanel('art'),true),shBtn('↩ Ở lại bãi',()=>{A.leaveCont=null;shPanel(undefined)}))}
-    else if(mode==='intro'){h.textContent='🐚 Nhặt vỏ sò Vịnh Yên';p.textContent='Dọc mép sóng có 36 loại vỏ sò, ốc phủ cát ẩm. Chọn một đồ đựng, ngồi xuống cầm lên rồi ra mép biển nhặt vỏ: nhúng rửa cát để thấy sắc màu thật, xếp vào đồ đựng (tối đa 5 vỏ). Nhặt tới đâu sóng dạt thêm vỏ tới đó. Khi dừng nhặt, bạn chọn cất vào Túi An Yên, xếp hình trên cát hoặc buông bỏ.';
+    else if(mode==='intro'){h.textContent='🐚 Nhặt vỏ sò Vịnh Yên';p.textContent='Trên bãi cát có 36 loại vỏ sò, ốc Vịnh Yên. Chọn một đồ đựng, ngồi xuống cầm lên rồi đi nhặt vỏ trên cát: mỗi vỏ nhặt lên tự vào đồ đựng (đựng được tới 36 vỏ). Nhặt tới đâu vỏ hiện thêm tới đó. Khi ngừng nhặt, bạn chọn cất vào Túi An Yên, xếp hình trên bãi cát hoặc trả về biển.';
       BIN_INFO.forEach((b,k)=>row.append(shBtn(b.ic+' '+b.name+' <small>· '+b.style+'</small>',()=>shChoose(k),k===0)));row.append(shBtn('📖 Sổ Sưu Tập '+Object.keys(shBook()).length+'/36',()=>shPanel({book:0})),shBtn('✕ Để sau',()=>shPanel(null)))}
-    else if(mode==='picked'){const b=A.bins[A.carry],L=b?b.items:[],q2=A.last;if(q2)shUI.insertBefore(shPreview(q2),h);h.textContent=(BIN_INFO[A.carry]?.ic||'')+' Vỏ sò đã nhặt · '+L.length+'/5';p.textContent=(q2?'«'+q2.msg+'» ':'');const ul=document.createElement('div');ul.className='book';L.forEach(x=>{const c=document.createElement('div');c.className='on';c.textContent=SH_TONE_IC[x.t]+' '+shName(x.s,x.t);ul.append(c)});shUI.insertBefore(ul,row);
-      if(L.length<5)row.append(shBtn('🐚 Nhặt tiếp',()=>shPanel(null),true));else p.textContent+=' '+BIN_INFO[A.carry].short+' đã đầy 5 vỏ.';row.append(shBtn('⏹ Ngừng nhặt',()=>shPanel('stop'),L.length>=5));if(q2&&q2.s===5)row.append(shBtn('👂 Áp tai nghe sóng',()=>shListen(q2)))}
+    else if(mode==='picked'){const b=A.bins[A.carry],L=b?b.items:[],q2=A.last;if(q2)shUI.insertBefore(shPreview(q2),h);h.textContent=(BIN_INFO[A.carry]?.ic||'')+' Vỏ sò đã nhặt · '+L.length+'/'+SH_CAP;p.textContent=(q2?'«'+q2.msg+'» ':'');const ul=document.createElement('div');ul.className='book';L.forEach(x=>{const c=document.createElement('div');c.className='on';c.textContent=SH_TONE_IC[x.t]+' '+shName(x.s,x.t);ul.append(c)});shUI.insertBefore(ul,row);
+      if(L.length<SH_CAP)row.append(shBtn('🐚 Nhặt tiếp',()=>shPanel(null),true));else p.textContent+=' '+BIN_INFO[A.carry].short+' đã đầy '+SH_CAP+' vỏ.';row.append(shBtn('⏹ Ngừng nhặt',()=>shPanel('stop'),L.length>=SH_CAP));if(q2&&q2.s===5)row.append(shBtn('👂 Áp tai nghe sóng',()=>shListen(q2)))}
     else if(mode==='bag2'){const b=A.bins[A.carry],L=b?b.items:[];A.sel=A.sel||new Set();const n=[...A.sel].filter(x=>L.includes(x)).length,left=3-shDayCount();h.textContent='🎒 Chọn vỏ cất vào Túi An Yên';
-      p.textContent='Chạm từng vỏ để chọn: 🎒 cất vào Túi An Yên, 🌊 trả lại biển. '+(n>=3?'Đã chọn '+n+' vỏ: cất chung thành 1 '+BIN_INFO[A.carry].short.toLowerCase()+' (chiếm 1 ô).':'Chọn 3–5 vỏ để cất cả khay (1 ô), hoặc 1–2 vỏ lẻ (hôm nay còn '+Math.max(0,left)+'/3 vỏ lẻ).');
+      p.textContent='Chạm từng vỏ để chọn: 🎒 cất vào Túi An Yên, 🌊 trả lại biển. '+(n>=3?'Đã chọn '+n+' vỏ: cất chung thành 1 '+BIN_INFO[A.carry].short.toLowerCase()+' (chiếm 1 ô).':'Chọn từ 3 vỏ trở lên để cất cả khay (1 ô, tối đa '+SH_CAP+' vỏ), hoặc 1–2 vỏ lẻ (hôm nay còn '+Math.max(0,left)+'/3 vỏ lẻ).');
       const ul=document.createElement('div');ul.className='row';ul.style.marginBottom='8px';L.forEach(x=>{const on=A.sel.has(x);ul.append(shBtn((on?'🎒 ':'🌊 ')+shName(x.s,x.t),()=>{on?A.sel.delete(x):A.sel.add(x);shPanel('bag2')},on))});shUI.insertBefore(ul,row);
       if(n>=3){const inp=document.createElement('input');inp.maxLength=40;inp.value=A.trayName||'';inp.placeholder='Tên kỷ niệm (≤ 40 ký tự), ví dụ: Chiều nắng Đảo Yên';inp.addEventListener('keydown',e=>e.stopPropagation());inp.addEventListener('input',()=>{A.trayName=inp.value});shUI.insertBefore(inp,row)}
       row.append(shBtn('✓ Xác nhận'+(n?' cất '+n+' vỏ':' · trả hết về biển'),shBagConfirm,true),shBtn('← Quay lại',()=>shPanel('stop')))}
@@ -905,7 +906,7 @@
     if(shPV.m)shPV.sc.remove(shPV.m);const m=new THREE.Mesh(shGeo(q.s,q.t),q.clean?shMat(q.s):SH_SANDY);m.scale.setScalar(1.05);m.position.y=-.05;shPV.sc.add(m);shPV.m=m;if(!shPV.raf)shPV.raf=requestAnimationFrame(shPV.loop);return shPV.cv}
   function shPills(){shPill.replaceChildren();if(!bayIsland){shPill.hidden=true;return}shPill.hidden=false;const A=TD_ACT;
     if(A.mode==='pick'){const st=shBtn('⏹ Ngừng nhặt',()=>{if(TD_ACT.art)shArtUnlay();shPanel('stop')});st.className='shstop';shPill.append(st)}
-    if(A.carry!=null){const b=A.bins[A.carry];shPill.append(shBtn(BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].short+' '+b.items.length+'/5',()=>shPanel(A.mode==='pick'?'picked':'tray')))}
+    if(A.carry!=null){const b=A.bins[A.carry];shPill.append(shBtn(BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].short+' '+b.items.length+'/'+SH_CAP,()=>shPanel(A.mode==='pick'?'picked':'tray')))}
     if(A.mode==='pick')shPill.append(shBtn('📖 Sổ '+Object.keys(shBook()).length+'/36',()=>shPanel({book:0})));if(A.decor.length&&!A.mode)shPill.append(shBtn('🧹 Dọn sạch bãi biển',()=>shPanel('clean')))}
   function tdShellsRefresh(){const A=TD_ACT;if(!A.decorOk&&A.g){A.decorOk=true;shDecorLoad()}if(!A.beach.length){A.spawned=0;A.queue=0;for(let i=0;i<3;i++)shSpawn()}/* mặc định chỉ vài vỏ rải rác */setTimeout(shPills,0)}
   // ---- Xếp vỏ sò thành hình trên cát: hoa, trái tim, mandala hoặc tác phẩm tự do; giữ lại trên bãi tới khi bấm «Dọn sạch bãi biển»
@@ -954,7 +955,7 @@
   // ---- Cất Túi An Yên: chọn vỏ cất / vỏ trả biển
   function shBagConfirm(){const A=TD_ACT,b=A.bins[A.carry];if(!b)return;const L=b.items,keep=L.filter(x=>A.sel&&A.sel.has(x));
     if(keep.length>=3){const label=String(A.trayName||'').trim().slice(0,40)||BIN_INFO[A.carry].short+' '+new Date().toLocaleDateString('vi-VN');window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:'shelltray',label,own:true,data:{tray:A.carry,shells:keep.map(q=>[q.s,q.t]),where:'Đảo Yên'}}}));bayCaption('🎒 Đã cất '+BIN_INFO[A.carry].short+' «'+label+'» ('+keep.length+' vỏ) vào Túi An Yên · chiếm 1 ô',5000)}
-    else if(keep.length){const n=shDayCount();if(n+keep.length>3){bayCaption('🎒 Hôm nay chỉ còn cất được '+Math.max(0,3-n)+' vỏ lẻ · chọn ít hơn, hoặc chọn 3–5 vỏ để cất cả khay',4500);return}try{localStorage.setItem(SH_DAY_KEY,JSON.stringify({d:shToday(),n:n+keep.length}))}catch(e){}
+    else if(keep.length){const n=shDayCount();if(n+keep.length>3){bayCaption('🎒 Hôm nay chỉ còn cất được '+Math.max(0,3-n)+' vỏ lẻ · chọn ít hơn, hoặc chọn từ 3 vỏ trở lên để cất cả khay',4500);return}try{localStorage.setItem(SH_DAY_KEY,JSON.stringify({d:shToday(),n:n+keep.length}))}catch(e){}
       for(const q of keep)window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:'shell',label:shName(q.s,q.t),own:true,data:{s:q.s,t:q.t,where:'Đảo Yên'}}}));bayCaption('🎒 Đã cất '+keep.map(q=>shName(q.s,q.t)).join(', ')+' vào Túi An Yên',5000)}
     for(const q of keep){b.g.remove(q.g)}b.items=L.filter(x=>!keep.includes(x));const rest=shSeaAll(true);if(rest)setTimeout(()=>bayCaption('🌊 '+rest+' vỏ còn lại đã trả về biển',3500),2600);A.sel=null;A.trayName='';shPanel(null);shSeq(1.4,()=>{},()=>shEnd(true),false)}
   // ---- Xếp hình trên bãi cát: tự xếp → hỏi ưng chưa → ưng thì camera lên cao ngắm bờ biển, chụp ảnh / nhặt thêm / xếp lại
@@ -965,7 +966,7 @@
     R.kind=kind;R.v=v;I.yaw=Math.atan2(R.cx-I.x,R.cz-I.z);const L=R.list,n=L.length,order=L.map((q,i)=>L[(i+v)%n]),pts=shPattern(kind,n,v),fx=-Math.cos(R.a),fz=-Math.sin(R.a);
     order.forEach((q,i)=>{const [px,pz]=pts[i],x=R.cx+px*fz+pz*fx,z=R.cz-px*fx+pz*fz,r=Math.atan2(x-R.cx,z-R.cz)+(v%2?Math.PI/2:0);q.g.rotation.set(0,r,0);q.ax=x;q.az=z;q.ar=r;A.tweens.push({g:q.g,from:q.g.position.clone(),to:new THREE.Vector3(x,tdTerrainY(x,z)+.01,z),t:-i*.1,dur:.7})});
     shSeq(.9,()=>{},null);bayCaption('🎨 Đang xếp '+n+' vỏ thành '+SH_ART[kind].slice(2).toLowerCase()+'…',2500);shPanel('artok')}
-  function shArtUnlay(){const A=TD_ACT,R=A.art,b=A.bins[A.carry];if(!R||!b)return;R.list.forEach((q,i)=>{q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...BIN_SOCK[A.carry][i%5]);q.g.scale.setScalar(.55)});b.items=R.list.slice(0,5);A.art=null}
+  function shArtUnlay(){const A=TD_ACT,R=A.art,b=A.bins[A.carry];if(!R||!b)return;R.list.forEach((q,i)=>{q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...binSock(A.carry,i));q.g.scale.setScalar(i<5?.55:.4)});b.items=R.list.slice();A.art=null}
   function shArtAccept(){const A=TD_ACT,R=A.art,I=bayIsland;if(!R||!I)return;for(const q of R.list)A.decor.push({s:q.s,t:q.t,x:q.ax,z:q.az,r:q.ar,g:q.g,art:R});shDecorSave();A.done=R;A.art=null;A.shot=null;
     const cx=R.cx-Math.cos(R.a)*5.5,cz=R.cz-Math.sin(R.a)*5.5;A.artCam={t:0,cx,cy:tdTerrainY(cx,cz)+6.5,cz,lx:R.cx+Math.cos(R.a)*2.5,ly:tdTerrainY(R.cx,R.cz),lz:R.cz+Math.sin(R.a)*2.5};/* camera lên cao phía trong đảo, nhìn ra bờ biển có hình vỏ sò */
     bayCaption('🌅 Hình vỏ sò đã nằm trên bãi cát · giữ lại tới khi bạn dọn sạch bãi',4500);shPanel('artdone');shPills()}
