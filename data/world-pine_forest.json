@@ -38,9 +38,9 @@
    "sort_order": 1,
    "params": {
     "seed": 1121,
-    "inner": 500,
+    "inner": 340,
     "outer": 460,
-    "inner_gap": 3.1,
+    "inner_gap": 3.8,
     "outer_gap": 2.3,
     "flower_patches": 150,
     "daquy": 70,
