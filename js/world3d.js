@@ -1143,7 +1143,18 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   let BAY_OUTFIT_KEY,BAY_OUTFIT_SEEN,SEE,bayAt,bayAvatar,bayBaseStyle,bayBuilt,bayCam,bayData,bayFarZoom,bayGroup,bayHUD,bayIsland,bayLift,bayLiftObjs,bayLiftPull,bayLiftT,bayLiftWant,bayLoading,bayLook,bayMapBox,bayMult,bayOutfit,bayOutfitOpen,bayOutfitSaved,bayPause,bayPhoto,baySheet,bayShip,bayStash,bayTmp,bayTour,bayView,bayZoom,bayZoomBack,bayZoomOver,closeSheet,lathe,navFree,shortName,bayCaption,bayDress,bayTap,bayZoomBy,buildBay,closeBayOutfit,closePhoto,dropPause,endTour,goLandmark,goTuDao,islandBoardNow,loadBayData,openBayMap,openBayOutfit,pauseShip,pines,refreshBayHud,resumeShip,sailToStop,setDestination,startTour,stopBaySound,tdGroundY,tuDaoTap,updateBay,viewPoint;
   let bayModuleReady=false,bayModuleP=null;
   function __bayExport(o){bayCaption=o.bayCaption;bayDress=o.bayDress;bayTap=o.bayTap;bayZoomBy=o.bayZoomBy;buildBay=o.buildBay;closeBayOutfit=o.closeBayOutfit;closePhoto=o.closePhoto;dropPause=o.dropPause;endTour=o.endTour;goLandmark=o.goLandmark;goTuDao=o.goTuDao;islandBoardNow=o.islandBoardNow;loadBayData=o.loadBayData;openBayMap=o.openBayMap;openBayOutfit=o.openBayOutfit;pauseShip=o.pauseShip;pines=o.pines;refreshBayHud=o.refreshBayHud;resumeShip=o.resumeShip;sailToStop=o.sailToStop;setDestination=o.setDestination;startTour=o.startTour;stopBaySound=o.stopBaySound;tdGroundY=o.tdGroundY;tuDaoTap=o.tuDaoTap;updateBay=o.updateBay;viewPoint=o.viewPoint;bayModuleReady=true}
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=fetch('js/bay3d.js?v=5914f1a0').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  // Lưu bản đồ Vịnh Yên trên máy người dùng (Cache Storage): chỉ tải từ mạng lần đầu, các lần sau đọc từ máy.
+  // Khoá theo đường dẫn kèm ?v=; khi đổi số ?v= (có bản mới) thì tải một lần nữa và xoá bản cũ.
+  const BAY_CACHE='anyen-vinh-yen';
+  async function cachedText(url){const full=new URL(url,document.baseURI).href;let c=null;
+    try{if(window.caches)c=await caches.open(BAY_CACHE)}catch(e){}
+    if(c){try{const hit=await c.match(full);if(hit)return await hit.text()}catch(e){}}
+    const r=await fetch(full);if(!r.ok)throw Error('HTTP '+r.status);const t=await r.text();
+    if(c){try{const base=full.split('?')[0];for(const k of await c.keys())if(k.url.split('?')[0]===base&&k.url!==full)await c.delete(k);
+      await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
+    return t}
+  window.anyenCachedText=cachedText;
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=192ca2c0').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
