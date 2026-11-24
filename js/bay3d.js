@@ -678,7 +678,7 @@
   try{tdSnap=JSON.parse(localStorage.getItem(TD_SNAP_KEY)||'null')}catch(e){}
   function tdTripMemo(){const S=bayShip,T=bayTour||bayPause?.tour,D=S.dest||bayPause?.dest;
     if(T)tdTrip={tour:T.tour.id,stops:T.stops.map(s=>s.landmark),idx:T.idx};else if(D&&D.label!=='Đảo Yên của bạn')tdTrip={dest:{x:D.x,z:D.z,label:D.label,bow:!!D.bow}};else if(!S.path.length)tdTrip=null}
-  function tdSnapTake(){if(!tdTrip)tdTripMemo();const S=bayShip;tdSnap={x:S.x,z:S.z,heading:S.heading,mult:bayMult(),view:bayView==='far'?'bow':bayView,zoom:bayZoom,viewYaw,trip:tdTrip,t:Date.now()};tdTrip=null;
+  function tdSnapTake(){if(!tdTrip)tdTripMemo();const S=bayShip;tdSnap={x:S.x,z:S.z,heading:S.heading,mult:bayMult(),view:bayView,farZoom:bayFarZoom,zoomBack:bayZoomBack,zoom:bayZoom,viewYaw,trip:tdTrip,t:Date.now()};tdTrip=null;
     try{localStorage.setItem(TD_SNAP_KEY,JSON.stringify(tdSnap))}catch(e){}}
   function tdSnapDrop(){tdSnap=null;try{localStorage.removeItem(TD_SNAP_KEY)}catch(e){}}
   // Nạp lại chuyến đã lưu: tàu đứng chờ ở cầu tàu (⏸), bấm ▶ Đi tiếp để chạy tiếp đúng tour / điểm đến cũ
@@ -689,7 +689,7 @@
     return false}
   function tdSnapRestore(withTrip){const P=tdSnap;tdSnapDrop();if(!P||!bayBuilt)return false;const S=bayShip;dropPause();endTour(false);
     if(Number.isFinite(P.x)&&navFree(P.x,P.z)){S.x=P.x;S.z=P.z;S.heading=P.heading||0}S.speed=0;S.yawRate=0;S.path=[];S.dest=null;S.stopped=true;S.trail.length=0;
-    if(P.mult)S.mult=P.mult;S.fast=bayMult()>1;if(P.view&&P.view!==bayView)setBayView(P.view);if(P.zoom)bayZoom=P.zoom;viewYaw=Number(P.viewYaw)||0;
+    if(P.mult)S.mult=P.mult;S.fast=bayMult()>1;if(P.view&&P.view!==bayView)setBayView(P.view);if(P.zoom)bayZoom=P.zoom;if(P.view==='far'){if(P.farZoom)bayFarZoom=P.farZoom;if(P.zoomBack)bayZoomBack=P.zoomBack}viewYaw=Number(P.viewYaw)||0;
     return withTrip?tdTripResume(P.trip):false}
   window.__bayResumeSnap=()=>tdSnapRestore(true);window.__bayIslandTrip=()=>bayIsland&&tdSnap?.trip||null;
   // Đầu cầu tàu (mút ngoài cùng của cầu tàu, phía biển): mũi tàu cập đúng điểm này, thân tàu nằm hướng nào cũng được.
@@ -717,7 +717,8 @@
   function tdBowLocal(){const v=(bayShip.bow||new THREE.Vector3(0,2.62,18.8)).clone();bayShip.group.localToWorld(v);TU_DAO.group.worldToLocal(v);return [v.x,v.z]}
   /* Dạo quanh Đảo Yên: từ đầu cầu tàu theo lối đá sang phòng thiền, quay lại ngã ba, sang chân cầu thang chòi ngắm biển, rồi men bãi cát về cầu tàu. */
   function tdLoop(){return [TD_JUNC].concat(TD_LEFT.slice(1),TD_LEFT.slice(0,-1).reverse(),TD_RIGHT.slice(1),TD_BEACH.slice(1))}
-  function islandGo(kind){if(!bayIsland){tdSnapTake();tdShellsRefresh();islandName(true);const b=tdBowLocal();bayIsland={x:b[0],z:b[1],yaw:Math.atan2(TD_PIER_END[0]-b[0],TD_PIER_END[1]-b[1]),path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;
+  function tdIslandCam(){/* đang ngắm toàn cảnh / tự xoay thì khi bước lên đảo chuyển về camera sau lưng người; Về tàu sẽ trả lại góc cũ */if(bayView==='far'||bayView==='spin'){const v=bayView;setBayView('bow');try{localStorage.setItem('yen_bay_view',v)}catch(e){}}bayZoom=bayZoomS=Math.min(bayZoom,1.6)}
+  function islandGo(kind){if(!bayIsland){tdSnapTake();tdIslandCam();tdShellsRefresh();islandName(true);const b=tdBowLocal();bayIsland={x:b[0],z:b[1],yaw:Math.atan2(TD_PIER_END[0]-b[0],TD_PIER_END[1]-b[1]),path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;
       bayIsland.path.push(TD_PIER_END)}
     const I=bayIsland;I.then=null;const onPier=I.x<TD_PIER_START[0]+1,atHouse=Math.hypot(I.x-TD_DOOR[0],I.z-TD_DOOR[1])<9,base=I.x<TD_PIER_END[0]-.5?[TD_PIER_END]:atHouse?[TD_STEP]:[];I.path=base;
     if(kind==='pier'){I.path=base.concat([TD_PIER_MID]);bayCaption('🏝 Bạn đã lên Đảo Yên · đi bằng W A S D hoặc nút mũi tên, chạm đất để đi tới, chạm nhà để vào nhà',6500)}
@@ -726,7 +727,7 @@
       else{const p=tdRoute(I.x,I.z,porch[0],porch[1]);I.path=p||(onPier?base:[]).concat(TD_WALK_HOUSE,[porch]);I.then='porch';bayCaption('🏡 Đang đi tới trước cửa nhà · tới nơi bấm vào cửa để vào nhà',4500)}}
     refreshIslandHud()}
   function islandBack(){if(!bayIsland)return;if(shGuardLeave(()=>islandBack()))return;tdStand();const I=bayIsland,b=tdBowLocal();I.then='board';const p=tdRoute(I.x,I.z,TD_PIER_END[0],TD_PIER_END[1]);I.path=p?p.concat([b]):(Math.hypot(I.x-TD_DOOR[0],I.z-TD_DOOR[1])<9?[TD_STEP]:[]).concat(I.x>TD_PIER_START[0]?[TD_PIER_START]:[]).concat([TD_PIER_MID,TD_PIER_END,b]);bayCaption('⛵ Đang về tàu…',3000)}
-  function tdAtDoor(){if(!bayMode||!bayBuilt)return false;if(!tdSnap)tdSnapTake();islandName(true);const x=TD_H.x0+.8,z=0;bayIsland={x,z,yaw:-Math.PI/2,path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=Math.PI;/* đứng trên hiên trước cửa, quay mặt ra biển; camera nhìn từ phía cầu tàu vào */refreshIslandHud();bayCaption('🚪 Đã ra trước cửa nhà · bấm nhà để vào lại, bấm đảo để dạo, bấm mặt nước để về tàu',5500);return true}
+  function tdAtDoor(){if(!bayMode||!bayBuilt)return false;if(!tdSnap)tdSnapTake();tdIslandCam();islandName(true);const x=TD_H.x0+.8,z=0;bayIsland={x,z,yaw:-Math.PI/2,path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=Math.PI;/* đứng trên hiên trước cửa, quay mặt ra biển; camera nhìn từ phía cầu tàu vào */refreshIslandHud();bayCaption('🚪 Đã ra trước cửa nhà · bấm nhà để vào lại, bấm đảo để dạo, bấm mặt nước để về tàu',5500);return true}
   window.__tdAtDoor=tdAtDoor;
   function islandName(on){const nm=document.querySelector('.immersive-name');if(nm)nm.textContent=on?'✧ LÀNG YÊN - ĐẢO YÊN':'✧ LÀNG YÊN - VỊNH YÊN'}
   // back: bấm Về tàu → nạp lại trạng thái đã lưu; 'new': chọn chuyến mới ngay trên đảo → bỏ bản lưu; không truyền (vào nhà, rời vịnh) → giữ bản lưu
@@ -1206,12 +1207,12 @@
     if(now-bayZoomEvt>350)bayBurst=now;bayZoomEvt=now;
     const atLim=far?(f<1&&bayFarZoom<=BF_MIN+1e-3):(f>1&&bayZoom>=BZ_MAX-1e-3);
     if(atLim){if(!bayLimitAt)bayLimitAt=now;if(!btn)return;if(btn)bayZoomOver=Math.max(bayZoomOver,.25)}else bayLimitAt=0;
-    if(!far){if(f>1&&bayZoom>=BZ_MAX-1e-3){bayZoomOver+=Math.log(f);if(bayZoomOver>.3){bayZoomOver=0;bayZoomBack=bayView;setBayView('far');bayFarZoom=bayFarZoomS=BF_MIN;bayLimitAt=0;bayCaption('🛳 Toàn cảnh từ xa · bấm ＋ để quay lại sau lưng',3000)}}
+    if(!far){if(f>1&&bayZoom>=BZ_MAX-1e-3&&!bayIsland){bayZoomOver+=Math.log(f);if(bayZoomOver>.3){bayZoomOver=0;bayZoomBack=bayView;setBayView('far');bayFarZoom=bayFarZoomS=BF_MIN;bayLimitAt=0;bayCaption('🛳 Toàn cảnh từ xa · bấm ＋ để quay lại sau lưng',3000)}}
       else{bayZoomOver=0;bayZoom=Math.max(BZ_MIN,Math.min(BZ_MAX,bayZoom*f))}}
     else{if(f<1&&bayFarZoom<=BF_MIN+1e-3){bayZoomOver+=Math.log(1/f);if(bayZoomOver>.3){bayZoomOver=0;setBayView(bayZoomBack&&bayZoomBack!=='far'?bayZoomBack:'bow');bayZoom=bayZoomS=BZ_MAX;bayLimitAt=0}}
       else{bayZoomOver=0;bayFarZoom=Math.max(BF_MIN,Math.min(BF_MAX,bayFarZoom*f))}}
     try{localStorage.setItem('yen_bay_zoom',String(bayZoom))}catch(e){}}
-  function setBayView(id){bayView=id;viewYaw=0;bayLift=0;bayLiftT=0;walkPitch=id==='far'?.12:.05;try{localStorage.setItem('yen_bay_view',id)}catch(e){}refreshBayHud();
+  function setBayView(id){if(bayIsland&&(id==='far'||id==='spin')){bayCaption('🏝 Đang dạo trên đảo · về tàu rồi mới ngắm toàn cảnh được',3000);return}bayView=id;viewYaw=0;bayLift=0;bayLiftT=0;walkPitch=id==='far'?.12:.05;try{localStorage.setItem('yen_bay_view',id)}catch(e){}refreshBayHud();
     const v=(bayShip.ex?.views||[]).find(x=>x.id===id);bayCaption('🎥 '+(v?.label||'Góc nhìn')+(v?.note?' · '+v.note:''),3500)}
   // Lịch trình: đi lần lượt tới điểm ghé của từng danh thắng, dừng ngắm vài giây rồi đi tiếp.
   bayTour=null;
