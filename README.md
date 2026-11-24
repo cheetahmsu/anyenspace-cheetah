@@ -40,8 +40,16 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Chạm mặt nước** trong cảnh để tàu tự tìm đường vòng qua các đảo và đi tới. **Vuốt trái/phải** chỉ xoay góc nhìn, không đổi hướng tàu.
 - **Hàng dưới (người):** thanh Toạ thiền · Thỉnh chuông · Nghi thức · Tương tác · Menu (sẽ thiết kế lại cho vịnh).
 
+### Bản đồ và du thuyền (bản 24/11)
+- **333 đảo đá lớn nhất** (xếp theo mặt đứng nhìn từ tàu: bề ngang × chiều cao) cộng toàn bộ danh thắng, đảo check-in 📸 và đảo trên các tour (dựng riêng, luôn giữ).
+- **Tải theo vùng:** lúc vào vịnh chỉ dựng đảo trong vòng khoảng 1,7 km quanh tàu (ô 600 × 600), tàu đi tới đâu dựng tới đó (vài mili giây mỗi khung hình), vùng đã xa trên 2,4 km thì giải phóng. Điện thoại dùng vân đá 256 điểm ảnh; lưới dò đường tô bờ đất theo hàng. Máy thử: thời gian mở vịnh từ khoảng 14 giây còn khoảng 5 giây.
+- **Đường đi ngắn nhất cho mũi tàu:** A* trên lưới 24 đơn vị đã nới khoảng an toàn quanh đảo và bờ, kéo thẳng các đoạn không vướng đảo; đường đi vẽ bằng vạch sáng trên mặt nước và trên bản đồ.
+- **Lái tàu kiểu mũi dẫn:** mũi tàu nhắm một điểm phía trước trên đường, xoay từ từ (giới hạn tốc độ xoay); tâm tàu luôn đi theo mũi nên thân tàu xoay dần theo. Tàu chậm lại trước khúc rẽ gắt, khi mũi còn lệch nhiều, khi sắp tới đích và khi thấy chân đá ngay trên hướng đi trong quãng hãm (lưới `NAV.hard`), qua rồi tăng tốc dần.
+- **Cập Đảo Yên:** tàu chạy tới điểm chờ ngoài khơi thẳng trục cầu tàu rồi đi thẳng chặng cuối, mũi tàu chạm đúng đầu cầu tàu; thân tàu nằm hướng nào cũng được (không còn dịch chuyển tàu vào chỗ neo).
+- **Xuống Đảo Yên là sang không gian riêng:** vùng đảo của vịnh ẩn đi (có lớp mờ chuyển cảnh), chỉ còn Đảo Yên, du thuyền neo ở cầu tàu, thuyền gỗ và thuyền nan đậu quanh đảo, vòng núi đá xa và hai hòn gần nhất (Trống Mái, Đỉnh Hương). Về tàu thì vịnh hiện lại.
+
 ### Dữ liệu dùng chung của vịnh
-- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hòang hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 257 đảo đá lớn theo 8 dáng, luồng tàu; khi dựng tự rải thêm mỏm đá phụ ven các đảo lớn ngoài luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
+- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hòang hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 333 đảo đá lớn nhất theo 8 dáng (cộng các danh thắng, đảo check-in và đảo trên tour dựng riêng), luồng tàu; khi dựng tự rải thêm mỏm đá phụ ven các đảo lớn ngoài luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
 - Toạ độ chiếu từ vĩ độ/kinh độ thật quanh cảng Tuần Châu, 1 đơn vị = 4 m; kích thước đảo được phóng đại. Mỗi danh thắng ghi rõ `precision` (`source` có nguồn công bố, `approx` ước lượng) và `source`.
 - Phông tranh 360° (`nature` kind `backdrop`) và chất liệu đá vôi, tán cây đều được vẽ bằng code khi mở cảnh, không cần tải ảnh.
 - Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
