@@ -429,7 +429,7 @@
   }
   // ===== Đảo Yên (đảo riêng): 160 m phía đông Hòn Gà Chọi, nhìn về Gà Chọi; cầu tàu quay về phía tây để du thuyền cập.
   // Cùng một toạ độ cho mọi người, mỗi người thấy đảo của mình.
-  const TU_DAO={x:1428,z:650,r:40,dock:[1428-72,650],heading:Math.PI/2};
+  const TU_DAO={x:1428,z:650,r:40,dock:[1428-79,650],heading:Math.PI/2};
   // ===== Đảo Yên (vẽ lại theo ảnh thiết kế 3.40). Toạ độ địa phương của đảo, đơn vị mét, không xoay, mặt nước y = 0.
   // Mặt trước đảo nhìn về phía tây (-x), nơi du thuyền cập. Từ ngoài vào: cầu tàu gỗ có biển ĐẢO YÊN → bãi cát rộng hình cung
   // → lối lát đá thẳng → bậc đá rộng → nhà chính mái ngói nâu, tường kính, hiên gỗ. Bên trái (-z): phòng nhỏ nghỉ ngơi và thiền
@@ -452,7 +452,7 @@
   const TD_MY=(()=>{let y=-9;for(let i=-1;i<=1;i+=.5)for(let j=-1;j<=1;j+=.5)y=Math.max(y,tdTerrainY(TD_MED.x+i*TD_MED.h,TD_MED.z+j*TD_MED.h));return y+.45})();/* sàn phòng thiền */
   const TD_GY=(()=>{let y=-9;for(let k=0;k<8;k++){const a=k/8*Math.PI*2;y=Math.max(y,tdTerrainY(TD_GAZ.x+Math.cos(a)*TD_GAZ.r,TD_GAZ.z+Math.sin(a)*TD_GAZ.r))}return y+5.4})();/* sàn chòi: cao gần gấp đôi trước */
   const TD_GDIR=(()=>{const v=[-.6,-.8];return v})(),TD_GRUN=Math.max(2,(TD_GY-tdTerrainY(TD_GAZ.x,TD_GAZ.z))/.62);
-  const TD_PIER_END=[-TU_DAO.r-7,0],TD_PIER_MID=[-TU_DAO.r-2,0],TD_PIER_START=[-TU_DAO.r+4,0];
+  const TD_PIER_END=[-TU_DAO.r-14,0],TD_PIER_MID=[-TU_DAO.r-5,0],TD_PIER_START=[-TU_DAO.r+4,0];
   const TD_STEP=[TD_H.x0-TD_SR-1,0],TD_DOOR=[.2,0],TD_JUNC=[-15,0];
   const TD_MED_FOOT=[TD_MED.x-TD_MED.h-1.8,TD_MED.z],TD_GAZ_FOOT=[TD_GAZ.x+TD_GDIR[0]*(TD_GAZ.r+TD_GRUN+.9),TD_GAZ.z+TD_GDIR[1]*(TD_GAZ.r+TD_GRUN+.9)];
   const tdBez=(a,c,b,n)=>{const o=[];for(let i=0;i<=n;i++){const t=i/n,u=1-t;o.push([u*u*a[0]+2*u*t*c[0]+t*t*b[0],u*u*a[1]+2*u*t*c[1]+t*t*b[1]])}return o};
@@ -501,10 +501,9 @@
       for(const [x,z,s] of [[-28,-30,1.6],[-36,-24,1.1],[-25,33,1.4],[-37,29,.9],[-44,-14,1.3],[-46,16,1.5],[-42,30,1.2],[-41,-31,1.6]])rock(x,z,s,k++);
       for(const [x,z,s] of [[-8,-8,1.2],[-9,8.5,1.1],[-12,-10,.8],[-11,10.5,.7]])rock(x,z,s,k++)}/* đá cảnh hai bên lối lên nhà */
     // ---- cầu tàu gỗ (giữ nguyên chỗ du thuyền cập), lan can dây, đèn lồng
-    const pier=new THREE.Group();g.add(pier);const X0=-TU_DAO.r-8,X1=-TU_DAO.r+4;/* cầu tàu ngắn: 12 m */
+    const pier=new THREE.Group();g.add(pier);const X0=-TU_DAO.r-15,X1=-TU_DAO.r+4;/* cầu tàu 19 m */
     for(let x=X0,i=0;x<X1;x+=1.1,i++)box(pier,x+.55,1.85,0,1.0,.3,5,i%3===0?woodL:wood);
     for(let i=0;i<6;i++)box(pier,X1+.5+i,1.7-i*.25,0,1.0,.25,4.4,i%2?woodL:wood);/* ván dốc xuống bãi */
-    P(new THREE.BoxGeometry(7,.25,1.8),M('#7a5a3c'),-TU_DAO.r-11.5,2.05,0,pier);/* cầu lên tàu */
     for(let x=X0;x<=X1;x+=5.5)for(const s of [-1,1]){cyl(pier,x,-1,s*2.6,.35,.4,6,darkW,7);cyl(pier,x,2.9,s*2.45,.12,.14,1.9,darkW,6)}
     const rope=M('#c9b48a');for(const s of [-1,1])for(let x=X0;x<X1-5.4;x+=5.5){beam(pier,[x,3.55,s*2.45],[x+5.5,3.55,s*2.45],.05,rope);beam(pier,[x,2.85,s*2.45],[x+5.5,2.85,s*2.45],.04,rope)}
     for(let x=X0+2.75;x<X1;x+=11)for(const s of [-1,1]){const lg=new THREE.Group();lg.position.set(x,3.0,s*2.45);lg.scale.setScalar(.9);pier.add(lg);box(lg,0,.95,0,.34,.36,.34,gold);const cp=P(new THREE.ConeGeometry(.28,.2,4),darkW,0,1.23,0,lg);cp.rotation.y=Math.PI/4}
@@ -646,7 +645,7 @@
   // bấm nhà → xuống tàu, đi hết cầu tàu, lên dốc rồi vào nhà. Bấm mặt nước / nút Về tàu → đi về cầu tàu và lên tàu.
   // Tàu vẫn neo ở cầu tàu (đã lưu), nên rời đi hay tắt trang thì lần sau trở lại đúng chỗ tàu đang neo ở Đảo Yên.
   function tdGroundY(x,z){// toạ độ địa phương của Đảo Yên
-    const PIER_X0=-TU_DAO.r-16,PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
+    const PIER_X0=-TU_DAO.r-17.5,/* gồm cả chỗ mũi tàu ghé sát đầu cầu */PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
     if(x>=PIER_X0&&x<=PIER_X1&&Math.abs(z)<2.5)y=Math.max(y,2);/* mặt cầu tàu */
     if(x>PIER_X1&&x<PIER_X1+6&&Math.abs(z)<2.2)y=Math.max(y,2-(x-PIER_X1)*.25);/* ván dốc xuống bãi */
     if(x>=TD_H.x0&&x<=TD_H.x1&&Math.abs(z)<=TD_H.z)y=Math.max(y,TD_FY);/* sàn nhà chính và hiên */
