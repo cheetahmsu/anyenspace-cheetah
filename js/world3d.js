@@ -1607,8 +1607,59 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
     rmCanvas.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;if(!pts.size)drag=null};rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:1);st.dist=Math.max(st.minD,Math.min(st.maxD,st.dist*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.005:.001))))))};
     const resize=()=>{const w=rmCanvas.clientWidth||600,h=rmCanvas.clientHeight||400;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};resize();st.resize=resize;
-    const t0=performance.now(),loop=()=>{if(!st.run)return;const t=(performance.now()-t0)/1000;for(const f of st.tick)f(t);cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target);r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
+    const t0=performance.now();let tl=t0;const loop=()=>{if(!st.run)return;const nw=performance.now(),dt=(nw-tl)/1000;tl=nw;const t=(nw-t0)/1000;for(const f of st.tick)f(t);if(st.walk)st.walk.update(dt);else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
     return st}
+  // ---- Đi lại trong phòng: nhân vật của bạn bước đi, camera luôn ở sau lưng (trễ mượt như ngoài rừng) và tự lùi đủ xa để thấy cả phòng.
+  const ROOM_WALK={default:{hw:3.5,hd:3.1,cx:0,cz:0,start:[0,2.1],cap:9,front:6,maxD:11},
+    nha_niem:{R:4.5,fov:62,hw:4.3,hd:4.3,cx:0,cz:0,start:[0,3.2],cap:5.4,front:0,maxD:11},
+    van_hoa:{hw:7.3,hd:4.9,cx:0,cz:.3,zmin:-2.3,start:[0,3],cap:6.2,front:0,maxD:11,fov:74,capAt:z=>4.6+Math.max(0,5.4-Math.abs(z))/5.4*2.2-.4}};
+  function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;
+    const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
+    const parts=outfitParts(g,torso);dressAvatar(parts,torso,myColor,myStyle,false);g.scale.setScalar(.8);sc.add(g);
+    const W={x:cfg.start[0],z:cfg.start[1],a:Math.PI,cy:0,dest:null,keys:new Set(),zf:1,yo:0,yoT:0,stride:0,fov:50};
+    W.cy=W.a+Math.PI;
+    const clampP=()=>{if(cfg.R){const d=Math.hypot(W.x-cfg.cx,W.z-cfg.cz);if(d>cfg.R){W.x=cfg.cx+(W.x-cfg.cx)/d*cfg.R;W.z=cfg.cz+(W.z-cfg.cz)/d*cfg.R}}
+      W.x=Math.max(cfg.cx-cfg.hw+.4,Math.min(cfg.cx+cfg.hw-.4,W.x));W.z=Math.max(cfg.zmin!=null?cfg.zmin:cfg.cz-cfg.hd+.4,Math.min(cfg.cz+cfg.hd-.4,W.z))};
+    const sa=d=>{d=(d+Math.PI)%(Math.PI*2);if(d<0)d+=Math.PI*2;return d-Math.PI};
+    const key=e=>{if(!roomOpen||!room||room!==st)return;const t=document.activeElement&&document.activeElement.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;const k={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'}[e.key.toLowerCase()];if(!k)return;e.preventDefault();if(e.type==='keydown'){W.keys.add(k);W.dest=null}else W.keys.delete(k)};
+    document.addEventListener('keydown',key);document.addEventListener('keyup',key);
+    // nút đi cho điện thoại
+    const pad=document.createElement('div');pad.className='rm-walkpad';pad.style.cssText='position:absolute;left:10px;bottom:10px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:6px;z-index:5;touch-action:none;user-select:none';
+    for(const [k,lab,gc,gr] of [['f','▲',2,1],['l','◀',1,2],['b','▼',2,2],['r','▶',3,2]]){const b=document.createElement('button');b.type='button';b.textContent=lab;b.setAttribute('aria-label',{f:'Đi tới',b:'Lùi',l:'Quay trái',r:'Quay phải'}[k]);b.style.cssText='grid-column:'+gc+';grid-row:'+gr+';border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(20,16,12,.55);color:#f4e2b9;font-size:18px;touch-action:none';
+      const dn=e=>{e.preventDefault();e.stopPropagation();W.keys.add(k);W.dest=null;try{b.setPointerCapture(e.pointerId)}catch(_){}},up=e=>{e.stopPropagation();W.keys.delete(k)};b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault());pad.appendChild(b)}
+    const stage=rmCanvas.parentNode;stage.style.position=stage.style.position||'relative';stage.appendChild(pad);
+    // chạm: vật tương tác thì mở, sàn thì bước tới; kéo một ngón để xoay nhìn quanh; chụm/lăn để zoom
+    const pts=new Map(),pd=()=>{const [a,c]=[...pts.values()];return Math.max(10,Math.hypot(a.x-c.x,a.y-c.y))};let pinch0=0,drag=null;
+    rmCanvas.onpointerdown=e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{rmCanvas.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={mv:0};else{if(drag)drag.mv=99;pinch0=pts.size===2?pd():0}};
+    rmCanvas.onpointermove=e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+      if(pts.size===2&&pinch0){const d=pd();W.zf=Math.max(.7,Math.min(1.3,W.zf*Math.max(.9,Math.min(1.1,pinch0/d))));pinch0=d;return}
+      if(!drag||pts.size!==1)return;drag.mv+=Math.abs(dx)+Math.abs(dy);if(drag.mv>8){W.yo=Math.max(-.9,Math.min(.9,W.yo-dx*.005));W.yoT=performance.now()}};
+    rmCanvas.onpointerup=e=>{if(!pts.delete(e.pointerId))return;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;if(!d||d.mv>8)return;
+      const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
+      const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(hit){let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk){pk.fn();return}}
+      const o=ray.ray.origin,dr=ray.ray.direction;if(dr.y<-.01){const s=-o.y/dr.y;W.dest={x:o.x+dr.x*s,z:o.z+dr.z*s};const sv=[W.x,W.z];W.x=W.dest.x;W.z=W.dest.z;clampP();W.dest={x:W.x,z:W.z};W.x=sv[0];W.z=sv[1]}};
+    rmCanvas.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;if(!pts.size)drag=null};
+    rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:1);W.zf=Math.max(.7,Math.min(1.3,W.zf*Math.exp(Math.max(-.18,Math.min(.18,dy*.001)))))};
+    W.update=dt=>{dt=Math.min(.05,dt);let mv=0;
+      if(W.keys.has('l'))W.a+=1.9*dt;if(W.keys.has('r'))W.a-=1.9*dt;if(W.keys.has('f'))mv=1;if(W.keys.has('b'))mv=-.6;
+      if(W.dest){const dx=W.dest.x-W.x,dz=W.dest.z-W.z,dist=Math.hypot(dx,dz);if(dist<.12)W.dest=null;else{const df=sa(Math.atan2(dx,dz)-W.a),mx=2.6*dt;W.a+=Math.max(-mx,Math.min(mx,df));if(Math.abs(df)<.9)mv=Math.min(1,dist*1.5)}}
+      if(mv){const sp=2.1*mv*dt;W.x+=Math.sin(W.a)*sp;W.z+=Math.cos(W.a)*sp;clampP();W.stride+=Math.abs(mv)*dt*7}
+      g.position.set(W.x,0,W.z);g.rotation.y=W.a;g.position.y=mv?Math.abs(Math.sin(W.stride))*.04:0;
+      // camera: sau lưng, quay theo hướng nhân vật có độ trễ và giới hạn tốc độ quay
+      const tgt=W.a+Math.PI+W.yo,df=sa(tgt-W.cy),mxc=1.5*dt;W.cy+=Math.max(-mxc,Math.min(mxc,df*(1-Math.exp(-dt*3))*1.0+(Math.abs(df)>2?Math.sign(df)*mxc:0)));
+      if(W.yo&&performance.now()-W.yoT>1800)W.yo*=Math.exp(-dt*1.5);
+      const asp=cam.aspect||1.6,fov=Math.max(cfg.fov||0,asp<1?Math.min(70,50/Math.sqrt(asp)):50);if(Math.abs(cam.fov-fov)>.01||W.fov!==fov){cam.fov=fov;W.fov=fov;cam.updateProjectionMatrix()}
+      const vh=fov*Math.PI/360,hh=Math.atan(Math.tan(vh)*asp),ex=(cfg.R||cfg.hw)*.95,ez=(cfg.R||cfg.hd)*1.2;
+      let D=Math.max(ex/Math.tan(hh),ez/Math.tan(vh));D=Math.max(3.2,Math.min(cfg.maxD,D))*W.zf;let p=.85;const ty=.8;if(D*Math.sin(p)+ty>cfg.cap)p=Math.max(.2,Math.asin(Math.max(0,cfg.cap-ty)/D));
+      // nhìn vào điểm giữa nhân vật và tâm phòng để trọn không gian vẫn trong khung
+      const lx=W.x*.65+cfg.cx*.35+Math.sin(W.a)*.4,lz=W.z*.65+cfg.cz*.35+Math.cos(W.a)*.4;
+      let px=lx+Math.sin(W.cy)*Math.cos(p)*D,pz=lz+Math.cos(W.cy)*Math.cos(p)*D,py=ty+Math.sin(p)*D;
+      px=Math.max(cfg.cx-cfg.hw+.3,Math.min(cfg.cx+cfg.hw-.3,px));pz=Math.max(cfg.cz-cfg.hd+.3,Math.min(cfg.cz+cfg.hd+cfg.front,pz));py=Math.min(py,cfg.capAt?cfg.capAt(pz):cfg.cap);
+      if(cfg.R){const d=Math.hypot(px-cfg.cx,pz-cfg.cz);if(d>cfg.R+.8){px=cfg.cx+(px-cfg.cx)/d*(cfg.R+.8);pz=cfg.cz+(pz-cfg.cz)/d*(cfg.R+.8)}}
+      cam.position.set(px,py,pz);cam.lookAt(lx,ty,lz)};
+    st.walk=W;st.walkAvatar=g;const oc=st.cleanup;st.cleanup=()=>{document.removeEventListener('keydown',key);document.removeEventListener('keyup',key);pad.remove();if(oc)oc()};
+    rmHint('Chạm sàn hoặc dùng W A S D / nút ▲◀▶▼ để đi lại · kéo để nhìn quanh · chụm/lăn để zoom')}
   const rTap=(st,obj,fn)=>{st.picks.push({obj,fn});return obj};
   const rAdd=(st,m,x,y,z)=>{m.position.set(x,y,z);st.sc.add(m);return m};
   // ---------------------------------------------------------------- Nhà chuông gió
@@ -1733,7 +1784,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(!roomsReady){if(openRoom.waiting)return openRoom.waiting;const hint=document.getElementById('zenHint');if(hint)hint.textContent='Đang mở '+(h.name||'phòng')+'…';
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
    if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:b[3]&&b[3].solo?'solo:'+h.id:'room:'+((b[3]&&b[3].venue)||h.id)}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
-    roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);room.resize();}
+    roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);enableWalk(room,h.id);room.resize();}
   function closeRoom(){if(!roomOpen)return;roomOpen=false;{const bk=roomBox.querySelector('[data-rm="back"]');if(bk)bk.textContent='← Trở về Rừng Yên'}if(roomFromIsland){roomFromIsland=false;const door=window.__tdExitDoor;window.__tdExitDoor=false;if(document.body.classList.contains('immersive'))setTimeout(()=>{if(!bayMode&&!roomOpen)enterBay();/* Rời nhà ở Đảo Yên: ra đứng trước cửa nhà, không về tàu */if(door){let n=0;const t=setInterval(()=>{if(++n>80||(window.__tdAtDoor&&window.__tdAtDoor()))clearInterval(t)},150)}},60)}if(document.body.classList.contains('immersive')&&!bayMode)window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'forest'}}));if(room){room.run=false;room.cleanup&&room.cleanup();room.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()});room=null}roomBox.hidden=true;document.body.classList.remove('room-open');rmPanel.innerHTML='';lastWalkFrame=performance.now();document.getElementById('zenHint').textContent='Đã trở về Rừng Yên'}
   roomBox.querySelector('[data-rm="back"]').addEventListener('click',closeRoom);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&roomOpen)closeRoom()});window.addEventListener('anyen-3d-exit',closeRoom);window.addEventListener('resize',()=>{if(room)room.resize()});
   // 3.19: Nghi thức Dâng y. Mở quanh năm; mỗi khách tự may một tấm y.
