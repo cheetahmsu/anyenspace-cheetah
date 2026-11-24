@@ -999,7 +999,7 @@
     // ---- hai kệ bày đồ trong Túi An Yên: mỗi kệ 18 ô (6 tầng × 3), kệ trái ô 1–18, kệ phải ô 19–36; ô trống để trống
     {const L=(window.anyenBagList?window.anyenBagList():[]).slice(0,36),fit=(g,W,H)=>{const b=new THREE.Box3().setFromObject(g),sz=b.getSize(new THREE.Vector3()),k=Math.min(W/Math.max(sz.x,sz.z,.01),H/Math.max(sz.y,.01));g.scale.multiplyScalar(k);const b2=new THREE.Box3().setFromObject(g);g.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());g.position.x-=c.x;g.position.z-=c.z;const o=new THREE.Group();o.add(g);return o};
       const mk=e=>{const g=new THREE.Group(),P=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);g.add(o);return o},d=e.data||{};
-        if(e.made==='shell'&&window.__shellMesh){g.add(window.__shellMesh(d.s|0,d.t|0))}
+        if(e.made==='shell'&&window.__shellMesh){const m=window.__shellMesh(d.s|0,d.t|0);m.rotation.y=Math.PI;/* mặt trước vỏ hướng ra phòng */g.add(m)}
         else if(e.made==='shelltray'&&window.__binMesh){const b=window.__binMesh(Math.max(0,Math.min(2,d.tray|0)));g.add(b);const sh=Array.isArray(d.shells)?d.shells.slice(0,6):[];sh.forEach(([s2,t2],k)=>{if(!window.__shellMesh)return;const m=window.__shellMesh(s2|0,t2|0);m.scale.multiplyScalar(.9);const a=k/Math.max(1,sh.length)*Math.PI*2;m.position.set(Math.cos(a)*.12,.12,Math.sin(a)*.12);b.add(m)})}
         else if(e.made==='robe'&&typeof robeTray==='function'){g.add(robeTray(/^#[0-9a-f]{6}$/i.test(d.color||'')?d.color:'#c98a1c'))}
         else if(e.made==='flower'){P(new THREE.ConeGeometry(.1,.3,8),M('#efe4cf'),0,.15,0).rotation.x=Math.PI;for(let k=0;k<7;k++)P(new THREE.IcosahedronGeometry(.07,0),M(['#f6f1e6','#f2b8c6','#f5d36a'][k%3]),Math.cos(k)*.08,.33+(k%2)*.04,Math.sin(k)*.08)}
