@@ -994,8 +994,29 @@
     // ---- tường sau: tường trát trắng, giữa là mảng đá, kệ gỗ hai bên trưng san hô và vỏ sò, vách nan gỗ
     B(HW*2,EAVE,.14,plaster,0,EAVE/2,-HD-.05);B(3,2.3,.06,stone,0,1.45,-HD+.06);B(3.1,.06,.12,glow('#ffd590',.6),0,2.62,-HD+.1);
     const coralG=new THREE.IcosahedronGeometry(.09,0),shellG=new THREE.SphereGeometry(.08,8,6,0,Math.PI*2,0,Math.PI/2);
-    for(const sx of [-1,1]){const cx=sx*2.65;B(1.7,2.5,.04,woodL,cx,1.25,-HD+.06);for(const ex of [-.83,.83])B(.06,2.5,.42,woodL,cx+ex,1.25,-HD+.25);B(1.7,.06,.42,woodL,cx,2.5,-HD+.25);for(let r=0;r<4;r++){const y=.35+r*.58;B(1.62,.05,.4,woodL,cx,y,-HD+.25);B(1.6,.03,.04,glow('#ffd28a',.5),cx,y+.5,-HD+.1);for(let k=0;k<3;k++){const x=cx-.5+k*.5;if((r+k)%2){for(let j=0;j<4;j++){const m=add(coralG,white,x+(Math.random()-.5)*.14,y+.1+j*.06,-HD+.32);m.scale.set(.7,1.3,.7)}}else{const m=add(shellG,M('#f2e4cf'),x,y+.04,-HD+.32);m.scale.set(1.3,.7,1)}}}
-      for(let k=0;k<7;k++)B(.05,2.6,.08,woodD,sx*(1.62+k*.06)+(sx<0?0:0),1.3,-HD+.3);for(let k=0;k<7;k++)B(.05,2.6,.08,woodD,cx+sx*(.95+k*.07),1.3,-HD+.3)}
+    for(const sx of [-1,1]){const cx=sx*2.65;B(1.7,2.62,.04,woodL,cx,1.31,-HD+.06);for(const ex of [-.83,.83])B(.06,2.62,.42,woodL,cx+ex,1.31,-HD+.25);B(1.7,.06,.42,woodL,cx,2.62,-HD+.25);for(let r=0;r<6;r++){const y=.08+r*.42;B(1.62,.04,.4,woodL,cx,y,-HD+.25);B(1.6,.025,.03,glow('#ffd28a',.45),cx,y+.39,-HD+.08)}
+      for(let k=0;k<7;k++){B(.05,2.6,.08,woodD,cx+sx*(.95+k*.07),1.3,-HD+.3);B(.03,2.6,.08,woodD,sx*(1.53+k*.04),1.3,-HD+.3)}}
+    // ---- hai kệ bày đồ trong Túi An Yên: mỗi kệ 18 ô (6 tầng × 3), kệ trái ô 1–18, kệ phải ô 19–36; ô trống để trống
+    {const L=(window.anyenBagList?window.anyenBagList():[]).slice(0,36),fit=(g,W,H)=>{const b=new THREE.Box3().setFromObject(g),sz=b.getSize(new THREE.Vector3()),k=Math.min(W/Math.max(sz.x,sz.z,.01),H/Math.max(sz.y,.01));g.scale.multiplyScalar(k);const b2=new THREE.Box3().setFromObject(g);g.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());g.position.x-=c.x;g.position.z-=c.z;const o=new THREE.Group();o.add(g);return o};
+      const mk=e=>{const g=new THREE.Group(),P=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);g.add(o);return o},d=e.data||{};
+        if(e.made==='shell'&&window.__shellMesh){g.add(window.__shellMesh(d.s|0,d.t|0))}
+        else if(e.made==='shelltray'&&window.__binMesh){const b=window.__binMesh(Math.max(0,Math.min(2,d.tray|0)));g.add(b);const sh=Array.isArray(d.shells)?d.shells.slice(0,6):[];sh.forEach(([s2,t2],k)=>{if(!window.__shellMesh)return;const m=window.__shellMesh(s2|0,t2|0);m.scale.multiplyScalar(.9);const a=k/Math.max(1,sh.length)*Math.PI*2;m.position.set(Math.cos(a)*.12,.12,Math.sin(a)*.12);b.add(m)})}
+        else if(e.made==='robe'&&typeof robeTray==='function'){g.add(robeTray(/^#[0-9a-f]{6}$/i.test(d.color||'')?d.color:'#c98a1c'))}
+        else if(e.made==='flower'){P(new THREE.ConeGeometry(.1,.3,8),M('#efe4cf'),0,.15,0).rotation.x=Math.PI;for(let k=0;k<7;k++)P(new THREE.IcosahedronGeometry(.07,0),M(['#f6f1e6','#f2b8c6','#f5d36a'][k%3]),Math.cos(k)*.08,.33+(k%2)*.04,Math.sin(k)*.08)}
+        else if(e.made==='pot'){const pts=[];for(let k=0;k<=8;k++){const t=k/8;pts.push(new THREE.Vector2(.06+.1*Math.sin(t*Math.PI*.95)+(t>.85?.02:0),t*.3))}P(new THREE.LatheGeometry(pts,14),M('#b8794a'),0,0,0)}
+        else if(e.made==='aroma'){P(new THREE.CylinderGeometry(.09,.09,.2,12),M('#d9efe6',{transparent:true,opacity:.75}),0,.1,0);P(new THREE.CylinderGeometry(.06,.06,.05,10),woodD,0,.22,0)}
+        else{const id=e.id;
+          if(id==='chuong')P(new THREE.SphereGeometry(.14,16,8,0,Math.PI*2,Math.PI/2,Math.PI/2),M('#b08a3e',{metalness:.6,roughness:.35,side:THREE.DoubleSide}),0,.14,0);
+          else if(id==='sen'){for(let k=0;k<8;k++){const p=P(new THREE.ConeGeometry(.05,.16,5),M('#f2a7bf'),Math.cos(k*.8)*.06,.08,Math.sin(k*.8)*.06);p.rotation.set(Math.sin(k*.8)*.5,0,-Math.cos(k*.8)*.5)}P(new THREE.CylinderGeometry(.04,.05,.04,10),M('#e8c24a'),0,.1,0)}
+          else if(id==='nen'){P(new THREE.CylinderGeometry(.06,.06,.18,12),M('#f3ead6'),0,.09,0);P(new THREE.SphereGeometry(.03,8,6),M('#ffcf70',{emissive:'#ffa030',emissiveIntensity:1.2}),0,.21,0)}
+          else if(id==='nhang'){P(new THREE.CylinderGeometry(.08,.07,.06,12),M('#8a6a48'),0,.03,0);for(let k=-1;k<=1;k++)P(new THREE.CylinderGeometry(.006,.006,.3,5),M('#a0522d'),k*.025,.2,0)}
+          else if(id==='hat'){const t=P(new THREE.TorusGeometry(.1,.022,6,18),M('#7a4a28'),0,.03,0);t.rotation.x=Math.PI/2}
+          else if(id==='tra'){P(new THREE.SphereGeometry(.09,12,10),M('#5c4a3a'),-.05,.08,0);P(new THREE.CylinderGeometry(.04,.035,.06,10),M('#efe6d4'),.1,.03,0)}
+          else if(id==='so'){P(new THREE.BoxGeometry(.2,.05,.26),M('#7d5a3c'),0,.025,0)}
+          else if(id==='cay'){P(new THREE.CylinderGeometry(.07,.06,.1,10),M('#b8794a'),0,.05,0);P(new THREE.IcosahedronGeometry(.07,0),leaf,0,.16,0)}
+          else{const r=P(new THREE.SphereGeometry(.1,10,8),M('#9a978c'),0,.06,0);r.scale.y=.6}}
+        return g};
+      L.forEach((e,i)=>{let o;try{o=fit(mk(e),.36,.3)}catch(er){return}const sx=i<18?-1:1,k=i%18,r=Math.floor(k/3),c=k%3;o.position.set(sx*2.65-.5+c*.5,.1+(5-r)*.42,-HD+.27);sc.add(o);rTap(st,o,()=>rmHint('🎒 '+(e.name||'Vật phẩm Túi An Yên')+' · ô '+(i+1)+'/36'))})}
     B(2.2,.12,.5,stone,0,.82,-HD+.4);B(.2,.8,.4,stone,-.9,.4,-HD+.4);B(.2,.8,.4,stone,.9,.4,-HD+.4);
     {/* vỏ sò điệp lớn */const g=new THREE.Group();for(let k=0;k<9;k++){const a=-1.2+k*.3,f=add(new THREE.ConeGeometry(.09,.62,6),M(k%2?'#f6ecdd':'#ead8c0'),0,0,0);sc.remove(f);f.position.set(Math.sin(a)*.3,Math.cos(a)*.3,0);f.rotation.z=-a;g.add(f)}g.position.set(0,.95,-HD+.45);g.scale.set(1.15,1,1);sc.add(g)}
     for(const sx of [-1,1]){const p=add(new THREE.IcosahedronGeometry(.14,0),leaf,sx*.75,1.0,-HD+.42);p.scale.y=.8}
