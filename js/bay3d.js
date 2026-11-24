@@ -468,7 +468,7 @@
     addKarst(X+52,Z-15,15,52,7302,{shape:1,rot:1.1});addKarst(X+55,Z+14,14,44,7303,{shape:0,rot:2.3});/* hai chóp đá vôi cao phía sau */
     addKarst(X+31,Z-27,8,17,7304,{shape:2,rot:.9});addKarst(X+33,Z+28,7,15,7305,{shape:2,rot:2.2});/* hai gò đá thấp ôm hai bên */
     bayExtraRocks.push([X+48,Z,30])}
-  const TD_COLL=[];const TD_ACT={cairn:null,shells:[]};/* hoạt động trên bãi: xếp đá cân bằng, nhặt vỏ sò *//* vật cản khi đi bộ trên đảo (toạ độ địa phương): [x, z, bán kính] của đá, gốc cây, dừa, bụi cây, ghế nằm */
+  const TD_COLL=[];const TD_ACT={cairn:null,shells:[],bins:[],carry:null,pick:null};/* hoạt động trên bãi: xếp đá cân bằng, nhặt vỏ sò *//* vật cản khi đi bộ trên đảo (toạ độ địa phương): [x, z, bán kính] của đá, gốc cây, dừa, bụi cây, ghế nằm */
   function buildTuDao(){const g=new THREE.Group();g.position.set(TU_DAO.x,0,TU_DAO.z);TD_COLL.length=0;
     const M=(c,r=.82,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:r,...o});
     const wood=M('#8a6446'),woodL=M('#b48b62'),darkW=M('#4a3a2e'),stone=M('#a49c8c',.92),stoneD=M('#857e71',.95),stoneL=M('#c9bfaa',.9),
@@ -603,9 +603,18 @@
        if(!sandAt(x,z)||!clear(x,z,.7)||TD_ACT.shells.some(q=>Math.hypot(q.x-x,q.z-z)<2.6))continue;
        const k=TD_ACT.shells.length,sg=new THREE.Group();sg.position.set(x,tdTerrainY(x,z)+.02,z);sg.rotation.y=i*1.7;
        if(k%3===2){const c=new THREE.Mesh(coneG,shM[k%5]);c.rotation.z=Math.PI/2;c.position.y=.06;sg.add(c)}else{const sh=new THREE.Mesh(shellG,shM[k%5]);sh.scale.set(1,.45,1.25);sg.add(sh)}
-       const hit=new THREE.Mesh(hitG,hitM);hit.position.y=.15;sg.add(hit);g.add(sg);TD_ACT.shells.push({x,z,g:sg,got:false})}}
+       const hit=new THREE.Mesh(hitG,hitM);hit.position.y=.15;sg.add(hit);g.add(sg);TD_ACT.shells.push({x,z,g:sg,got:false})}
+     // giỏ mây, khay sò, giỏ lưới đặt sẵn trên bãi cạnh vùng vỏ sò
+     const wick=new THREE.MeshStandardMaterial({color:'#b08850',roughness:.9}),wickD=new THREE.MeshStandardMaterial({color:'#8a6538',roughness:.9}),trayM=new THREE.MeshStandardMaterial({color:'#9c7650',roughness:.8}),netM=new THREE.MeshStandardMaterial({color:'#3f7d74',roughness:.8,wireframe:true}),netR=new THREE.MeshStandardMaterial({color:'#2f5f58',roughness:.8});
+     const mk=[g2=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.32,.24,.34,14,1,true),wick);b.position.y=.17;g2.add(b);const bt=new THREE.Mesh(new THREE.CircleGeometry(.24,14),wickD);bt.rotation.x=-Math.PI/2;bt.position.y=.01;g2.add(bt);const h=new THREE.Mesh(new THREE.TorusGeometry(.3,.025,6,16,Math.PI),wickD);h.position.y=.34;g2.add(h);for(const y of [.08,.2,.31]){const r=new THREE.Mesh(new THREE.TorusGeometry(.245+y*.23,.014,4,18),wickD);r.rotation.x=Math.PI/2;r.position.y=y;g2.add(r)}return .3},
+       g2=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.7,.05,.45),trayM);b.position.y=.03;g2.add(b);for(const [x,z,w,d] of [[0,.215,.7,.03],[0,-.215,.7,.03],[.335,0,.03,.45],[-.335,0,.03,.45]]){const e=new THREE.Mesh(new THREE.BoxGeometry(w,.1,d),trayM);e.position.set(x,.08,z);g2.add(e)}return .07},
+       g2=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8,0,Math.PI*2,Math.PI*.35,Math.PI*.65),netM);b.position.y=.3;g2.add(b);const r=new THREE.Mesh(new THREE.TorusGeometry(.27,.02,6,18),netR);r.rotation.x=Math.PI/2;r.position.y=.44;g2.add(r);return .12}];
+     const NAMES=['giỏ mây','khay sò','giỏ lưới'];
+     for(let bi=0,tries=0;TD_ACT.bins.length<3&&tries<200;tries++,bi++){const a=(122+bi*9)*Math.PI/180,e=tdSandEdge(a)+.1,R=tdR(a)*(e+.12),x=TD_O[0]+Math.cos(a)*R,z=TD_O[1]+Math.sin(a)*R;
+       if(!sandAt(x,z)||!clear(x,z,.8)||TD_ACT.shells.some(q=>Math.hypot(q.x-x,q.z-z)<1.4)||TD_ACT.bins.some(q=>Math.hypot(q.x-x,q.z-z)<1.6))continue;
+       const k=TD_ACT.bins.length,bg=new THREE.Group();bg.position.set(x,tdTerrainY(x,z),z);bg.rotation.y=k*1.3;const fy=mk[k](bg);const hit=new THREE.Mesh(new THREE.SphereGeometry(.55,6,4),hitM);hit.position.y=.25;bg.add(hit);g.add(bg);TD_ACT.bins.push({x,z,g:bg,fy,name:NAMES[k],n:0,home:bg.position.clone(),homeR:bg.rotation.y})}}
     g.traverse(o=>{if(!o.isMesh)return;let p=o,tag='island';while(p&&p!==g){if(p===house){tag='house';break}if(p===pier){tag='pier';break}p=p.parent}o.userData.tuDao=tag});
-    if(TD_ACT.cairn)TD_ACT.cairn.g.traverse(o=>{o.userData.tuDao='cairn'});TD_ACT.shells.forEach((q,k)=>q.g.traverse(o=>{o.userData.tuDao='shell';o.userData.shell=k}));
+    if(TD_ACT.cairn)TD_ACT.cairn.g.traverse(o=>{o.userData.tuDao='cairn'});TD_ACT.shells.forEach((q,k)=>q.g.traverse(o=>{o.userData.tuDao='shell';o.userData.shell=k}));TD_ACT.bins.forEach((q,k)=>q.g.traverse(o=>{o.userData.tuDao='bin';o.userData.bin=k}));
     bayGroup.add(g);TU_DAO.group=g;bayExtraRocks.push([TU_DAO.x+20,TU_DAO.z,50],[TU_DAO.x-16,TU_DAO.z-32,20],[TU_DAO.x-16,TU_DAO.z+32,20])/* chừa lối vào cầu tàu ngắn ở giữa bờ tây (x≈-44) */}
   // Bấm cầu tàu / đảo / nhà: tàu cập cầu tàu (nếu đang ở xa thì đi tới trước), rồi bước lên đảo.
   // Tạm thời không gian trên đảo dùng chung không gian Tư Gia. Lưu tàu ở cầu tàu, nên tắt đột xuất hay rời đi thì lần sau vào vịnh vẫn đứng ở cầu tàu.
@@ -669,7 +678,7 @@
   window.__tdAtDoor=tdAtDoor;
   function islandName(on){const nm=document.querySelector('.immersive-name');if(nm)nm.textContent=on?'✧ LÀNG YÊN - ĐẢO YÊN':'✧ LÀNG YÊN - VỊNH YÊN'}
   // back: bấm Về tàu → nạp lại trạng thái đã lưu; 'new': chọn chuyến mới ngay trên đảo → bỏ bản lưu; không truyền (vào nhà, rời vịnh) → giữ bản lưu
-  function islandBoardNow(back){if(!bayIsland)return;bayIsland=null;document.body.classList.remove('bay-island');viewYaw=0;islandName(false);refreshIslandHud();
+  function islandBoardNow(back){if(!bayIsland)return;tdBinsHome();TD_ACT.pick=null;if(bayAvatar)bayAvatar.crouch=0;bayIsland=null;document.body.classList.remove('bay-island');viewYaw=0;islandName(false);refreshIslandHud();
     if(back==='new'){tdSnapDrop();return}if(!back)return;const resumed=tdSnapRestore(true);if(back&&!resumed)bayCaption('⛵ Đã về tàu · tàu neo ở cầu tàu Đảo Yên',3500);refreshBayHud();drawBayMap()}
   // Đi tự do trên đảo như ở Rừng Yên: không xuống nước, không xuyên nhà / chòi; bước vào cửa nhà thì vào nhà.
   const tdOk=(x,z)=>{if(tdGroundY(x,z)<-.12)return false;if(x>TD_H.x0-.4&&x<TD_H.x1+.5&&Math.abs(z)<TD_H.z+.4&&!(x<TD_H.x0+1.9&&Math.abs(z)<2.4))return false;if(Math.hypot(x-TD_GAZ.x,z-TD_GAZ.z)<TD_GAZ.r+.3)return false;return true};
@@ -713,7 +722,7 @@
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
     I.moving=I.path.length>0;I.t+=dt;
-    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){const C=TD_ACT.cairn;I.yaw=Math.atan2(C.x-I.x,C.z-I.z);cairnAdd()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='house'){window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
+    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){const C=TD_ACT.cairn;I.yaw=Math.atan2(C.x-I.x,C.z-I.z);cairnAdd()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(String(t).startsWith('bin:'))takeBin(+t.slice(4));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='house'){window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
   // ---- Xếp đá cân bằng / nhặt vỏ sò
   function tdGoTo(sx,sz,then,cap){const I=bayIsland;if(!I)return;tdStand();if(Math.hypot(I.x-sx,I.z-sz)<.9){I.path=[];I.then=then;return}const p=tdRoute(I.x,I.z,sx,sz);if(!p){bayCaption('Chỗ đó chưa đi tới được, hãy chạm chỗ khác trên đảo',2500);return}I.path=p;I.then=then;if(cap)bayCaption(cap,3000)}
   function tdNearStand(x,z,r,side){const I=bayIsland,cy=(bayIsland.cam0||0)+viewYaw,fx=Math.sin(cy),fz=Math.cos(cy);let best=null,bd=1e9;for(let k=0;k<16;k++){const a=k*Math.PI/8,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(!tdWalkable(px,pz))continue;const d=Math.hypot(px-I.x,pz-I.z)+(side?4*Math.abs(-Math.cos(a)*fx-Math.sin(a)*fz):0);/* side: đứng cạnh, không che vật trước camera */if(d<bd){bd=d;best=[px,pz]}}return best||[x,z]}
@@ -723,12 +732,27 @@
   function cairnAdd(){const C=TD_ACT.cairn;if(!C)return;if(C.n>=C.pile.length){for(const m of C.pile){m.position.copy(m.userData.home);m.rotation.set(0,m.userData.homeR,0)}C.n=0;C.h=.3;C.anim=null;bayCaption('🪨 Đã gỡ tháp đá về bãi · chạm vào đá để xếp lại từ đầu',4000);return}
     const m=C.pile[C.n],sy=m.scale.y;C.anim={m,t:0,to:new THREE.Vector3((Math.random()-.5)*.06,C.h+sy*.82,(Math.random()-.5)*.06),from:m.position.clone()};m.rotation.set(0,Math.random()*6.28,0);C.h+=sy*1.6;C.n++;
     bayCaption('🪨 Viên '+C.n+'/'+C.pile.length+' · '+CAIRN_SAY[C.n-1]+(C.n<C.pile.length?' · chạm đá để đặt tiếp':''),C.n<C.pile.length?3500:6000)}
-  function pickShell(k){const q=TD_ACT.shells[k];if(!q||q.got)return;const I=bayIsland;if(I)I.yaw=Math.atan2(q.x-I.x,q.z-I.z);q.got=true;q.pick=0;const n=TD_ACT.shells.filter(s=>s.got).length,N=TD_ACT.shells.length;
-    bayCaption(n<N?'🐚 Nhặt được vỏ sò '+n+'/'+N+' · chạm vỏ sò khác trên bãi để nhặt tiếp':'🐚 Đã nhặt đủ '+N+' vỏ sò · lần sau ghé đảo, sóng sẽ đưa vỏ sò mới vào bờ',n<N?3500:6000)}
+  function tdGoBin(k){const q=TD_ACT.bins[k];if(!q||!bayIsland)return;if(TD_ACT.carry===k){bayCaption('🧺 Bạn đang cầm '+q.name+' · chạm vỏ sò để nhặt bỏ vào',3000);return}const [sx,sz]=tdNearStand(q.x,q.z,.75,true);tdGoTo(sx,sz,'bin:'+k,'🧺 Đang tới lấy '+q.name+'…')}
+  function binHold(q,on){if(on){TU_DAO.group.remove(q.g);me.add(q.g);q.g.position.set(.42,.62,.18);q.g.rotation.set(0,0,0);q.g.scale.setScalar(.8)}else{if(q.g.parent)q.g.parent.remove(q.g);TU_DAO.group.add(q.g);q.g.position.copy(q.home);q.g.rotation.set(0,q.homeR,0);q.g.scale.setScalar(1)}}
+  function takeBin(k){const q=TD_ACT.bins[k];if(!q)return;const I=bayIsland;if(I)I.yaw=Math.atan2(q.x-I.x,q.z-I.z);const old=TD_ACT.carry;if(old!=null&&old!==k)binHold(TD_ACT.bins[old],false);TD_ACT.carry=k;TD_ACT.pick={bin:k,t:0};
+    bayCaption('🧺 Đã cầm '+q.name+(q.n?' ('+q.n+' vỏ sò)':'')+(old!=null&&old!==k?' · đã đặt '+TD_ACT.bins[old].name+' lại chỗ cũ':'')+' · chạm vỏ sò để nhặt bỏ vào',4000)}
+  function tdBinsHome(){if(TD_ACT.carry!=null){binHold(TD_ACT.bins[TD_ACT.carry],false);TD_ACT.carry=null}}
+  function pickShell(k){const q=TD_ACT.shells[k];if(!q||q.got||TD_ACT.pick)return;const I=bayIsland;if(I)I.yaw=Math.atan2(q.x-I.x,q.z-I.z);TD_ACT.pick={k,t:0,has:TD_ACT.carry!=null,from:q.g.position.clone()};if(TD_ACT.pick.has)q.got=true}
+  function shellIntoBin(k){const q=TD_ACT.shells[k],b=TD_ACT.bins[TD_ACT.carry];if(!b)return;q.g.visible=false;const c=q.g.children[0].clone();c.userData={tuDao:'bin',bin:TD_ACT.carry,inBin:true};const a=b.n*2.4,r=.07+.05*(b.n%3);c.position.set(Math.cos(a)*r,b.fy+.02*Math.floor(b.n/6),Math.sin(a)*r);c.rotation.y=a;b.g.add(c);b.n++;
+    const n=TD_ACT.shells.filter(s=>s.got).length,N=TD_ACT.shells.length;bayCaption(n<N?'🐚 Bỏ vào '+b.name+' · '+b.name+' có '+b.n+' vỏ sò · đã nhặt '+n+'/'+N:'🐚 Đã nhặt đủ '+N+' vỏ sò · lần sau ghé đảo, sóng sẽ đưa vỏ sò mới vào bờ',n<N?3500:6000)}
   function tdActAnim(dt){const C=TD_ACT.cairn;if(C&&C.anim){const A=C.anim;A.t+=dt/.7;const u=Math.min(1,A.t),e=u*u*(3-2*u);A.m.position.lerpVectors(A.from,A.to,e);A.m.position.y+=Math.sin(Math.PI*u)*.6;A.m.rotation.z=u>=1?0:Math.sin(u*Math.PI*3)*.05*(1-u);if(u>=1){A.m.position.copy(A.to);C.anim=null}}
-    for(const q of TD_ACT.shells){if(q.got&&q.g.visible){q.pick+=dt/.5;q.g.position.y+=dt*.8;q.g.scale.setScalar(Math.max(.01,1-q.pick));if(q.pick>=1)q.g.visible=false}}}
-  function tdShellsRefresh(){if(TD_ACT.shells.length&&TD_ACT.shells.every(q=>q.got))for(const q of TD_ACT.shells){q.got=false;q.g.visible=true;q.g.scale.setScalar(1);q.g.position.y=tdTerrainY(q.x,q.z)+.02}}
-  window.__tdAct={act:TD_ACT,cairn:()=>tdGoCairn(),shell:k=>tdGoShell(k),scr:(x,z,y=.3)=>{const v=new THREE.Vector3(x,tdGroundY(x,z)+y,z);TU_DAO.group.localToWorld(v);v.project(camera);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]}};
+    const P=TD_ACT.pick;bayAvatar.crouch=0;if(P){P.t+=dt;const T=P.t;
+      if(P.bin!=null){bayAvatar.crouch=Math.sin(Math.PI*Math.min(1,T/.9));if(T>=.45&&!P.held){P.held=true;binHold(TD_ACT.bins[P.bin],true)}if(T>=.9)TD_ACT.pick=null}
+      else{const q=TD_ACT.shells[P.k],I=bayIsland,hx=I?I.x+Math.sin(I.yaw)*.35:q.x,hz=I?I.z+Math.cos(I.yaw)*.35:q.z,gy=tdGroundY(hx,hz),hand=new THREE.Vector3(hx,gy+.75,hz);
+        bayAvatar.crouch=T<.5?T/.5:T<1.1?1:Math.max(0,1-(T-1.1)/.5);
+        if(T>=.5&&T<1.1){const u=(T-.5)/.6;q.g.position.lerpVectors(P.from,hand,u*u*(3-2*u))}
+        if(P.has){if(T>=1.1&&!P.done){P.done=true;shellIntoBin(P.k)}if(T>=1.6)TD_ACT.pick=null}
+        else{if(T>=1.1&&T<1.9){bayAvatar.crouch=T<1.4?Math.max(0,1-(T-1.1)/.3)*0:0;q.g.position.copy(hand);q.g.position.y=gy+1.05+Math.sin((T-1.1)*6)*.03}
+          if(T>=1.9&&T<2.5){bayAvatar.crouch=Math.min(1,(T-1.9)/.3);const u=(T-1.9)/.6;q.g.position.lerpVectors(new THREE.Vector3(hx,gy+1.05,hz),P.from,u*u*(3-2*u))}
+          if(T>=1.1&&!P.said){P.said=true;bayCaption('🐚 Chưa có giỏ để bỏ vào · ngắm vỏ sò rồi đặt lại xuống cát · giỏ, khay sò và giỏ lưới có sẵn trên bãi',4500)}
+          if(T>=2.5){q.g.position.copy(P.from);bayAvatar.crouch=Math.max(0,1-(T-2.5)/.4);if(T>=2.9)TD_ACT.pick=null}}}}}
+  function tdShellsRefresh(){if(TD_ACT.shells.length&&TD_ACT.shells.every(q=>q.got)){for(const q of TD_ACT.shells){q.got=false;q.g.visible=true;q.g.scale.setScalar(1);q.g.position.set(q.x,tdTerrainY(q.x,q.z)+.02,q.z)}for(const b of TD_ACT.bins){b.g.children.filter(c=>c.userData.inBin).forEach(c=>b.g.remove(c));b.n=0}}}
+  window.__tdAct={hit:(px,py)=>{const r=new THREE.Raycaster();r.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-py/innerHeight*2+1),camera);return r.intersectObject(TU_DAO.group,true).slice(0,4).map(h=>[h.object.userData.tuDao,h.object.userData.bin,+h.distance.toFixed(1),h.object.type])},act:TD_ACT,cairn:()=>tdGoCairn(),shell:k=>tdGoShell(k),scr:(x,z,y=.3)=>{const v=new THREE.Vector3(x,tdGroundY(x,z)+y,z);TU_DAO.group.localToWorld(v);v.project(camera);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]}};
   function islandWorld(out){const I=bayIsland;out.set(I.x,tdGroundY(I.x,I.z)+(I.moving?Math.abs(Math.sin(I.t*7))*.08:0),I.z);TU_DAO.group.localToWorld(out);return out}
   const islandHud=document.createElement('button');islandHud.type='button';islandHud.id='islandBack';islandHud.textContent='⛵ Về tàu';islandHud.hidden=true;document.body.appendChild(islandHud);
   {const st=document.createElement('style');st.textContent='#islandBack{position:fixed;z-index:73;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);border:1px solid #c8a96a;border-radius:999px;background:#c8a96a;color:#0b2824;font-weight:600;font-size:14px;padding:9px 16px;cursor:pointer}#islandBack[hidden]{display:none}body.bay-island #bayHUD,body.bay-island #homeBtn,body.bay-island #bayMap,body.bay-island #baySheet{display:none!important}';document.head.appendChild(st)}
@@ -1167,10 +1191,10 @@
   const bayPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),bayHit=new THREE.Vector3();
   function bayTap(ray){
     if(!bayBuilt){bayCaption('Đang tải bản đồ vịnh…');return}
-    if(bayIsland){const th=TU_DAO.group&&ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao==='house'){islandGo('house');return}if(th&&th.object.userData.tuDao==='cairn'){tdGoCairn();return}if(th&&th.object.userData.tuDao==='shell'){tdGoShell(th.object.userData.shell);return}
+    if(bayIsland){const all=TU_DAO.group?ray.intersectObject(TU_DAO.group,true):[],act=all.find(h=>/^(cairn|shell|bin)$/.test(h.object.userData.tuDao||'')),th=act||all[0];/* vật nhỏ để tương tác (đá, vỏ sò, giỏ) được ưu tiên dù có bụi cây che một phần */if(th&&th.object.userData.tuDao==='house'){islandGo('house');return}if(th&&th.object.userData.tuDao==='cairn'){tdGoCairn();return}if(th&&th.object.userData.tuDao==='shell'){tdGoShell(th.object.userData.shell);return}if(th&&th.object.userData.tuDao==='bin'){tdGoBin(th.object.userData.bin);return}
       if(th){const v=th.point.clone();TU_DAO.group.worldToLocal(v);islandWalkTo(v.x,v.z);return}
       bayCaption('Chạm xuống đất để đi tới · nút ⛵ Về tàu để rời đảo',2500);return}
-    if(TU_DAO.group){const th=ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao){const k=th.object.userData.tuDao;tuDaoTap(k==='cairn'||k==='shell'?'island':k);return}}
+    if(TU_DAO.group){const th=ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao){const k=th.object.userData.tuDao;tuDaoTap(k==='cairn'||k==='shell'||k==='bin'?'island':k);return}}
     const lmHit=ray.intersectObjects(bayPick,false)[0],rock=ray.intersectObjects(bayKarstMeshes,false)[0];
     if(lmHit&&(!rock||lmHit.distance<rock.distance+60)){goLandmark(lmHit.object.userData.landmark);return}
     let pt=null;if(rock)pt=rock.point;else if(ray.ray.intersectPlane(bayPlane,bayHit))pt=bayHit;
