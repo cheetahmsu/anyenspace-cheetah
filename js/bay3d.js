@@ -607,15 +607,25 @@
   function islandGo(kind){if(!bayIsland){const b=tdBowLocal();bayIsland={x:b[0],z:b[1],yaw:Math.atan2(TD_PIER_END[0]-b[0],TD_PIER_END[1]-b[1]),path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=0;
       bayIsland.path.push(TD_PIER_END)}
     const I=bayIsland;I.then=null;const onPier=I.x<TD_PIER_START[0]+1,atHouse=Math.hypot(I.x-TD_DOOR[0],I.z-TD_DOOR[1])<9,base=I.x<TD_PIER_END[0]-.5?[TD_PIER_END]:atHouse?[TD_STEP]:[];I.path=base;
-    if(kind==='pier'){I.path=base.concat([TD_PIER_MID]);bayCaption('🏝 Đứng trên cầu tàu Đảo Yên · bấm đảo để dạo, bấm nhà để vào nhà, bấm mặt nước để về tàu',5500)}
-    else if(kind==='island'){I.path=(onPier?base.concat([TD_PIER_START]):atHouse?[TD_STEP,TD_PIER_START]:[]).concat(tdLoop(),[TD_PIER_START]);bayCaption('🏝 Dạo một vòng quanh Đảo Yên…',4000)}
+    if(kind==='pier'){I.path=base.concat([TD_PIER_MID]);bayCaption('🏝 Bạn đã lên Đảo Yên · đi bằng W A S D hoặc nút mũi tên, chạm đất để đi tới, chạm nhà để vào nhà',6500)}
+    else if(kind==='island'){I.path=(onPier?base.concat([TD_PIER_START]):atHouse?[TD_STEP,TD_PIER_START]:[]);bayCaption('🏝 Bạn đã lên Đảo Yên · đi bằng W A S D hoặc nút mũi tên, chạm đất để đi tới, chạm nhà để vào nhà',6500)}
     else if(kind==='house'){I.path=atHouse?[TD_DOOR]:(onPier?base:[]).concat(TD_WALK_HOUSE,[TD_DOOR]);I.then='house';bayCaption('🏡 Đi qua cầu tàu lên nhà nghỉ trên đảo…',4000)}
     refreshIslandHud()}
   function islandBack(){if(!bayIsland)return;const I=bayIsland,b=tdBowLocal();I.then='board';I.path=(Math.hypot(I.x-TD_DOOR[0],I.z-TD_DOOR[1])<9?[TD_STEP]:[]).concat(I.x>TD_PIER_START[0]?[TD_PIER_START]:[]).concat([TD_PIER_MID,TD_PIER_END,b]);bayCaption('⛵ Đang về tàu…',3000)}
   function tdAtDoor(){if(!bayMode||!bayBuilt)return false;const x=TD_H.x0+.8,z=0;bayIsland={x,z,yaw:-Math.PI/2,path:[],then:null,t:0};document.body.classList.add('bay-island');viewYaw=Math.PI;/* đứng trên hiên trước cửa, quay mặt ra biển; camera nhìn từ phía cầu tàu vào */refreshIslandHud();bayCaption('🚪 Đã ra trước cửa nhà · bấm nhà để vào lại, bấm đảo để dạo, bấm mặt nước để về tàu',5500);return true}
   window.__tdAtDoor=tdAtDoor;
   function islandBoardNow(){if(!bayIsland)return;bayIsland=null;document.body.classList.remove('bay-island');viewYaw=0;refreshIslandHud()}
-  function updateIslandWalk(dt){const I=bayIsland;if(!I)return;let left=4.5*dt*(bayMult?bayMult():1);
+  // Đi tự do trên đảo như ở Rừng Yên: không xuống nước, không xuyên nhà / chòi; bước vào cửa nhà thì vào nhà.
+  const tdOk=(x,z)=>{if(tdGroundY(x,z)<-.12)return false;if(x>TD_H.x0-.4&&x<TD_H.x1+.5&&Math.abs(z)<TD_H.z+.4&&!(x<TD_H.x0+1.9&&Math.abs(z)<2.4))return false;if(Math.hypot(x-TD_GAZ.x,z-TD_GAZ.z)<TD_GAZ.r+.3)return false;return true};
+  function tdClip(x0,z0,x1,z1){const d=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ceil(d/.5));let lx=x0,lz=z0;for(let i=1;i<=n;i++){const x=x0+(x1-x0)*i/n,z=z0+(z1-z0)*i/n;if(!tdOk(x,z))break;lx=x;lz=z}return [lx,lz]}
+  function islandWalkTo(x,z){const I=bayIsland;if(!I)return;if(!tdOk(x,z)){const c=tdClip(I.x,I.z,x,z);x=c[0];z=c[1]}
+    const pierEnd=TD_PIER_START[0]-1,path=[];if(I.x<pierEnd&&x>pierEnd)path.push(TD_PIER_START);else if(I.x>pierEnd&&x<pierEnd)path.push(TD_PIER_START);
+    const px=path.length?path[0][0]:I.x,pz=path.length?path[0][1]:I.z,c=tdClip(px,pz,x,z);path.push(c);I.then=null;I.path=path}
+  function updateIslandWalk(dt){const I=bayIsland;if(!I)return;
+    {const K=walkingKeys;if(K.size&&I.then!=='board'&&I.then!=='house'){I.path.length=0;I.then=null;if(K.has('turnleft'))I.yaw+=1.9*dt;if(K.has('turnright'))I.yaw-=1.9*dt;const mv=K.has('forward')?1:K.has('back')?-.6:0;
+      if(mv){const sp=4.5*mv*dt*(bayMult?bayMult():1),nx=I.x+Math.sin(I.yaw)*sp,nz=I.z+Math.cos(I.yaw)*sp;if(tdOk(nx,nz)){I.x=nx;I.z=nz}else if(tdOk(nx,I.z))I.x=nx;else if(tdOk(I.x,nz))I.z=nz;I.moving=true;I.t+=dt}else I.moving=false;
+      if(I.x>TD_H.x0+1.2&&Math.abs(I.z)<2.4)I.then='house';return}}
+    let left=4.5*dt*(bayMult?bayMult():1);
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
     I.moving=I.path.length>0;I.t+=dt;
@@ -623,7 +633,11 @@
   function islandWorld(out){const I=bayIsland;out.set(I.x,tdGroundY(I.x,I.z)+(I.moving?Math.abs(Math.sin(I.t*7))*.08:0),I.z);TU_DAO.group.localToWorld(out);return out}
   const islandHud=document.createElement('button');islandHud.type='button';islandHud.id='islandBack';islandHud.textContent='⛵ Về tàu';islandHud.hidden=true;document.body.appendChild(islandHud);
   {const st=document.createElement('style');st.textContent='#islandBack{position:fixed;z-index:73;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);border:1px solid #c8a96a;border-radius:999px;background:#c8a96a;color:#0b2824;font-weight:600;font-size:14px;padding:9px 16px;cursor:pointer}#islandBack[hidden]{display:none}body.bay-island #bayHUD{opacity:.45;pointer-events:none}';document.head.appendChild(st)}
-  function refreshIslandHud(){islandHud.hidden=!bayIsland||!bayMode}
+  const islandPad=document.createElement('div');islandPad.id='islandPad';islandPad.hidden=true;document.body.appendChild(islandPad);
+  {const st=document.createElement('style');st.textContent='#islandPad{position:fixed;z-index:73;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);gap:6px;touch-action:none;user-select:none}#islandPad[hidden]{display:none}#islandPad button{border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(20,16,12,.55);color:#f4e2b9;font-size:18px;touch-action:none}';document.head.appendChild(st)}
+  for(const [k,lab,gc,gr] of [['forward','▲',2,1],['turnleft','◀',1,2],['back','▼',2,2],['turnright','▶',3,2]]){const b=document.createElement('button');b.type='button';b.textContent=lab;b.style.cssText='grid-column:'+gc+';grid-row:'+gr;b.setAttribute('aria-label',{forward:'Đi tới',back:'Lùi',turnleft:'Quay trái',turnright:'Quay phải'}[k]);
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();walkingKeys.add(k);try{b.setPointerCapture(e.pointerId)}catch(_){}});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>walkingKeys.delete(k));b.addEventListener('contextmenu',e=>e.preventDefault());islandPad.appendChild(b)}
+  function refreshIslandHud(){islandHud.hidden=!bayIsland||!bayMode;islandPad.hidden=islandHud.hidden;if(islandHud.hidden)walkingKeys.clear()}
   islandHud.addEventListener('click',islandBack);
   function goTuDao(instant){if(!bayBuilt)return;const [x,z]=TU_DAO.dock;
     if(!instant){setDestination(x,z,'Đảo Yên của bạn');return}
@@ -990,8 +1004,10 @@
   const bayPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),bayHit=new THREE.Vector3();
   function bayTap(ray){
     if(!bayBuilt){bayCaption('Đang tải bản đồ vịnh…');return}
+    if(bayIsland){const th=TU_DAO.group&&ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao==='house'){islandGo('house');return}
+      if(th){const v=th.point.clone();TU_DAO.group.worldToLocal(v);islandWalkTo(v.x,v.z);return}
+      bayCaption('Chạm xuống đất để đi tới · nút ⛵ Về tàu để rời đảo',2500);return}
     if(TU_DAO.group){const th=ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao){tuDaoTap(th.object.userData.tuDao);return}}
-    if(bayIsland){islandBack();return}
     const lmHit=ray.intersectObjects(bayPick,false)[0],rock=ray.intersectObjects(bayKarstMeshes,false)[0];
     if(lmHit&&(!rock||lmHit.distance<rock.distance+60)){goLandmark(lmHit.object.userData.landmark);return}
     let pt=null;if(rock)pt=rock.point;else if(ray.ray.intersectPlane(bayPlane,bayHit))pt=bayHit;

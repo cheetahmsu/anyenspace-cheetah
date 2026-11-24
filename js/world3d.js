@@ -865,7 +865,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(groundHits.length){const q=groundHits[0].point;if(Math.abs(q.x)<72&&q.z>-124&&q.z<36){navigateTo(q.x,q.z);}}
 
   }
-  renderer.domElement.addEventListener('pointerup',e=>{dragging3d=false;if(moved)return;handleSceneTap(e);});
+  let lastTap=null,dtIn=false;const dblZoom=()=>{if(bayMode){bayZoomBy(dtIn?1/.7:.7);dtIn=!dtIn}else{setZoom(camZoom>.85?.6:1);setCamLift(1)}};
+  renderer.domElement.addEventListener('pointerup',e=>{dragging3d=false;if(moved)return;const nt=performance.now();if(lastTap&&nt-lastTap.t<330&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<28){lastTap=null;dblZoom()}else lastTap={t:nt,x:e.clientX,y:e.clientY};handleSceneTap(e);});
   // Desktop clicks may land on transparent overlays rather than the WebGL canvas.
   document.addEventListener('click',e=>{if(!document.body.classList.contains('immersive')||e.detail===0)return;if(e.target===renderer.domElement||e.target.closest('button,a,input,select,textarea,label,nav,aside,[role=dialog],#zenToolbar,#zenPanelClose,#zenUnifiedMenu,#zenItemSheet,#zenBagSheet,#zenWishSheet,#zenJournalSheet,#zenJournalOpen,#zenRitualPanel,#zenGestures,#realtimeBox,#resonancePanel,#bayHUD,#bayMap,#baySheet,#profileModal,#anyenWishPanel,#anyenWishQuoteToast,#toast,.profile-bar,.social-demo,.walk-panel,.zone-nav,.zone-help,.zone-action,.immersive-top'))return;handleSceneTap(e);},true);
   window.addEventListener('yen-zone',e=>{let dest=destinations[e.detail];if(!dest)return;targetPosition.set(...dest.pos);targetLook.set(...dest.look);lookOffset=0;if(document.body.classList.contains('immersive')&&zoneWalkPoints[e.detail]){if(meActivity==='sit')document.getElementById('realtimeSit')?.click();if(meActivity==='walk')document.getElementById('realtimeWalk')?.click();navigateTo(...zoneWalkPoints[e.detail]);}});
@@ -1124,14 +1125,15 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const swipePts=new Map();
   // Khóa trục: mỗi lần vuốt chỉ xoay (ngang) hoặc chỉ nâng/hạ (dọc) theo hướng vuốt ban đầu, để vuốt chéo trên điện thoại không làm camera lắc.
   let swipeAxis=null,swipeAcc=[0,0];
-  renderer.domElement.addEventListener('pointerdown',e=>{swipePts.set(e.pointerId,[e.clientX,e.clientY]);swipeAxis=null;swipeAcc=[0,0];if(swipePts.size>1)moved=true});
-  for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{swipePts.delete(e.pointerId);swipeAxis=null;swipeAcc=[0,0];if(!swipePts.size)dragging3d=false});
+  let swipeV=0,swipeT=0,inV=0,inRun=false;const inertiaGo=v=>{inV=v;if(inRun)return;inRun=true;let tl=performance.now();const f=()=>{const n=performance.now(),dt=Math.min(.05,(n-tl)/1000);tl=n;viewYaw+=inV*dt;inV*=Math.exp(-dt*3.2);if(Math.abs(inV)>.03&&!swipePts.size)requestAnimationFrame(f);else inRun=false};requestAnimationFrame(f)};
+  renderer.domElement.addEventListener('pointerdown',e=>{inV=0;swipePts.set(e.pointerId,[e.clientX,e.clientY]);swipeAxis=null;swipeAcc=[0,0];if(swipePts.size>1)moved=true});
+  for(const ev of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(ev,e=>{if(ev==='pointerup'&&swipeAxis==='x'&&swipePts.size===1&&performance.now()-swipeT<90&&Math.abs(swipeV)>.3)inertiaGo(swipeV);swipePts.delete(e.pointerId);swipeAxis=null;swipeAcc=[0,0];if(!swipePts.size)dragging3d=false});
   renderer.domElement.addEventListener('pointermove',e=>{const last=swipePts.get(e.pointerId);if(!last)return;let dx=e.clientX-last[0],dy=e.clientY-last[1];last[0]=e.clientX;last[1]=e.clientY;
     if(!dragging3d||swipePts.size!==1||!document.body.classList.contains('immersive'))return;
     if(!swipeAxis){swipeAcc[0]+=dx;swipeAcc[1]+=dy;const ax=Math.abs(swipeAcc[0]),ay=Math.abs(swipeAcc[1]);if(Math.max(ax,ay)<8)return;swipeAxis=ax>=ay*.8?'x':'y';dx=swipeAcc[0];dy=swipeAcc[1]}
     if(swipeAxis==='x')dy=0;else dx=0;
     // A full-width swipe turns the view about 200°; turning only moves the camera, not the avatar.
-    viewYaw-=dx/Math.max(320,innerWidth)*3.5;if(bayMode)walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002));else setCamLift(camLift+dy/Math.max(320,innerHeight)*2.4)});
+    {const dy0=dx/Math.max(320,innerWidth)*3.5,n0=performance.now();if(swipeAxis==='x'){swipeV=-dy0/Math.max(8,n0-swipeT)*1000;swipeT=n0}}viewYaw-=dx/Math.max(320,innerWidth)*3.5;if(bayMode)walkPitch=Math.max(-.35,Math.min(.35,walkPitch-dy*.002));else setCamLift(camLift+dy/Math.max(320,innerHeight)*2.4)});
   window.addEventListener('yen-zone',()=>{walking=false;walkingKeys.clear()});
   
   // ===== VỊNH HẠ LONG: du thuyền dạo vịnh theo bản đồ thật =====
@@ -1154,7 +1156,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=a972d775').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=c07dc374').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1617,7 +1619,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
     const parts=outfitParts(g,torso);dressAvatar(parts,torso,myColor,myStyle,false);g.scale.setScalar(.8);sc.add(g);
-    const W={x:cfg.start[0],z:cfg.start[1],a:Math.PI,cy:0,dest:null,keys:new Set(),zf:1,yo:0,yoT:0,stride:0,fov:50};
+    const W={x:cfg.start[0],z:cfg.start[1],a:Math.PI,cy:0,dest:null,keys:new Set(),zf:1,yo:0,yoT:0,yv:0,pl:0,stride:0,fov:50,lt:null};
     W.cy=W.a+Math.PI;
     const clampP=()=>{if(cfg.R){const d=Math.hypot(W.x-cfg.cx,W.z-cfg.cz);if(d>cfg.R){W.x=cfg.cx+(W.x-cfg.cx)/d*cfg.R;W.z=cfg.cz+(W.z-cfg.cz)/d*cfg.R}}
       W.x=Math.max(cfg.cx-cfg.hw+.4,Math.min(cfg.cx+cfg.hw-.4,W.x));W.z=Math.max(cfg.zmin!=null?cfg.zmin:cfg.cz-cfg.hd+.4,Math.min(cfg.cz+cfg.hd-.4,W.z))};
@@ -1630,17 +1632,24 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const dn=e=>{e.preventDefault();e.stopPropagation();W.keys.add(k);W.dest=null;try{b.setPointerCapture(e.pointerId)}catch(_){}},up=e=>{e.stopPropagation();W.keys.delete(k)};b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault());pad.appendChild(b)}
     const stage=rmCanvas.parentNode;stage.style.position=stage.style.position||'relative';stage.appendChild(pad);
     // chạm: vật tương tác thì mở, sàn thì bước tới; kéo một ngón để xoay nhìn quanh; chụm/lăn để zoom
-    const pts=new Map(),pd=()=>{const [a,c]=[...pts.values()];return Math.max(10,Math.hypot(a.x-c.x,a.y-c.y))};let pinch0=0,drag=null;
-    rmCanvas.onpointerdown=e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{rmCanvas.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={mv:0};else{if(drag)drag.mv=99;pinch0=pts.size===2?pd():0}};
-    rmCanvas.onpointermove=e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
-      if(pts.size===2&&pinch0){const d=pd();W.zf=Math.max(.7,Math.min(1.3,W.zf*Math.max(.9,Math.min(1.1,pinch0/d))));pinch0=d;return}
-      if(!drag||pts.size!==1)return;drag.mv+=Math.abs(dx)+Math.abs(dy);if(drag.mv>8){W.yo=Math.max(-.9,Math.min(.9,W.yo-dx*.005));W.yoT=performance.now()}};
-    rmCanvas.onpointerup=e=>{if(!pts.delete(e.pointerId))return;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;if(!d||d.mv>8)return;
+    // Cùng quy tắc với Rừng Yên và Vịnh Yên: vuốt ngang xoay góc nhìn (có quán tính), vuốt dọc nâng/hạ camera, hai ngón chụm/mở để zoom, chạm đúp để zoom gần/xa.
+    const pts=new Map(),pd=()=>{const [a,c]=[...pts.values()];return Math.max(10,Math.hypot(a.x-c.x,a.y-c.y))};let pinch0=0,drag=null,swV=0,swT=0;const ZF=[.55,1.7];
+    const zoomBy=f=>{W.zf=Math.max(ZF[0],Math.min(ZF[1],W.zf*f))};
+    rmCanvas.onpointerdown=e=>{W.yv=0;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{rmCanvas.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={ax:0,ay:0,axis:null,mv:0};else{if(drag)drag.mv=99;pinch0=pts.size===2?pd():0}};
+    rmCanvas.onpointermove=e=>{const p=pts.get(e.pointerId);if(!p)return;let dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+      if(pts.size===2&&pinch0){const d=pd();zoomBy(Math.max(.8,Math.min(1.25,pinch0/d)));pinch0=d;return}
+      if(!drag||pts.size!==1)return;
+      if(!drag.axis){drag.ax+=dx;drag.ay+=dy;const ax=Math.abs(drag.ax),ay=Math.abs(drag.ay);if(Math.max(ax,ay)<8)return;drag.axis=ax>=ay*.8?'x':'y';drag.mv=99;dx=drag.ax;dy=drag.ay}
+      if(drag.axis==='x'){const dyaw=dx/Math.max(320,innerWidth)*3.5,n=performance.now();W.yo=Math.max(-Math.PI,Math.min(Math.PI,W.yo-dyaw));W.yv=-dyaw/Math.max(8,n-swT)*1000;swT=n;W.yoT=n}
+      else{W.pl=Math.max(-.4,Math.min(.35,W.pl+dy/Math.max(320,innerHeight)*1.6));W.yoT=performance.now()}};
+    const endP=e=>{if(!pts.delete(e.pointerId))return;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;return d};
+    rmCanvas.onpointerup=e=>{const d=endP(e);if(!d)return;if(d.axis==='x'&&performance.now()-swT<90&&Math.abs(W.yv)>.3){W.inert=true}else W.yv=0;if(d.mv>8)return;
+      const nt=performance.now();if(W.lt&&nt-W.lt.t<330&&Math.hypot(e.clientX-W.lt.x,e.clientY-W.lt.y)<28){W.lt=null;W.zf=W.zf>.85?.65:1;W.yo=0;W.pl=0;return}W.lt={t:nt,x:e.clientX,y:e.clientY};
       const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(hit){let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk){pk.fn();return}}
       const o=ray.ray.origin,dr=ray.ray.direction;if(dr.y<-.01){const s=-o.y/dr.y;W.dest={x:o.x+dr.x*s,z:o.z+dr.z*s};const sv=[W.x,W.z];W.x=W.dest.x;W.z=W.dest.z;clampP();W.dest={x:W.x,z:W.z};W.x=sv[0];W.z=sv[1]}};
-    rmCanvas.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;if(!pts.size)drag=null};
-    rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:1);W.zf=Math.max(.7,Math.min(1.3,W.zf*Math.exp(Math.max(-.18,Math.min(.18,dy*.001)))))};
+    rmCanvas.onpointercancel=e=>{endP(e)};
+    rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);zoomBy(Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012)))))};
     W.update=dt=>{dt=Math.min(.05,dt);let mv=0;
       if(W.keys.has('l'))W.a+=1.9*dt;if(W.keys.has('r'))W.a-=1.9*dt;if(W.keys.has('f'))mv=1;if(W.keys.has('b'))mv=-.6;
       if(W.dest){const dx=W.dest.x-W.x,dz=W.dest.z-W.z,dist=Math.hypot(dx,dz);if(dist<.12)W.dest=null;else{const df=sa(Math.atan2(dx,dz)-W.a),mx=2.6*dt;W.a+=Math.max(-mx,Math.min(mx,df));if(Math.abs(df)<.9)mv=Math.min(1,dist*1.5)}}
@@ -1648,10 +1657,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       g.position.set(W.x,0,W.z);g.rotation.y=W.a;g.position.y=mv?Math.abs(Math.sin(W.stride))*.04:0;
       // camera: sau lưng, quay theo hướng nhân vật có độ trễ và giới hạn tốc độ quay
       const tgt=W.a+Math.PI+W.yo,df=sa(tgt-W.cy),mxc=1.5*dt;W.cy+=Math.max(-mxc,Math.min(mxc,df*(1-Math.exp(-dt*3))*1.0+(Math.abs(df)>2?Math.sign(df)*mxc:0)));
-      if(W.yo&&performance.now()-W.yoT>1800)W.yo*=Math.exp(-dt*1.5);
+      if(W.inert){W.yo=Math.max(-Math.PI,Math.min(Math.PI,W.yo+W.yv*dt));W.yv*=Math.exp(-dt*3.2);if(Math.abs(W.yv)<.03)W.inert=false}if((W.yo||W.pl)&&!W.inert&&performance.now()-W.yoT>(mv?600:2500)){const k=Math.exp(-dt*(mv?2.5:1.1));W.yo*=k;W.pl*=k}
       const asp=cam.aspect||1.6,fov=Math.max(cfg.fov||0,asp<1?Math.min(70,50/Math.sqrt(asp)):50);if(Math.abs(cam.fov-fov)>.01||W.fov!==fov){cam.fov=fov;W.fov=fov;cam.updateProjectionMatrix()}
       const vh=fov*Math.PI/360,hh=Math.atan(Math.tan(vh)*asp),ex=(cfg.R||cfg.hw)*.95,ez=(cfg.R||cfg.hd)*1.2;
-      let D=Math.max(ex/Math.tan(hh),ez/Math.tan(vh));D=Math.max(3.2,Math.min(cfg.maxD,D))*W.zf;let p=.85;const ty=.8;if(D*Math.sin(p)+ty>cfg.cap)p=Math.max(.2,Math.asin(Math.max(0,cfg.cap-ty)/D));
+      let D=Math.max(ex/Math.tan(hh),ez/Math.tan(vh));D=Math.max(3.2,Math.min(cfg.maxD,D))*W.zf;let p=Math.max(.15,Math.min(1.25,.85+W.pl));const ty=.8;if(D*Math.sin(p)+ty>cfg.cap)p=Math.max(.2,Math.asin(Math.max(0,cfg.cap-ty)/D));
       // nhìn vào điểm giữa nhân vật và tâm phòng để trọn không gian vẫn trong khung
       const lx=W.x*.65+cfg.cx*.35+Math.sin(W.a)*.4,lz=W.z*.65+cfg.cz*.35+Math.cos(W.a)*.4;
       let px=lx+Math.sin(W.cy)*Math.cos(p)*D,pz=lz+Math.cos(W.cy)*Math.cos(p)*D,py=ty+Math.sin(p)*D;
