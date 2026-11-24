@@ -429,7 +429,7 @@
   }
   // ===== Đảo Yên (đảo riêng): 160 m phía đông Hòn Gà Chọi, nhìn về Gà Chọi; cầu tàu quay về phía tây để du thuyền cập.
   // Cùng một toạ độ cho mọi người, mỗi người thấy đảo của mình.
-  const TU_DAO={x:1428,z:650,r:40,dock:[1428-108,650],heading:Math.PI/2};
+  const TU_DAO={x:1428,z:650,r:40,dock:[1428-72,650],heading:Math.PI/2};
   // ===== Đảo Yên (vẽ lại theo ảnh thiết kế 3.40). Toạ độ địa phương của đảo, đơn vị mét, không xoay, mặt nước y = 0.
   // Mặt trước đảo nhìn về phía tây (-x), nơi du thuyền cập. Từ ngoài vào: cầu tàu gỗ có biển ĐẢO YÊN → bãi cát rộng hình cung
   // → lối lát đá thẳng → bậc đá rộng → nhà chính mái ngói nâu, tường kính, hiên gỗ. Bên trái (-z): phòng nhỏ nghỉ ngơi và thiền
@@ -452,7 +452,7 @@
   const TD_MY=(()=>{let y=-9;for(let i=-1;i<=1;i+=.5)for(let j=-1;j<=1;j+=.5)y=Math.max(y,tdTerrainY(TD_MED.x+i*TD_MED.h,TD_MED.z+j*TD_MED.h));return y+.45})();/* sàn phòng thiền */
   const TD_GY=(()=>{let y=-9;for(let k=0;k<8;k++){const a=k/8*Math.PI*2;y=Math.max(y,tdTerrainY(TD_GAZ.x+Math.cos(a)*TD_GAZ.r,TD_GAZ.z+Math.sin(a)*TD_GAZ.r))}return y+5.4})();/* sàn chòi: cao gần gấp đôi trước */
   const TD_GDIR=(()=>{const v=[-.6,-.8];return v})(),TD_GRUN=Math.max(2,(TD_GY-tdTerrainY(TD_GAZ.x,TD_GAZ.z))/.62);
-  const TD_PIER_END=[-TU_DAO.r-43,0],TD_PIER_MID=[-TU_DAO.r-20,0],TD_PIER_START=[-TU_DAO.r+4,0];
+  const TD_PIER_END=[-TU_DAO.r-7,0],TD_PIER_MID=[-TU_DAO.r-2,0],TD_PIER_START=[-TU_DAO.r+4,0];
   const TD_STEP=[TD_H.x0-TD_SR-1,0],TD_DOOR=[.2,0],TD_JUNC=[-15,0];
   const TD_MED_FOOT=[TD_MED.x-TD_MED.h-1.8,TD_MED.z],TD_GAZ_FOOT=[TD_GAZ.x+TD_GDIR[0]*(TD_GAZ.r+TD_GRUN+.9),TD_GAZ.z+TD_GDIR[1]*(TD_GAZ.r+TD_GRUN+.9)];
   const tdBez=(a,c,b,n)=>{const o=[];for(let i=0;i<=n;i++){const t=i/n,u=1-t;o.push([u*u*a[0]+2*u*t*c[0]+t*t*b[0],u*u*a[1]+2*u*t*c[1]+t*t*b[1]])}return o};
@@ -500,17 +500,14 @@
         if(tdInBuild(x,z,.5)||tdOnPaths(x,z,2.5))continue;const s=1.4+1.6*((i*5+k)%4)/3;rock(x,z,s,k++);if(i%2===0){const b=rock(x+Math.cos(a+1)*s*1.4,z+Math.sin(a+1)*s*1.4,s*.6,k++)}}
       for(const [x,z,s] of [[-28,-30,1.6],[-36,-24,1.1],[-25,33,1.4],[-37,29,.9],[-44,-14,1.3],[-46,16,1.5],[-42,30,1.2],[-41,-31,1.6]])rock(x,z,s,k++);
       for(const [x,z,s] of [[-8,-8,1.2],[-9,8.5,1.1],[-12,-10,.8],[-11,10.5,.7]])rock(x,z,s,k++)}/* đá cảnh hai bên lối lên nhà */
-    // ---- cầu tàu gỗ (giữ nguyên chỗ du thuyền cập), lan can dây, đèn lồng, biển ĐẢO YÊN ở đầu bãi
-    const pier=new THREE.Group();g.add(pier);const X0=-TU_DAO.r-44,X1=-TU_DAO.r+4;
+    // ---- cầu tàu gỗ (giữ nguyên chỗ du thuyền cập), lan can dây, đèn lồng
+    const pier=new THREE.Group();g.add(pier);const X0=-TU_DAO.r-8,X1=-TU_DAO.r+4;/* cầu tàu ngắn: 12 m */
     for(let x=X0,i=0;x<X1;x+=1.1,i++)box(pier,x+.55,1.85,0,1.0,.3,5,i%3===0?woodL:wood);
     for(let i=0;i<6;i++)box(pier,X1+.5+i,1.7-i*.25,0,1.0,.25,4.4,i%2?woodL:wood);/* ván dốc xuống bãi */
-    P(new THREE.BoxGeometry(7,.25,1.8),M('#7a5a3c'),-TU_DAO.r-47.5,2.05,0,pier);/* cầu lên tàu */
+    P(new THREE.BoxGeometry(7,.25,1.8),M('#7a5a3c'),-TU_DAO.r-11.5,2.05,0,pier);/* cầu lên tàu */
     for(let x=X0;x<=X1;x+=5.5)for(const s of [-1,1]){cyl(pier,x,-1,s*2.6,.35,.4,6,darkW,7);cyl(pier,x,2.9,s*2.45,.12,.14,1.9,darkW,6)}
     const rope=M('#c9b48a');for(const s of [-1,1])for(let x=X0;x<X1-5.4;x+=5.5){beam(pier,[x,3.55,s*2.45],[x+5.5,3.55,s*2.45],.05,rope);beam(pier,[x,2.85,s*2.45],[x+5.5,2.85,s*2.45],.04,rope)}
     for(let x=X0+2.75;x<X1;x+=11)for(const s of [-1,1]){const lg=new THREE.Group();lg.position.set(x,3.0,s*2.45);lg.scale.setScalar(.9);pier.add(lg);box(lg,0,.95,0,.34,.36,.34,gold);const cp=P(new THREE.ConeGeometry(.28,.2,4),darkW,0,1.23,0,lg);cp.rotation.y=Math.PI/4}
-    {const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');cx.fillStyle='#3a2b1f';cx.fillRect(0,0,512,128);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,116);cx.fillStyle='#f4e2b9';cx.font='bold 56px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText('🏝 ĐẢO YÊN',256,66);
-      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const bx=X1-3;const board=new THREE.Mesh(new THREE.PlaneGeometry(4.2,1.05),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));board.position.set(bx,3.55,0);board.rotation.y=-Math.PI/2;pier.add(board);
-      for(const s of [-1,1])cyl(pier,bx,2.6,s*2.45,.2,.22,2.6,darkW,8);box(pier,bx+.05,3.55,0,.12,1.25,4.4,darkW)}
     // ---- lối lát đá thẳng từ cầu tàu tới chân bậc: phiến đá chữ nhật nằm ngang lối, viền đá nhỏ hai bên
     const pathG=new THREE.Group();g.add(pathG);
     {const sl=[stoneL,M('#bdb39d',.9),M('#d4cbb6',.9)];let k=0;for(let x=TD_PIER_START[0]+5.6;x<TD_STEP[0]+.6;x+=1.15){const o=box(pathG,x,tdGroundY(x,0)+.06,0,.95,.16,3.3,sl[k%3]);o.rotation.y=.015*Math.sin(k*2.1);k++}}
@@ -593,7 +590,7 @@
       for(const s of [-1,1])for(const [x,z] of [[TD_STEP[0]+.3,s*4.6],[TD_STEP[0]+1.4,s*5.6],[-2.6,s*(TD_H.z-.2)],[-2.4,s*(TD_H.z-2.4)]])bush(x,z,1.15,true,true);
       for(let i=0;i<70;i++){const a=i*2.399,r=10+(i%13)*2.6,x=TD_O[0]-6+Math.cos(a)*r,z=Math.sin(a)*r*1.15;if(okPlant(x,z,.4))bush(x,z,.8+.4*((i*7)%5)/4,i%4===0)}}
     g.traverse(o=>{if(!o.isMesh)return;let p=o,tag='island';while(p&&p!==g){if(p===house){tag='house';break}if(p===pier){tag='pier';break}p=p.parent}o.userData.tuDao=tag});
-    bayGroup.add(g);TU_DAO.group=g;bayExtraRocks.push([TU_DAO.x+TD_O[0],TU_DAO.z,54])}
+    bayGroup.add(g);TU_DAO.group=g;bayExtraRocks.push([TU_DAO.x+20,TU_DAO.z,50],[TU_DAO.x-16,TU_DAO.z-32,20],[TU_DAO.x-16,TU_DAO.z+32,20])/* chừa lối vào cầu tàu ngắn ở giữa bờ tây (x≈-44) */}
   // Bấm cầu tàu / đảo / nhà: tàu cập cầu tàu (nếu đang ở xa thì đi tới trước), rồi bước lên đảo.
   // Tạm thời không gian trên đảo dùng chung không gian Tư Gia. Lưu tàu ở cầu tàu, nên tắt đột xuất hay rời đi thì lần sau vào vịnh vẫn đứng ở cầu tàu.
   let tuDaoPending=null;const TU_DAO_SPOTS={pier:'Cầu tàu',island:'Bãi đảo',house:'Nhà nghỉ trên đảo'};
@@ -628,7 +625,7 @@
   // bấm nhà → xuống tàu, đi hết cầu tàu, lên dốc rồi vào nhà. Bấm mặt nước / nút Về tàu → đi về cầu tàu và lên tàu.
   // Tàu vẫn neo ở cầu tàu (đã lưu), nên rời đi hay tắt trang thì lần sau trở lại đúng chỗ tàu đang neo ở Đảo Yên.
   function tdGroundY(x,z){// toạ độ địa phương của Đảo Yên
-    const PIER_X0=-TU_DAO.r-52,PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
+    const PIER_X0=-TU_DAO.r-16,PIER_X1=-TU_DAO.r+4;let y=tdTerrainY(x,z);
     if(x>=PIER_X0&&x<=PIER_X1&&Math.abs(z)<2.5)y=Math.max(y,2);/* mặt cầu tàu */
     if(x>PIER_X1&&x<PIER_X1+6&&Math.abs(z)<2.2)y=Math.max(y,2-(x-PIER_X1)*.25);/* ván dốc xuống bãi */
     if(x>=TD_H.x0&&x<=TD_H.x1&&Math.abs(z)<=TD_H.z)y=Math.max(y,TD_FY);/* sàn nhà chính và hiên */
