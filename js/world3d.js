@@ -261,7 +261,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const SENSE_HOUSES=[
     {id:'chuong_gio',lake:'Thanh',name:'Nhà Thanh',short:'Nhà Thanh',board:'NHÀ THANH',icon:'🎐',W:2*POND_R,D:2*POND_R,note:'House of Sound · lắng nghe chuông gió, chuông xoay và chiêng'},
     {id:'xong_huong',lake:'Hương',name:'Nhà Hương · Haromy',board:'NHÀ HƯƠNG · HAROMY',short:'Nhà Hương',icon:'🌿',W:2*POND_R,D:2*POND_R,note:'House of Aroma · Haromy, ngôi nhà của mùi thơm Hạnh phúc · 18 tinh dầu & thảo mộc · Lọ Ước, Túi thơm'},
-    {id:'quan_tra',lake:'Vị',name:'Nhà Vị',short:'Nhà Vị',board:'NHÀ VỊ',icon:'🍵',W:2*POND_R,D:2*POND_R,note:'House of Taste · Ngũ Thiền Trà · chén trà cho cuộc trò chuyện một kèm một'},
+    {id:'quan_tra',lake:'Vị',name:'Nhà Vị',short:'Nhà Vị',board:'NHÀ VỊ',icon:'🍵',W:2*POND_R,D:2*POND_R,note:'House of Taste · Ngũ Thiên Trà · pha trà 6 bước: Đun nước, Tráng ấm, Cho trà, Hãm trà, Rót trà, Mời trà nhận lời nhắn · chén trà cho cuộc trò chuyện một kèm một'},
     {id:'xuong_gom',lake:'Chạm',name:'Nhà Chạm',short:'Nhà Chạm',board:'NHÀ CHẠM',icon:'🏺',W:2*POND_R,D:2*POND_R,note:'House of Touch · Gốm Bàu Trúc · nặn gốm đi lùi quanh đôn, nung lộ thiên'},
     {id:'nha_niem',lake:'Niệm',name:'Nhà Niệm',short:'Nhà Niệm',icon:'🕯️',W:2*POND_R,D:2*POND_R,noBoard:true,note:'House of Mindfulness · rửa tay ở bồn đá rồi bước qua cửa vòm Trăng'}];
   for(const h of SENSE_HOUSES){Object.assign(h,besidePond(h.lake,HOUSE_GAP,h.D));h.r=Math.hypot(h.W,h.D)/2;h.door=[h.x+Math.sin(h.rot)*(h.D/2+HOUSE_GAP/2),h.z+Math.cos(h.rot)*(h.D/2+HOUSE_GAP/2)]}
@@ -1589,7 +1589,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=0d8cfc70').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=263d6726').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   function makeRoom(wall,floor,opt){const bare=!!(opt&&opt.bare);const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}

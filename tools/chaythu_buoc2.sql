@@ -598,7 +598,7 @@ insert into public.anyen_venues(id,realm,kind,name,tier,capacity,schedulable,sor
   ('xong_huong','rung_yen','house','Haromy · Ngôi nhà của mùi thơm Hạnh phúc','group',6,true,1),
   ('nha_hoa_lan','rung_yen','house','Nhà Hoa Lan','group',6,true,2),
   ('xuong_gom','rung_yen','house','Nhà Gốm Bàu Trúc','group',6,true,3),
-  ('quan_tra','rung_yen','house','Nhà Ngũ Thiền Trà','group',6,true,4),
+  ('quan_tra','rung_yen','house','Nhà Vị','group',6,true,4),
   ('chuong_gio','rung_yen','house','Nhà Chuông Xoay','group',6,true,5),
   ('nha_van_hoa','rung_yen','culture','Nhà Văn Hóa','community',36,false,6),
   ('tu_gia','rung_yen','home','Tư Gia','group',6,false,7),
