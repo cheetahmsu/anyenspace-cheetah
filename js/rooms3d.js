@@ -438,7 +438,7 @@
     function chooseSolo(note){S.mode='solo';S.pending=false;S.healer=false;S.healerHere=false;S.people=0;S.list=[];S.therapist=null;if(S.mySeat==null||S.mySeat===0)S.mySeat=3;clearTimeout(pendT);window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'solo:nha_niem'}}));if(note)rmHint(note);litSeats();render()}
     function chooseSession(){S.pending=true;render();window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:'room:nha_niem'}}));clearTimeout(pendT);pendT=setTimeout(()=>{if(S.pending)chooseSolo('Chưa kết nối được phiên 1+5 · bạn đang ở chế độ Solo')},12000)}
     on(window,'anyen-space-result',e=>{const d=e.detail||{};if(d.id!=='nha_niem'||!S.entered)return;
-      if(d.ok&&d.session){const was=inSession();S.mode='session';S.pending=false;clearTimeout(pendT);S.healer=!!d.healer;S.therapist=d.therapist||null;if(d.me)S.me=d.me;if(!was){S.list=[];S.mySeat=S.healer?0:null}if(!was){rmHint(S.healer?'🌿 Bạn dẫn phiên 1+5 · chuông và nhịp thở của bạn vang tới cả phòng':'🌿 Đã vào phiên 1+5 cùng Healer');goView(S.healer?'seatH':'seat')}litSeats();render();return}
+      if(d.ok&&d.session){const was=inSession();S.mode='session';S.pending=false;clearTimeout(pendT);S.healer=!!d.healer;S.therapist=d.therapist||null;if(d.me)S.me=d.me;if(!was){S.list=[];S.colSent=false;S.mySeat=S.healer?0:null}if(!was){rmHint(S.healer?'🌿 Bạn dẫn phiên 1+5 · chuông và nhịp thở của bạn vang tới cả phòng':'🌿 Đã vào phiên 1+5 cùng Healer');goView(S.healer?'seatH':'seat')}litSeats();render();return}
       if(!S.pending&&!inSession())return;const was=inSession();
       const why=d.ok?(was?'Phiên 1+5 đã kết thúc · bạn tiếp tục Solo':'Bạn chưa có phiên 1+5 nào đang diễn ra ở Nhà Niệm · đặt lịch Healer ở trang Lịch trị liệu'):d.reason==='guest'||d.reason==='auth'?'Đăng nhập thành viên và đặt lịch Healer để vào phiên 1+5':d.reason==='session'?'Đang có phiên riêng ở đây · bạn trải nghiệm Solo, không phiên nào thấy bạn':d.reason==='full'?'Phiên đã đủ người · bạn trải nghiệm Solo':'Chưa vào được phiên · bạn đang ở chế độ Solo';
       if(was&&S.act&&!S.act.shared)stopAct(true,true);chooseSolo(why);S.sessNote=why;render()});
@@ -447,16 +447,16 @@
     on(window,'anyen-space-room',e=>{const m=e.detail||{};if(!inSession()||!m.fromHealer)return;const el=Math.max(0,Math.min(1200,+m.el||0));
       if(m.k==='bell')bellSound();else if(m.k==='breath')startBreath(String(m.p),+m.m,el,true);else if(m.k==='silence')startSilence(el,true);else if(m.k==='stop')stopAct(true)});
     // Healer luôn ở tọa cụ 0. Khách giữ chỗ bằng cờ c; hai người cùng chọn một chỗ thì ai vào trước giữ chỗ, người sau tự sang chỗ trống kế tiếp.
-    function claim(k){S.mySeat=k;if(inSession()&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k})}
+    function claim(k){S.mySeat=k;if(inSession()&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k,col:myRobe()})}
     function seatPeople(){const occ={};if(!S.entered){S.occ=occ;drawPeople();return}
       if(!inSession()){occ[S.mySeat==null?3:S.mySeat]={id:'me',name:'Bạn',me:true}}
       else{const list=S.list.slice().sort((x,y)=>(x.t||0)-(y.t||0)||String(x.id).localeCompare(String(y.id)));
-        for(const p of list){const healer=S.therapist&&p.id===S.therapist,k=healer?0:p.c;if(k==null||(k===0&&!healer)||occ[k])continue;occ[k]={id:p.id,name:p.name||'Một người bạn',healer,me:p.id===S.me}}
-        if(S.healer){if(!occ[0]||!occ[0].me){occ[0]={id:S.me,name:'Bạn',healer:true,me:true}}if(S.mySeat!==0)claim(0)}
+        for(const p of list){const healer=S.therapist&&p.id===S.therapist,k=healer?0:p.c;if(k==null||(k===0&&!healer)||occ[k])continue;occ[k]={id:p.id,name:p.name||'Một người bạn',healer,me:p.id===S.me,col:p.col||null}}
+        if(S.healer){if(!occ[0]||!occ[0].me){occ[0]={id:S.me,name:'Bạn',healer:true,me:true}}if(S.mySeat!==0||!S.colSent){S.colSent=true;claim(0)}}
         else{const mine=Object.entries(occ).find(([k,o])=>o.me);if(mine)S.mySeat=+mine[0];else if(S.list.length){/* chờ danh sách có mặt rồi mới chọn chỗ */const free=[1,2,3,4,5].filter(k=>!occ[k]),k=free.includes(S.mySeat)?S.mySeat:free[0];if(k!=null){claim(k);occ[k]={id:S.me,name:'Bạn',me:true}}}}}
       S.occ=occ;drawPeople()}
     function drawPeople(){let n=0;for(let k=0;k<6;k++){const o=S.occ[k];seats[k].material.emissiveIntensity=o?(o.me?.9:.45):0;if(!o)continue;const a=seatA(k);
-        dummy.position.set(Math.sin(a)*2.4,.15,Math.cos(a)*2.4);dummy.rotation.set(0,a+Math.PI,0);dummy.scale.set(1.2,1,.95);dummy.updateMatrix();bodies.setMatrixAt(n,dummy.matrix);bodies.setColorAt(n,new THREE.Color(o.healer||k===0?ROBE[0]:o.me&&!inSession()?myRobe():ROBE[k]));
+        dummy.position.set(Math.sin(a)*2.4,.15,Math.cos(a)*2.4);dummy.rotation.set(0,a+Math.PI,0);dummy.scale.set(1.2,1,.95);dummy.updateMatrix();bodies.setMatrixAt(n,dummy.matrix);bodies.setColorAt(n,new THREE.Color(o.me?myRobe():o.col||(o.healer||k===0?ROBE[0]:ROBE[k])));/* màu áo mỗi người tự chọn, gửi qua presence */
         dummy.position.y=.15+.6;dummy.scale.set(1,1.12,1);dummy.updateMatrix();heads.setMatrixAt(n,dummy.matrix);heads.setColorAt(n,SKIN);n++}
       bodies.count=heads.count=n;bodies.instanceMatrix.needsUpdate=heads.instanceMatrix.needsUpdate=true;if(n){bodies.instanceColor.needsUpdate=heads.instanceColor.needsUpdate=true}}
     const myRobe=()=>{try{const c=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').color;return /^#[0-9a-f]{6}$/i.test(c)?c:ROBE[3]}catch(e){return ROBE[3]}};
