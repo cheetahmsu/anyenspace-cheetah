@@ -225,7 +225,7 @@ $('#f-signup').addEventListener('submit',async function(e){e.preventDefault();
   if(r.error)throw r.error;
   if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){msg('#sMsg','err','Email này đã đăng ký. Hãy đăng nhập hoặc dùng "Quên mật khẩu".');return}
   if(r.data.session){await loadProfile(true);return}
-  pending={email:email,kind:'signup'};openVerify('Chúng tôi đã gửi mã 6 chữ số tới '+email+'. Nhập mã để hòan tất đăng ký.');
+  pending={email:email,kind:'signup'};openVerify('Chúng tôi đã gửi mã 6 chữ số tới '+email+'. Nhập mã để hoàn tất đăng ký.');
  }catch(err){msg('#sMsg','err',vi(err))}finally{busy($('#sBtn'),false,'Tạo tài khoản')}
 });
 
@@ -294,7 +294,7 @@ async function loadProfile(fromAuth){
  $('#pTherapist').hidden=!th;$('#pSpec').value=profile.specialty||'';$('#pBio').value=profile.bio||'';
  var st=null,canApply=false;
  if(ms==='restricted'){st=['Tài khoản đang bị hạn chế','Bạn vẫn đi dạo được trong làng nhưng không tham gia các hoạt động.'+(profile.status_reason?' Lý do: '+profile.status_reason:'')+' Hãy liên hệ quản trị viên nếu cần hỏi thêm.']}
- else if(ts==='pending'){st=['Đang chờ duyệt nhà trị liệu','Quản trị viên sẽ liên hệ với bạn qua email để xác minh. Trong lúc chờ, bạn dùng như thành viên và có thể hòan thiện phần giới thiệu bên trên.']}
+ else if(ts==='pending'){st=['Đang chờ duyệt nhà trị liệu','Quản trị viên sẽ liên hệ với bạn qua email để xác minh. Trong lúc chờ, bạn dùng như thành viên và có thể hoàn thiện phần giới thiệu bên trên.']}
  else if(ts==='rejected'){st=['Đơn nhà trị liệu chưa được duyệt',(profile.status_reason?'Lý do: '+profile.status_reason+'. ':'')+'Bạn có thể cập nhật thông tin và nộp lại.'];canApply=true}
  else if(ts==='suspended'){st=['Quyền nhà trị liệu đang tạm khóa','Hãy liên hệ quản trị viên để biết thêm.'+(profile.status_reason?' Lý do: '+profile.status_reason:'')]}
  else if(ts==='approved'&&th){st=null}
