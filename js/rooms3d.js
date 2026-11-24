@@ -523,6 +523,7 @@
     const glow=(c,o,map)=>new THREE.MeshBasicMaterial({color:c,map:map||null,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
     const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
     const clean=(t,n)=>String(t||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,n);
+    const myColor=()=>{try{const c=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').color;return /^#[0-9a-f]{6}$/i.test(c||'')?c:'#d9b67d'}catch(e){return '#d9b67d'}};
     const myName=()=>{try{return clean(JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').name,24)||'Khách Làng Yên'}catch(e){return 'Khách Làng Yên'}};
     const journal=q=>window.dispatchEvent(new CustomEvent('anyen-journal-add',{detail:{lake:'Văn Hóa',title:'🏛️ Nhà Văn Hóa',quote:q,at:Date.now()}}));
     sc.background=new THREE.Color('#120e0a');roomBox.classList.add('vanhoa');
@@ -553,9 +554,14 @@
     const tables=new THREE.InstancedMesh(new THREE.CylinderGeometry(.62,.62,.72,8,1),M('#5a452f'),6);sc.add(tables);
     CPOS.forEach(([x,z],k)=>{dummy.position.set(x,.36,z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(1);dummy.updateMatrix();tables.setMatrixAt(k,dummy.matrix);tables.setColorAt(k,new THREE.Color('#ffffff'))});
     const SEAT_OFF=new THREE.Color('#3b3026'),SEAT_ON=new THREE.Color('#c99a52'),SEAT_ME=new THREE.Color('#f2d58a');
-    const seats=new THREE.InstancedMesh(new THREE.BoxGeometry(.42,.42,.42),M('#ffffff'),36);sc.add(seats);
+    const seats=new THREE.InstancedMesh(new THREE.BoxGeometry(.52,.2,.52),M('#ffffff'),36);sc.add(seats);/* bục ngồi thấp (bồ đoàn vuông) */
+    // nhân vật ngồi tọa thiền trên bục có người: thân + gối xếp bằng gộp 1 lưới (màu áo theo từng người) + đầu (màu da); 2 InstancedMesh, mỗi người 22 tam giác
+    const mergeGeo=gs=>{const pos=[],nor=[];for(const [g,m] of gs){const n=g.toNonIndexed();n.applyMatrix4(m);pos.push(...n.attributes.position.array);nor.push(...n.attributes.normal.array)}const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));out.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));return out};
+    const mx=(x,y,z,sx,sy,sz)=>new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),new THREE.Quaternion(),new THREE.Vector3(sx,sy,sz));
+    const sitBody=new THREE.InstancedMesh(mergeGeo([[new THREE.OctahedronGeometry(.3,0),mx(0,.08,.04,1.15,.26,.85)],[new THREE.ConeGeometry(.2,.58,6,1,true),mx(0,.36,-.02,1,1,.8)]]),M('#ffffff',{roughness:.85}),36);
+    const sitHead=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.13,0),M('#e2bf98'),36);sitBody.count=sitHead.count=0;sitBody.frustumCulled=sitHead.frustumCulled=false;sc.add(sitBody,sitHead);
     const seatPos=i=>{const k=i%6,s=Math.floor(i/6),a=s/6*Math.PI*2+Math.PI/6;return [CPOS[k][0]+Math.sin(a)*1.08,CPOS[k][1]+Math.cos(a)*1.08,a]};
-    for(let i=0;i<36;i++){const [x,z,a]=seatPos(i);dummy.position.set(x,.21,z);dummy.rotation.set(0,a,0);dummy.updateMatrix();seats.setMatrixAt(i,dummy.matrix);seats.setColorAt(i,SEAT_OFF)}
+    for(let i=0;i<36;i++){const [x,z,a]=seatPos(i);dummy.position.set(x,.1,z);dummy.rotation.set(0,a,0);dummy.updateMatrix();seats.setMatrixAt(i,dummy.matrix);seats.setColorAt(i,SEAT_OFF)}
     const labels=CL.map(([id,nm,,col],k)=>{const t=tex(256,64,(c,w,h)=>{c.fillStyle='rgba(20,14,8,.78)';c.beginPath();c.roundRect?c.roundRect(2,2,w-4,h-4,18):c.rect(2,2,w-4,h-4);c.fill();c.strokeStyle=col;c.lineWidth=3;c.stroke();c.fillStyle='#f6e7c8';c.font='600 26px system-ui, sans-serif';c.textAlign='center';c.fillText(id+' · '+nm,w/2,42)});
       const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));s.scale.set(1.1,.275,1);s.position.set(CPOS[k][0],1.3,CPOS[k][1]);sc.add(s);return s});
     const ringT=tex(128,128,(c,w)=>{const g=c.createRadialGradient(64,64,40,64,64,62);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.7,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,0,w,w)});
@@ -626,11 +632,19 @@
     const canHost=()=>isLeader();
     const nameOf=id=>{if(id===S.me)return myName();const p=S.list.find(x=>x.id===id);return clean(p&&p.name,24)||'Một người bạn'};
     const send=p=>{if(S.joined&&window.anyenSpaceChat)return window.anyenSpaceChat.send(p);return false};
-    function computeSeats(){const list=S.joined?S.list:[{id:S.me,t:0,c:S.pickC}];const used=[0,0,0,0,0,0],assign={};let rr=0;
-      for(const p of [...list].sort((a,b)=>(a.t||0)-(b.t||0)||String(a.id).localeCompare(String(b.id)))){let k=Number.isInteger(p.c)&&p.c>=0&&p.c<6&&used[p.c]<6?p.c:-1;if(k<0){for(let j=0;j<6;j++){const q=(rr+j)%6;if(used[q]<6){k=q;break}}rr=(k+1)%6}if(k<0)break;assign[p.id]=k*1+used[k]*6;used[k]++}
+    // Xếp chỗ giống nhau trên mọi máy: theo giờ vào; ai đã chọn đúng một bục còn trống thì ngồi bục đó, ai chọn cụm thì vào bục trống đầu tiên của cụm, còn lại tự vào bục trống theo vòng 6 cụm.
+    function computeSeats(){const list=S.joined?S.list:[{id:S.me,t:0,c:S.pickC,s:S.pickS}];const taken=new Set(),assign={};let rr=0;
+      const order=[...list].sort((a,b)=>(a.t||0)-(b.t||0)||String(a.id).localeCompare(String(b.id)));
+      for(const p of order)if(Number.isInteger(p.s)&&p.s>=0&&p.s<36&&!taken.has(p.s)){assign[p.id]=p.s;taken.add(p.s)}
+      const freeIn=k=>{for(let j=0;j<6;j++){const i=k+j*6;if(!taken.has(i))return i}return -1};
+      for(const p of order){if(assign[p.id]!=null)continue;let i=Number.isInteger(p.c)&&p.c>=0&&p.c<6?freeIn(p.c):-1;if(i<0){for(let j=0;j<6&&i<0;j++)i=freeIn((rr+j)%6);if(i>=0)rr=(i%6+1)%6}if(i<0)break;assign[p.id]=i;taken.add(i)}
       S.assign=assign;const mine=assign[S.me];S.myC=mine==null?(S.pickC||0):mine%6;
       const hosts=S.list.filter(p=>p.host).sort((a,b)=>(a.t||0)-(b.t||0));S.leader=S.joined?((hosts[0]||[...S.list].sort((a,b)=>(a.t||0)-(b.t||0)||String(a.id).localeCompare(String(b.id)))[0]||{id:S.me}).id):S.me;
       for(let i=0;i<36;i++)seats.setColorAt(i,SEAT_OFF);for(const [id,i] of Object.entries(assign))seats.setColorAt(i,id===S.me?SEAT_ME:SEAT_ON);seats.instanceColor.needsUpdate=true;
+      let n=0;for(const [id,i] of Object.entries(assign)){const [x,z]=seatPos(i),p=id===S.me?{col:myColor()}:list.find(q=>q.id===id)||{},yaw=Math.atan2(-x*.15,SZ-z);/* quay mặt về sân khấu */
+        dummy.position.set(x,.2,z);dummy.rotation.set(0,yaw,0);dummy.scale.setScalar(1);dummy.updateMatrix();sitBody.setMatrixAt(n,dummy.matrix);sitBody.setColorAt(n,new THREE.Color(/^#[0-9a-f]{6}$/i.test(p.col||'')?p.col:'#c9b48c'));
+        dummy.position.set(x,.2+.78,z);dummy.scale.set(1,1.2,1);dummy.updateMatrix();sitHead.setMatrixAt(n,dummy.matrix);n++}
+      sitBody.count=sitHead.count=n;sitBody.instanceMatrix.needsUpdate=sitHead.instanceMatrix.needsUpdate=true;if(sitBody.instanceColor)sitBody.instanceColor.needsUpdate=true;sitBody.boundingSphere=null;
       CPOS.forEach((_,k)=>tables.setColorAt(k,new THREE.Color(k===S.myC?'#f6dca0':'#ffffff')));tables.instanceColor.needsUpdate=true}
     const clusterOf=id=>{const i=S.assign[id];return i==null?null:i%6};
     // ---- màn chiếu 16:9
@@ -740,16 +754,20 @@
     on(window,'anyen-space-result',e=>{const d=e.detail||{};if(d.id!=='nha_van_hoa')return;if(d.ok){S.joined=true;S.me=d.me||S.me;S.note='';resendMine()}else{S.joined=false;S.list=[];S.n=0;
       S.note=d.reason==='guest'||d.reason==='auth'?'Bạn đang trải nghiệm riêng · đăng nhập thành viên để cùng 36 người xem, chơi nhạc và thả đèn':d.reason==='full'?'Nhà Văn Hóa đã đủ 36 người · bạn đang trải nghiệm riêng':'Chưa kết nối được phòng 36 người · bạn đang trải nghiệm riêng'}computeSeats();scrDirty=true;render()});
     on(window,'anyen-space-people',e=>{const d=e.detail||{};if(d.id!=='nha_van_hoa')return;const grew=(d.n||0)>S.n;S.n=d.n||0;if(d.me)S.me=d.me;S.joined=true;
-      S.list=Array.isArray(d.list)?d.list.map(p=>({id:String(p.id),name:clean(p.name,24),t:+p.t||0,host:!!p.host,c:Number.isInteger(p.c)?p.c:null})):[];const wasLead=S.leader;computeSeats();
+      S.list=Array.isArray(d.list)?d.list.map(p=>({id:String(p.id),name:clean(p.name,24),t:+p.t||0,host:!!p.host,c:Number.isInteger(p.c)?p.c:null,s:Number.isInteger(p.s)?p.s:null,col:/^#[0-9a-f]{6}$/i.test(p.col||'')?p.col:null})):[];const wasLead=S.leader;computeSeats();
       if(grew){resendLeader();resendMine()}if(wasLead!==S.leader&&S.leader===S.me){rmHint('🎙️ Bạn đang dẫn chương trình cho cả phòng');if(S.quiz){S.votes=new Map();if(S.myVote!=null)S.votes.set(S.me,S.myVote);recount();send({k:'vr',i:S.quiz.i});pushTally()}}scrDirty=true;render()});
     // vai trò: Healer/Admin được ưu tiên dẫn (tự báo trong presence; chỉ ảnh hưởng ai điều khiển màn chiếu, không mở quyền dữ liệu nào)
+    if(window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({col:myColor()});
     (async()=>{try{if(typeof window.anyenAuthClient!=='function')return;const c=await window.anyenAuthClient();if(!c)return;const {data}=await c.rpc('anyen_my_role');S.role=String(data||'guest');if(/therapist|admin/.test(S.role)&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({host:true})}catch(e){}})();
-    function pickCluster(k){if(k<0||k>5)return;S.pickC=k;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k});computeSeats();wave(k);voice(CL[k][2],1);rmHint('🎶 Bạn ngồi cụm '+CL[k][0]+' · '+CL[k][1]+' · bấm phím 1–5 để hòa tấu');render()}
+    function pickSeat(i){if(!(i>=0&&i<36))return;const who=Object.entries(S.assign).find(([id,j])=>j===i);if(who&&who[0]!==S.me){rmHint('Bục này đã có '+nameOf(who[0])+' ngồi · chạm một bục trống (màu tối) để ngồi');return}
+      S.pickS=i;S.pickC=i%6;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({s:i,c:i%6});computeSeats();wave(i%6);voice(CL[i%6][2],1);rmHint('🧘 Bạn đã ngồi vào bục '+(Math.floor(i/6)+1)+' cụm '+CL[i%6][0]+' · '+CL[i%6][1]);render()}
+    function pickCluster(k){if(k<0||k>5)return;S.pickC=k;S.pickS=null;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k,s:-1});computeSeats();wave(k);voice(CL[k][2],1);rmHint('🎶 Bạn ngồi cụm '+CL[k][0]+' · '+CL[k][1]+' · bấm phím 1–5 để hòa tấu');render()}
     // ---- chạm trong phòng: dùng vị trí ngón tay cuối cùng để biết chạm vào bàn nào, đèn nào, ô nào
     let lastP=null;on(rmCanvas,'pointerdown',e=>{lastP={x:e.clientX,y:e.clientY}});
     const ray=new THREE.Raycaster();function hitOf(obj){if(!lastP)return null;const rc=rmCanvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((lastP.x-rc.left)/rc.width*2-1,-(lastP.y-rc.top)/rc.height*2+1),st.cam);return ray.intersectObject(obj,false)[0]||null}
     rTap(st,tables,()=>{const h=hitOf(tables);if(h&&h.instanceId!=null){S.tab='jam';pickCluster(h.instanceId);goView('mine')}});
-    rTap(st,seats,()=>{const h=hitOf(seats);if(h&&h.instanceId!=null){S.tab='jam';pickCluster(h.instanceId%6);goView('mine')}});
+    rTap(st,seats,()=>{const h=hitOf(seats);if(h&&h.instanceId!=null)pickSeat(h.instanceId)});
+    rTap(st,sitBody,()=>{const h=hitOf(sitBody);if(!h||h.instanceId==null)return;const e=Object.entries(S.assign)[h.instanceId];if(e)rmHint(e[0]===S.me?'🧘 Đây là chỗ của bạn · chạm một bục trống để đổi chỗ':'🧘 '+nameOf(e[0])+' đang ngồi ở cụm '+CL[e[1]%6][0])});
     rTap(st,lanterns,()=>{const h=hitOf(lanterns);if(!h||h.instanceId==null)return;const it=[...S.lantern.values()].find(x=>x.slot===h.instanceId);if(it){S.readL=it.id;rmHint('🏮 '+clean(it.name,24)+': “'+it.w+'”');S.tab='lantern';render()}});
     rTap(st,screen,()=>{S.tab=S.quiz?'quiz':'stage';goView('stage');render()});
     rTap(st,gallery,()=>{S.tab='tea';S.sub='gallery';goView('gallery');const h=hitOf(gallery);if(h&&h.uv){const px=h.uv.x*512,py=(1-h.uv.y)*512,col=Math.max(0,Math.min(2,Math.floor((px-16)/162))),row=Math.max(0,Math.min(2,Math.floor((py-36)/158)));S.galSel=row*3+col}if(GAL.state!=='ready')loadGallery();render()});
@@ -768,7 +786,7 @@
           '<form class="rm-row" data-vh="video"><input type="url" inputmode="url" maxlength="400" placeholder="Đường dẫn video https (mp4/webm) cho màn chiếu" aria-label="Đường dẫn video" class="vh-in"><button type="submit">📺 Chiếu</button></form>'}
         if(sh&&sh.p==='video')h+='<div class="rm-row"><button type="button" data-vh="unmute">'+(S.muted?'🔊 Bật tiếng':'🔈 Tắt tiếng')+'</button></div>';
         h+='<div class="rm-row">Cổ vũ: '+CHEER.map(([i,l],k)=>'<button type="button" data-vh="cheer" data-e="'+k+'">'+i+' '+l+'</button>').join('')+'</div>'}
-      else if(t==='jam')h+='<p><b>02 · Hòa tấu 36 nhịp gõ ngũ cung</b> · Bấm 1–5 (hoặc phím số) lúc nào cũng hòa âm êm tai, không lệch tông. Chạm một bàn để đổi cụm nhạc cụ.</p><div class="rm-row vh-keys">'+['Đô','Rê','Mi','Son','La'].map((n,k)=>'<button type="button" data-vh="note" data-p="'+(k+1)+'"><b>'+(k+1)+'</b><small>'+n+'</small></button>').join('')+'</div><div class="rm-row">'+CL.map(([id,nm],k)=>'<button type="button" data-vh="cluster" data-c="'+k+'"'+(k===S.myC?' class="sel"':'')+'>'+id+' '+esc(nm)+'</button>').join('')+'</div>';
+      else if(t==='jam')h+='<p><b>02 · Hòa tấu 36 nhịp gõ ngũ cung</b> · Bấm 1–5 (hoặc phím số) lúc nào cũng hòa âm êm tai, không lệch tông. Chạm một bàn để đổi cụm nhạc cụ, hoặc chạm một bục trống để ngồi đúng chỗ đó.</p><div class="rm-row vh-keys">'+['Đô','Rê','Mi','Son','La'].map((n,k)=>'<button type="button" data-vh="note" data-p="'+(k+1)+'"><b>'+(k+1)+'</b><small>'+n+'</small></button>').join('')+'</div><div class="rm-row">'+CL.map(([id,nm],k)=>'<button type="button" data-vh="cluster" data-c="'+k+'"'+(k===S.myC?' class="sel"':'')+'>'+id+' '+esc(nm)+'</button>').join('')+'</div>';
       else if(t==='lantern'){const mine=S.lantern.get(S.me),cnt=S.lantern.size;h+='<p><b>03 · Thả đèn hoa An Yên</b> · '+cnt+'/36 đèn đang lơ lửng dưới vòm mái. Chạm một đèn để đọc lời chúc.</p>'+
         (S.readL&&S.lantern.get(S.readL)?'<p class="rm-quote">🏮 '+esc(S.lantern.get(S.readL).name)+': “'+esc(S.lantern.get(S.readL).w)+'”</p>':'')+
         '<form class="rm-row" data-vh="lantern"><input type="text" maxlength="60" autocomplete="off" placeholder="Lời chúc bình an ngắn (tối đa 60 ký tự)" aria-label="Lời chúc" class="vh-in" value="'+esc(S.draftWish||'')+'"><button type="submit" class="rm-gold">🏮 '+(mine?'Đổi lời chúc':'Thả đèn hoa')+'</button></form>'+
