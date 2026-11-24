@@ -672,6 +672,45 @@
      const base=new THREE.Mesh(stoneG,sm[2]);base.scale.set(.8,.24,.65);base.position.y=.1;cg.add(base);
      const pile=[];for(let i=0;i<7;i++){const m=new THREE.Mesh(stoneG,sm[i]),sc=.36-i*.035,a=i*2.3;m.scale.set(sc,sc*.42,sc*.85);m.position.set(1.15+Math.cos(a)*.38,sc*.36,.25+Math.sin(a)*.38);m.rotation.y=a;m.userData.home=m.position.clone();m.userData.homeR=a;cg.add(m);pile.push(m)}
      TD_ACT.cairn={x:cs[0],z:cs[1],g:cg,pile,n:0,h:.3,anim:null};TD_COLL.push([cs[0],cs[1],.9],[cs[0]+1.15,cs[1]+.25,.55]);
+     // ---- Vườn đá cân bằng trên bãi trái gần Nhà Thiền: bộ 36 viên ST01–ST36 (mỗi viên một model: kích thước, dáng, vân riêng), dùng lại cho 5 tác phẩm
+     {const S=.03;/* 1 cm ngoài đời = 3 cm trong cảnh để nhìn rõ trên điện thoại */
+      const ST=[[28,20,12,'#bcb7ac','spk','#2e2c28'],[26,18,11,'#c99f68','spk','#6a4a2a'],[24,17,10,'#8b8a84','vein','#ece6d8'],[22,16,10,'#d28a48','band','#f4ecdc'],[20,14,9,'#dcd6ca','spk','#1e1c1a'],[19,13,8,'#9c9a76','pore','#6e6c50'],[18,12,8,'#d8c39e','plain',''],[17,12,7,'#5f5f5d','pore','#3a3a38'],[16,11,7,'#7c8a5e','vein','#d8dcc0'],
+        [16,11,7,'#dacb9e','spk','#3a3226'],[15,10,6,'#7b8a4c','vein','#e8e2b0'],[14,10,6,'#eee8dc','vein','#c9a46a'],[14,9,5,'#8d8d87','plain',''],[13,9,5,'#a8623c','pore','#6a3a20'],[13,8,5,'#e3d5b2','plain',''],[12,8,5,'#5b5b59','vein','#e0ddd4'],[12,7,5,'#b6ab99','plain',''],[12,7,5,'#dacfba','plain',''],
+        [11,7,4,'#b9b1a2','spk','#7a7266'],[11,7,4,'#a8432f','vein','#f2e6dc'],[10,6,4,'#d79c4a','plain',''],[10,6,4,'#e7ddc6','plain',''],[9,6,4,'#8b9169','plain',''],[9,6,3.5,'#a98b8f','spk','#7a5e62'],[9,5,3.5,'#9b9b99','plain',''],[8.5,5,3.5,'#bba962','spk','#2e2a18'],[8,5,3.5,'#e3d0a9','plain',''],
+        [8,5,3.5,'#8b6b4b','plain',''],[7,4.5,3,'#e1d5c1','spk','#7a6a50'],[7,4.5,3,'#6f6f6b','spk','#e6e2d8'],[6.5,4,3,'#7f8159','plain',''],[6,4,2.8,'#d9a96a','spk','#6a4220'],[5.5,4.5,2.5,'#e9e1d1','plain',''],[5,3.5,2.5,'#d9a952','spk','#7a5420'],[5,3.4,2.3,'#5d5b51','spk','#c8c2b0'],[4.5,3,2,'#4b4b49','plain','']];
+      const stTex=(i)=>{const [,,,base,pat,pc]=ST[i],cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d');c.fillStyle=base;c.fillRect(0,0,64,64);let sd=i*97+13;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+        for(let k=0;k<70;k++){c.fillStyle='rgba('+(rnd()<.5?'255,250,240,':'40,30,20,')+(.04+rnd()*.06)+')';c.fillRect(rnd()*64,rnd()*64,2+rnd()*5,1+rnd()*3)}
+        if(pat==='spk')for(let k=0;k<90;k++){c.fillStyle=pc;c.globalAlpha=.5+rnd()*.5;c.beginPath();c.arc(rnd()*64,rnd()*64,.5+rnd()*1.6,0,7);c.fill()}
+        if(pat==='pore')for(let k=0;k<60;k++){c.fillStyle=pc;c.globalAlpha=.35+rnd()*.4;c.beginPath();c.arc(rnd()*64,rnd()*64,.8+rnd()*1.4,0,7);c.fill()}
+        if(pat==='vein'){c.strokeStyle=pc;for(let k=0;k<3;k++){c.globalAlpha=.55+rnd()*.35;c.lineWidth=.6+rnd()*1.2;c.beginPath();c.moveTo(rnd()*64,0);c.bezierCurveTo(rnd()*64,20,rnd()*64,44,rnd()*64,64);c.stroke()}}
+        if(pat==='band'){c.globalAlpha=.9;c.fillStyle=pc;c.fillRect(26,0,7,64)}
+        c.globalAlpha=1;const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t};
+      const stCache=[];const stone=(id,asym)=>{const i=id-1;if(!stCache[i]){const [w,d,h]=ST[i],geo=new THREE.IcosahedronGeometry(1,2),p=geo.attributes.position,v=new THREE.Vector3(),s1=i*1.37+.4,s2=i*.71+1.1;
+          for(let k=0;k<p.count;k++){v.fromBufferAttribute(p,k).normalize();const n=1+.07*Math.sin(v.x*3.1+s1)*Math.cos(v.z*2.6+s2)+.04*Math.sin(v.y*5+s1*2)+(asym?.16*Math.max(0,v.x)*(.6+.4*Math.sin(s2)):0);v.multiplyScalar(n);v.y=Math.sign(v.y)*Math.pow(Math.abs(v.y),.78);p.setXYZ(k,v.x*w/2*S,v.y*h/2*S,v.z*d/2*S)}
+          geo.computeVertexNormals();stCache[i]={geo,mat:new THREE.MeshStandardMaterial({map:stTex(i),roughness:.82})}}
+        const m=new THREE.Mesh(stCache[i].geo,stCache[i].mat);m.userData.stone='ST'+String(id).padStart(2,'0');return m};
+      const sg=new THREE.Group();g.add(sg);const bb=new THREE.Box3();
+      const boulder=(x,z,sx,sy,sz,k)=>{const y=tdTerrainY(x,z),o=P(rockG,M(['#8f8a80','#9d968a'][k%2],.95),x,y+sy*.55,z,sg);o.scale.set(sx,sy,sz);o.rotation.set(0,k*.9,0);o.updateMatrixWorld();bb.setFromObject(o,true);return bb.max.y-.04};
+      const ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0),up=new THREE.Vector3(0,1,0),from=new THREE.Vector3();const stack=(ids,x,z,y0,o={})=>{let y=y0,prev=null;ids.forEach((id,k)=>{const m=stone(id,o.asym);m.rotation.set(o.tilt?o.tilt[k%o.tilt.length]*.8:0,(k*1.9+x)%6.28,o.tilt?o.tilt[k%o.tilt.length]:(k%2?.05:-.04));const dx=(o.dx?o.dx[k%o.dx.length]:0);if(prev){/* tựa đúng mặt viên bên dưới tại trục tháp, không lơ lửng */sg.updateMatrixWorld();from.set(x+dx,y+2,z);sg.localToWorld(from);ray.set(from,down);const h=ray.intersectObject(prev,false)[0];if(h){const v=h.point.clone();sg.worldToLocal(v);y=v.y}}m.position.set(x+dx,y+1,z);sg.add(m);m.updateMatrixWorld();bb.setFromObject(m,true);m.position.y+=y-bb.min.y-.012;if(prev){m.updateMatrixWorld();sg.updateMatrixWorld();from.set(x+dx,y-3,z);sg.localToWorld(from);ray.set(from,up);const h=ray.intersectObject(m,false)[0];if(h){const v=h.point.clone();sg.worldToLocal(v);m.position.y+=y-v.y-.01}}m.updateMatrixWorld();bb.setFromObject(m,true);y=bb.max.y-.008;prev=m});return y};
+      const a0=-2.05,se0=tdSandEdge(a0),spot=(t,u)=>{const a=a0+t/(.86*tdR(a0)),se=tdSandEdge(a),r=(se+(1-se)*u)*tdR(a);return [TD_O[0]+Math.cos(a)*r,TD_O[1]+Math.sin(a)*r]};
+      const find=(t,need)=>{for(const u of [.38,.3,.46,.24,.54])for(const dt of [0,1,-1,2,-2,3,-3]){const [x,z]=spot(t+dt,u);if(sandAt(x,z)&&clear(x,z,need))return [x,z]}return spot(t,.38)};
+      const tag=(name,fromIdx)=>{for(let k=fromIdx;k<sg.children.length;k++)sg.children[k].userData.stoneArt=name};
+      const ARTS=[];
+      // (1) Tháp đá cân bằng · 6 viên: Đ01 (đế) Đ02 Đ06 Đ15 Đ22 Đ28 (đỉnh)
+      {const n0=sg.children.length,[x,z]=find(-8,.9);stack([1,2,6,15,22,28],x,z,tdTerrainY(x,z));tag('Tháp đá cân bằng · 6 viên',n0);ARTS.push(['tower',x,z]);TD_COLL.push([x,z,.6])}
+      // (2) Đá cân bằng nghệ thuật · 7 viên bất đối xứng trên tảng đá
+      {const n0=sg.children.length,[x,z]=find(-4,1.2),top=boulder(x,z,.72,.42,.6,1);stack([4,12,3,13,21,31,29],x,z,top,{asym:true,tilt:[.95,-.35,.45,-.3,.25,-.2,.15],dx:[0,.04,-.05,.03,-.02,.02,0]});tag('Đá cân bằng nghệ thuật · 7 viên',n0);ARTS.push(['art',x,z]);TD_COLL.push([x,z,1.2])}
+      // (3) Vòng tròn đá thiền · 10 viên đồng tâm có đá tâm, cát cào thành vòng
+      {const n0=sg.children.length,[x,z]=find(1,2.1),y0=tdTerrainY(x,z);
+        const rg=[];for(let r=.3;r<=1.62;r+=.22){const ring=new THREE.RingGeometry(r-.025,r+.025,56,1).rotateX(-Math.PI/2),p=ring.attributes.position;for(let k=0;k<p.count;k++)p.setY(k,tdTerrainY(x+p.getX(k),z+p.getZ(k))-y0+.012);rg.push(ring)}
+        for(const ring of rg){const o=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color:'#b89f72',transparent:true,opacity:.45,depthWrite:false}));o.position.set(x,y0,z);sg.add(o)}
+        stack([5],x,z,y0);[[10,0],[6,1],[11,2],[16,3]].forEach(([id,k])=>{const a=k/4*Math.PI*2+.4,px=x+Math.cos(a)*.55,pz=z+Math.sin(a)*.55;stack([id],px,pz,tdTerrainY(px,pz))});
+        [19,23,26,32,34].forEach((id,k)=>{const a=k/5*Math.PI*2,px=x+Math.cos(a)*1.05,pz=z+Math.sin(a)*1.05;stack([id],px,pz,tdTerrainY(px,pz))});tag('Vòng tròn đá thiền · 10 viên',n0);ARTS.push(['circle',x,z]);TD_COLL.push([x,z,1.3])}
+      // (4) Con đường đá cân bằng · 7 viên, 3 cụm 3–2–2 dọc bãi
+      {const n0=sg.children.length,[x,z]=find(5.5,1),a=a0+5.5/(.86*tdR(a0)),tx=-Math.sin(a),tz=Math.cos(a);[[[1,7,14],-1.3],[[17,24],0],[[27,33],1.2]].forEach(([ids,o])=>{const px=x+tx*o,pz=z+tz*o;stack(ids,px,pz,tdTerrainY(px,pz));TD_COLL.push([px,pz,.45])});tag('Con đường đá cân bằng · 7 viên',n0);ARTS.push(['path',x,z])}
+      // (5) Tác phẩm đá trên nền đá tự nhiên · 6 viên, điểm nhận diện của bãi
+      {const n0=sg.children.length,[x,z]=find(9.5,1.2),top=boulder(x,z,.85,.45,.7,0);stack([2,8,18,25,35,36],x,z,top,{dx:[0,.02,-.02,.015,-.01,0]});tag('Tác phẩm đá trên nền đá tự nhiên · 6 viên',n0);ARTS.push(['base',x,z]);TD_COLL.push([x,z,1.3])}
+      TD_ACT.stoneArts=ARTS}
      TD_ACT.g=g;TD_ACT.clear=clear;const hitM=SH_HIT_M;
      /* 3 mẫu Khay / Giỏ đặt sẵn trên bãi cạnh Chòi ngắm cảnh */
      /* cả 3 đồ đựng đặt chung một chỗ: một tấm chiếu cói nhỏ trên bãi cát cạnh Chòi ngắm cảnh */
@@ -1011,6 +1050,7 @@
   function shGuardLeave(cont){if(bayIsland&&TD_ACT.mode){TD_ACT.leaveCont=null;shEnd(true);return false}/* rời đi giữa chừng: giỏ về chỗ cũ, vỏ chưa cất bỏ lại biển */if(!bayIsland||!shPending())return false;TD_ACT.leaveCont=cont;shPanel('leave');bayCaption('🏖 Trước khi rời bãi biển, hãy cất vỏ sò vào Túi An Yên hoặc xếp thành hình trên cát',5000);return true}
   function shAfterChoice(){const A=TD_ACT;if(!A.leaveCont)return;if(shPending()){setTimeout(()=>{if(A.leaveCont&&shPending())shPanel('leave')},900);return}const c=A.leaveCont;A.leaveCont=null;setTimeout(c,1600)}
   document.getElementById('exit3D')?.addEventListener('click',e=>{if(typeof bayMode!=='undefined'&&bayMode&&bayIsland&&TD_ACT.mode){TD_ACT.leaveCont=null;shEnd(true)}},true);
+  window.__tdShot=(tx,tz,ox,oy,oz)=>{const T=new THREE.Vector3(tx,tdGroundY(tx,tz)+.4,tz),C=new THREE.Vector3(tx+ox,tdGroundY(tx,tz)+oy,tz+oz);TU_DAO.group.localToWorld(T);TU_DAO.group.localToWorld(C);const c=camera.clone();c.position.copy(C);c.lookAt(T);c.updateMatrixWorld();renderer.render(scene,c);return renderer.domElement.toDataURL('image/jpeg',.85)};/* chỉ dùng khi kiểm thử: chụp cảnh từ một điểm nhìn */
   window.__tdAct={fill:n=>{const A=TD_ACT;for(let i=0;i<n;i++){if(!A.beach.length)shSpawn();const q=A.beach.shift();if(!q)break;q.g.parent&&q.g.parent.remove(q.g);me.add(q.g);q.clean=true;q.msg='';A.hand=q;shIntoBin(true)}return A.carry!=null?A.bins[A.carry].items.length:0},hit:(px,py)=>{const r=new THREE.Raycaster();r.setFromCamera(new THREE.Vector2(px/innerWidth*2-1,-py/innerHeight*2+1),camera);return r.intersectObject(TU_DAO.group,true).slice(0,4).map(h=>[h.object.userData.tuDao,h.object.userData.bin,+h.distance.toFixed(1),h.object.type])},act:TD_ACT,cairn:()=>tdGoCairn(),shell:k=>tdGoShell(k),scr:(x,z,y=.3)=>{const v=new THREE.Vector3(x,tdGroundY(x,z)+y,z);TU_DAO.group.localToWorld(v);v.project(camera);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]}};
   function islandWorld(out){const I=bayIsland;out.set(I.x,tdGroundY(I.x,I.z)+(I.moving?Math.abs(Math.sin(I.t*7))*.08:0),I.z);TU_DAO.group.localToWorld(out);return out}
   const islandHud=document.createElement('button');islandHud.type='button';islandHud.id='islandBack';islandHud.textContent='⛵ Về tàu';islandHud.hidden=true;document.body.appendChild(islandHud);
