@@ -262,3 +262,8 @@ body.immersive:not(.yen-bay) #anyenPhotoBtn,body.immersive.yen-bay.bay-island #a
 body.bay-photo-open #anyenPhotoBtn,body.room-open #anyenPhotoBtn,body.sh-grid #anyenPhotoBtn,body.bay-outfit-open #anyenPhotoBtn{display:none!important}
 #bayPhoto .bp-cb small.bp-lab{display:block;font-size:9px;line-height:1.1;max-width:44px;white-space:normal}
 #bayPhoto .bp-crop.f-white{box-shadow:inset 0 0 0 10px rgba(251,248,241,.92),0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-gold{box-shadow:inset 0 0 0 6px #0d2f29,inset 0 0 0 9px #c8a96a,0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-polaroid{box-shadow:inset 0 0 0 12px #fbf8f1,inset 0 -52px 0 0 #fbf8f1,0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-film{box-shadow:inset 0 22px 0 0 #111,inset 0 -22px 0 0 #111,0 0 0 9999px rgba(6,20,18,.5)}
+
+/* Đảo Yên & Rừng Yên: gọn giao diện. Chụp ảnh chỉ ở thanh dọc; đi bằng chạm, zoom bằng hai ngón / con lăn; Về tàu nằm trong thanh dọc */
+#anyenPhotoBtn,#islandPad,#islandBack,body.immersive #camZoomBox{display:none!important}
+body:not(.bay-island) #zenToolbar [data-zen=boat],body.bay-photo-open #zenToolbar [data-zen=boat],body.room-open #zenToolbar [data-zen=boat]{display:none!important}
+body.bay-island #zenToolbar [data-zen=bell],body.bay-island #zenToolbar [data-zen=ritual]{display:none!important}/* Thỉnh chuông & Nghi thức chỉ có bên trong Nhà Thiền (bảng trong phòng) */
