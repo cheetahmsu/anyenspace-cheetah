@@ -469,23 +469,26 @@
     addKarst(X+31,Z-27,8,17,7304,{shape:2,rot:.9});addKarst(X+33,Z+28,7,15,7305,{shape:2,rot:2.2});/* hai gò đá thấp ôm hai bên */
     bayExtraRocks.push([X+48,Z,30])}
   const TD_COLL=[];const TD_ACT={cairn:null,beach:[],bins:[],carry:null,hand:null,seq:null,nextSpawn:0,g:null,clear:null,spawned:0,queue:0,decor:[],decorOk:false,tweens:[],leaveCont:null,mode:null,camSave:null,station:null,focus:null};/* hoạt động trên bãi: xếp đá cân bằng, nhặt vỏ sò *//* vật cản khi đi bộ trên đảo (toạ độ địa phương): [x, z, bán kính] của đá, gốc cây, dừa, bụi cây, ghế nằm */
-  // ===== Bộ Sưu Tập Vỏ Biển v1.0 (tài liệu «36 Loại Sò / Ốc Vịnh Yên & 3 Mẫu Khay / Giỏ»): 9 dáng gốc × 4 sắc thái biển = 36 loại.
-  // Mỗi dáng là một khối tham số 120–220 tam giác, màu và vân bằng Vertex Color (không dùng ảnh). Vỏ mới nhặt còn phủ cát ẩm,
-  // «Nhúng nước rửa cát» ở mép sóng mới lộ sắc thái thật. Sau đó: bỏ vào Khay / Giỏ đang cầm, cất Túi An Yên (≤ 3 vỏ / ngày),
-  // thả biển, hoặc đặt lại trả cho biển. Ốc Tù Và có nút «Áp tai nghe sóng» (15 giây). Sổ Sưu Tập 36 ô lưu trên máy.
-  const SH_SHAPE=['Sò Điệp','Ốc Xà Cừ','Ốc Sứ','Ốc Tháp','Sò Trái Tim','Ốc Tù Và','Sò Tai Tượng','Ốc Ngọc Trai','Ốc Gai Biển'];
-  const SH_TONE=['Nắng Mai','Ngọc Vịnh','Hoàng Hôn','Bạch Nguyệt'],SH_TONE_IC=['🌅','🌊','🌇','🌕'];
-  const SH_NAME=[['Hồng San Hô','Xanh Ngọc Bích','Cam Hoàng Hôn','Trắng Ánh Xà Cừ'],['Vàng Mật Ong','Ánh Ngọc Lam','Tím Hoa Sim','Bạc Trăng Rằm'],['Đốm Nâu Kem','Vân Ngọc Bích','Đốm Hổ Phách','Trắng Sứ Mây'],['Vàng Nắng Mai','Lam Thủy Tinh','Hồng Phấn Cổ','Ngà Voi Chấm Vàng'],['Hồng Đào Ấm','Cẩm Thạch Xanh','Tím Nhạt Sương','Ngọc Trai Trắng'],['Trắng Miệng Hồng','Ngọc Xanh Miệng Kem','Nâu Cát Miệng Cam','Bạch Tuyết Ánh Ngọc'],['Kem Viền Vàng','Sóng Ngọc Bích','Sóng Tím Oải Hương','Sóng Trắng Pha Lê'],['Vân Nâu Kem','Vân Xanh Rêu','Vân Tím Nâu','Vân Bạc Ngọc Trai'],['San Hô Nhạt','Gai Ngọc Lam','Gai Hồng Thạch Anh','Gai Trắng Tuyết']];
-  /* [màu nền, màu vân / đốm / miệng] cho từng loại */
-  const SH_COL=[[['#ef7f73','#fde0d6'],['#2fae97','#c9f2e6'],['#ef9a55','#fde3c6'],['#f1ece4','#d6e2ee']],
-    [['#e5b066','#fff1d6'],['#2c9c8e','#c6ecf4'],['#a46ad8','#f3d6f7'],['#d9dee7','#fbf6ec']],
-    [['#f3e6d0','#8b4a2b'],['#dcefbf','#3f9a5a'],['#f6e0c4','#c27a2a'],['#f7f2e8','#d9b27a']],
-    [['#f1b34a','#fde6b0'],['#2fb4c4','#c4f0f5'],['#ef7fae','#fcd8e8'],['#f0e8d8','#e0bd6a']],
-    [['#ef7c84','#fdd0cc'],['#7fcf5c','#dcf6c6'],['#8a7ae0','#d0c8f7'],['#eef0f2','#d3d8e0']],
-    [['#f6e9d7','#f08aa0'],['#9dd6c7','#f7e9cf'],['#c9a27a','#f2a25a'],['#f7f3ec','#d8eee6']],
-    [['#f4e8d2','#e7b445'],['#2fae6a','#cdf2da'],['#f4ecdf','#8a6ad8'],['#f3efe8','#d9d3c8']],
-    [['#f7e9d5','#b8652e'],['#e8f5de','#3e9a4e'],['#f0e6f7','#7a52c0'],['#f5f3ef','#c8c4bd']],
-    [['#f8dec9','#ec7f6a'],['#e4f0de','#36a487'],['#f0e2f5','#b06ad6'],['#f7f3eb','#dfd4c0']]];
+  // ===== Bộ Sưu Tập 12 Loại Ốc – Vịnh Yên (phong cách 3D Soft Minimal Luxury): 12 dáng × 3 phiên bản màu = 36 vỏ.
+  // Mỗi dáng là một khối tham số (vài trăm tam giác), màu và vân bằng Vertex Color (không dùng ảnh), bề mặt bóng mềm (clearcoat).
+  // Vỏ mới nhặt còn phủ cát ẩm, «Nhúng nước rửa cát» ở mép sóng mới lộ màu thật. Ốc Gai Biển có nút «Áp tai nghe sóng» (15 giây).
+  const SH_N=12,SH_T=3;
+  const SH_SHAPE=['Sò Điệp','Ốc Xà Cừ','Ốc Sứ','Ốc Tháp','Sò Trái Tim','Ốc Bồ Câu','Ốc Đốm','Ốc Nón','Sò Tai Tượng','Ốc Ngọc Trai','Ốc Anh Vũ','Ốc Gai Biển'];
+  const SH_TONE=['Bình Minh','Nắng Vàng','Biển Ngọc'],SH_TONE_IC=['🌸','🌞','🌊'];
+  const SH_NAME=[['Hồng San Hô','Vàng Nắng','Xanh Ngọc'],['Ánh Ngọc Hồng','Ánh Tím Lam','Ánh Vàng Lục'],['Đốm Nâu Kem','Vàng Đốm Trắng','Ngọc Đốm Trắng'],['Vàng Nắng','Hồng San Hô','Xanh Biển'],['Sọc Hồng','Sọc Vàng','Sọc Tím'],['Hồng Phấn','Vàng Mật','Ngọc Lam'],['Hồng Chấm Trắng','Vàng Chấm Trắng','Lam Chấm Trắng'],['Zigzag Hồng','Zigzag Vàng','Zigzag Lam'],['Sóng Tím','Sóng Vàng','Sóng Ngọc'],['Vân Nâu Kem','Vân Hồng','Vân Lam'],['Sọc Cam Đỏ','Sọc Vàng','Sọc Lam'],['Gai Hồng','Gai Vàng','Gai Lam']];
+  /* [màu nền, màu vân / đốm / miệng, (màu thứ ba)] cho từng phiên bản */
+  const SH_COL=[[['#f4628a','#ffd3df'],['#f7b524','#ffeaa6'],['#1fbfab','#bff5ec']],
+    [['#d8b8f0','#9fe3f2','#f9c7de'],['#8c78e6','#c5d2ff','#f2c6f0'],['#f2cf45','#93d88c','#fff2b8']],
+    [['#fbf1e2','#a5582c'],['#f8c21c','#fffaf0'],['#22bcc0','#f3fefd']],
+    [['#f6be26','#fff0b4'],['#f47a6c','#ffd9cf'],['#2f8de6','#c4e4ff']],
+    [['#f25479','#ffd7e1'],['#f6be2b','#fff3c9'],['#9767de','#f0e6ff']],
+    [['#f46797','#ffe0ea'],['#f5b52a','#fff1ca'],['#27bfae','#d3f8f0']],
+    [['#f45b6d','#ffffff'],['#f7c21d','#ffffff'],['#1d9ae6','#ffffff']],
+    [['#f26b6b','#fff5f0'],['#f5b928','#fff7de'],['#2c9fe6','#ecf8ff']],
+    [['#8752d6','#fcefdc'],['#f4b229','#fff4d8'],['#1db3a6','#e8fbf7']],
+    [['#b9652b','#fcefdf'],['#f27c9f','#fff1f5'],['#4f86e0','#eef4ff']],
+    [['#f2553f','#fff4ea'],['#f6b71c','#fff6d8'],['#2d8fe6','#eef6ff']],
+    [['#f26f7b','#ffdde0'],['#f5b52a','#ffecbc'],['#29a5e6','#d9f2ff']]];
   const SH_SEA=['Sóng đến rồi đi, như hơi thở của biển. Thở vào, thở ra.','Cát mịn trôi đi, sắc men thật hiện ra. Mọi điều đẹp cần chút kiên nhẫn.','Biển không vội vàng, mà vẫn chạm tới mọi bờ.','Một chiếc vỏ nhỏ cũng mang cả đại dương trong lòng.','Hãy để ưu phiền trôi theo bọt sóng.','Lắng nghe: tiếng sóng chính là tiếng lòng đang dịu lại.','Mỗi con sóng là một khởi đầu mới.','Bình yên không ở đâu xa, ở ngay hơi thở này.','Cảm ơn biển đã gửi món quà nhỏ hôm nay.'];
   const shName=(s,t)=>SH_SHAPE[s]+' '+SH_NAME[s][t],shKey=(s,t)=>s+'-'+t;
   function shSurf(nu,nv,fn,c1,c2,c3){const P=[],C=[],I=[],a=new THREE.Color(c1),b=new THREE.Color(c2),d=new THREE.Color(c3||'#fbf3ea'),c=new THREE.Color();
@@ -500,25 +503,29 @@
       return [(D+rho*Math.cos(f))*Math.cos(th),o.H*(1-s)+rho*Math.sin(f)*(o.ys||1),(D+rho*Math.cos(f))*Math.sin(th),o.col(th,f,fr,s)]}}
   /* vỏ ốc tròn xoay nằm ngang (trục x): prof(t,φ) → [bán kính, màu]; t từ đầu ống (0) tới đỉnh tháp (1) */
   function shRev(L,prof){return (u,v)=>{const f=u*TAU,[r,k]=prof(v,f);return [(v-.5)*L,r*Math.sin(f),r*Math.cos(f),k]}}
-  /* 9 dáng theo bộ ảnh «Bộ 9 loại sò/ốc – Vịnh Yên»: dựng xong được chuẩn hoá dài ~1 đơn vị, nằm trên mặt cát (y ≥ 0) */
+  /* 12 dáng theo ảnh «Bộ Sưu Tập 12 Loại Ốc – Vịnh Yên» (3 góc nhìn trước – trái – trên): dựng xong chuẩn hoá dài ~1 đơn vị, nằm trên mặt cát (y ≥ 0) */
+  const shDots=(t,f,rows,cols,t0,t1,rad,asp=1.4)=>{const rt=(t-t0)/(t1-t0)*rows,ri=Math.round(rt);if(ri<0||ri>rows||t<t0-.02||t>t1+.02)return 0;const off=(ri%2)*.5,cf=f/TAU*cols-off,ci=Math.round(cf);return 1-shSm(rad*.72,rad,Math.hypot(rt-ri,(cf-ci)*asp))};
   const SH_FN=[
-    /* 01 Sò Điệp: quạt 18 rãnh nổi, mép lượn sóng, hai tai ở bản lề */ [56,12,(u,v)=>{const th=(u-.5)*2.7,r=Math.pow(v,.9),rib=Math.cos(th*18*.5*2),cr=Math.pow(Math.max(0,rib),1.5);
-      const ear=(1-shSm(.08,.26,r))*shSm(.95,1.3,Math.abs(th))*.14,rr=.56*r*(1+.035*rib*r)+ear;return [Math.sin(th)*rr,.015+.36*Math.pow(Math.max(0,1-r*r),.5)*Math.cos(th*.38)+.03*cr*r,Math.cos(th)*rr*.95-.28,.12+.55*cr*r+.25*(1-r)]}],
-    /* 02 Ốc Xà Cừ: xoắn tròn thấp, ánh xà cừ ngũ sắc */ [18,88,shHelix({T:3.4,c:.17,a:.43,d:.5,H:.8,col:(th,f)=>.6+.7*(.5+.5*Math.sin(th*.9+f*1.6))+.25*Math.sin(f*3)})],
-    /* 03 Ốc Sứ: bầu dục bóng sứ, đốm nâu, khe miệng răng cưa dưới bụng */ [44,22,(u,v)=>{const f=u*TAU,a=Math.PI*v,x=.6*Math.sin(a)*Math.cos(f),z=.4*Math.sin(a)*Math.sin(f)*(1-.05*Math.cos(2*f)),y=.3+.29*Math.cos(a);let k=0;for(const [sf,sa,sr] of SH_SPOTS){const d=Math.hypot(Math.atan2(Math.sin(f-sf),Math.cos(f-sf))*Math.sin(a)*1.3,(a/Math.PI-sa)*2.2);k=Math.max(k,1-shSm(sr*.55,sr,d))}return [x,Math.max(.02,y),z,a>2.3?.05:k]}],
-    /* 04 Ốc Tháp: tháp nhọn vàng nắng, gờ xoắn rõ, nằm nghiêng */ [14,150,shHelix({T:7.5,c:.07,a:.3,d:.24,H:1.45,sp:(th,f)=>1+.12*Math.pow(Math.max(0,Math.sin(f)),3),col:(th,f)=>.15+.75*Math.pow(Math.max(0,Math.sin(f)),4)}),g=>g.rotateZ(Math.PI/2-.12)],
-    /* 05 Sò Trái Tim: trái tim phồng, sọc chéo cẩm thạch */ [48,12,(u,v)=>{const t=u*TAU,s=1-v,hx=16*Math.pow(Math.sin(t),3)/17,hz=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))/17,x=hx*s*.5,z=hz*s*.5;return [x,.015+.3*Math.pow(Math.max(0,1-s*s),.6),z,shSm(-.35,.35,Math.sin((x*1.1+z)*13))]}],
-    /* 06 Ốc Tù Và Trắng Tuyết: thân thoi, vành gai trên vai, tháp xoắn nhọn, môi miệng loe hồng đào */ [40,64,shRev(1.25,(t,f)=>{const ap=Math.max(0,Math.cos(f-Math.PI/2)),body=t<.12?.08+t*1.6:t<.5?.27+.17*Math.sin((t-.12)/.38*Math.PI*.5):.44*Math.pow(Math.max(0,(1-t)/.5),1.15)*(.86+.14*Math.pow(1-((1-t)*7)%1,2));
-      const spk=.2*Math.pow(Math.max(0,Math.cos(f*8)),5)*Math.exp(-Math.pow((t-.5)/.035,2))+.06*Math.pow(Math.max(0,Math.cos(f*8)),5)*Math.exp(-Math.pow((((1-t)*7)%1-.05)/.06,2))*(t>.55?1:0),lip=Math.pow(ap,5)*shSm(.06,.2,t)*(1-shSm(.42,.54,t))*.3;return [body+spk+lip,lip>.03?shSm(.03,.1,lip):.1*Math.pow(Math.max(0,Math.cos(f*8)),3)]})],
-    /* 07 Sò Tai Tượng: hai mảnh vỏ khép, mép gợn sóng tím, gờ sóng to */ [60,14,(u,v)=>{const f=u*TAU,a=Math.PI*v,sa=Math.sin(a),w=Math.cos(f*6),R=1+.1*w*Math.pow(sa,2);return [.62*sa*Math.cos(f)*R,.33*(1-Math.cos(a))+.11*Math.sin(f*6)*Math.pow(sa,6),.46*sa*Math.sin(f)*R,.1+.9*Math.pow(sa,5)+.15*w*sa]}],
-    /* 08 Ốc Ngọc Trai: tròn bóng, vòng xoắn lộ trên đỉnh, sọc nâu theo đường lớn */ [18,80,shHelix({T:3,c:.3,a:.55,d:.42,H:.42,col:(th)=>shSm(-.25,.25,Math.sin(th*2.2))*.95})],
-    /* 09 Ốc Gai Biển: thân thoi, ống dài, hàng gai dài toả tròn, miệng cam hồng */ [42,72,shRev(1.4,(t,f)=>{const ap=Math.max(0,Math.cos(f-Math.PI/2)),body=t<.28?.05+.05*t/.28:t<.55?.1+.22*Math.sin((t-.28)/.27*Math.PI*.5+.15):.32*Math.pow(Math.max(0,(1-t)/.45),1.1)*(.85+.15*Math.pow(1-((1-t)*6)%1,2));
-      const sp=Math.pow(Math.max(0,Math.cos(f*7)),9),spk=sp*(.32*Math.exp(-Math.pow((t-.47)/.022,2))+.24*Math.exp(-Math.pow((t-.6)/.022,2))+.14*Math.exp(-Math.pow((t-.72)/.022,2))+.12*Math.exp(-Math.pow((t-.3)/.02,2))),lip=Math.pow(ap,5)*shSm(.25,.34,t)*(1-shSm(.5,.6,t))*.22;return [body+spk+lip,lip>.03?shSm(.03,.09,lip):.3*sp]})]];
+    /* 01 Sò Điệp: quạt 18 rãnh tròn nổi, mép lượn sóng, hai tai ở bản lề */ [64,14,(u,v)=>{const th=(u-.5)*2.7,r=Math.pow(v,.9),rib=Math.cos(th*18),cr=Math.pow(Math.max(0,rib),1.2);
+      const ear=(1-shSm(.08,.26,r))*shSm(.95,1.3,Math.abs(th))*.14,rr=.56*r*(1+.04*rib*r)+ear;return [Math.sin(th)*rr,.015+.4*Math.pow(Math.max(0,1-r*r),.5)*Math.cos(th*.38)+.045*cr*r,Math.cos(th)*rr*.95-.28,.05+.75*cr*r*r+.2*(1-r)]}],
+    /* 02 Ốc Xà Cừ: xoắn tròn thấp, ánh xà cừ ngũ sắc */ [20,96,shHelix({T:3.4,c:.17,a:.43,d:.5,H:.8,col:(th,f)=>.55+.75*(.5+.5*Math.sin(th*.9+f*1.6))+.3*Math.sin(f*3)})],
+    /* 03 Ốc Sứ: trứng bầu dục bóng sứ, đốm tròn đều, khe miệng dưới bụng */ [56,30,(u,v)=>{const f=u*TAU,a=Math.PI*v,x=.6*Math.sin(a)*Math.cos(f),z=.42*Math.sin(a)*Math.sin(f)*(1-.05*Math.cos(2*f)),y=.3+.3*Math.cos(a);
+      const k=a>2.35?0:shDots(a/Math.PI,f,5,11,.08,.72,.36,1.6);return [x,Math.max(.02,y),z,k]}],
+    /* 04 Ốc Tháp: tháp nhọn, gờ xoắn rõ, miệng tròn, nằm nghiêng */ [14,150,shHelix({T:7.5,c:.07,a:.3,d:.24,H:1.45,sp:(th,f)=>1+.12*Math.pow(Math.max(0,Math.sin(f)),3),col:(th,f,fr)=>.05+.8*Math.pow(Math.max(0,Math.sin(f)),4)+.6*shSm(.97,1,fr)}),g=>g.rotateZ(Math.PI/2-.12)],
+    /* 05 Sò Trái Tim: trái tim phồng tròn, sọc chéo */ [56,14,(u,v)=>{const t=u*TAU,s=1-v,hx=16*Math.pow(Math.sin(t),3)/17,hz=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))/17,x=hx*s*.5,z=hz*s*.5;return [x,.015+.4*Math.pow(Math.max(0,1-s*s),.55),z,shSm(-.3,.3,Math.sin((x*1.1+z)*11))]}],
+    /* 06 Ốc Bồ Câu: xoắn tròn mập, miệng loe rộng màu nhạt */ [22,104,shHelix({T:3.2,c:.2,a:.5,d:.44,H:.95,sp:(th,f,s,fr)=>1+.32*Math.pow(shSm(.88,1,fr),1.4)*(.5+.5*Math.max(0,Math.cos(f))),col:(th,f,fr)=>.08+.92*shSm(.9,.99,fr)+.12*Math.max(0,Math.sin(th*2))})],
+    /* 07 Ốc Đốm: hình giọt nước, chóp xoắn nhỏ, chấm tròn trắng */ [48,80,shRev(1.25,(t,f)=>{const tt=Math.pow(t,.9),r=.42*Math.pow(Math.sin(Math.PI*tt),.62)*(t>.8?1+.1*Math.sin((t-.8)*70):1);return [Math.max(.004,r),shDots(t,f,5,10,.1,.74,.36,1.5)]})],
+    /* 08 Ốc Nón: nón ngược, vai tròn, chóp thấp, sọc zigzag */ [40,56,shRev(1.25,(t,f)=>{const r=t<.8?.03+.42*Math.pow(t/.8,1.05):.45*Math.pow(Math.max(0,1-(t-.8)/.2),.75)*(1+.05*Math.sin((t-.8)*90));const zz=Math.abs(((f/TAU*10)%1)*2-1);return [Math.max(.004,r),t>.82?.25+.5*shSm(-.3,.3,Math.sin((t-.8)*120)):shSm(-.25,.25,Math.sin((t*7.5+zz*.45)*TAU))]})],
+    /* 09 Sò Tai Tượng: hai mảnh vỏ khép, mép gợn sóng to, viền miệng màu kem */ [60,16,(u,v)=>{const f=u*TAU,a=Math.PI*v,sa=Math.sin(a),w=Math.cos(f*6),R=1+.12*w*Math.pow(sa,2);return [.62*sa*Math.cos(f)*R,.36*(1-Math.cos(a))+.13*Math.sin(f*6)*Math.pow(sa,6),.46*sa*Math.sin(f)*R,.05+.95*Math.pow(sa,7)]}],
+    /* 10 Ốc Ngọc Trai: tròn bóng, vòng xoắn lộ trên đỉnh, sọc theo đường xoắn */ [22,96,shHelix({T:3.2,c:.2,a:.47,d:.5,H:.75,col:(th)=>shSm(-.22,.22,Math.sin(th*2.2))})],
+    /* 11 Ốc Anh Vũ (Nautilus): xoắn phẳng đối xứng, ống dẹt, sọc toả */ [22,90,shHelix({T:2.4,c:.15,a:.5,d:.62,H:0,ys:.6,col:(th,f,fr)=>shSm(-.28,.28,Math.sin(th*4.2))*(1-.35*shSm(.9,1,fr))})],
+    /* 12 Ốc Gai Biển: thân thoi, hàng gai dài toả tròn, miệng loe màu nhạt */ [42,76,shRev(1.4,(t,f)=>{const ap=Math.max(0,Math.cos(f-Math.PI/2)),body=t<.28?.05+.05*t/.28:t<.55?.1+.22*Math.sin((t-.28)/.27*Math.PI*.5+.15):.32*Math.pow(Math.max(0,(1-t)/.45),1.1)*(.85+.15*Math.pow(1-((1-t)*6)%1,2));
+      const sp=Math.pow(Math.max(0,Math.cos(f*7)),9),spk=sp*(.32*Math.exp(-Math.pow((t-.47)/.022,2))+.24*Math.exp(-Math.pow((t-.6)/.022,2))+.14*Math.exp(-Math.pow((t-.72)/.022,2))+.12*Math.exp(-Math.pow((t-.3)/.02,2))),lip=Math.pow(ap,5)*shSm(.25,.34,t)*(1-shSm(.5,.6,t))*.24;return [body+spk+lip,lip>.03?shSm(.03,.09,lip):.35*sp]})]];
   const SH_GEO=new Map();
-  function shGeo(s,t){const k=shKey(s,t);if(!SH_GEO.has(k)){const [nu,nv,fn,post]=SH_FN[s],[c1,c2]=SH_COL[s][t],g=shSurf(nu,nv,fn,c1,c2,s===1?'#f3d3e6':undefined);if(post)post(g);
+  function shGeo(s,t){s=((s|0)%SH_N+SH_N)%SH_N;t=((t|0)%SH_T+SH_T)%SH_T;/* vỏ lưu từ bộ cũ (9×4) vẫn hiện được */const k=shKey(s,t);if(!SH_GEO.has(k)){const [nu,nv,fn,post]=SH_FN[s],[c1,c2,c3]=SH_COL[s][t],g=shSurf(nu,nv,fn,c1,c2,c3);if(post)post(g);
       g.computeBoundingBox();const B=g.boundingBox,sz=Math.max(B.max.x-B.min.x,B.max.z-B.min.z,B.max.y-B.min.y);g.translate(-(B.max.x+B.min.x)/2,-B.min.y,-(B.max.z+B.min.z)/2);g.scale(1/sz,1/sz,1/sz);g.computeVertexNormals();SH_GEO.set(k,g)}return SH_GEO.get(k)}
-  const SH_MAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.3,metalness:.05,side:THREE.DoubleSide}),SH_PEARL=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.22,metalness:.18,side:THREE.DoubleSide}),SH_SANDY=new THREE.MeshStandardMaterial({vertexColors:true,color:'#cdbb96',roughness:.95,side:THREE.DoubleSide});
-  const shMat=s=>s===1||s===7?SH_PEARL:SH_MAT;
+  const SH_MAT=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.32,metalness:0,clearcoat:.9,clearcoatRoughness:.18,side:THREE.DoubleSide}),SH_PEARL=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.25,metalness:.05,clearcoat:1,clearcoatRoughness:.12,iridescence:.7,iridescenceIOR:1.6,side:THREE.DoubleSide})/* bóng mềm kiểu Soft Minimal Luxury; xà cừ và ngọc trai có ánh ngũ sắc */,SH_SANDY=new THREE.MeshStandardMaterial({vertexColors:true,color:'#cdbb96',roughness:.95,side:THREE.DoubleSide});
+  const shMat=s=>s===1||s===9?SH_PEARL:SH_MAT;
   const SH_HIT_G=new THREE.SphereGeometry(.85,6,4),SH_HIT_M=new THREE.MeshBasicMaterial({visible:false});
   function shMesh(s,t,sandy){const m=new THREE.Mesh(shGeo(s,t),sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
@@ -851,12 +858,12 @@
     if(A.g&&bayIsland&&A.beach.length<6&&A.spawned<36&&performance.now()>A.nextSpawn){shSpawn();A.nextSpawn=performance.now()+1200}/* bãi luôn có 6 vỏ, nhặt tới đâu hiện bù từ từ tới đó, đủ 36 vỏ thì thôi */
     for(let i=A.tweens.length-1;i>=0;i--){const w=A.tweens[i];w.t+=dt;if(w.t<0)continue;const u=Math.min(1,w.t/w.dur),e=u*u*(3-2*u);w.g.position.lerpVectors(w.from,w.to,e);w.g.position.y+=Math.sin(Math.PI*u)*.7;if(u>=1){w.g.position.copy(w.to);if(w.kill)w.g.parent&&w.g.parent.remove(w.g);A.tweens.splice(i,1)}}}
   // ---- Dạo cát & bắt gặp: mép cát ẩm chỉ lấp ló 2–3 vỏ phủ cát; nhặt rồi sóng lại dạt vỏ khác vào
-  const SH_BOOK_KEY='yen_shell_book_v1',SH_DAY_KEY='yen_shell_bag_day_v1';
+  const SH_BOOK_KEY='yen_shell_book_v2',SH_DAY_KEY='yen_shell_bag_day_v1';
   const shBook=()=>{try{return JSON.parse(localStorage.getItem(SH_BOOK_KEY)||'{}')||{}}catch(e){return {}}};
   const shToday=()=>new Date().toLocaleDateString('sv-SE');
   const shDayCount=()=>{try{const d=JSON.parse(localStorage.getItem(SH_DAY_KEY)||'{}');return d.d===shToday()?d.n|0:0}catch(e){return 0}};
   let shId=0;
-  function shRandKind(){const r=Math.random(),t=r<.4?3:r<.6?0:r<.8?1:2;/* Đảo Yên hay gặp nhóm Bạch Nguyệt */return [Math.floor(Math.random()*9),t]}
+  function shRandKind(){const A=TD_ACT;if(!A.deck||!A.deck.length){A.deck=[];for(let s=0;s<SH_N;s++)for(let t=0;t<SH_T;t++)A.deck.push([s,t]);for(let i=A.deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[A.deck[i],A.deck[j]]=[A.deck[j],A.deck[i]]}}return A.deck.pop()}/* mỗi lượt: 36 vỏ, mỗi vỏ hiện một lần */
   function shSpawn(){const A=TD_ACT;if(!A.g||A.spawned>=36)return;/* cả bãi hiện tối đa 36 vỏ trong một lượt dạo */
     for(let tr=0;tr<80;tr++){const F=A.focus,A0=1.75,A1=2.88,/* chỉ bãi biển bên phải, cạnh Chòi ngắm cảnh */a=F!=null&&tr<50?Math.max(A0,Math.min(A1,F+(Math.random()-.5)*.45)):A0+Math.random()*(A1-A0),e0=tdSandEdge(a)+.03,lo=e0,rr=lo+Math.random()*Math.max(.01,.885-lo),R=tdR(a)*rr,/* chỉ trên bãi cát khô, không ra mép nước */x=TD_O[0]+Math.cos(a)*R,z=TD_O[1]+Math.sin(a)*R;
       if(Math.abs(z)<5||!tdWalkable(x,z)||!A.clear(x,z,.5))continue;if(A.cairn&&Math.hypot(x-A.cairn.x,z-A.cairn.z)<3)continue;if(A.beach.some(q=>Math.hypot(q.x-x,q.z-z)<(F!=null?1.3:2.2))||A.decor.some(q=>Math.hypot(q.x-x,q.z-z)<1.2)||A.bins.some(b=>Math.hypot(b.x-x,b.z-z)<1.5)||(bayIsland&&Math.hypot(bayIsland.x-x,bayIsland.z-z)<1.2))continue;
@@ -901,7 +908,7 @@
   function shTrayToBag(name){const A=TD_ACT,b=A.bins[A.carry];if(!b||b.items.length<3)return;const label=String(name||'').trim().slice(0,40)||BIN_INFO[A.carry].short+' '+new Date().toLocaleDateString('vi-VN');
     window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:'shelltray',label,own:true,data:{tray:A.carry,shells:b.items.map(q=>[q.s,q.t]),where:'Đảo Yên'}}}));for(const q of b.items)b.g.remove(q.g);b.items=[];
     bayCaption('🎒 Đã cất '+BIN_INFO[A.carry].name+' «'+label+'» vào Túi An Yên · cả khay chỉ chiếm 1 ô',4500);shPanel(null);shPills();if(A.mode==='pick'){shSeaAll(true);setTimeout(()=>shEnd(true),1400)}else shAfterChoice()}
-  let shAudio=null;function shListen(qq){const q=qq||TD_ACT.hand;if(!q||q.s!==5)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(shAudio){shAudio.stop();shAudio=null}const ctx=new AC(),len=ctx.sampleRate*15,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*3.2}
+  let shAudio=null;function shListen(qq){const q=qq||TD_ACT.hand;if(!q||q.s!==11)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(shAudio){shAudio.stop();shAudio=null}const ctx=new AC(),len=ctx.sampleRate*15,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);let last=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*3.2}
       const src=ctx.createBufferSource();src.buffer=buf;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;const g=ctx.createGain();const t0=ctx.currentTime;g.gain.setValueAtTime(0,t0);for(let k=0;k<15;k+=5){g.gain.linearRampToValueAtTime(.5,t0+k+2.2);g.gain.linearRampToValueAtTime(.12,t0+k+5)}g.gain.linearRampToValueAtTime(0,t0+15);
       src.connect(lp);lp.connect(g);g.connect(ctx.destination);src.start();src.stop(t0+15);src.onended=()=>{ctx.close()};shAudio={stop:()=>{try{src.stop()}catch(e){}}};bayCaption('🐚 Áp tai nghe sóng · 15 giây tĩnh lặng',15000)}catch(e){}}
   // ---- bảng chọn bên dưới màn hình (1–2 chạm) và nút Sổ Sưu Tập / khay đang cầm
@@ -915,7 +922,7 @@
       else{h.textContent='✨ '+shName(q.s,q.t)+' · '+SH_TONE_IC[q.t]+' '+SH_TONE[q.t];p.textContent='«'+q.msg+'»';const left=3-shDayCount();
         if(A.carry!=null&&A.bins[A.carry].items.length<SH_CAP)row.append(shBtn(BIN_INFO[A.carry].ic+' Xếp vào '+BIN_INFO[A.carry].short,shIntoBin,true));
         else if(A.carry!=null)row.append(shBtn('⏹ '+BIN_INFO[A.carry].short+' đã đầy · Ngừng nhặt',()=>shPanel('stop'),true));
-        if(A.mode!=='pick')row.append(shBtn('🎒 Cất Túi An Yên ('+Math.max(0,left)+'/3)',shToBag,A.carry==null),shBtn('🎨 Xếp hình trên cát',()=>shPanel('art')));row.append(shBtn('🌊 Thả biển',shToSea),shBtn('↩ Đặt lại cho biển',()=>shDrop()));if(q.s===5)row.append(shBtn('👂 Áp tai nghe sóng',shListen))}}
+        if(A.mode!=='pick')row.append(shBtn('🎒 Cất Túi An Yên ('+Math.max(0,left)+'/3)',shToBag,A.carry==null),shBtn('🎨 Xếp hình trên cát',()=>shPanel('art')));row.append(shBtn('🌊 Thả biển',shToSea),shBtn('↩ Đặt lại cho biển',()=>shDrop()));if(q.s===11)row.append(shBtn('👂 Áp tai nghe sóng',shListen))}}
     else if(mode==='tray'){const b=A.bins[A.carry];if(!b){shPanel(null);return}h.textContent=BIN_INFO[A.carry].ic+' '+BIN_INFO[A.carry].name+' · '+b.items.length+'/'+SH_CAP;p.textContent=b.items.length?b.items.map(q=>shName(q.s,q.t)).join(' · '):'Chưa có vỏ nào. Nhặt và rửa vỏ rồi chọn «Xếp vào» để bày lên khay.';
       if(b.items.length>=3){const inp=document.createElement('input');inp.maxLength=40;inp.placeholder='Tên kỷ niệm (≤ 40 ký tự), ví dụ: Chiều nắng Đảo Yên';inp.addEventListener('keydown',e=>e.stopPropagation());shUI.insertBefore(inp,row);row.append(shBtn('🎒 Cất cả khay vào Túi An Yên',()=>shTrayToBag(inp.value),true))}
       if(b.items.length)row.append(shBtn('🎨 Xếp hình trên cát',()=>shPanel('art')));row.append(shBtn('↩ Đặt khay về chỗ cũ',()=>{binHold(b,false);A.carry=null;shPanel(null);shPills()}),shBtn('✕ Đóng',()=>shPanel(null)))}
@@ -929,7 +936,7 @@
     else if(mode==='intro'){h.textContent='🐚 Nhặt vỏ sò Vịnh Yên';p.textContent='Trên bãi cát có 36 loại vỏ sò, ốc Vịnh Yên. Chọn một đồ đựng, ngồi xuống cầm lên rồi đi nhặt vỏ trên cát: mỗi vỏ nhặt lên tự vào đồ đựng (đựng được tới 36 vỏ). Nhặt tới đâu vỏ hiện thêm tới đó. Khi ngừng nhặt, bạn chọn cất vào Túi An Yên, xếp hình trên bãi cát hoặc trả về biển.';
       BIN_INFO.forEach((b,k)=>row.append(shBtn(b.ic+' '+b.name+' <small>· '+b.style+'</small>',()=>shChoose(k),k===0)));row.append(shBtn('📖 Sổ Sưu Tập '+Object.keys(shBook()).length+'/36',()=>shPanel({book:0})),shBtn('✕ Để sau',()=>shPanel(null)))}
     else if(mode==='picked'){const b=A.bins[A.carry],L=b?b.items:[],q2=A.last;if(q2)shUI.insertBefore(shPreview(q2),h);h.textContent=(BIN_INFO[A.carry]?.ic||'')+' Vỏ sò đã nhặt · '+L.length+'/'+SH_CAP;p.textContent=q2?'Vừa nhặt: '+SH_TONE_IC[q2.t]+' '+shName(q2.s,q2.t)+'. ':'';
-      if(L.length<SH_CAP)row.append(shBtn('🐚 Nhặt tiếp',()=>shPanel(null),true));else p.textContent+=' '+BIN_INFO[A.carry].short+' đã đầy '+SH_CAP+' vỏ.';row.append(shBtn('⏹ Ngừng nhặt',()=>shPanel('stop'),L.length>=SH_CAP));if(q2&&q2.s===5)row.append(shBtn('👂 Áp tai nghe sóng',()=>shListen(q2)))}
+      if(L.length<SH_CAP)row.append(shBtn('🐚 Nhặt tiếp',()=>shPanel(null),true));else p.textContent+=' '+BIN_INFO[A.carry].short+' đã đầy '+SH_CAP+' vỏ.';row.append(shBtn('⏹ Ngừng nhặt',()=>shPanel('stop'),L.length>=SH_CAP));if(q2&&q2.s===11)row.append(shBtn('👂 Áp tai nghe sóng',()=>shListen(q2)))}
     else if(mode==='bag2'){const b=A.bins[A.carry],L=b?b.items:[];A.sel=A.sel||new Set();const n=[...A.sel].filter(x=>L.includes(x)).length,left=3-shDayCount();h.textContent='🎒 Chọn vỏ cất vào Túi An Yên';
       p.textContent='Chạm từng vỏ để chọn: 🎒 cất vào Túi An Yên, 🌊 trả lại biển. '+(n>=3?'Đã chọn '+n+' vỏ: cất chung thành 1 '+BIN_INFO[A.carry].short.toLowerCase()+' (chiếm 1 ô).':'Chọn từ 3 vỏ trở lên để cất cả khay (1 ô, tối đa '+SH_CAP+' vỏ), hoặc 1–2 vỏ lẻ (hôm nay còn '+Math.max(0,left)+'/3 vỏ lẻ).');
       const ul=document.createElement('div');ul.className='row';ul.style.marginBottom='8px';L.forEach(x=>{const on=A.sel.has(x);ul.append(shBtn((on?'🎒 ':'🌊 ')+shName(x.s,x.t),()=>{on?A.sel.delete(x):A.sel.add(x);shPanel('bag2')},on))});shUI.insertBefore(ul,row);
@@ -945,7 +952,7 @@
       if(left>0)L.forEach(q=>row.append(shBtn('🎒 '+shName(q.s,q.t),()=>shOneToBag(q))));if(!L.length&&!(b&&b.items.length>=3))p.textContent='Chưa có vỏ nào đã rửa sạch để cất. Hãy nhúng rửa cát trước nhé.';row.append(shBtn('← Quay lại',()=>shPanel('stop')))}
     else if(mode==='clean'){h.textContent='🧹 Dọn sạch bãi biển?';p.textContent='Các hình xếp bằng vỏ sò ('+A.decor.length+' vỏ) sẽ được dọn đi, cát lại phẳng mịn.';row.append(shBtn('🧹 Dọn sạch',shClearDecor,true),shBtn('✕ Giữ lại',()=>shPanel(undefined)))}
     else if(mode&&mode.book!=null){const B=shBook(),t=mode.book;h.textContent='📖 Sổ Sưu Tập 36 loại · '+Object.keys(B).length+'/36';const tabs=document.createElement('div');tabs.className='tabs';SH_TONE.forEach((n,i)=>tabs.append(shBtn(SH_TONE_IC[i]+' '+n,()=>shPanel({book:i}),i===t)));p.replaceWith(tabs);
-      const grid=document.createElement('div');grid.className='book';for(let s=0;s<9;s++){const c=document.createElement('div'),e=B[shKey(s,t)];if(e)c.className='on';c.textContent=String(s+1).padStart(2,'0')+' '+(e?SH_NAME[s][t]+' · '+SH_SHAPE[s]:'· · ·');grid.append(c)}shUI.insertBefore(grid,row);row.append(shBtn('✕ Đóng',()=>shPanel(null)))}}
+      const grid=document.createElement('div');grid.className='book';for(let s=0;s<SH_N;s++){const c=document.createElement('div'),e=B[shKey(s,t)];if(e)c.className='on';c.textContent=String(s+1).padStart(2,'0')+' '+(e?SH_NAME[s][t]+' · '+SH_SHAPE[s]:'· · ·');grid.append(c)}shUI.insertBefore(grid,row);row.append(shBtn('✕ Đóng',()=>shPanel(null)))}}
   /* xoay 360° ngắm vỏ trên tay: một khung 3D nhỏ dùng chung, chỉ chạy khi bảng đang mở */
   let shPV=null;function shPreview(q){if(!shPV){const cv=document.createElement('canvas');cv.className='pv';cv.width=192;cv.height=192;const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});r.setPixelRatio(1);r.setSize(192,192,false);
       const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#9a8c70',1.6));const dl=new THREE.DirectionalLight('#ffffff',1.6);dl.position.set(2,3,2);sc.add(dl);const cam=new THREE.PerspectiveCamera(32,1,.05,20);cam.position.set(0,1.25,1.9);cam.lookAt(0,.15,0);
@@ -959,7 +966,7 @@
   // ---- Xếp vỏ sò thành hình trên cát: hoa, trái tim, mandala hoặc tác phẩm tự do; giữ lại trên bãi tới khi bấm «Dọn sạch bãi biển»
   const SH_DECOR_KEY='yen_shell_decor_v1';
   function shDecorSave(){try{localStorage.setItem(SH_DECOR_KEY,JSON.stringify(TD_ACT.decor.map(q=>({s:q.s,t:q.t,x:+q.x.toFixed(2),z:+q.z.toFixed(2),r:+q.r.toFixed(2)}))))}catch(e){}}
-  function shDecorLoad(){let L=[];try{L=JSON.parse(localStorage.getItem(SH_DECOR_KEY)||'[]')||[]}catch(e){}for(const d of L.slice(0,120)){if(!(d.s>=0&&d.s<9&&d.t>=0&&d.t<4)||!Number.isFinite(d.x)||!Number.isFinite(d.z))continue;const g=new THREE.Group(),m=shMesh(d.s,d.t,false);g.add(m);g.position.set(d.x,tdTerrainY(d.x,d.z)+.01,d.z);g.rotation.y=d.r||0;TD_ACT.g.add(g);TD_ACT.decor.push({s:d.s,t:d.t,x:d.x,z:d.z,r:d.r||0,g})}}
+  function shDecorLoad(){let L=[];try{L=JSON.parse(localStorage.getItem(SH_DECOR_KEY)||'[]')||[]}catch(e){}for(const d of L.slice(0,120)){if(!(d.s>=0&&d.s<SH_N&&d.t>=0&&d.t<SH_T)||!Number.isFinite(d.x)||!Number.isFinite(d.z))continue;const g=new THREE.Group(),m=shMesh(d.s,d.t,false);g.add(m);g.position.set(d.x,tdTerrainY(d.x,d.z)+.01,d.z);g.rotation.y=d.r||0;TD_ACT.g.add(g);TD_ACT.decor.push({s:d.s,t:d.t,x:d.x,z:d.z,r:d.r||0,g})}}
   function shPattern(kind,n,v=0){const P=[],sc=1+.18*(v%3),rot=v*.7;if(kind==='hoa'){P.push([0,0]);let k=1;for(let ring=1;k<n;ring++){const c=ring*6,r=.32*ring;for(let i=0;i<c&&k<n;i++,k++){const a=(i+(ring%2?0:.5))/c*TAU;P.push([Math.cos(a)*r,Math.sin(a)*r])}}}
     else if(kind==='tim'){const sc=Math.max(.045,Math.min(.12,.02*n+.03));for(let i=0;i<n;i++){const t=i/n*TAU,hx=16*Math.pow(Math.sin(t),3),hz=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);P.push([hx*sc*.55,hz*sc*.55])}}
     else if(kind==='mandala'){const rings=[1,6,12,18,24];let k=0;for(let ri=0;k<n;ri++){const c=rings[Math.min(ri,4)],r=.34*ri;for(let i=0;i<c&&k<n;i++,k++){const a=(i+ri*.5)/c*TAU;P.push([Math.cos(a)*r,Math.sin(a)*r])}}}
@@ -1041,6 +1048,11 @@
   function shGridRandom(){const A=TD_ACT,R=A.art,b=A.bins[A.carry];if(!R)return;const all=R.cells.filter(Boolean).concat(b?b.items:[]);for(const q of all)if(R.cells.includes(q))R.cells[R.cells.indexOf(q)]=null;
     const idx=[...Array(GRID_N*GRID_N).keys()].sort(()=>Math.random()-.5),sh=all.slice().sort(()=>Math.random()-.5);sh.forEach((q,k)=>shGridPut(q,idx[k]));R.sel=null;shGridMark();shPanel('grid');bayCaption('🎲 Đã xếp ngẫu nhiên '+sh.length+' vỏ · bấm lại để xếp kiểu khác, hoặc chạm vỏ để tự chỉnh',4000)}
   /* ảnh nhỏ của từng loại vỏ (vẽ một lần, dùng lại) để khách chọn vỏ bằng hình, không cần tên */
+  /* xem trước cả bộ 36 vỏ (kiểm thử / ảnh giới thiệu): 12 cột × 3 hàng, góc nhìn view: 'front' | 'side' | 'top' */
+  window.__shellSheet=(view='front',W=1600,H=760)=>{const cv=document.createElement('canvas');cv.width=W;cv.height=H;const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(W,H,false);r.setClearColor('#f7efe3');r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;
+    const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#c9b89a',1.5));const dl=new THREE.DirectionalLight('#fff4e0',2.2);dl.position.set(3,6,5);sc.add(dl);const d2=new THREE.DirectionalLight('#e0f0ff',.8);d2.position.set(-4,3,-2);sc.add(d2);
+    for(let s=0;s<SH_N;s++)for(let t=0;t<SH_T;t++){const m=shMesh(s,t,false);m.scale.setScalar(.95);const col=s%4,row=Math.floor(s/4);m.position.set((col-1.5)*4.3+(t-1)*1.25,0,(row-1)*2.9);if(view==='side')m.rotation.y=Math.PI/2;sc.add(m)}
+    const hw=8.4,cam=new THREE.OrthographicCamera(-hw,hw,hw*H/W,-hw*H/W,.1,100);if(view==='top'){cam.position.set(0,20,0.01);cam.lookAt(0,0,0)}else{cam.position.set(0,11,16);cam.lookAt(0,.3,0)}r.render(sc,cam);const url=cv.toDataURL('image/jpeg',.9);r.dispose();return url};
   const shThumbC={};let shThumbR=null;function shThumb(q){const k=q.s+'_'+q.t;if(shThumbC[k])return shThumbC[k];try{if(!shThumbR){const cv=document.createElement('canvas');cv.width=cv.height=96;const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(96,96,false);const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#9a8c70',1.6));const dl=new THREE.DirectionalLight('#ffffff',1.6);dl.position.set(2,3,2);sc.add(dl);const cam=new THREE.PerspectiveCamera(30,1,.05,20);cam.position.set(0,1.5,1.35);cam.lookAt(0,.08,0);shThumbR={r,sc,cam,cv}}
       const T=shThumbR,m=new THREE.Mesh(shGeo(q.s,q.t),shMat(q.s));m.rotation.y=.6;T.sc.add(m);T.r.render(T.sc,T.cam);shThumbC[k]=T.cv.toDataURL('image/png');T.sc.remove(m)}catch(e){shThumbC[k]=''}return shThumbC[k]}
   function shGridHide(R){if(R&&R.grid){R.grid.parent&&R.grid.parent.remove(R.grid);R.grid=null;R.cellM=null}}
