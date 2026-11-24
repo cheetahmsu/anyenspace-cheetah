@@ -1421,33 +1421,36 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.08,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.1,3),bqMats.twine);t.position.set(x,.03,.095);g.add(t)}}
     return g}
 
-  // 3.32: Mỗi hồ Lục Căn có một luống hoa sát bờ (theo tranh "6 hồ" và bộ mẫu three.js): gò đất xanh thấp, hoa mọc dày, vài tảng đá.
-  // Luống quay về phía ngã rẽ cũ trên vòng đường Ngũ quan; hướng được dò quanh bờ hồ để luống tránh lối đi, nhà và gốc cây.
-  const BED_R=2.4;
+  // 3.33: Mỗi hồ Lục Căn có một luống hoa dài, mảnh, ôm theo một cung quanh miệng hồ (theo tranh "6 hồ"): dải đất xanh thấp
+  // nằm sát vòng đá, hoa mọc dày dọc dải, hai tảng đá ở hai đầu. Cung được dò quanh bờ để tránh lối đi, nhà, gốc và tán cây,
+  // ưu tiên phía ngã rẽ cũ trên vòng đường Ngũ quan. Vị trí sáu hồ giữ nguyên.
+  const BED_IN=POND_R+.45,BED_OUT=POND_R+1.65,BED_ARC=1.9;/* dải rộng 1.2 m, dài khoảng 12 m theo bờ */
   const canopyNear=(x,z,r)=>{const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=treeGrid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<r)return true}return false};
   const FLOWER_GARDENS=[{kind:'hong',lake:'Sắc'},{kind:'cam_tu_cau',lake:'Thanh'},{kind:'lan',lake:'Hương'},{kind:'cuc',lake:'Vị'},{kind:'nhai',lake:'Chạm'},{kind:'sen',lake:'Niệm'}].map((g,i)=>{const pts=BRANCHES[i],c=pts[pts.length-8],l=wishLakes.find(v=>v.name===g.lake);
-    const bedFree=(x,z)=>!(onPaved(x,z)||branchDistance(x,z)<1.3||stairsDistance(x,z)<1.8||wishLakes.some(w=>!w.lotus&&Math.hypot(x-w.x,z-w.z)<POND_R+.45)||houseHit(x,z,.6)||treeBlocked(x,z));
-    const th0=Math.atan2(c[1]-l.z,c[0]-l.x),D=POND_R+.3+BED_R*.8;let best=null;
-    for(let k=0;k<36;k++){const th=k/36*Math.PI*2,bx=l.x+Math.cos(th)*D,bz=l.z+Math.sin(th)*D;let ok=0,n=0;for(let gx=-BED_R;gx<=BED_R;gx+=.5)for(let gz=-BED_R;gz<=BED_R;gz+=.5){if(gx*gx+gz*gz>BED_R*BED_R)continue;n++;if(bedFree(bx+gx,bz+gz)&&!canopyNear(bx+gx,bz+gz,3))ok++}
-      const dth=Math.abs(Math.atan2(Math.sin(th-th0),Math.cos(th-th0))),score=ok/n-.25*dth/Math.PI;if(!best||score>best.score)best={score,th,bx,bz}}
-    const ox=Math.cos(best.th),oz=Math.sin(best.th);/* đứng hái ở mép ngoài luống */
-    return {...g,bx:best.bx,bz:best.bz,th:best.th,x:best.bx+ox*(BED_R+.6),z:best.bz+oz*(BED_R+.6),free:bedFree}});
-  {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),rockGeo=new THREE.DodecahedronGeometry(1,0),rockM=new THREE.MeshStandardMaterial({color:'#8d8a7d',roughness:.95,flatShading:true});
+    const bedFree=(x,z)=>!(onPaved(x,z)||branchDistance(x,z)<1.2||stairsDistance(x,z)<1.8||wishLakes.some(w=>!w.lotus&&Math.hypot(x-w.x,z-w.z)<POND_R+.4)||houseHit(x,z,.6)||treeBlocked(x,z));
+    const th0=Math.atan2(c[1]-l.z,c[0]-l.x);let best=null;
+    for(let k=0;k<72;k++){const th=k/72*Math.PI*2;let ok=0,n=0;for(let a=-BED_ARC/2;a<=BED_ARC/2;a+=.08)for(let r=BED_IN+.1;r<=BED_OUT;r+=.35){const x=l.x+Math.cos(th+a)*r,z=l.z+Math.sin(th+a)*r;n++;if(bedFree(x,z)&&!canopyNear(x,z,2.4))ok++}
+      const dth=Math.abs(Math.atan2(Math.sin(th-th0),Math.cos(th-th0))),score=ok/n-.2*dth/Math.PI;if(!best||score>best.score)best={score,th}}
+    const th=best.th,rm=(BED_IN+BED_OUT)/2,R=BED_OUT+.8;/* đứng hái ở mép ngoài, giữa cung */
+    return {...g,lx:l.x,lz:l.z,th,bx:l.x+Math.cos(th)*rm,bz:l.z+Math.sin(th)*rm,x:l.x+Math.cos(th)*R,z:l.z+Math.sin(th)*R,free:bedFree}});
+  {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),rockGeo=new THREE.DodecahedronGeometry(1,0),rockM=new THREE.MeshStandardMaterial({color:'#8d8a7d',roughness:.95,flatShading:true}),moundM=mat('#315c35');
     for(const gd of FLOWER_GARDENS){
-      if(!gd.pier){const pts=[],N=gd.kind==='lan'?80:64;for(let tries=0;pts.length<N&&tries<4000;tries++){const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*(BED_R-.25),x=gd.bx+Math.cos(a)*r,z=gd.bz+Math.sin(a)*r;
-          if(!gd.free(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.34))continue;pts.push([x,z])}
-        // gò đất trồng hoa: lăng trụ 9 cạnh thấp, mép không đều
-        const mound=new THREE.Mesh(new THREE.CylinderGeometry(BED_R*.86,BED_R*.95,.22,9),mat('#315c35'));mound.position.set(gd.bx,terrainHeight(gd.bx,gd.bz)-.04,gd.bz);mound.rotation.y=gd.th;mound.scale.set(1,1,.9);mound.userData.garden=gd;scene.add(mound);
-        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,Math.max(1,pts.length));pts.forEach(([x,z],i)=>{const s=1.8+rnd()*.7;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.04,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
+      if(!gd.pier){const pts=[],N=gd.kind==='lan'?96:84;for(let tries=0;pts.length<N&&tries<5000;tries++){const a=gd.th+(rnd()-.5)*BED_ARC*(.96),r=BED_IN+.15+rnd()*(BED_OUT-BED_IN-.3),x=gd.lx+Math.cos(a)*r,z=gd.lz+Math.sin(a)*r;
+          if(!gd.free(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.32))continue;pts.push([x,z])}
+        // dải đất trồng hoa: hình vành khuyên cắt cung, đùn thấp, mép vát; toạ độ theo tâm hồ
+        const sh=new THREE.Shape(),S=24,a0=gd.th-BED_ARC/2;for(let k=0;k<=S;k++){const a=a0+k/S*BED_ARC;sh[k?'lineTo':'moveTo'](Math.cos(a)*BED_OUT,-Math.sin(a)*BED_OUT)}for(let k=S;k>=0;k--){const a=a0+k/S*BED_ARC;sh.lineTo(Math.cos(a)*BED_IN,-Math.sin(a)*BED_IN)}
+        const mg=new THREE.ExtrudeGeometry(sh,{depth:.12,bevelEnabled:true,bevelThickness:.06,bevelSize:.14,bevelSegments:1,curveSegments:4});mg.rotateX(-Math.PI/2);
+        const mound=new THREE.Mesh(mg,moundM);mound.position.set(gd.lx,terrainHeight(gd.bx,gd.bz)-.03,gd.lz);mound.userData.garden=gd;scene.add(mound);
+        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,Math.max(1,pts.length));pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.6;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.12,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
         mesh.count=pts.length;mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
         // lá xanh thấp dưới chân hoa
-        const nb=Math.ceil(pts.length/2),bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.22,0),new THREE.MeshStandardMaterial({color:'#3d7a3a',roughness:.9,flatShading:true}),Math.max(1,nb));for(let i=0;i<nb;i++){const [x,z]=pts[i*2];e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.25,terrainHeight(x,z)+.12,z+(rnd()-.5)*.25);sc.set(1.5,.6,1.5);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)}bush.count=nb;bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
-        // hai tảng đá tròn ở mép luống, như trong tranh
-        const rocks=new THREE.InstancedMesh(rockGeo,rockM,2);[[-1,.62],[1,.38]].forEach(([sd,s],i)=>{const a=gd.th+sd*1.15,x=gd.bx+Math.cos(a)*BED_R*.92,z=gd.bz+Math.sin(a)*BED_R*.92;e.set(rnd()*.3,rnd()*6,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+s*.35,z);sc.set(s*1.2,s*.8,s);m4.compose(v,q,sc);rocks.setMatrixAt(i,m4)});rocks.instanceMatrix.needsUpdate=true;scene.add(rocks);
+        const nb=Math.ceil(pts.length/2),bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),new THREE.MeshStandardMaterial({color:'#3d7a3a',roughness:.9,flatShading:true}),Math.max(1,nb));for(let i=0;i<nb;i++){const [x,z]=pts[i*2];e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.2,z+(rnd()-.5)*.2);sc.set(1.4,.55,1.4);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)}bush.count=nb;bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
+        // hai tảng đá tròn ở hai đầu cung, như trong tranh
+        const rocks=new THREE.InstancedMesh(rockGeo,rockM,2);[[-1,.55],[1,.42]].forEach(([sd,s],i)=>{const a=gd.th+sd*(BED_ARC/2+.06),r=(BED_IN+BED_OUT)/2+.1,x=gd.lx+Math.cos(a)*r,z=gd.lz+Math.sin(a)*r;e.set(rnd()*.3,rnd()*6,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+s*.35,z);sc.set(s*1.2,s*.8,s);m4.compose(v,q,sc);rocks.setMatrixAt(i,m4)});rocks.instanceMatrix.needsUpdate=true;scene.add(rocks);
         }
       // a floating flower sign above each garden: tap it to go and pick
       const cv=document.createElement('canvas');cv.width=256;cv.height=256;const cx=cv.getContext('2d');cx.fillStyle='rgba(11,45,40,.82)';cx.beginPath();cx.arc(128,128,112,0,7);cx.fill();cx.strokeStyle='#c8a96a';cx.lineWidth=8;cx.stroke();cx.font='120px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(FLOWER_KINDS[gd.kind].icon,128,138);
-      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);const sx=gd.pier?gd.x:gd.bx,sz=gd.pier?gd.z:gd.bz;sp.position.set(sx,terrainHeight(sx,sz)+2.9,sz);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);const sx=gd.pier?gd.x:gd.bx,sz=gd.pier?gd.z:gd.bz;sp.position.set(sx,terrainHeight(sx,sz)+2.6,sz);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
   // ---- basket, picking, arranging, carrying, offering
   let bouquetYaw=0,bqSpin=true,flowerBasket=[],bouquetLayout='tron',carriedBouquet=null,pendingGarden=null,pendingOffer=false,swapPick=-1;
   const flowerUi=document.createElement('div');flowerUi.innerHTML=`
