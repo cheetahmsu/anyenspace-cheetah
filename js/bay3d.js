@@ -534,7 +534,7 @@
     for(const s of [-1,1])box(house,gx1,FY+WH/2,s*gz*.5,.16,WH,.16,wood);
     box(house,gx0,FY+WH,0,.22,.22,gz*2+.2,wood);box(house,gx0,FY+.08,0,.2,.16,gz*2,wood);for(const s of [-1,1])box(house,(gx0+gx1)/2,FY+WH,s*gz,gx1-gx0,.22,.22,wood);
     {/* cửa đôi giữa mặt tiền */box(house,gx0-.04,FY+1.25,0,.14,2.5,.14,darkW);for(const s of [-1,1])box(house,gx0-.04,FY+1.25,s*1.35,.16,2.5,.16,darkW);box(house,gx0-.04,FY+2.55,0,.18,.16,2.9,darkW);for(const s of [-1,1])box(house,gx0-.1,FY+1.2,s*.25,.06,.32,.06,gold)}
-    {/* hiên trước: cột gỗ đỡ mái đua, chậu cây trắng hai bên cửa, đôi ghế dài */for(let z=-hz+.6;z<=hz-.5;z+=(hz*2-1.1)/4)cyl(house,hx0+.45,FY+WH/2+.15,z,.14,.16,WH+.3,wood,8);
+    {/* hiên trước: cột gỗ đỡ mái đua, chậu cây trắng hai bên cửa, đôi ghế dài */for(let z=-hz+.6;z<=hz-.5;z+=(hz*2-1.1)/4)if(Math.abs(z)>1.5)cyl(house,hx0+.45,FY+WH/2+.15,z,.14,.16,WH+.3,wood,8);/* bỏ cột giữa trước cửa cho thoáng lối vào */
       for(const s of [-1,1]){cyl(house,-.2,FY+.4,s*2.3,.42,.32,.8,whiteM,12);const pl=P(new THREE.IcosahedronGeometry(.62,1),leafM[1],-.2,FY+1.25,s*2.3,house);pl.scale.set(1,1.15,1);
         box(house,.1,FY+.42,s*6,.8,.4,2.6,creamM);box(house,.45,FY+.75,s*6,.18,.5,2.6,creamM);cyl(house,-.5,FY+.55,s*4.3,.03,.03,1.1,darkW,6);box(house,-.5,FY+1.15,s*4.3,.28,.32,.28,warm)}}
     hipRoof(house,hx0-1.3,hx1+1.3,-hz-1.3,hz+1.3,FY+WH+.25,3.1,tile);
@@ -690,9 +690,9 @@
   function islandWalkTo(x,z){const I=bayIsland;if(!I)return;tdStand();const p=tdRoute(I.x,I.z,x,z);if(!p){bayCaption('Chỗ đó chưa đi tới được, hãy chạm chỗ khác trên đảo',2500);return}I.then=null;I.path=p}
   function updateIslandWalk(dt){const I=bayIsland;if(!I)return;
     {const K=walkingKeys;if(K.size&&I.then!=='board'&&I.then!=='house'){I.path.length=0;I.then=null;if(K.has('turnleft'))I.yaw+=1.9*dt;if(K.has('turnright'))I.yaw-=1.9*dt;const mv=K.has('forward')?1:K.has('back')?-.6:0;
-      if(mv){const sp=WALK_SPEED*mv*dt,nx=I.x+Math.sin(I.yaw)*sp,nz=I.z+Math.cos(I.yaw)*sp;if(tdWalkable(nx,nz)){I.x=nx;I.z=nz}else if(tdWalkable(nx,I.z))I.x=nx;else if(tdWalkable(I.x,nz))I.z=nz;I.moving=true;I.t+=dt}else I.moving=false;
+      if(mv){const sp=WALK_SPEED*mv*walkDt,nx=I.x+Math.sin(I.yaw)*sp,nz=I.z+Math.cos(I.yaw)*sp;if(tdWalkable(nx,nz)){I.x=nx;I.z=nz}else if(tdWalkable(nx,I.z))I.x=nx;else if(tdWalkable(I.x,nz))I.z=nz;I.moving=true;I.t+=dt}else I.moving=false;
       if(I.x>TD_H.x0+1.2&&Math.abs(I.z)<2.4)I.then='house';return}}
-    let left=WALK_SPEED*dt;/* cùng tốc độ đi bộ với Rừng Yên, không nhân theo tốc độ tàu */
+    let left=WALK_SPEED*walkDt;/* cùng tốc độ đi bộ với Rừng Yên, không nhân theo tốc độ tàu */
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
     I.moving=I.path.length>0;I.t+=dt;
