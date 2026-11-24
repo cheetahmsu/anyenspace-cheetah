@@ -12,7 +12,7 @@
 - Menu mở các tương tác và đường dẫn chọn phòng. Các bảng khác được ẩn trong chế độ 3D trên mobile.
 - **Chạm mặt đất** để đi theo đường thẳng tới điểm được chọn, dừng trước hồ và khu điện chính. Chưa có thuật toán tìm đường vòng chướng ngại.
 - **Chạm tọa cụ** để ngồi thiền; **chạm nhân vật khác** để gửi lời chào cho phòng đang kết nối.
-- 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khóac ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
+- 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khoác ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
 - Giữ ngồi thiền/thiền hành khi gõ chuông.
 
 ## Vịnh Hạ Long – Lan Hạ – Bái Tử Long · Du thuyền Yên (beta)
@@ -50,7 +50,7 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Xuống Đảo Yên là sang không gian riêng:** vùng đảo của vịnh ẩn đi (có lớp mờ chuyển cảnh), chỉ còn Đảo Yên, du thuyền neo ở cầu tàu, thuyền gỗ và thuyền nan đậu quanh đảo, vòng núi đá xa và hai hòn gần nhất (Trống Mái, Đỉnh Hương). Về tàu thì vịnh hiện lại.
 
 ### Dữ liệu dùng chung của vịnh
-- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hòang hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 333 đảo đá lớn nhất theo 8 dáng (cộng các danh thắng, đảo check-in và đảo trên tour dựng riêng), luồng tàu; khi dựng tự rải thêm mỏm đá phụ ven các đảo lớn ngoài luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
+- Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hoàng hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 333 đảo đá lớn nhất theo 8 dáng (cộng các danh thắng, đảo check-in và đảo trên tour dựng riêng), luồng tàu; khi dựng tự rải thêm mỏm đá phụ ven các đảo lớn ngoài luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
 - Toạ độ chiếu từ vĩ độ/kinh độ thật quanh cảng Tuần Châu, 1 đơn vị = 4 m; kích thước đảo được phóng đại. Mỗi danh thắng ghi rõ `precision` (`source` có nguồn công bố, `approx` ước lượng) và `source`.
 - Phông tranh 360° (`nature` kind `backdrop`) và chất liệu đá vôi, tán cây đều được vẽ bằng code khi mở cảnh, không cần tải ảnh.
 - Sửa dữ liệu trong `tools/build_halong_bay.py` rồi chạy `python3 tools/build_halong_bay.py` để sinh lại tệp JSON.
