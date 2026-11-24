@@ -1275,7 +1275,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     document.getElementById('zenHint').textContent=ok?(w?'🚶 Đang đi bộ tới '+name+'…':'✨ Đã đến '+name):'Chưa tới được '+name+' lúc này';});
   fmCanvas.addEventListener('click',e=>{const r=fmCanvas.getBoundingClientRect(),x=FM.x0+(e.clientX-r.left)/r.width*(FM.x1-FM.x0),z=FM.z0+(e.clientY-r.top)/r.height*(FM.z1-FM.z0);
     /* tapping a house on the map walks to its door */
-    if(rectHit(ORCHID.x,ORCHID.z,ORCHID.rot,ORCHID.w,ORCHID.d,x,z,1)){standUpForTravel();goToOrchid();closeForestMap();return}{const h=[...SENSE_HOUSES,VAN_HOA].find(v=>rectHit(v.x,v.z,v.rot,v.W,v.D,x,z,1));if(h){standUpForTravel();goToHouse(h);closeForestMap();return}}
+    if(rectHit(ORCHID.x,ORCHID.z,ORCHID.rot,ORCHID.w,ORCHID.d,x,z,1)){standUpForTravel();goToHouse(NHA_SAC);closeForestMap();return}{const h=[...SENSE_HOUSES,VAN_HOA].find(v=>rectHit(v.x,v.z,v.rot,v.W,v.D,x,z,1));if(h){standUpForTravel();goToHouse(h);closeForestMap();return}}
     const ok=walkToPlace(x,z);if(ok)closeForestMap();else document.getElementById('zenHint').textContent='Chỗ này chưa đi tới được, hãy chạm gần lối đi hơn';});
   // 3.17: Vườn hoa ở năm ngã rẽ đường Ngũ quan và nghi thức dâng hoa.
   // Hái hoa ở sáu vườn quanh các hồ Lục Căn (sen trắng ở luống cạnh Hồ Niệm), tối đa 9 bông; bấm Xong để xem trước bó hoa, tự sắp xếp, ưng ý thì mang lên đồi
