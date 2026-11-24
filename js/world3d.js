@@ -1156,7 +1156,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=c07dc374').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=58270ea9').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1168,13 +1168,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function saveForestState(){try{localStorage.setItem('yen_forest_state',JSON.stringify({x:mePosition.x,z:mePosition.z,yaw:viewYaw,t:Date.now()}))}catch(e){}}
   function saveBayState(){if(!bayBuilt)return;const S=bayShip;const st={x:S.x,z:S.z,heading:S.heading,fast:S.fast,mult:bayMult(),t:Date.now()};
     const T=bayTour||bayPause?.tour,D=S.dest||bayPause?.dest;
-    if(D&&!T)st.dest={x:D.x,z:D.z,label:D.label};
+    if(D&&!T)st.dest={x:D.x,z:D.z,label:D.label,bow:!!D.bow};
     if(T)st.tour={id:T.tour.id,stops:T.stops.map(s=>s.landmark),idx:T.idx};
     try{localStorage.setItem('yen_bay_state',JSON.stringify(st))}catch(e){}}
   function restoreBayState(){let st=null;try{st=JSON.parse(localStorage.getItem('yen_bay_state')||'null')}catch(e){}if(!st||!Number.isFinite(st.x)||!navFree(st.x,st.z))return false;
     bayShip.x=st.x;bayShip.z=st.z;bayShip.heading=st.heading||0;bayShip.mult=(st.mult>1||st.fast)?5:1;bayShip.fast=bayShip.mult>1;bayShip.trail.length=0;bayShip.speed=0;bayShip.path=[];bayShip.dest=null;
     if(st.tour){const t=bayData.props.find(p=>p.kind==='tour'&&p.id===st.tour.id),stops=t&&(t.params?.stops||[]).filter(s=>st.tour.stops.includes(s.landmark));if(stops?.length){bayTour={tour:t,stops,idx:Math.min(st.tour.idx||0,stops.length-1),dwellUntil:0};sailToStop();bayCaption('🧭 Tiếp tục tour · '+shortName(t.name),4500)}}
-    else if(st.dest)setDestination(st.dest.x,st.dest.z,st.dest.label);
+    else if(st.dest)setDestination(st.dest.x,st.dest.z,st.dest.label,false,st.dest.bow?{bow:true}:null);
     return true}
   window.addEventListener('anyen-3d-exit',()=>{if(!bayMode)saveForestState()});
   // Không gian đang ở: 'forest' | 'bay' | 'room:<id>' | 'out'. Người ở không gian khác thì không hiện hình ở đây (chỉ giữ vị trí, trạng thái).

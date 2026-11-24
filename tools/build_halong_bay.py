@@ -286,10 +286,11 @@ def main():
             karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), shape])
             made += 1
 
-    # Chỉ giữ khoảng 1/3 số đảo: ưu tiên đảo lớn (bề ngang × chiều cao), danh thắng biểu tượng dựng riêng nên luôn còn.
-    KEEP_RATIO = 1 / 3
-    vol = lambda k: k[2] * (1.9 if k[4] == 3 else 1) * k[3]
-    keep = sorted(karsts, key=vol, reverse=True)[:max(1, round(len(karsts) * KEEP_RATIO))]
+    # Chỉ giữ 333 đảo lớn nhất (mặt đứng nhìn từ tàu: bề ngang × chiều cao). Đảo check-in, danh thắng và đảo trên tour
+    # là các danh thắng (props kind "landmark") dựng riêng nên luôn còn, không tính vào 333.
+    KEEP_COUNT = 333
+    size = lambda k: k[2] * (1.9 if k[4] == 3 else 1.35 if k[4] == 4 else 1) * k[3]
+    keep = sorted(karsts, key=size, reverse=True)[:KEEP_COUNT]
     keep_ids = {id(k) for k in keep}
     karsts = [k for k in karsts if id(k) in keep_ids]
 
