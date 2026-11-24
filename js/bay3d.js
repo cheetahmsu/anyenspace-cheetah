@@ -483,34 +483,44 @@
     [['#f1b34a','#fde6b0'],['#2fb4c4','#c4f0f5'],['#ef7fae','#fcd8e8'],['#f0e8d8','#e0bd6a']],
     [['#ef7c84','#fdd0cc'],['#7fcf5c','#dcf6c6'],['#8a7ae0','#d0c8f7'],['#eef0f2','#d3d8e0']],
     [['#f6e9d7','#f08aa0'],['#9dd6c7','#f7e9cf'],['#c9a27a','#f2a25a'],['#f7f3ec','#d8eee6']],
-    [['#f4e8d2','#e7b445'],['#2fae6a','#cdf2da'],['#6f5ed0','#ddd6f7'],['#f3efe8','#d9d3c8']],
+    [['#f4e8d2','#e7b445'],['#2fae6a','#cdf2da'],['#f4ecdf','#8a6ad8'],['#f3efe8','#d9d3c8']],
     [['#f7e9d5','#b8652e'],['#e8f5de','#3e9a4e'],['#f0e6f7','#7a52c0'],['#f5f3ef','#c8c4bd']],
     [['#f8dec9','#ec7f6a'],['#e4f0de','#36a487'],['#f0e2f5','#b06ad6'],['#f7f3eb','#dfd4c0']]];
   const SH_SEA=['Sóng đến rồi đi, như hơi thở của biển. Thở vào, thở ra.','Cát mịn trôi đi, sắc men thật hiện ra. Mọi điều đẹp cần chút kiên nhẫn.','Biển không vội vàng, mà vẫn chạm tới mọi bờ.','Một chiếc vỏ nhỏ cũng mang cả đại dương trong lòng.','Hãy để ưu phiền trôi theo bọt sóng.','Lắng nghe: tiếng sóng chính là tiếng lòng đang dịu lại.','Mỗi con sóng là một khởi đầu mới.','Bình yên không ở đâu xa, ở ngay hơi thở này.','Cảm ơn biển đã gửi món quà nhỏ hôm nay.'];
   const shName=(s,t)=>SH_SHAPE[s]+' '+SH_NAME[s][t],shKey=(s,t)=>s+'-'+t;
-  function shSurf(nu,nv,fn,c1,c2){const P=[],C=[],I=[],a=new THREE.Color(c1),b=new THREE.Color(c2),c=new THREE.Color();
-    for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const [x,y,z,k]=fn(i/nu,j/nv);P.push(x,y,z);c.copy(a).lerp(b,Math.max(0,Math.min(1,k)));C.push(c.r,c.g,c.b)}
+  function shSurf(nu,nv,fn,c1,c2,c3){const P=[],C=[],I=[],a=new THREE.Color(c1),b=new THREE.Color(c2),d=new THREE.Color(c3||'#fbf3ea'),c=new THREE.Color();
+    for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const [x,y,z,k]=fn(i/nu,j/nv);P.push(x,y,z);const kk=Math.max(0,Math.min(2,k));if(kk<=1)c.copy(a).lerp(b,kk);else c.copy(b).lerp(d,kk-1);C.push(c.r,c.g,c.b)}
     for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const q=j*(nu+1)+i;I.push(q,q+nu+1,q+1,q+1,q+nu+1,q+nu+2)}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setIndex(I);g.computeVertexNormals();return g}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setIndex(I);return g}
   const shSm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},TAU=Math.PI*2;
-  const SH_SPOTS=Array.from({length:11},(_,i)=>[i*2.399%TAU,.18+.5*((i*.618)%1)]);
-  /* 9 dáng gốc, dài khoảng 1 đơn vị, nằm trên mặt cát (y ≥ 0) */
+  const SH_SPOTS=Array.from({length:22},(_,i)=>[(i*2.399+Math.sin(i*7.1)*1.3)%TAU,.08+.66*((i*.7548+.5*Math.sin(i*3.7)**2)%1),.2+.12*((i*.37)%1)]);
+  /* Vỏ ốc xoắn (đường xoắn logarit): u = vòng quanh ống, v = dọc theo vòng xoắn từ đỉnh tới miệng ốc.
+     o: T số vòng, c tốc độ lớn, a bán kính ống, d bán kính tâm ống, H chiều cao tháp, sp(θ,φ,s,f) hệ số gai/loe, col(θ,φ,f) màu */
+  function shHelix(o){const Tt=o.T*TAU;return (u,v)=>{const f=u*TAU,th=v*Tt,s=Math.exp(-o.c*(Tt-th)),fr=v,m=o.sp?o.sp(th,f,s,fr):1,rho=o.a*s*m,D=o.d*s;
+      return [(D+rho*Math.cos(f))*Math.cos(th),o.H*(1-s)+rho*Math.sin(f)*(o.ys||1),(D+rho*Math.cos(f))*Math.sin(th),o.col(th,f,fr,s)]}}
+  /* vỏ ốc tròn xoay nằm ngang (trục x): prof(t,φ) → [bán kính, màu]; t từ đầu ống (0) tới đỉnh tháp (1) */
+  function shRev(L,prof){return (u,v)=>{const f=u*TAU,[r,k]=prof(v,f);return [(v-.5)*L,r*Math.sin(f),r*Math.cos(f),k]}}
+  /* 9 dáng theo bộ ảnh «Bộ 9 loại sò/ốc – Vịnh Yên»: dựng xong được chuẩn hoá dài ~1 đơn vị, nằm trên mặt cát (y ≥ 0) */
   const SH_FN=[
-    /* 01 Sò Điệp: quạt rãnh đều */ [16,5,(u,v)=>{const th=(u-.5)*2.5,r=v,rib=Math.cos(th*11);return [Math.sin(th)*r*.55,.02+.5*r*(1-r)+.035*r*rib,Math.cos(th)*r*.55-.25,r*(.25+.45*(.5+.5*rib))]}],
-    /* 02 Ốc Xà Cừ: xoắn ốc tròn, ánh xà cừ */ [14,7,(u,v)=>{const f=u*TAU,t=v,r=.5*Math.sin(Math.PI*(.12+.86*t))*(1-.3*t);return [Math.cos(f)*r,.62*t,Math.sin(f)*r,.5+.5*Math.sin(f+t*15)]}],
-    /* 03 Ốc Sứ: bầu dục bóng men sứ, đốm */ [12,5,(u,v)=>{const f=u*TAU,a=Math.PI*v*.92,x=.6*Math.sin(a)*Math.cos(f),z=.42*Math.sin(a)*Math.sin(f),y=Math.max(.03,.32+.32*Math.cos(a));let k=0;for(const [sf,sa] of SH_SPOTS){const d=Math.hypot(Math.atan2(Math.sin(f-sf),Math.cos(f-sf))*.9,(a/Math.PI-sa)*3.2);k=Math.max(k,1-shSm(.22,.42,d))}return [x,y,z,a>2.2?0:k]}],
-    /* 04 Ốc Tháp: tháp xoắn nhọn, nằm nghiêng */ [10,12,(u,v)=>{const f=u*TAU,t=v,w=(t*6)%1,r=.21*(1-t)*(.78+.3*Math.pow(1-w,2));return [t-.45,r*Math.sin(f)+.2*(1-t)+.01,r*Math.cos(f),Math.pow(1-w,4)]}],
-    /* 05 Sò Trái Tim: hình trái tim, sọc cẩm thạch */ [18,4,(u,v)=>{const t=u*TAU,s=1-v,hx=16*Math.pow(Math.sin(t),3)/17,hz=(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))/17;return [hx*s*.5,.02+.34*Math.sqrt(Math.max(0,1-s*s)),hz*s*.5,.5+.5*Math.cos(t*10)*s]}],
-    /* 06 Ốc Tù Và: thân xoắn, gai vai, miệng loe màu */ [14,10,(u,v)=>{const f=u*TAU,t=v;let r=t<.15?.05+t*1.2:t<.68?.23+(t-.15)/.53*.19:.42*Math.pow(Math.max(0,1-(t-.68)/.32),1.3);if(t>.62&&t<.8)r*=1+.45*Math.pow(Math.max(0,Math.cos(7*f)),4);const m=Math.pow(Math.max(0,Math.cos(f-Math.PI/2)),2)*shSm(.12,.2,t)*(1-shSm(.6,.7,t));r*=1-.22*m;return [(t-.5)*1.1,.38+r*Math.sin(f)*.82,r*Math.cos(f),m*1.4]}],
-    /* 07 Sò Tai Tượng: vỏ sóng gợn, mép lượn */ [18,5,(u,v)=>{const th=(u-.5)*3,r=v,w=Math.sin(th*6);return [Math.sin(th)*r*.62,.02+.62*r*(1-r)+.12*r*r*w,Math.cos(th)*r*.46-.18,r*(.5+.5*w)]}],
-    /* 08 Ốc Ngọc Trai: tròn, vân sọc xoắn */ [14,7,(u,v)=>{const f=u*TAU,t=v,r=.48*Math.sin(Math.PI*(.1+.88*t));return [Math.cos(f)*r,.58*t,Math.sin(f)*r,shSm(-.2,.25,Math.sin(f*3+t*9))]}],
-    /* 09 Ốc Gai Biển: thân thoi, ống dài, ba vòng gai */ [14,12,(u,v)=>{const f=u*TAU,t=v;let r=t<.3?.05+.05*t/.3:t<.7?.1+.25*Math.sin((t-.3)/.4*Math.PI*.5+.6):.32*(1-(t-.7)/.3);const sp=Math.pow(Math.max(0,Math.cos(6*f)),6),b=Math.exp(-Math.pow((t-.44)/.035,2))+Math.exp(-Math.pow((t-.57)/.035,2))+Math.exp(-Math.pow((t-.7)/.035,2));r*=1+1.1*b*sp;const m=Math.pow(Math.max(0,Math.cos(f-Math.PI/2)),2)*shSm(.32,.4,t)*(1-shSm(.62,.7,t));return [(t-.5)*1.2,.36+r*Math.sin(f)*.85,r*Math.cos(f),Math.min(1,b*sp*1.6+m*1.2)]}]];
+    /* 01 Sò Điệp: quạt 18 rãnh nổi, mép lượn sóng, hai tai ở bản lề */ [56,12,(u,v)=>{const th=(u-.5)*2.7,r=Math.pow(v,.9),rib=Math.cos(th*18*.5*2),cr=Math.pow(Math.max(0,rib),1.5);
+      const ear=(1-shSm(.08,.26,r))*shSm(.95,1.3,Math.abs(th))*.14,rr=.56*r*(1+.035*rib*r)+ear;return [Math.sin(th)*rr,.015+.36*Math.pow(Math.max(0,1-r*r),.5)*Math.cos(th*.38)+.03*cr*r,Math.cos(th)*rr*.95-.28,.12+.55*cr*r+.25*(1-r)]}],
+    /* 02 Ốc Xà Cừ: xoắn tròn thấp, ánh xà cừ ngũ sắc */ [18,88,shHelix({T:3.4,c:.17,a:.43,d:.5,H:.8,col:(th,f)=>.6+.7*(.5+.5*Math.sin(th*.9+f*1.6))+.25*Math.sin(f*3)})],
+    /* 03 Ốc Sứ: bầu dục bóng sứ, đốm nâu, khe miệng răng cưa dưới bụng */ [44,22,(u,v)=>{const f=u*TAU,a=Math.PI*v,x=.6*Math.sin(a)*Math.cos(f),z=.4*Math.sin(a)*Math.sin(f)*(1-.05*Math.cos(2*f)),y=.3+.29*Math.cos(a);let k=0;for(const [sf,sa,sr] of SH_SPOTS){const d=Math.hypot(Math.atan2(Math.sin(f-sf),Math.cos(f-sf))*Math.sin(a)*1.3,(a/Math.PI-sa)*2.2);k=Math.max(k,1-shSm(sr*.55,sr,d))}return [x,Math.max(.02,y),z,a>2.3?.05:k]}],
+    /* 04 Ốc Tháp: tháp nhọn vàng nắng, gờ xoắn rõ, nằm nghiêng */ [14,150,shHelix({T:7.5,c:.07,a:.3,d:.24,H:1.45,sp:(th,f)=>1+.12*Math.pow(Math.max(0,Math.sin(f)),3),col:(th,f)=>.15+.75*Math.pow(Math.max(0,Math.sin(f)),4)}),g=>g.rotateZ(Math.PI/2-.12)],
+    /* 05 Sò Trái Tim: trái tim phồng, sọc chéo cẩm thạch */ [48,12,(u,v)=>{const t=u*TAU,s=1-v,hx=16*Math.pow(Math.sin(t),3)/17,hz=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))/17,x=hx*s*.5,z=hz*s*.5;return [x,.015+.3*Math.pow(Math.max(0,1-s*s),.6),z,shSm(-.35,.35,Math.sin((x*1.1+z)*13))]}],
+    /* 06 Ốc Tù Và Trắng Tuyết: thân thoi, vành gai trên vai, tháp xoắn nhọn, môi miệng loe hồng đào */ [40,64,shRev(1.25,(t,f)=>{const ap=Math.max(0,Math.cos(f-Math.PI/2)),body=t<.12?.08+t*1.6:t<.5?.27+.17*Math.sin((t-.12)/.38*Math.PI*.5):.44*Math.pow(Math.max(0,(1-t)/.5),1.15)*(.86+.14*Math.pow(1-((1-t)*7)%1,2));
+      const spk=.2*Math.pow(Math.max(0,Math.cos(f*8)),5)*Math.exp(-Math.pow((t-.5)/.035,2))+.06*Math.pow(Math.max(0,Math.cos(f*8)),5)*Math.exp(-Math.pow((((1-t)*7)%1-.05)/.06,2))*(t>.55?1:0),lip=Math.pow(ap,5)*shSm(.06,.2,t)*(1-shSm(.42,.54,t))*.3;return [body+spk+lip,lip>.03?shSm(.03,.1,lip):.1*Math.pow(Math.max(0,Math.cos(f*8)),3)]})],
+    /* 07 Sò Tai Tượng: hai mảnh vỏ khép, mép gợn sóng tím, gờ sóng to */ [60,14,(u,v)=>{const f=u*TAU,a=Math.PI*v,sa=Math.sin(a),w=Math.cos(f*6),R=1+.1*w*Math.pow(sa,2);return [.62*sa*Math.cos(f)*R,.33*(1-Math.cos(a))+.11*Math.sin(f*6)*Math.pow(sa,6),.46*sa*Math.sin(f)*R,.1+.9*Math.pow(sa,5)+.15*w*sa]}],
+    /* 08 Ốc Ngọc Trai: tròn bóng, vòng xoắn lộ trên đỉnh, sọc nâu theo đường lớn */ [18,80,shHelix({T:3,c:.3,a:.55,d:.42,H:.42,col:(th)=>shSm(-.25,.25,Math.sin(th*2.2))*.95})],
+    /* 09 Ốc Gai Biển: thân thoi, ống dài, hàng gai dài toả tròn, miệng cam hồng */ [42,72,shRev(1.4,(t,f)=>{const ap=Math.max(0,Math.cos(f-Math.PI/2)),body=t<.28?.05+.05*t/.28:t<.55?.1+.22*Math.sin((t-.28)/.27*Math.PI*.5+.15):.32*Math.pow(Math.max(0,(1-t)/.45),1.1)*(.85+.15*Math.pow(1-((1-t)*6)%1,2));
+      const sp=Math.pow(Math.max(0,Math.cos(f*7)),9),spk=sp*(.32*Math.exp(-Math.pow((t-.47)/.022,2))+.24*Math.exp(-Math.pow((t-.6)/.022,2))+.14*Math.exp(-Math.pow((t-.72)/.022,2))+.12*Math.exp(-Math.pow((t-.3)/.02,2))),lip=Math.pow(ap,5)*shSm(.25,.34,t)*(1-shSm(.5,.6,t))*.22;return [body+spk+lip,lip>.03?shSm(.03,.09,lip):.3*sp]})]];
   const SH_GEO=new Map();
-  function shGeo(s,t){const k=shKey(s,t);if(!SH_GEO.has(k)){const [nu,nv,fn]=SH_FN[s],[c1,c2]=SH_COL[s][t];SH_GEO.set(k,shSurf(nu,nv,fn,c1,c2))}return SH_GEO.get(k)}
+  function shGeo(s,t){const k=shKey(s,t);if(!SH_GEO.has(k)){const [nu,nv,fn,post]=SH_FN[s],[c1,c2]=SH_COL[s][t],g=shSurf(nu,nv,fn,c1,c2,s===1?'#f3d3e6':undefined);if(post)post(g);
+      g.computeBoundingBox();const B=g.boundingBox,sz=Math.max(B.max.x-B.min.x,B.max.z-B.min.z,B.max.y-B.min.y);g.translate(-(B.max.x+B.min.x)/2,-B.min.y,-(B.max.z+B.min.z)/2);g.scale(1/sz,1/sz,1/sz);g.computeVertexNormals();SH_GEO.set(k,g)}return SH_GEO.get(k)}
   const SH_MAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.3,metalness:.05,side:THREE.DoubleSide}),SH_PEARL=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.22,metalness:.18,side:THREE.DoubleSide}),SH_SANDY=new THREE.MeshStandardMaterial({vertexColors:true,color:'#cdbb96',roughness:.95,side:THREE.DoubleSide});
   const shMat=s=>s===1||s===7?SH_PEARL:SH_MAT;
   const SH_HIT_G=new THREE.SphereGeometry(.5,6,4),SH_HIT_M=new THREE.MeshBasicMaterial({visible:false});
-  function shMesh(s,t,sandy){const m=new THREE.Mesh(shGeo(s,t),sandy?SH_SANDY:shMat(s));m.scale.setScalar(s===3||s===8?.3:.26);return m}
+  function shMesh(s,t,sandy){const m=new THREE.Mesh(shGeo(s,t),sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
   const BIN_INFO=[{name:'Giỏ Mây Đan Mắt Cáo',short:'Giỏ Mây',ic:'🧺',style:'Giản Dị'},{name:'Khay Gốm Sóng Biển',short:'Khay Sóng Ngọc',ic:'🌊',style:'Sang Chảnh'},{name:'Đĩa Sứ Vỏ Sò Hồng Đào',short:'Đĩa Sò Hồng',ic:'🐚',style:'Hạnh Phúc'}];
   const BIN_SOCK=[[[0,.07,0],[.12,.08,.06],[-.12,.08,.05],[.05,.09,-.12],[-.06,.1,-.1]],[[-.2,.07,.02],[-.07,.07,-.06],[.06,.07,.05],[.19,.07,-.03],[0,.07,.12]],[[0,.11,.02],[.13,.1,.1],[-.13,.1,.1],[.1,.1,-.08],[-.1,.1,-.08]]];
