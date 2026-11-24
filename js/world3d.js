@@ -1263,83 +1263,78 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.__pickNine=pickNine;
   // One merged, vertex-coloured stem per kind (about 0.6 m tall), shared by the gardens (instanced) and the bouquets.
   const flowerGeos={};
-  // 3.23: Hoa vẽ lại (sen, hồng, cẩm tú cầu, huệ, cúc, oải hương): cánh hoa là lưới cong có chuyển màu theo chiều dài cánh,
-  // dựng mặt trước và mặt sau đều sáng. Hai mức chi tiết: 'lo' cho vườn hoa (hàng trăm cây, InstancedMesh), 'hi' cho bó hoa.
-  const FL={C:h=>new THREE.Color(h),tmp:new THREE.Color(),up:new THREE.Vector3(0,1,0),nv:new THREE.Vector3()};
-  function flPetal({L,Wd,cup=.3,curl=0,prof,stops,edge=null,nu=6,nv=4}){const pos=[],col=[],idx=[],tmp=FL.tmp;
-    for(let a=0;a<=nu;a++){const u=a/nu,hw=Wd*.5*prof(u);for(let b=0;b<=nv;b++){const v=b/nv*2-1;pos.push(v*hw,u*L,-cup*Wd*v*v*(.3+.7*u)-curl*L*u*u);
-      let k=0;while(k<stops.length-2&&u>stops[k+1][0])k++;const [u0,c0]=stops[k],[u1,c1]=stops[k+1];tmp.copy(c0).lerp(c1,Math.min(1,Math.max(0,(u-u0)/(u1-u0||1))));if(edge)tmp.lerp(edge,Math.pow(Math.abs(v),3)*.35*u);col.push(tmp.r,tmp.g,tmp.b)}}
-    for(let a=0;a<nu;a++)for(let b=0;b<nv;b++){const q=a*(nv+1)+b;idx.push(q,q+1,q+nv+1,q+1,q+nv+2,q+nv+1)}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();return g}
+  // 3.31: Sáu hoa dâng Phật vẽ lại theo bộ mẫu three.js "Làng Yên – 6 flower assets" và ảnh tham khảo kèm theo: khối low-poly
+  // mặt phẳng (flat shading), cánh hoa là khối bầu dục dẹt tô chuyển màu từ gốc ra đầu cánh, màu tươi rực như bản mẫu.
+  // Khác bản mẫu: cánh nghiêng theo trục riêng của từng cánh (bản mẫu nghiêng theo trục X chung nên hoa bị lệch một phía),
+  // cẩm tú cầu xoay từng cụm hoa nhỏ theo mặt cầu, oải hương xếp nụ quanh bông thay vì một mặt phẳng.
+  // Hai mức chi tiết: 'lo' cho vườn hoa (hàng trăm cây, InstancedMesh, mỗi cây vài trăm tam giác), 'hi' cho bó hoa.
+  const FL={C:h=>new THREE.Color(h),tmp:new THREE.Color(),up:new THREE.Vector3(0,1,0)};
   function flBuilder(){const parts=[];return {
-    put(g,{tilt=0,ang=0,y=0,x=0,z=0,soft=.55,single=false}={}){g.rotateX(tilt);g.rotateY(ang);g.translate(x,y,z);const a=g.toNonIndexed(),nr=a.attributes.normal;
-      for(let i=0;i<nr.count;i++){FL.nv.fromBufferAttribute(nr,i);if(FL.nv.y<0)FL.nv.negate();FL.nv.multiplyScalar(soft).add(FL.up).normalize();nr.setXYZ(i,FL.nv.x,FL.nv.y,FL.nv.z)}parts.push(a);if(single)return;
-      const b=a.clone();for(const at of [b.attributes.position,b.attributes.color,b.attributes.normal])for(let i=0;i<at.count;i+=3){const t=[at.getX(i+1),at.getY(i+1),at.getZ(i+1)];at.setXYZ(i+1,at.getX(i+2),at.getY(i+2),at.getZ(i+2));at.setXYZ(i+2,...t)}parts.push(b)},
     solid(g,c,{x=0,y=0,z=0}={}){g.translate(x,y,z);const q=g.index?g.toNonIndexed():g;if(c!=null){const cc=FL.C(c),cl=[];for(let i=0;i<q.attributes.position.count;i++)cl.push(cc.r,cc.g,cc.b);q.setAttribute('color',new THREE.Float32BufferAttribute(cl,3))}if(!q.attributes.normal)q.computeVertexNormals();parts.push(q)},
     geo(){let n=0;for(const q of parts)n+=q.attributes.position.count;const P=new Float32Array(n*3),N=new Float32Array(n*3),K=new Float32Array(n*3);let o=0;for(const q of parts){const k=q.attributes.position.count;P.set(q.attributes.position.array,o*3);N.set(q.attributes.normal.array,o*3);K.set(q.attributes.color.array,o*3);o+=k}
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('normal',new THREE.BufferAttribute(N,3));g.setAttribute('color',new THREE.BufferAttribute(K,3));return g}}}
-  const flOval=p=>u=>u<.55?Math.max(.1,Math.pow(Math.sin(u/.55*Math.PI/2),p)):Math.pow(Math.cos((u-.55)/.45*Math.PI/2),.7)*(1-.8*Math.pow((u-.55)/.45,3));
-  const flOvalR=u=>u<.6?Math.max(.12,Math.pow(Math.sin(u/.6*Math.PI/2),.6)):Math.pow(Math.cos((u-.6)/.4*Math.PI/2),.45)*(1-.55*Math.pow((u-.6)/.4,4));
-  const flRoundTip=u=>u<.68?Math.max(.15,Math.pow(Math.sin(u/.68*Math.PI/2),.6)):Math.sqrt(Math.max(0,1-Math.pow((u-.68)/.32,2)))*.97+.03;
-  // 3.30: Sáu loài hoa dâng Phật theo bản thiết kế "06 loài hoa dâng Phật" (màu tươi sáng, khối đơn giản, tô màu theo đỉnh,
-  // không dùng ảnh): Sen Trắng (Hồ Niệm), Huệ Cam Đào (Hồ Chạm), Cẩm Tú Cầu Lam (Hồ Thanh), Oải Hương Tím (Hồ Hương),
-  // Hồng Đỏ Ruby (Hồ Sắc), Cúc Vàng (Hồ Vị). Khóa loài giữ như cũ để hợp với dữ liệu đã lưu: sen = Sen Trắng, nhai = Huệ Cam Đào.
+  // flat-shaded part: face normals, one colour or the gradient already on the geometry
+  function flFlat(B,g,c=null,m=null){if(m)g.applyMatrix4(m);const q=g.index?g.toNonIndexed():g;q.deleteAttribute('normal');q.computeVertexNormals();B.solid(q,c)}
+  // petal-local frame: the petal grows along +z from its base at the origin; tilt < 0 lifts the tip, ang turns it around the flower axis
+  const flM=(ang=0,tilt=0,r=0,y=0)=>new THREE.Matrix4().makeRotationY(ang).multiply(new THREE.Matrix4().makeTranslation(0,y,r)).multiply(new THREE.Matrix4().makeRotationX(tilt));
+  function flPetal({L,W,T=.03,seg=[6,4],base,tip,br=1,bend=0}){const g=new THREE.SphereGeometry(1,seg[0],seg[1]);g.scale(W,T,L);g.translate(0,0,L);
+    const P=g.attributes.position,c=new Float32Array(P.count*3),a=FL.C(base),b=FL.C(tip),t=FL.tmp;
+    for(let i=0;i<P.count;i++){const u=Math.min(1,Math.max(0,P.getZ(i)/(2*L)));if(bend)P.setY(i,P.getY(i)+bend*u*u*L);t.copy(a).lerp(b,u*u*(3-2*u));c[i*3]=t.r*br;c[i*3+1]=t.g*br;c[i*3+2]=t.b*br}
+    g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
   const FLOWER_BUILD={
-    sen(B,hi){// Sen trắng dâng Phật: cùng dáng sen trong Hồ Sen (cánh tròn bầu, 3 lớp 8 + 8 + 6 so le ôm gương sen), nhưng màu trắng
-      const grad=(tip,base)=>{const g=new THREE.SphereGeometry(.5,hi?12:7,hi?10:5),P=g.attributes.position,c=new Float32Array(P.count*3),a=new THREE.Color(base),b=new THREE.Color(tip),t=new THREE.Color();
-        const pink=new THREE.Color('#f59ab8'),BR=1.45;/* viền hồng nhạt ở rìa cánh; màu nhân >1 để cánh trắng sáng hơn dưới ánh rừng */
-        for(let i=0;i<P.count;i++){const y=P.getY(i),u=Math.min(1,Math.max(0,y+.5)),k=u*u*(3-2*u),half=Math.sqrt(Math.max(1e-4,.25-y*y)),rim=Math.min(1,Math.abs(P.getX(i))/half);
-          t.copy(a).lerp(b,Math.pow(k,1.3)).lerp(pink,Math.pow(rim,5)*(.25+.6*u));c[i*3]=t.r*BR;c[i*3+1]=t.g*BR;c[i*3+2]=t.b*BR}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g};
-      const outer=grad('#ffffff','#f6faee'),mid=grad('#ffffff','#f8fbf2'),inner=grad('#ffffff','#fbfcf6');
-      const petal=(geo,ang,tilt,len,wid,y)=>{const g=geo.clone();g.scale(wid,len,wid*.16);g.translate(0,len*.5,0);g.rotateX(tilt);g.rotateY(ang);g.translate(0,y,0);B.solid(g,null)};
-      for(let k=0;k<8;k++)petal(outer,k*Math.PI*2/8,1.05,.36,.27,0);
-      for(let k=0;k<8;k++)petal(mid,(k+.5)*Math.PI*2/8,.7,.33,.25,.025);
-      for(let k=0;k<6;k++)petal(inner,k*Math.PI*2/6+.2,.38,.27,.21,.05);
-      B.solid(new THREE.CylinderGeometry(.09,.065,.09,hi?12:7),'#d9c75c',{y:.1});
-      if(hi)for(let k=0;k<7;k++){const d=new THREE.CircleGeometry(.012,6);d.rotateX(-Math.PI/2);B.solid(d,'#8a7a2c',{x:Math.cos(k*.9)*.045*(k%2?1:.5),y:.1455,z:Math.sin(k*.9)*.045*(k%2?1:.5)})}},
-    nhai(B,hi){const C=FL.C,r=hi?[8,3]:[4,2],back=[[0,C('#ffe66d')],[.36,C('#ff773d')],[1,C('#f04f1c')]],front=[[0,C('#fff08a')],[.34,C('#ff974d')],[1,C('#ff5e26')]];
-      const pr=u=>Math.max(.12,Math.sin(Math.min(1,u*1.05)*Math.PI))*(u<.3?.7+u:1);
-      for(let k=0;k<6;k++){const fr=k%2===1;B.put(flPetal({L:fr?.27:.29,Wd:fr?.11:.12,cup:.35,curl:-.42,prof:pr,stops:fr?front:back,edge:fr?C('#ee6228'):C('#dc4e1c'),nu:r[0],nv:r[1]}),{tilt:.95,ang:k/6*Math.PI*2+(fr?.08:0),y:fr?.008:0})}
-      B.solid(new THREE.CylinderGeometry(.03,.008,.06,hi?10:5),'#ffe66d',{y:.02});
-      const ax=new THREE.Vector3(1,0,0);for(let k=0;k<6;k++){const a=k/6*Math.PI*2+.5,len=.2,f=new THREE.CylinderGeometry(.0025,.003,len,3);f.translate(0,len/2,0);f.rotateX(.42);f.rotateY(a);B.solid(f,'#ffda66',{y:.01});
-        const tip=new THREE.Vector3(0,len,0).applyAxisAngle(ax,.42).applyAxisAngle(FL.up,a),an=new THREE.SphereGeometry(.012,hi?6:4,hi?4:2);an.scale(1.6,.7,.8);an.rotateY(a);B.solid(an,'#b54114',{x:tip.x,y:tip.y+.01,z:tip.z})}},
-    cam_tu_cau(B,hi){const C=FL.C,cols=['#2b96f3','#4ab3ff','#8cd3ff','#58bcff','#248ce8','#9cdeff','#38a2fc','#6ec4ff'].map(C),N=hi?26:14,R0=.26,rnd=seededRandom(331),L=hi?.1:.12;
-      for(let i=0;i<N;i++){const yy=1-(i/(N-1))*1.25,r=Math.sqrt(Math.max(0,1-yy*yy)),a=i*2.39996,p=new THREE.Vector3(Math.cos(a)*r,yy,Math.sin(a)*r);
-        const c=cols[(i*5)%cols.length],c2=c.clone().lerp(C('#ffffff'),.3),q=new THREE.Quaternion().setFromUnitVectors(FL.up,p),rot0=rnd()*Math.PI;
-        for(let k=0;k<4;k++){const g=flPetal({L,Wd:L*.85,cup:.12,curl:-.03,prof:flRoundTip,stops:[[0,c2],[1,c]],nu:hi?4:2,nv:hi?3:1});g.rotateX(1.45);g.rotateY(rot0+k*Math.PI/2);g.applyQuaternion(q);g.translate(p.x*R0,p.y*R0+.25,p.z*R0);B.put(g,{soft:.9,single:!hi})}
-        const d=new THREE.SphereGeometry(.014,hi?6:4,hi?4:2);d.translate(p.x*(R0+.01),p.y*(R0+.01)+.25,p.z*(R0+.01));B.solid(d,'#ffffff')}
-      for(const s of [-1,1])B.put(flPetal({L:.24,Wd:.13,cup:.25,curl:.08,prof:flOval(.7),stops:[[0,C('#2f9456')],[1,s<0?C('#3eac66'):C('#52c078')]],nu:hi?6:3,nv:hi?3:1}),{tilt:1.5,ang:s*Math.PI/2,y:.0,soft:.4})},
-    lan(B,hi){const C=FL.C,tiers=['#7b4bff','#7b4bff','#8a5cff','#9568ff','#a47aff','#b08cff','#c2a3ff','#d0b5ff','#d9c2ff'],bud=new THREE.SphereGeometry(1,hi?6:4,hi?4:2);
-      const spike=(bx,bz,lean,turn,h)=>{const stem=new THREE.CylinderGeometry(.008,.011,h,hi?5:3);stem.translate(0,h/2,0);stem.rotateZ(lean);stem.rotateY(turn);stem.translate(bx,0,bz);B.solid(stem,'#3d9864');
-        const dir=new THREE.Vector3(-Math.sin(lean),Math.cos(lean),0).applyAxisAngle(FL.up,turn),tip=new THREE.Vector3(bx,0,bz).addScaledVector(dir,h),W=hi?12:10,K=5;
-        for(let w=0;w<W;w++){const t=w/(W-1),p=tip.clone().addScaledVector(dir,-.34+t*.36),rr=.03*(1-.4*Math.abs(t-.45)),c=tiers[Math.min(tiers.length-1,Math.floor(t*tiers.length))],sz=.024*(1-.45*Math.pow(Math.abs(t-.45)/.55,2));
-          for(let k=0;k<K;k++){const a=k/K*Math.PI*2+w*.6,g=bud.clone();g.scale(sz*.8,sz*1.4,sz*.8);B.solid(g,c,{x:p.x+Math.cos(a)*rr,y:p.y,z:p.z+Math.sin(a)*rr})}
-          if(hi){const cx=new THREE.SphereGeometry(.012,5,3);cx.scale(1,.45,1);B.solid(cx,'#46a66d',{x:p.x,y:p.y-.02,z:p.z})}}};
-      spike(-.07,0,.2,0,.62);spike(0,0,0,0,.72);spike(.07,0,-.2,0,.6);
-      for(const [a,l] of [[.9,.16],[2.3,.14],[3.9,.16],[5.2,.13]]){const s=new THREE.CylinderGeometry(.005,.006,l,3);s.translate(0,l/2,0);s.rotateZ(.5);s.rotateY(a);B.solid(s,'#48a870',{y:.04})}
-      const rib=new THREE.TorusGeometry(.03,.009,hi?6:4,hi?16:8);rib.rotateX(Math.PI/2);B.solid(rib,'#e0a538',{y:.11});const rib2=new THREE.TorusGeometry(.032,.006,4,hi?16:8);rib2.rotateX(Math.PI/2);B.solid(rib2,'#c28822',{y:.095})},
-    hong(B,hi){const C=FL.C,r=hi?[7,4]:[4,2],outer=[[0,C('#b00d2a')],[.6,C('#e31c3e')],[.88,C('#ff5c78')],[1,C('#ff99ab')]],mid=[[0,C('#c41232')],[.72,C('#f02649')],[1,C('#ff637e')]],coreS=[[0,C('#8c0720')],[1,C('#c41232')]];
-      const pr=flRoundTip;
-      for(let k=0;k<3;k++)B.put(flPetal({L:.13,Wd:.1,cup:1.1,curl:.18,prof:pr,stops:coreS,nu:r[0],nv:r[1]}),{tilt:.05,ang:k*2.09+.3,y:.04,soft:.25});
-      for(let k=0;k<3;k++)B.put(flPetal({L:.19,Wd:.16,cup:1.0,curl:-.04,prof:pr,stops:mid,edge:C('#a30d29'),nu:r[0],nv:r[1]}),{tilt:.16,ang:k*2.09+1.35,y:.02,soft:.25});
-      for(let k=0;k<4;k++)B.put(flPetal({L:.22,Wd:.2,cup:.85,curl:-.36,prof:pr,stops:outer,edge:C('#a30e2a'),nu:r[0],nv:r[1]}),{tilt:.3,ang:k*Math.PI/2+.6,soft:.25});
-      for(let k=0;k<3;k++)B.put(flPetal({L:.14,Wd:.07,cup:.2,curl:-.05,prof:flOval(.8),stops:[[0,C('#3ea85d')],[1,C('#52bc6e')]],nu:hi?6:3,nv:1}),{tilt:1.95,ang:k*2.09+.9,y:.0,soft:.3});
-      B.solid(new THREE.SphereGeometry(.035,hi?10:6,hi?6:3),'#3ea85d',{y:-.01})},
-    cuc(B,hi){const C=FL.C,r=hi?[6,3]:[3,1],outer=[[0,C('#ffb300')],[.62,C('#ffd400')],[1,C('#fff05a')]],inner=[[0,C('#ffc200')],[.68,C('#ffe026')],[1,C('#fff780')]];
-      const pr=u=>u<.25?Math.max(.25,Math.sin(u/.25*Math.PI/2)):Math.pow(Math.max(0,1-Math.pow((u-.25)/.75,2.2)),.6)*.95+.05;
-      for(let k=0;k<12;k++)B.put(flPetal({L:.25,Wd:.105,cup:.5,curl:-.02,prof:flOval(.55),stops:outer,nu:r[0],nv:r[1]}),{tilt:1.43,ang:k/12*Math.PI*2,y:.005});
-      for(let k=0;k<10;k++)B.put(flPetal({L:.19,Wd:.09,cup:.55,curl:.06,prof:flOval(.55),stops:inner,nu:r[0],nv:r[1]}),{tilt:1.05,ang:k/10*Math.PI*2+.31,y:.012});
-      const dome=new THREE.SphereGeometry(.062,hi?16:8,hi?8:4,0,Math.PI*2,0,Math.PI/2);dome.scale(1,.55,1);B.solid(dome,'#f58b00',{y:.008});
-      if(hi)for(let k=0;k<8;k++){const d=new THREE.SphereGeometry(.007,5,3);B.solid(d,'#fff282',{x:Math.cos(k*.785)*.035,y:.034,z:Math.sin(k*.785)*.035})}}};
+    sen(B,hi){// Sen: cánh trắng ngà ửng hồng ở đầu cánh, ba lớp ôm gương sen vàng; màu nhân 1.35 cho cánh sáng dịu như có hào quang
+      const seg=hi?[7,4]:[5,3],br=1.35;
+      for(let k=0;k<8;k++)flFlat(B,flPetal({L:.17,W:.09,T:.028,seg,base:'#fff4f8',tip:'#ff6fae',br,bend:.35}),null,flM(k*Math.PI/4,-.7,.05));
+      if(hi)for(let k=0;k<8;k++)flFlat(B,flPetal({L:.15,W:.08,T:.026,seg,base:'#fff6f9',tip:'#ff85bd',br,bend:.3}),null,flM((k+.5)*Math.PI/4,-.95,.045,.01));
+      for(let k=0;k<6;k++)flFlat(B,flPetal({L:.12,W:.07,T:.024,seg,base:'#fffaf6',tip:'#ffc5dc',br,bend:.2}),null,flM(k*Math.PI/3+.25,-1.25,.04,.02));
+      flFlat(B,new THREE.CylinderGeometry(.075,.05,.07,hi?10:6),'#ffe23a',new THREE.Matrix4().makeTranslation(0,.06,0));
+      if(hi)for(let k=0;k<7;k++){const d=new THREE.CircleGeometry(.011,5);d.rotateX(-Math.PI/2);const r=k?.042:0,a=k*Math.PI/3;flFlat(B,d,'#c98a10',new THREE.Matrix4().makeTranslation(Math.cos(a)*r,.0955,Math.sin(a)*r))}},
+    hong(B,hi){// Hồng đỏ ruby: nụ lõi khép, ba vòng cánh mở dần, cánh ngoài sáng hơn ở mép; đài xanh bên dưới
+      const seg=hi?[7,4]:[5,3];
+      flFlat(B,new THREE.SphereGeometry(.06,hi?7:5,hi?5:3).scale(1,1.35,1),'#b30d2c',new THREE.Matrix4().makeTranslation(0,.07,0));
+      const rings=hi?[[5,-1.3,.03,.09,.08,'#c8102e','#ff2a4a'],[6,-1.0,.05,.11,.1,'#d4112f','#ff3355'],[7,-.6,.07,.13,.12,'#e0142f','#ff6685']]:[[4,-1.15,.04,.1,.09,'#c8102e','#ff2a4a'],[6,-.65,.07,.13,.12,'#e0142f','#ff6685']];
+      rings.forEach(([n,tilt,r,L,W,c0,c1],ri)=>{for(let k=0;k<n;k++)flFlat(B,flPetal({L,W,T:.022,seg,base:c0,tip:c1,bend:.25}),null,flM(k*Math.PI*2/n+ri*.45,tilt,r,.01+ri*.004))});
+      for(let k=0;k<5;k++)flFlat(B,flPetal({L:.07,W:.022,T:.01,seg:[4,2],base:'#3d8a2a',tip:'#5aa83a'}),null,flM(k*Math.PI*2/5+.3,.45,.03,-.01))},
+    cuc(B,hi){// Cúc vàng: nhiều cánh mảnh xếp ba vòng, vòng trong cụp vào ôm nhụy cam
+      const seg=hi?[5,3]:[4,2],rings=hi?[[16,-.15,.06,.14,.045,'#ff9a00','#ffd200'],[14,-.65,.05,.12,.042,'#ffa800','#ffdc00'],[10,-1.15,.03,.09,.038,'#ffb400','#ffe62a']]:[[12,-.25,.06,.14,.05,'#ff9a00','#ffd200'],[9,-.95,.04,.11,.045,'#ffa800','#ffdc00']];
+      rings.forEach(([n,tilt,r,L,W,c0,c1],ri)=>{for(let k=0;k<n;k++)flFlat(B,flPetal({L,W,T:.02,seg,base:c0,tip:(k+ri)%4===0?'#ffec60':c1,bend:.35}),null,flM(k*Math.PI*2/n+ri*.2,tilt,r,ri*.012))});
+      const dome=new THREE.SphereGeometry(.05,hi?9:6,hi?4:2,0,Math.PI*2,0,Math.PI/2);dome.scale(1,.6,1);flFlat(B,dome,'#ff8a00',new THREE.Matrix4().makeTranslation(0,.025,0))},
+    cam_tu_cau(B,hi){// Cẩm tú cầu lam: khối cầu kết từ các cụm hoa nhỏ bốn cánh, mỗi cụm quay theo mặt cầu, nhụy chấm vàng nhạt
+      const cols=['#1f5cff','#3a7bff','#2c66f5','#4f8dff','#1a50e8','#5fa0ff'],N=hi?26:12,R0=.16,rnd=seededRandom(331),L=hi?.042:.052,seg=hi?[5,3]:[4,2],q=new THREE.Quaternion(),m=new THREE.Matrix4(),p=new THREE.Vector3();
+      flFlat(B,new THREE.IcosahedronGeometry(R0*.9,hi?1:0),'#1d4fd0',new THREE.Matrix4().makeTranslation(0,R0*.25,0));
+      for(let i=0;i<N;i++){const yy=1-(i+.5)/N*1.35,r=Math.sqrt(Math.max(0,1-yy*yy)),a=i*2.39996;p.set(Math.cos(a)*r,yy,Math.sin(a)*r).normalize();q.setFromUnitVectors(FL.up,p);
+        const c=cols[(i*5)%cols.length],rot=rnd()*Math.PI,base=new THREE.Matrix4().compose(p.clone().multiplyScalar(R0).add(new THREE.Vector3(0,R0*.25,0)),q,new THREE.Vector3(1,1,1));
+        for(let k=0;k<4;k++)flFlat(B,flPetal({L,W:L*.8,T:.008,seg,base:FL.C(c).lerp(FL.C('#ffffff'),.2).getHex(),tip:c,bend:-.1}),null,base.clone().multiply(flM(rot+k*Math.PI/2,-.12,.004)));
+        if(hi)flFlat(B,new THREE.SphereGeometry(.007,4,2),'#fff27a',base.clone().multiply(m.makeTranslation(0,.008,0)))}},
+    nhai(B,hi){// Huệ tây cam: sáu cánh vươn lên rồi uốn ra ngoài, họng vàng, đốm cam sẫm, nhị dài đầu nâu cam
+      const seg=hi?[6,4]:[4,3];
+      for(let k=0;k<6;k++){const a=k*Math.PI/3+(k%2?.08:0),lt=k%2===0;
+        if(hi){const L1=.07,t1=-1.2,m1=flM(a,t1,.015);flFlat(B,flPetal({L:L1,W:.05,T:.016,seg,base:'#ffd23a',tip:lt?'#ffa51f':'#ff8a10'}),null,m1);
+          const m2=m1.clone().multiply(new THREE.Matrix4().makeTranslation(0,0,L1*1.85)).multiply(new THREE.Matrix4().makeRotationX(.95+(lt?.12:0)));
+          flFlat(B,flPetal({L:.09,W:.058,T:.016,seg,base:lt?'#ffa51f':'#ff8a10',tip:'#ff5a00',bend:-.25}),null,m2);
+          for(let d=0;d<3;d++)flFlat(B,new THREE.SphereGeometry(.006,4,2),'#b5360a',m2.clone().multiply(new THREE.Matrix4().makeTranslation((d-1)*.012,.017,.03+d%2*.025)))}
+        else flFlat(B,flPetal({L:.13,W:.055,T:.016,seg,base:'#ffd23a',tip:lt?'#ff7a10':'#ff5a00',bend:-.35}),null,flM(a,-.75,.015))}
+      const ns=hi?6:3;for(let k=0;k<ns;k++){const a=k*Math.PI*2/ns+.4,len=.16,f=new THREE.CylinderGeometry(.003,.004,len,3);f.translate(0,len/2,0);const mm=new THREE.Matrix4().makeRotationY(a).multiply(new THREE.Matrix4().makeRotationX(.38));flFlat(B,f,'#ffe066',mm);
+        flFlat(B,new THREE.SphereGeometry(.011,hi?5:4,2).scale(.7,.6,1.6),'#a8400f',mm.clone().multiply(new THREE.Matrix4().makeTranslation(0,len,0)))}},
+    lan(B,hi){// Oải hương tím: vài bông nhọn, nụ mọc thành vòng quanh trục, nhỏ dần lên ngọn và nhạt màu dần; lá mảnh ở gốc
+      const spikes=hi?[[-.1,.02,.22,1.05],[-.05,-.03,.1,1.2],[0,0,0,1.38],[.05,.03,-.1,1.22],[.1,-.02,-.22,1.08]]:[[-.06,0,.16,1.12],[0,0,0,1.38],[.06,0,-.16,1.15]];
+      const lv=hi?11:6,per=hi?4:3,bud=new THREE.SphereGeometry(1,hi?5:4,hi?3:2);
+      spikes.forEach(([bx,bz,lean,h],si)=>{const sm=new THREE.Matrix4().makeTranslation(bx,0,bz).multiply(new THREE.Matrix4().makeRotationZ(lean));
+        const st=new THREE.CylinderGeometry(.006,.01,h,hi?5:3);st.translate(0,h/2,0);flFlat(B,st,'#4f8a2c',sm);
+        for(let j=0;j<lv;j++){const t=j/(lv-1),y=h*(.6+.38*t),s=(1-.45*t)*(hi?1:1.4),col=FL.C('#7a2cf0').lerp(FL.C('#b07aff'),t).getHex();
+          for(let k=0;k<per;k++){const a=k*Math.PI*2/per+j*1.1+si,g=bud.clone();g.scale(.026*s,.04*s,.026*s);g.rotateX(-.5);g.rotateY(a);
+            flFlat(B,g,(j+k+si)%3?col:'#a35cff',sm.clone().multiply(new THREE.Matrix4().makeTranslation(Math.sin(a)*.026*s,y,Math.cos(a)*.026*s)))}}});
+      for(const [a,l] of (hi?[[.6,.34],[2.1,.3],[3.6,.36],[5.0,.3]]:[[.6,.34],[3.6,.36]]))flFlat(B,flPetal({L:l*.5,W:.018,T:.008,seg:[4,2],base:'#3f7a28',tip:'#78a936',bend:-.2}),null,flM(a,-1.15,.01))}};
   const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.52,cuc:.47,lan:.48,sen:.55};
   // Scale each model into the old flower's frame: heads sit at HEAD_Y on a thin stem; huệ and oải hương are whole plants.
   const FLOWER_FIT={sen:{d:.17,y:.55},hong:{d:.12,y:.53},cam_tu_cau:{d:.17,y:.5},cuc:{d:.17,y:.47},nhai:{d:.19,y:.52},lan:{h:.5}};
   function flowerGeo(kind,lod='lo'){const key=kind+':'+lod;if(flowerGeos[key])return flowerGeos[key];const hi=lod==='hi';let g;{const B=flBuilder();(FLOWER_BUILD[kind]||FLOWER_BUILD.sen)(B,hi);g=B.geo()}if(kind==='nhai')g.rotateZ(.24);/* đầu huệ nghiêng 14° */g.computeBoundingBox();const bb=g.boundingBox,f=FLOWER_FIT[kind]||FLOWER_FIT.sen,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
     if(f.h){const s=f.h/sz.y;g.translate(-c.x,-bb.min.y,-c.z);g.scale(s,s,s);return flowerGeos[key]=g}
     const s=f.d/Math.max(sz.x,sz.z);g.translate(-c.x,-c.y,-c.z);g.scale(s,s,s);g.translate(0,f.y,0);
-    const stemTop=f.y-sz.y*s*.35,P=[],S='#389e52',Sd='#3fa356';P.push([part(new THREE.CylinderGeometry(.006,.008,stemTop,4),0,stemTop/2,0),S]);
-    for(const [y,a] of [[.2,0],[.3,2.6]])P.push([part(new THREE.SphereGeometry(.05,6,4),Math.cos(a)*.045,y,Math.sin(a)*.045,.5,.14,1,-a),Sd]);
-    const st=mergeColored(P),B2=flBuilder();B2.solid(g,null);B2.solid(st,null);return flowerGeos[key]=B2.geo()}
+    const stemTop=f.y-sz.y*s*.35,P=[],S='#4f8a2c';P.push([part(new THREE.CylinderGeometry(.006,.008,stemTop,4),0,stemTop/2,0),S]);
+    const B2=flBuilder();B2.solid(g,null);B2.solid(mergeColored(P),null);
+    /* lá bầu dục to, mặt phẳng, xanh tươi như bản mẫu */for(const [y,a,c] of [[.19,.3,'#4d852d'],[.29,2.9,'#78a936']]){const lf=flPetal({L:.055,W:.024,T:.006,seg:[5,3],base:c,tip:c});flFlat(B2,lf,null,new THREE.Matrix4().makeTranslation(0,y,0).multiply(flM(a,-.35,.004)))}
+    return flowerGeos[key]=B2.geo()}
 
   // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
   const BOUQUET_LAYOUTS={tron:'🔵 Tròn',thap:'🔺 Tháp',quat:'🪭 Quạt'};
