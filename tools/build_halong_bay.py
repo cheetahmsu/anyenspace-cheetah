@@ -286,22 +286,10 @@ def main():
             karsts.append([round(x, 1), round(z, 1), round(r, 1), round(h, 1), shape])
             made += 1
 
-    # Chỉ giữ 99 đảo: trong mỗi dáng đảo lấy những hòn lớn nhất (bề ngang × chiều cao), số lượng mỗi dáng theo tỉ lệ ban đầu
-    # và tối thiểu 3 hòn, để vẫn còn đủ tháp, nấm, hai đỉnh, đồi tròn... Danh thắng, điểm check-in, điểm tour dựng riêng nên luôn còn.
-    KEEP_COUNT = 99
+    # Chỉ giữ khoảng 1/3 số đảo: ưu tiên đảo lớn (bề ngang × chiều cao), danh thắng biểu tượng dựng riêng nên luôn còn.
+    KEEP_RATIO = 1 / 3
     vol = lambda k: k[2] * (1.9 if k[4] == 3 else 1) * k[3]
-    by_shape = {}
-    for k in karsts:
-        if k[4] in (6, 7):                       # răng nghiêng và hòn nhỏ sát nước: đảo nhỏ, bỏ hết
-            continue
-        by_shape.setdefault(k[4], []).append(k)
-    pool = sum(len(v) for v in by_shape.values())
-    quota = {sh: min(len(v), max(3, round(KEEP_COUNT * len(v) / pool))) for sh, v in by_shape.items()}
-    while sum(quota.values()) > KEEP_COUNT:      # thừa: bớt ở dáng đông nhất
-        quota[max(quota, key=lambda sh: quota[sh])] -= 1
-    while sum(quota.values()) < KEEP_COUNT:      # thiếu: thêm cho dáng còn nhiều hòn chưa lấy nhất
-        quota[max(quota, key=lambda sh: len(by_shape[sh]) - quota[sh])] += 1
-    keep = [k for sh, v in by_shape.items() for k in sorted(v, key=vol, reverse=True)[:quota[sh]]]
+    keep = sorted(karsts, key=vol, reverse=True)[:max(1, round(len(karsts) * KEEP_RATIO))]
     keep_ids = {id(k) for k in keep}
     karsts = [k for k in karsts if id(k) in keep_ids]
 

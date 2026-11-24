@@ -593,8 +593,11 @@
           let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const r=L.hills>10?60+bayHash(k,3,3)*90:30+bayHash(k,3,3)*30;
             if(!inP(x,z)||!inP(x+r*.8,z)||!inP(x-r*.8,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;addKarst(x,z,r,r*(.45+bayHash(k,4,4)*.5)+L.height,9000+k,{round:true,dome:.75});made++}}}
       if(n.kind==='backdrop'){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
-      // Chỉ dựng các đảo trong dữ liệu (99 đảo lớn nhất), không thêm mỏm đá phụ quanh đảo.
-      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>addKarst(x,z,r,h,i*7+v,{shape:v}))
+      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>{addKarst(x,z,r,h,i*7+v,{shape:v});
+        // 1–2 mỏm đá phụ ven mép nước ở các đảo lớn, chỉ đặt khi nằm ngoài luồng tàu
+        if(v===7||r<32)return;const er=r*(v===3?1.5:v===4?1.3:1),cnt=1+(r>=44&&bayHash(i,5,9)>.4?1:0);
+        for(let j=0;j<cnt;j++){const a=bayHash(i,j,13)*6.28,d=er*(1.1+bayHash(i,j,17)*.22),sr=r*(.12+bayHash(i,j,19)*.08),sh=Math.min(h*.35,sr*(1.6+bayHash(i,j,23)*1.6))+2,qx=x+Math.cos(a)*d,qz=z+Math.sin(a)*d;
+          if(!clearOfChannels(qx,qz,sr*1.3+30))continue;addKarst(qx,qz,sr,sh,i*31+j,{shape:bayHash(i,j,29)>.5?7:6,rot:a});bayExtraRocks.push([qx,qz,sr*1.3])}})
     }
     for(const p of d.props){
       if(p.kind==='landmark')buildLandmark(p);
@@ -1342,5 +1345,5 @@
     meTag.visible=view==='far';SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
     if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
   }
-  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=6275d3c2').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
+  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=2fbaac1c').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
   __bayExport({bayCaption,bayDress,bayTap,bayZoomBy,buildBay,closeBayOutfit,closePhoto,dropPause,endTour,goLandmark,goTuDao,islandBoardNow,loadBayData,openBayMap,openBayOutfit,pauseShip,pines,refreshBayHud,resumeShip,sailToStop,setDestination,startTour,stopBaySound,tdGroundY,tuDaoTap,updateBay,viewPoint});
