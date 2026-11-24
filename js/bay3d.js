@@ -439,7 +439,7 @@
   const TD_SR=(()=>{for(let L=1;L<14;L+=.1)if(TD_FY-tdTerrainY(TD_H.x0-L,0)<=.38*L)return L;return 14})();/* chiều dài bậc đá trước nhà */
   const TD_SBOT=tdTerrainY(TD_H.x0-TD_SR,0);
   const TD_MY=(()=>{let y=-9;for(let i=-1;i<=1;i+=.5)for(let j=-1;j<=1;j+=.5)y=Math.max(y,tdTerrainY(TD_MED.x+i*TD_MED.h,TD_MED.z+j*TD_MED.h));return y+.45})();/* sàn phòng thiền */
-  const TD_GY=(()=>{let y=-9;for(let k=0;k<8;k++){const a=k/8*Math.PI*2;y=Math.max(y,tdTerrainY(TD_GAZ.x+Math.cos(a)*TD_GAZ.r,TD_GAZ.z+Math.sin(a)*TD_GAZ.r))}return y+2.6})();/* sàn chòi */
+  const TD_GY=(()=>{let y=-9;for(let k=0;k<8;k++){const a=k/8*Math.PI*2;y=Math.max(y,tdTerrainY(TD_GAZ.x+Math.cos(a)*TD_GAZ.r,TD_GAZ.z+Math.sin(a)*TD_GAZ.r))}return y+5.4})();/* sàn chòi: cao gần gấp đôi trước */
   const TD_GDIR=(()=>{const v=[-.6,-.8];return v})(),TD_GRUN=Math.max(2,(TD_GY-tdTerrainY(TD_GAZ.x,TD_GAZ.z))/.62);
   const TD_PIER_END=[-TU_DAO.r-43,0],TD_PIER_MID=[-TU_DAO.r-20,0],TD_PIER_START=[-TU_DAO.r+4,0];
   const TD_STEP=[TD_H.x0-TD_SR-1,0],TD_DOOR=[.2,0],TD_JUNC=[-15,0];
@@ -547,19 +547,23 @@
     // ---- chòi ngắm biển (bên phải): bát giác trên cột cao, lan can, mái nón lá màu vàng nâu, bàn ghế, cầu thang về phía lối đá
     const gaz=new THREE.Group();gaz.position.set(TD_GAZ.x,0,TD_GAZ.z);g.add(gaz);
     {const Y=TD_GY,R=TD_GAZ.r;cyl(gaz,0,Y-.12,0,R+.25,R+.25,.26,woodL,8);
-      for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,x=Math.cos(a)*(R-.3),z=Math.sin(a)*(R-.3),gy=tdTerrainY(TD_GAZ.x+x,TD_GAZ.z+z);cyl(gaz,x,(Y+gy-.6)/2,z,.17,.2,Y-gy+.6,darkW,8);cyl(gaz,x,Y+1.4,z,.12,.12,2.8,wood,8)}
+      for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,x=Math.cos(a)*(R-.3),z=Math.sin(a)*(R-.3),gy=tdTerrainY(TD_GAZ.x+x,TD_GAZ.z+z);cyl(gaz,x,(Y+gy-.6)/2,z,.17,.2,Y-gy+.6,darkW,8);cyl(gaz,x,Y+1.7,z,.12,.12,3.4,wood,8)}
+      for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,b=(i+1.5)/8*Math.PI*2,gy=tdTerrainY(TD_GAZ.x+Math.cos(a)*(R-.3),TD_GAZ.z+Math.sin(a)*(R-.3)),gy2=tdTerrainY(TD_GAZ.x+Math.cos(b)*(R-.3),TD_GAZ.z+Math.sin(b)*(R-.3)),ym=Math.min(gy,gy2)+(Y-Math.min(gy,gy2))*.45;beam(gaz,[Math.cos(a)*(R-.3),ym,Math.sin(a)*(R-.3)],[Math.cos(b)*(R-.3),ym+.4,Math.sin(b)*(R-.3)],.07,wood)}/* giằng ngang giữa các cột chân */
       const sa=Math.atan2(TD_GDIR[1],TD_GDIR[0]);for(let i=0;i<8;i++){const a=i/8*Math.PI*2,b=(i+1)/8*Math.PI*2,m=(a+b)/2+Math.PI/8;if(Math.abs(Math.atan2(Math.sin(m-sa),Math.cos(m-sa)))<.4)continue;
         beam(gaz,[Math.cos(a+Math.PI/8)*(R-.3),Y+.95,Math.sin(a+Math.PI/8)*(R-.3)],[Math.cos(b+Math.PI/8)*(R-.3),Y+.95,Math.sin(b+Math.PI/8)*(R-.3)],.05,wood);
         for(let t=.2;t<1;t+=.2){const aa=a+Math.PI/8+(b-a)*t;cyl(gaz,Math.cos(aa)*(R-.3),Y+.5,Math.sin(aa)*(R-.3),.03,.03,.9,wood,5)}}
-      const roof=P(new THREE.ConeGeometry(R+1.4,2.6,8),M('#a98a5f',.95,{flatShading:true}),0,Y+4.1,0,gaz);roof.rotation.y=Math.PI/8;cyl(gaz,0,Y+2.85,0,R+.1,R+.1,.14,wood,8);P(new THREE.SphereGeometry(.22,8,6),gold,0,Y+5.5,0,gaz);
+      const roof=P(new THREE.ConeGeometry(R+1.4,3.0,8),M('#a98a5f',.95,{flatShading:true}),0,Y+4.9,0,gaz);roof.rotation.y=Math.PI/8;cyl(gaz,0,Y+3.4,0,R+.1,R+.1,.14,wood,8);P(new THREE.SphereGeometry(.24,8,6),gold,0,Y+6.5,0,gaz);
       cyl(gaz,0,Y+.45,0,.75,.75,.07,woodL,16);cyl(gaz,0,Y+.22,0,.08,.12,.45,darkW,8);for(let k=0;k<4;k++){const a=k/4*Math.PI*2+.4;box(gaz,Math.cos(a)*1.5,Y+.25,Math.sin(a)*1.5,.6,.08,.6,creamM)}
       const st=new THREE.Group();st.position.set(Math.cos(sa)*R,0,Math.sin(sa)*R);st.rotation.y=-sa+Math.PI/2;gaz.add(st);const n=Math.ceil((Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/.2);
       for(let i=0;i<n;i++)box(st,0,Y-.1-(i+1)*(Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/n+.1,(i+.5)*TD_GRUN/n,1.6,.1,TD_GRUN/n+.05,woodL);
       for(const s of [-1,1]){const yb=tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]);beam(st,[s*.85,Y+.9,0],[s*.85,yb+.9,TD_GRUN],.05,wood);beam(st,[s*.85,Y-.1,0],[s*.85,yb,TD_GRUN],.08,darkW);cyl(st,s*.85,yb+.45,TD_GRUN,.06,.06,.9,wood,6)}}
-    // ---- bãi biển: hai ghế nằm gỗ nệm trắng và dù trắng ở bãi trái
-    {const lz=-20;for(const [x,z] of [[-30,lz],[-30,lz+2.2]]){const y=tdTerrainY(x,z),lg=new THREE.Group();lg.position.set(x,y,z);lg.rotation.y=.25;g.add(lg);box(lg,0,.32,0,2.1,.1,.75,woodL);const bk=box(lg,-1.05,.62,0,.85,.1,.75,woodL);bk.rotation.z=-.85;
-        box(lg,.15,.42,0,1.7,.1,.68,whiteM);for(const sx of [-.85,.85])for(const sz of [-.3,.3])cyl(lg,sx,.15,sz,.04,.04,.3,darkW,5)}
-      const ux=-31.6,uz=lz+1.1,uy=tdTerrainY(ux,uz);cyl(g,ux,uy+1.3,uz,.05,.05,2.6,darkW,6);const um=P(new THREE.ConeGeometry(1.9,.7,12,1,true),M('#f7f3ea',.7,{side:THREE.DoubleSide}),ux,uy+2.55,uz);box(g,ux+.6,uy+.3,uz+.1,.5,.45,.5,woodL)}
+    // ---- bãi biển gần chòi ngắm biển: hai ghế nằm gỗ nệm trắng quay ra biển, dù trắng che phía đầu ghế
+    {const C=[-11,35.7],out=[-.47,.88],land=[.47,-.88],perp=[.88,.47],th=Math.atan2(-out[1],out[0]);
+      for(const s2 of [-1,1]){const x=C[0]+perp[0]*1.15*s2,z=C[1]+perp[1]*1.15*s2,y=tdTerrainY(x,z),lg=new THREE.Group();lg.position.set(x,y,z);lg.rotation.y=th;g.add(lg);
+        box(lg,0,.32,0,2.1,.1,.75,woodL);const bk=box(lg,-1.05,.62,0,.85,.1,.75,woodL);bk.rotation.z=-.85;box(lg,.15,.42,0,1.7,.1,.68,whiteM);for(const sx of [-.85,.85])for(const sz of [-.3,.3])cyl(lg,sx,.15,sz,.04,.04,.3,darkW,5)}
+      const ux=C[0]+land[0]*.5,uz=C[1]+land[1]*.5,uy=tdTerrainY(ux,uz);cyl(g,ux,uy+1.35,uz,.05,.05,2.7,darkW,6);
+      const um=P(new THREE.ConeGeometry(2.4,.75,14,1,true),M('#f7f3ea',.7,{side:THREE.DoubleSide}),ux,uy+2.65,uz);P(new THREE.SphereGeometry(.07,6,5),darkW,ux,uy+3.05,uz);
+      box(g,C[0]+land[0]*1.4+perp[0]*2.2,tdTerrainY(C[0]+land[0]*1.4+perp[0]*2.2,C[1]+land[1]*1.4+perp[1]*2.2)+.25,C[1]+land[1]*1.4+perp[1]*2.2,.5,.45,.5,woodL)}
     // ---- cây: tán rộng nhiều cụm lá, dừa nghiêng ven bãi; bụi cây và bụi hoa dọc lối, quanh nhà
     const blobG=new THREE.IcosahedronGeometry(1,1),frondG=new THREE.ConeGeometry(.3,2.6,4);
     const okPlant=(x,z,pad)=>{const [r,a]=tdRho(x,z);return r<tdSandEdge(a)-.01&&!tdInBuild(x,z,pad)&&!tdOnPaths(x,z,pad+1.6)&&x<22};
