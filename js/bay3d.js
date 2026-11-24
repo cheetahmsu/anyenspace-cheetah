@@ -1342,5 +1342,5 @@
     meTag.visible=view==='far';SEE.on.value=1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
     if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
   }
-  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=b3d7ddb7').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
+  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=6275d3c2').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
   __bayExport({bayCaption,bayDress,bayTap,bayZoomBy,buildBay,closeBayOutfit,closePhoto,dropPause,endTour,goLandmark,goTuDao,islandBoardNow,loadBayData,openBayMap,openBayOutfit,pauseShip,pines,refreshBayHud,resumeShip,sailToStop,setDestination,startTour,stopBaySound,tdGroundY,tuDaoTap,updateBay,viewPoint});
