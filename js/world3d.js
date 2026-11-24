@@ -51,22 +51,44 @@ const wishLakes=[
  {name:'Sen',x:0,z:-4,color:'#5a9b91',theme:'an yên',lotus:true}/* hồ sen hai cánh (trước gọi là Hồ Niệm) */
 ];
 const lakeVisuals=new Map();let wishDestination=null;let selectedWishLake='Sen';window.anyenSelectedWishLake='Sen';
+// 3.32: Sáu hồ Lục Căn vẽ lại theo bộ mẫu three.js "6 hồ giác quan" và tranh tham khảo: nền hồ sẫm, mặt nước xanh ngọc,
+// viền đá cuội tròn dẹt (một InstancedMesh cho cả sáu hồ), lá súng nổi; Hồ Sắc có cá Koi bơi vòng, Hồ Thanh có gợn sóng
+// lan tròn, Hồ Niệm có vài bông sen trắng hồng nhỏ, thưa. Luống hoa của mỗi hồ dựng ở phần vườn hoa (FLOWER_GARDENS).
+const POND_WATER='#2a6a66',pondAnims=[];
+const pondStoneGeo=new THREE.DodecahedronGeometry(1,0),pondStoneMat=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true});
+const pondPadGeo=new THREE.CircleGeometry(.5,10,.35,Math.PI*2-.35);pondPadGeo.rotateX(-Math.PI/2);
+const pondPadMat=new THREE.MeshStandardMaterial({color:'#5b9a43',roughness:.95,flatShading:true,side:THREE.DoubleSide});
+{const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),stoneCols=['#77766a','#898779','#9b9787','#6d7069','#a6a08e'].map(c=>new THREE.Color(c));
 for(const l of wishLakes){
  const group=new THREE.Group();group.position.set(l.x,.035,l.z);scene.add(group);
  if(!l.lotus){
-   const rim=new THREE.Mesh(new THREE.TorusGeometry(POND_R+.12,.2,8,72),mat('#9a8662'));rim.rotation.x=-Math.PI/2;group.add(rim);
-   const pool=new THREE.Mesh(new THREE.CircleGeometry(POND_R,72),new THREE.MeshStandardMaterial({color:l.color,transparent:true,opacity:.88,metalness:.3,roughness:.23,side:THREE.DoubleSide}));pool.rotation.x=-Math.PI/2;group.add(pool);l.pool=pool;
+   const bed=new THREE.Mesh(new THREE.CircleGeometry(POND_R+.08,40),mat('#43583b'));bed.rotation.x=-Math.PI/2;bed.position.y=-.01;group.add(bed);
+   const pool=new THREE.Mesh(new THREE.CircleGeometry(POND_R-.1,40),new THREE.MeshStandardMaterial({color:POND_WATER,transparent:true,opacity:.91,metalness:.08,roughness:.28}));pool.rotation.x=-Math.PI/2;pool.position.y=.06;group.add(pool);l.pool=pool;
+   /* đá và lá súng: mỗi hồ một InstancedMesh, toạ độ theo hồ nên vẫn đi theo khi hồ được dời từ dữ liệu */const pondStones=new THREE.InstancedMesh(pondStoneGeo,pondStoneMat,52);
+   for(let i=0;i<52;i++){const a=i*Math.PI*2/52,r=POND_R+.1+Math.sin(i*2.7)*.045,s=.24+(i%4)*.025;e.set(.04*(i%3),a+(i%2)*.3,.06*(i%4));q.setFromEuler(e);v.set(Math.cos(a)*r,.1,Math.sin(a)*r);sc.set(s*1.05,.13+(i%3)*.018,s*.82);
+     pondStones.setMatrixAt(i,m4.compose(v,q,sc));pondStones.setColorAt(i,stoneCols[i%5])}
+   pondStones.instanceMatrix.needsUpdate=true;pondStones.instanceColor.needsUpdate=true;group.add(pondStones);
+   const nPad=l.name==='Sắc'?8:l.name==='Niệm'?9:5,pondPads=new THREE.InstancedMesh(pondPadGeo,pondPadMat,nPad);for(let i=0;i<nPad;i++){const a=i*2.399+l.x*.1,r=POND_R*(.25+(i%3)*.17),s=.85+(i%3)*.2;e.set(0,a,0);q.setFromEuler(e);v.set(Math.cos(a)*r,.075,Math.sin(a)*r);sc.set(s*1.2,1,s*.85);pondPads.setMatrixAt(i,m4.compose(v,q,sc))}pondPads.instanceMatrix.needsUpdate=true;group.add(pondPads);
+   if(l.name==='Sắc'){// cá Koi trắng đỏ / trắng đen, mỗi con một lưới gộp, bơi vòng chậm
+     const fish=[];for(let i=0;i<4;i++){const P=[],add=(g,c)=>P.push([g,c]);const body=new THREE.SphereGeometry(.28,8,6);body.scale(1.55,.58,.72);add(body,'#f4eee2');
+       const patch=new THREE.SphereGeometry(.17,7,5);patch.scale(1,.34,.8);patch.translate(.12,.105,0);add(patch,i%2?'#242b2b':'#d83a32');
+       const tail=new THREE.BufferGeometry();tail.setAttribute('position',new THREE.Float32BufferAttribute([-.34,0,0,-.72,.18,.12,-.72,-.18,.12,-.34,0,0,-.72,-.18,-.12,-.72,.18,-.12,-.34,0,0,-.72,-.18,.12,-.72,.18,.12,-.34,0,0,-.72,.18,-.12,-.72,-.18,-.12],3));add(tail,'#f4eee2');
+       for(const z of [.17,-.17]){const eye=new THREE.SphereGeometry(.035,5,4);eye.translate(.32,.06,z);add(eye,'#242b2b')}
+       const f=new THREE.Mesh(mergeColored(P),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.58,flatShading:true}));f.scale.setScalar(1.6);f.userData={orbit:i/4*Math.PI*2,radius:POND_R*(.3+(i%3)*.12),phase:i*1.7,dir:i%2?1:-1};group.add(f);fish.push(f)}
+     pondAnims.push(t=>{for(const f of fish){const u=f.userData,a=u.orbit+u.dir*t*.12;f.position.set(Math.cos(a)*u.radius,.06+Math.sin(t*1.4+u.phase)*.02,Math.sin(a)*u.radius);f.rotation.y=-a-u.dir*Math.PI/2}})}
+   if(l.name==='Thanh'){// gợn sóng tròn lan dần từ giữa hồ: Thanh là âm thanh
+     const rings=[0,1,2].map(k=>{const r=new THREE.Mesh(new THREE.RingGeometry(.92,1,40),new THREE.MeshBasicMaterial({color:'#e8fbf4',transparent:true,opacity:.5,depthWrite:false}));r.rotation.x=-Math.PI/2;r.position.y=.075;group.add(r);return r});
+     pondAnims.push(t=>rings.forEach((r,k)=>{const u=((t*.25+k/3)%1);r.scale.setScalar(.3+u*2.6);r.material.opacity=.55*(1-u)}))}
+   if(l.name==='Niệm'){// sen trắng hồng nhỏ, đơn giản, thưa: ba bông trên lá
+     const P=[];const petal=(a,tilt,len,wid,y,tip)=>{const g=new THREE.SphereGeometry(1,6,4);g.scale(wid,.035,len);g.translate(0,0,len);g.rotateX(-tilt);g.rotateY(a);g.translate(0,y,0);P.push([g,tip])};
+     for(let k=0;k<8;k++)petal(k*Math.PI/4,.55,.2,.09,0,k%2?'#fff4f1':'#f5b6c5');for(let k=0;k<6;k++)petal(k*Math.PI/3+.3,1.0,.16,.08,.02,k%2?'#fff8f6':'#f9c8d4');
+     const c=new THREE.CylinderGeometry(.07,.05,.06,8);c.translate(0,.08,0);P.push([c,'#e8bf4a']);const lot=mergeColored(P),lm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6,flatShading:true,emissive:'#ffffff',emissiveIntensity:.06});
+     for(const [x,z] of [[-.35,-.12],[.18,.24],[.4,-.28]]){const f=new THREE.Mesh(lot,lm);f.position.set(x*POND_R,.11,z*POND_R);f.scale.setScalar(1.5);group.add(f)}}
  }
  const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');const drawLakeLabel=()=>{ctx.clearRect(0,0,512,128);ctx.fillStyle='#f1d69f';ctx.font='bold 48px serif';ctx.textAlign='center';ctx.fillText('HỒ '+l.name.toUpperCase(),256,62);ctx.font='28px sans-serif';ctx.fillText(l.theme,256,103)};drawLakeLabel();
  const tex=new THREE.CanvasTexture(labelCanvas);l.redrawLabel=()=>{drawLakeLabel();tex.needsUpdate=true};const label=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));label.position.set(0,l.lotus?5.4:1.5,0);label.scale.set(5,1.25,1);group.add(label);/* Hồ Sen's sign floats above the arched bridge */
- if(!l.lotus){const colors={'Sắc':'#f2c96b','Thanh':'#a9c5ed','Hương':'#f4e8d2','Vị':'#e89baa','Chạm':'#bca4dd','Niệm':'#fbfbf6'};if(l.name==='Niệm'){/* Hồ Niệm: lá sen nổi và sen trắng (Bạch Liên) nhụy vàng, cảnh tĩnh */const padM=mat('#5d8c6e'),whiteM=new THREE.MeshStandardMaterial({color:'#fbfaf3',roughness:.6,emissive:'#ffffff',emissiveIntensity:.08,side:THREE.DoubleSide}),coreM=mat('#d8a73a');
-   for(let j=0;j<14;j++){const a=j*2.39996,r=.9+(j%5)*.95,pad=new THREE.Mesh(new THREE.CircleGeometry(.42+(j%3)*.1,14,.3,Math.PI*2-.3),padM);pad.rotation.x=-Math.PI/2;pad.rotation.z=a;pad.position.set(Math.cos(a)*r,.07,Math.sin(a)*r);group.add(pad)}
-   const petal=new THREE.SphereGeometry(.16,10,8);petal.scale(.55,.28,1.25);petal.translate(0,0,.17);
-   for(let j=0;j<6;j++){const a=j*2.1+.4,r=1.3+(j%3)*1.1,f=new THREE.Group();f.position.set(Math.cos(a)*r,.12,Math.sin(a)*r);f.scale.setScalar(1.35);group.add(f);
-     for(const [n,tilt,y,s] of [[8,.55,0,1],[6,.95,.04,.8]])for(let k=0;k<n;k++){const p=new THREE.Mesh(petal,whiteM);p.rotation.order='YXZ';p.rotation.y=k*Math.PI*2/n+y*9;p.rotation.x=-tilt;p.position.y=y;p.scale.setScalar(s);f.add(p)}
-     const c=new THREE.Mesh(new THREE.CylinderGeometry(.07,.05,.06,10),coreM);c.position.y=.09;f.add(c)}}
- else for(let j=0;j<12;j++){const a=j*2.39996,r=1.1+(j%4)*1.25;const plant=new THREE.Group();plant.position.set(Math.cos(a)*r,.09,Math.sin(a)*r);plant.scale.setScalar(1.45);group.add(plant);const leaf=new THREE.Mesh(new THREE.SphereGeometry(.4,8,6),mat('#56845e'));leaf.scale.set(1,.13,.6);plant.add(leaf);for(let p=0;p<5;p++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.19,8,6),mat(colors[l.name]));petal.position.set(Math.cos(p*1.256)*.2,.15,Math.sin(p*1.256)*.2);plant.add(petal)}}}lakeVisuals.set(l.name,group);
-}
+ lakeVisuals.set(l.name,group);
+}}
 function animateCoin(lake,remote){const l=wishLakes.find(v=>v.name===lake);if(!l)return;const coin=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,24),new THREE.MeshStandardMaterial({color:'#e5c178',metalness:.8,roughness:.2}));const from=remote?new THREE.Vector3(l.x+5,1.7,l.z+5):mePosition.clone().add(new THREE.Vector3(0,1.7,0));scene.add(coin);const start=performance.now();function frame(now){const t=Math.min(1,(now-start)/1400);coin.position.set(from.x+(l.x-from.x)*t,from.y+(.12-from.y)*t+Math.sin(Math.PI*t)*2.8,from.z+(l.z-from.z)*t);coin.rotation.z=t*15;if(t<1)requestAnimationFrame(frame);else{scene.remove(coin);coin.geometry.dispose();coin.material.dispose()}}requestAnimationFrame(frame)}
 const wishQuotes={"Sắc":["Thịnh vượng là biết điều gì thật sự đủ.","Giá trị hôm nay tạo nên cơ hội ngày mai.","Kiên nhẫn cũng là một hình thức đầu tư.","Hãy chăm sóc nền móng trước khi xây thêm tầng.","Một quyết định sáng suốt cần ít vội vàng hơn.","Tài sản quý nhất là khả năng bắt đầu lại.","Đừng so tốc độ của mình với người khác.","Dành chỗ cho cả tích lũy và tận hưởng.","Điều bền vững thường lớn lên trong im lặng.","Thành công có ý nghĩa khi bạn vẫn là chính mình.","Hôm nay, hãy tạo ra một giá trị thật.","Không phải cánh cửa nào mở ra cũng cần bước vào."],"Thanh":["Làm việc quan trọng trước khi làm việc khẩn cấp.","Bạn không cần giỏi mọi thứ để tạo khác biệt.","Một lời nói rõ ràng có thể tháo gỡ hiểu lầm.","Đừng nhầm bận rộn với tiến bộ.","Có những bước lùi giúp nhìn rõ đường đi.","Tài năng nở rộ trong đúng môi trường.","Hãy xin giúp đỡ trước khi kiệt sức.","Tập trung là món quà dành cho mục tiêu.","Một ngày làm việc tốt vẫn cần điểm dừng.","Bạn được phép học trong lúc đang làm.","Lắng nghe đồng đội là một năng lực lãnh đạo.","Cơ hội đôi khi đến từ cuộc trò chuyện chân thành."],"Hương":["Cơ thể không phải cỗ máy chạy hết công suất.","Một giấc ngủ đủ là quyết định khôn ngoan.","Chăm sóc bản thân không cần đợi lúc mệt.","Hãy uống nước và trở về với hiện tại.","Nghỉ ngơi cũng là một phần của phát triển.","Mỗi hơi thở chậm là một lời nhắc dịu dàng.","Đừng dùng một ngày khó để đánh giá cả đời.","Đi bộ vài phút cũng giúp tâm trí rộng mở.","Lắng nghe cơ thể trước khi nó lên tiếng lớn.","Một bữa ăn thong thả đáng được trân trọng.","Sức khỏe đến từ điều nhỏ được lặp lại.","Cân bằng là điều được điều chỉnh mỗi ngày."],"Vị":["Tình yêu đẹp không khiến bạn đánh mất mình.","Một câu hỏi chân thành hơn mười lời đoán.","Hãy yêu bằng sự hiện diện, không chỉ lời hứa.","Bền lâu cần cả gần gũi lẫn khoảng riêng.","Đừng mong người khác đọc điều bạn chưa nói.","Sự dịu dàng có sức mạnh riêng.","Yêu thương không phải cuộc thi hy sinh.","Một lời xin lỗi đúng lúc có thể mở cửa.","Lắng nghe là cách ôm nhau bằng tâm trí.","Bạn xứng đáng với sự tôn trọng.","Đừng kết luận khi trái tim còn đang nóng.","Tình cảm cần được tưới bằng hành động."],"Chạm":["Kết nối thật bắt đầu khi ta hiện diện thật.","Một lời hỏi thăm có thể thay đổi một ngày.","Hãy tìm người để cùng đi, không chỉ cùng đến.","Không phải cuộc gặp nào cũng cần mục đích.","Được lắng nghe là một dạng được yêu thương.","Tình bạn lớn lên từ những lần có mặt.","Bạn có thể chủ động mở lời trước.","Khác biệt không nhất thiết là khoảng cách.","Hãy giữ lời hứa nhỏ để nuôi niềm tin.","Mỗi người mang theo câu chuyện chưa kể.","Hãy tập hiểu người trước khi mong được hiểu.","Chân thành là chiếc cầu không cần trang trí."],"Niệm":["Mỗi hơi thở tỉnh thức là một lần trở về nhà.","Làm chậm một việc nhỏ, bạn sẽ thấy nó trọn vẹn.","Chánh niệm là biết mình đang làm gì khi đang làm điều đó.","Hãy để tâm nghỉ một chút như mặt hồ lặng.","Sen trắng nở giữa bùn mà không nhiễm bùn.","Một ngọn đèn nhỏ đủ soi một bước chân.","Lắng nghe hơi thở vào, mỉm cười với hơi thở ra.","Điều đang có mặt bây giờ là đủ để bắt đầu."],"Sen":["Bạn không cần giải quyết cả tương lai hôm nay.","Trở về với hơi thở, trở về với chính mình.","Bình an không đợi mọi việc hoàn tất.","Một khoảnh khắc tỉnh thức cũng đáng quý.","Hãy để suy nghĩ đi qua mà không chạy theo.","Bạn có thể bắt đầu lại từ phút này.","Im lặng là khoảng trống để lắng nghe.","Chậm một nhịp để nhìn rõ điều đang xảy ra.","Có câu trả lời đến khi ta ngừng ép tìm.","Một ngày bình thường vẫn chứa điều kỳ diệu.","Bạn được phép chưa biết bước tiếp theo.","Hãy đối xử với mình bằng sự tử tế."]};
 function wishQuote(lake){const arr=wishQuotes[lake]||wishQuotes.Sen;window.anyenLastQuote=window.anyenLastQuote||{};let index=Math.floor(Math.random()*arr.length);if(arr.length>1&&index===window.anyenLastQuote[lake])index=(index+1)%arr.length;window.anyenLastQuote[lake]=index;
@@ -1025,7 +1047,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     for(const r of w.rooms||[])if(r.name&&r.palette_color)roomPalettes[r.name]=r.palette_color;
     for(const pr of w.props||[]){if(pr.kind!=='wish_lake')continue;const l=wishLakes.find(v=>v.name===pr.name);if(!l)continue;
       l.x=Number(pr.x);l.z=Number(pr.z);if(pr.params?.color)l.color=pr.params.color;if(pr.params?.theme)l.theme=pr.params.theme;
-      const g=lakeVisuals.get(l.name);if(g)g.position.set(l.x,.035,l.z);if(l.pool)l.pool.material.color.set(l.color);if(l.redrawLabel)l.redrawLabel()}
+      const g=lakeVisuals.get(l.name);if(g)g.position.set(l.x,.035,l.z);/* 3.32: mặt nước sáu hồ dùng chung màu xanh ngọc của bản thiết kế */if(l.redrawLabel)l.redrawLabel()}
     window.anyenWorld={id:WORLD_ID,source,map:m,rooms:w.rooms||[],buildings:w.buildings||[],props:w.props||[],npcs:w.npcs||[]};
     window.dispatchEvent(new CustomEvent('anyen-world-loaded',{detail:{id:WORLD_ID,source}}));
     return true;
@@ -1399,27 +1421,33 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const tw=new THREE.Mesh(new THREE.TorusGeometry(.012,.003,4,8),bqMats.twine);tw.position.set(.05,.08,.095);g.add(tw);for(const x of [.045,.06]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.002,.002,.1,3),bqMats.twine);t.position.set(x,.03,.095);g.add(t)}}
     return g}
 
-  // Gardens at the five junctions of the Ngũ quan ring (where each branch leaves the ring), plus lotus picking at Bến sen.
-  const FLOWER_GARDENS=[{kind:'hong',lake:'Sắc'},{kind:'cam_tu_cau',lake:'Thanh'},{kind:'lan',lake:'Hương'},{kind:'cuc',lake:'Vị'},{kind:'nhai',lake:'Chạm'},{kind:'sen',lake:'Niệm'}]/* bản đồ v3.6: Huệ cạnh Hồ Chạm, Oải hương cạnh Hồ Hương */.map((g,i)=>{const pts=BRANCHES[i],c=pts[pts.length-8],phi=Math.atan2(c[0]-HILL.x,c[1]-HILL.z),l=wishLakes.find(v=>v.name===g.lake),th=Math.atan2(l.x-HILL.x,l.z-HILL.z),sg=Math.sign(Math.atan2(Math.sin(th-phi),Math.cos(th-phi)))||1;
-    const u=[Math.sin(phi),Math.cos(phi)],w=[-sg*Math.cos(phi),sg*Math.sin(phi)];/* u: outward along the branch, w: along the ring away from the pond */
-    return {...g,x:c[0],z:c[1],u,w,cx:c[0]+(u[0]+w[0])*1.5,cz:c[1]+(u[1]+w[1])*1.5}});
-  /* hoa sen hồng ở Bến sen không còn hái được: sen dâng Phật là Sen Trắng ở luống cạnh Hồ Niệm */
-  {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
+  // 3.32: Mỗi hồ Lục Căn có một luống hoa sát bờ (theo tranh "6 hồ" và bộ mẫu three.js): gò đất xanh thấp, hoa mọc dày, vài tảng đá.
+  // Luống quay về phía ngã rẽ cũ trên vòng đường Ngũ quan; hướng được dò quanh bờ hồ để luống tránh lối đi, nhà và gốc cây.
+  const BED_R=2.4;
+  const canopyNear=(x,z,r)=>{const cx=Math.floor(x/TREE_CELL),cz=Math.floor(z/TREE_CELL);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=treeGrid.get(treeCellKey(cx+i,cz+j));if(a)for(const t of a)if(Math.hypot(x-t[0],z-t[1])<r)return true}return false};
+  const FLOWER_GARDENS=[{kind:'hong',lake:'Sắc'},{kind:'cam_tu_cau',lake:'Thanh'},{kind:'lan',lake:'Hương'},{kind:'cuc',lake:'Vị'},{kind:'nhai',lake:'Chạm'},{kind:'sen',lake:'Niệm'}].map((g,i)=>{const pts=BRANCHES[i],c=pts[pts.length-8],l=wishLakes.find(v=>v.name===g.lake);
+    const bedFree=(x,z)=>!(onPaved(x,z)||branchDistance(x,z)<1.3||stairsDistance(x,z)<1.8||wishLakes.some(w=>!w.lotus&&Math.hypot(x-w.x,z-w.z)<POND_R+.45)||houseHit(x,z,.6)||treeBlocked(x,z));
+    const th0=Math.atan2(c[1]-l.z,c[0]-l.x),D=POND_R+.3+BED_R*.8;let best=null;
+    for(let k=0;k<36;k++){const th=k/36*Math.PI*2,bx=l.x+Math.cos(th)*D,bz=l.z+Math.sin(th)*D;let ok=0,n=0;for(let gx=-BED_R;gx<=BED_R;gx+=.5)for(let gz=-BED_R;gz<=BED_R;gz+=.5){if(gx*gx+gz*gz>BED_R*BED_R)continue;n++;if(bedFree(bx+gx,bz+gz)&&!canopyNear(bx+gx,bz+gz,3))ok++}
+      const dth=Math.abs(Math.atan2(Math.sin(th-th0),Math.cos(th-th0))),score=ok/n-.25*dth/Math.PI;if(!best||score>best.score)best={score,th,bx,bz}}
+    const ox=Math.cos(best.th),oz=Math.sin(best.th);/* đứng hái ở mép ngoài luống */
+    return {...g,bx:best.bx,bz:best.bz,th:best.th,x:best.bx+ox*(BED_R+.6),z:best.bz+oz*(BED_R+.6),free:bedFree}});
+  {const rnd=seededRandom(9090),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3(),rockGeo=new THREE.DodecahedronGeometry(1,0),rockM=new THREE.MeshStandardMaterial({color:'#8d8a7d',roughness:.95,flatShading:true});
     for(const gd of FLOWER_GARDENS){
-      if(!gd.pier){const R=6,pts=[];for(let tries=0;pts.length<240&&tries<9000;tries++){const a=rnd()*Math.PI/2,r=.25+Math.sqrt(rnd())*(R-.4),ca=Math.cos(a),sa=Math.sin(a),x=gd.cx+(gd.u[0]*ca+gd.w[0]*sa)*r,z=gd.cz+(gd.u[1]*ca+gd.w[1]*sa)*r;
-          if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.7)||houseHit(x,z,.6)||treeBlocked(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.26))continue;pts.push([x,z])}
-        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,pts.length);pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.8;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.02,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
-        mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
-        // a low leafy border under the flowers
-        const bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),mat('#2f5a3a'),pts.length);pts.forEach(([x,z],i)=>{e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.05,z+(rnd()-.5)*.2);sc.set(1.5,.6,1.5);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)});bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
-        // low edging stones along the curved edge and the two straight sides of the bed
-        const ring=[];for(let k=0;k<=22;k++){const a=k/22*Math.PI/2,x=gd.cx+(gd.u[0]*Math.cos(a)+gd.w[0]*Math.sin(a))*(R+.2),z=gd.cz+(gd.u[1]*Math.cos(a)+gd.w[1]*Math.sin(a))*(R+.2);if(onPaved(x,z)||branchDistance(x,z)<1.5||stairsDistance(x,z)<1.8||houseHit(x,z,.3)||wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+.4))continue;ring.push([x,z,a])}
-        for(const dir of [gd.u,gd.w])for(let t=.4;t<=R;t+=.55){const x=gd.cx+dir[0]*t-(dir===gd.u?gd.w[0]:gd.u[0])*.2,z=gd.cz+dir[1]*t-(dir===gd.u?gd.w[1]:gd.u[1])*.2;if(!onPaved(x,z))ring.push([x,z,Math.atan2(dir[0],dir[1])])}
-        const edge=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.22,0),mat('#6c695d'),Math.max(1,ring.length));ring.forEach(([x,z,a],i)=>{e.set(0,a,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.06,z);sc.set(1.4,.6,1);m4.compose(v,q,sc);edge.setMatrixAt(i,m4)});edge.count=ring.length;edge.instanceMatrix.needsUpdate=true;scene.add(edge);
+      if(!gd.pier){const pts=[],N=gd.kind==='lan'?80:64;for(let tries=0;pts.length<N&&tries<4000;tries++){const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*(BED_R-.25),x=gd.bx+Math.cos(a)*r,z=gd.bz+Math.sin(a)*r;
+          if(!gd.free(x,z))continue;if(pts.some(([px,pz])=>Math.hypot(px-x,pz-z)<.34))continue;pts.push([x,z])}
+        // gò đất trồng hoa: lăng trụ 9 cạnh thấp, mép không đều
+        const mound=new THREE.Mesh(new THREE.CylinderGeometry(BED_R*.86,BED_R*.95,.22,9),mat('#315c35'));mound.position.set(gd.bx,terrainHeight(gd.bx,gd.bz)-.04,gd.bz);mound.rotation.y=gd.th;mound.scale.set(1,1,.9);mound.userData.garden=gd;scene.add(mound);
+        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMat,Math.max(1,pts.length));pts.forEach(([x,z],i)=>{const s=1.8+rnd()*.7;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.04,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
+        mesh.count=pts.length;mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
+        // lá xanh thấp dưới chân hoa
+        const nb=Math.ceil(pts.length/2),bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.22,0),new THREE.MeshStandardMaterial({color:'#3d7a3a',roughness:.9,flatShading:true}),Math.max(1,nb));for(let i=0;i<nb;i++){const [x,z]=pts[i*2];e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.25,terrainHeight(x,z)+.12,z+(rnd()-.5)*.25);sc.set(1.5,.6,1.5);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)}bush.count=nb;bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
+        // hai tảng đá tròn ở mép luống, như trong tranh
+        const rocks=new THREE.InstancedMesh(rockGeo,rockM,2);[[-1,.62],[1,.38]].forEach(([sd,s],i)=>{const a=gd.th+sd*1.15,x=gd.bx+Math.cos(a)*BED_R*.92,z=gd.bz+Math.sin(a)*BED_R*.92;e.set(rnd()*.3,rnd()*6,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+s*.35,z);sc.set(s*1.2,s*.8,s);m4.compose(v,q,sc);rocks.setMatrixAt(i,m4)});rocks.instanceMatrix.needsUpdate=true;scene.add(rocks);
         }
       // a floating flower sign above each garden: tap it to go and pick
       const cv=document.createElement('canvas');cv.width=256;cv.height=256;const cx=cv.getContext('2d');cx.fillStyle='rgba(11,45,40,.82)';cx.beginPath();cx.arc(128,128,112,0,7);cx.fill();cx.strokeStyle='#c8a96a';cx.lineWidth=8;cx.stroke();cx.font='120px serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(FLOWER_KINDS[gd.kind].icon,128,138);
-      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);const sx=gd.pier?gd.x:gd.cx+(gd.u[0]+gd.w[0])*2.4,sz=gd.pier?gd.z:gd.cz+(gd.u[1]+gd.w[1])*2.4;sp.position.set(sx,terrainHeight(sx,sz)+2.6,sz);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
+      const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sp.scale.set(1.1,1.1,1);const sx=gd.pier?gd.x:gd.bx,sz=gd.pier?gd.z:gd.bz;sp.position.set(sx,terrainHeight(sx,sz)+2.9,sz);sp.userData.garden=gd;scene.add(sp);gd.sign=sp}}
   // ---- basket, picking, arranging, carrying, offering
   let bouquetYaw=0,bqSpin=true,flowerBasket=[],bouquetLayout='tron',carriedBouquet=null,pendingGarden=null,pendingOffer=false,swapPick=-1;
   const flowerUi=document.createElement('div');flowerUi.innerHTML=`
@@ -2174,6 +2202,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(document.body.classList.contains('immersive')){const near=[...onlineAvatars.values()].some(p=>p.group.position.distanceTo(me.position)<7);document.querySelector('#nearGuest').textContent=near?'Có một khách tham quan gần bạn':'Dạo gần một người để chào'};
     markers.forEach((m,i)=>{m.rotation.y=t*.3;m.children[0].rotation.z=t*.35;m.position.y=(i===0?2.5:i===1?2.2:i===2?2.8:4)+Math.sin(t*1.2+i)*.13});
     flowers.forEach((f,i)=>f.position.y=f.userData.y0+Math.sin(t*.8+i)*.02);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
+    for(const f of pondAnims)f(t);
     water.material.color.setHSL(.48,.31,.27+Math.sin(t*.5)*.01);renderer.render(scene,camera)
   }animate();
 
