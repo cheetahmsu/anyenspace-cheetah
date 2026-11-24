@@ -783,7 +783,7 @@
   function bayZoomBy(f,force,btn){if(!bayMode||(bayPhoto&&!force)||bayOutfitOpen)return;const far=bayView==='far',now=performance.now();
     if(now-bayZoomEvt>350)bayBurst=now;bayZoomEvt=now;
     const atLim=far?(f<1&&bayFarZoom<=BF_MIN+1e-3):(f>1&&bayZoom>=BZ_MAX-1e-3);
-    if(atLim){if(!bayLimitAt)bayLimitAt=now;if(!btn&&bayLimitAt>=bayBurst)return;if(btn)bayZoomOver=Math.max(bayZoomOver,.25)}else bayLimitAt=0;
+    if(atLim){if(!bayLimitAt)bayLimitAt=now;if(!btn)return;if(btn)bayZoomOver=Math.max(bayZoomOver,.25)}else bayLimitAt=0;
     if(!far){if(f>1&&bayZoom>=BZ_MAX-1e-3){bayZoomOver+=Math.log(f);if(bayZoomOver>.3){bayZoomOver=0;bayZoomBack=bayView;setBayView('far');bayFarZoom=bayFarZoomS=BF_MIN;bayLimitAt=0;bayCaption('🛳 Toàn cảnh từ xa · bấm ＋ để quay lại sau lưng',3000)}}
       else{bayZoomOver=0;bayZoom=Math.max(BZ_MIN,Math.min(BZ_MAX,bayZoom*f))}}
     else{if(f<1&&bayFarZoom<=BF_MIN+1e-3){bayZoomOver+=Math.log(1/f);if(bayZoomOver>.3){bayZoomOver=0;setBayView(bayZoomBack&&bayZoomBack!=='far'?bayZoomBack:'bow');bayZoom=bayZoomS=BZ_MAX;bayLimitAt=0}}
@@ -1288,9 +1288,9 @@
     if(view==='photo'){PC=bayPhoto.cam||(bayPhoto.cam={...CAM0});if(bayPhoto.hold&&!bayPhoto.shooting)camStep(PC,bayPhoto.hold[0],bayPhoto.hold[1]*dt)}
     // Góc nhìn: mũi tàu / boong thượng / tự xoay (sau lưng người) · ngắm tàu từ xa (vòng quanh tàu) · trang phục (trước mặt người)
     bayZoomS+=(bayZoom-bayZoomS)*Math.min(1,dt*7);bayFarZoomS+=(bayFarZoom-bayFarZoomS)*Math.min(1,dt*7);
-    if(cv==='far'){const c=bayShip.group.position,cx=c.x+BAY.x,cz=c.z+BAY.z,yaw=S.heading+viewYaw+Math.PI*.78+(view==='photo'?(bayPhoto.t0??(bayPhoto.t0=t)):t)*.03,d=82*wide*bayFarZoomS,h0=24*Math.pow(bayFarZoomS,.7)+Math.sin(walkPitch)*-30;
-      bayLiftA.set(cx,6,cz);const lift=bayLiftStep(dt,bayLiftA,h=>bayLiftB.set(cx-Math.sin(yaw)*d,h0+h,cz-Math.cos(yaw)*d),[0,8,16,28,44],bayKarstMeshes);
-      bayCam.set(cx-Math.sin(yaw)*d,h0+lift,cz-Math.cos(yaw)*d);bayPullIn(bayLiftA,bayCam,bayKarstMeshes);camera.position.lerp(bayCam,Math.min(1,dt*2.5));bayLook.set(cx,4,cz);camera.lookAt(bayLook)}
+    if(cv==='far'){const c=bayShip.group.position,cx=c.x+BAY.x,cz=c.z+BAY.z,yaw=S.heading+viewYaw+Math.PI*.78,d=82*wide*bayFarZoomS,h0=24*Math.pow(bayFarZoomS,.7)+Math.sin(walkPitch)*-30;
+      // không tự nâng / kéo camera khi đá che: đá giữa camera và tàu tự mờ đi (nhìn xuyên), nên khung hình giữ nguyên
+      bayCam.set(cx-Math.sin(yaw)*d,h0,cz-Math.cos(yaw)*d);camera.position.lerp(bayCam,Math.min(1,dt*2.5));bayLook.set(cx,4,cz);camera.lookAt(bayLook)}
     else if(cv==='outfit'){const narrow=camera.aspect<1,yaw=S.heading+Math.PI+.35+viewYaw*.5,d=narrow?6.4:6;bayCam.set(bayTmp.x-Math.sin(yaw)*d,bayTmp.y+1.5,bayTmp.z-Math.cos(yaw)*d);camera.position.lerp(bayCam,Math.min(1,dt*4));
       // điện thoại: nhân vật ở nửa trên (bảng chọn ở dưới); màn rộng: nhân vật lệch trái (bảng chọn ở bên phải)
       const side=narrow?0:-2.1,rx=Math.cos(yaw),rz=-Math.sin(yaw);bayLook.set(bayTmp.x+rx*side,bayTmp.y+(narrow?-.72:.95),bayTmp.z+rz*side);camera.lookAt(bayLook)}
@@ -1299,9 +1299,10 @@
       const want=(bayIsland?bayIsland.yaw:S.heading)+viewYaw;if(bayCamYaw==null||dt===0)bayCamYaw=want;else{const d=Math.atan2(Math.sin(want-bayCamYaw),Math.cos(want-bayCamYaw));bayCamYaw+=d*Math.min(1,dt*(Math.abs(d)>.6?6:2.4))}
       // zoom: xa dần thì camera lùi và lên cao để thấy toàn cảnh; bị che thì tự nâng cao thêm
       const zx=Math.max(0,bayZoomS-1),yaw=bayCamYaw,dist=(meActivity==='sit'?3.1:3.7)*wide*(cv==='sundeck'?1.06:1)*bayZoomS,up=(cv==='sundeck'?2.9:2.7)*Math.min(1,bayZoomS)+zx*2.2-Math.sin(walkPitch)*2.2;
-      if(!bayLiftObjs&&bayKarstMeshes.length&&bayBuilt){const sb=shipBlockers();if(sb.length)bayLiftObjs=sb.concat(bayKarstMeshes)}
-      bayLiftA.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);const lift=bayLiftStep(dt,bayLiftA,h=>bayLiftB.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+h,bayTmp.z-Math.cos(yaw)*dist),[0,1.5,3,5,8,12],bayLiftObjs||bayKarstMeshes);
-      bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+lift,bayTmp.z-Math.cos(yaw)*dist);bayPullIn(bayLiftA,bayCam,bayLiftObjs||bayKarstMeshes);camera.position.copy(bayCam);
+      // chỉ tránh cabin, cột của chính con tàu (gắn theo tàu nên không đổi khi tàu đi ngang đảo đá); đá thì nhìn xuyên, không tự zoom
+      if(!bayLiftObjs&&bayBuilt&&!bayIsland){const sb=shipBlockers();if(sb.length)bayLiftObjs=sb}
+      bayLiftA.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);const lift=bayLiftStep(dt,bayLiftA,h=>bayLiftB.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+h,bayTmp.z-Math.cos(yaw)*dist),[0,1.5,3,5,8,12],bayIsland?[]:bayLiftObjs||[]);
+      bayCam.set(bayTmp.x-Math.sin(yaw)*dist,bayTmp.y+up+lift,bayTmp.z-Math.cos(yaw)*dist);if(!bayIsland&&bayLiftObjs)bayPullIn(bayLiftA,bayCam,bayLiftObjs);camera.position.copy(bayCam);
       // hướng nhìn: như cũ (về chân trời); khi lùi xa / lên cao thì cúi xuống vừa đủ để người vẫn nằm trong khung
       const ly=bayTmp.y+(camera.aspect<1?1.6:2.6)+Math.sin(walkPitch)*14-(cv==='sundeck'?4.5:0),hd=Math.max(.5,Math.hypot(bayCam.x-bayTmp.x,bayCam.z-bayTmp.z)),p0=Math.atan2(bayCam.y-ly,hd+30),pMe=Math.atan2(bayCam.y-(bayTmp.y+1),hd),
         half=Math.atan(Math.tan((view==='photo'&&bayPhoto.base?bayPhoto.base.fov:camera.fov)*Math.PI/360)),pitch=Math.max(p0,pMe-half*(.85-.25*Math.min(1,(zx+lift)/6)));
