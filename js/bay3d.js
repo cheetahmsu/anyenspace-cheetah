@@ -1450,7 +1450,7 @@
   const bayPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0),bayHit=new THREE.Vector3();
   function bayTap(ray){
     if(!bayBuilt){bayCaption('Đang tải bản đồ vịnh…');return}
-    if(bayIsland){const all=TU_DAO.group?ray.intersectObject(TU_DAO.group,true):[],act=all.find(h=>/^(cairn|shell|bin)$/.test(h.object.userData.tuDao||'')),th=act||all[0];if(TD_ACT.art&&TD_ACT.mode==='pick'){const c=all.find(h=>/^(cell|artshell)$/.test(h.object.userData.tuDao||''));if(c)shGridTap(c.object.userData.cell);else bayCaption('Chạm vào một ô mờ trên cát để đặt vỏ sò',2200);return}/* vật nhỏ để tương tác (đá, vỏ sò, giỏ) được ưu tiên dù có bụi cây che một phần */if(th&&th.object.userData.tuDao==='house'){islandGo('house');return}if(th&&th.object.userData.tuDao==='cairn'){tdGoCairn();return}if(th&&th.object.userData.tuDao==='shell'){tdGoShell(th.object.userData.shell);return}if(th&&th.object.userData.tuDao==='bin'){if(th.object.userData.bin<0){shIntro();return}tdGoBin(th.object.userData.bin);return}
+    if(bayIsland){const all=TU_DAO.group?ray.intersectObject(TU_DAO.group,true):[],act=all.find(h=>/^(cairn|shell|bin)$/.test(h.object.userData.tuDao||'')),th=act||all[0];if(TD_ACT.art&&TD_ACT.mode==='pick'){const c=all.find(h=>/^(cell|artshell)$/.test(h.object.userData.tuDao||''));if(c)shGridTap(c.object.userData.cell);else bayCaption('Chạm vào một ô mờ trên cát để đặt vỏ sò',2200);return}/* vật nhỏ để tương tác (đá, vỏ sò, giỏ) được ưu tiên dù có bụi cây che một phần */if(th&&th.object.userData.tuDao==='house'){islandGo('house');return}if(th&&th.object.userData.stoneArt){const v=th.point.clone();TU_DAO.group.worldToLocal(v);bayCaption('🪨 '+th.object.userData.stoneArt+' · Vườn đá cân bằng Vịnh Yên',4000);const sp=tdNearStand(v.x,v.z,1.6,false)||[v.x,v.z];islandWalkTo(sp[0],sp[1]);return}if(th&&th.object.userData.tuDao==='cairn'){tdGoCairn();return}if(th&&th.object.userData.tuDao==='shell'){tdGoShell(th.object.userData.shell);return}if(th&&th.object.userData.tuDao==='bin'){if(th.object.userData.bin<0){shIntro();return}tdGoBin(th.object.userData.bin);return}
       if(th){const v=th.point.clone();TU_DAO.group.worldToLocal(v);islandWalkTo(v.x,v.z);return}
       bayCaption('Chạm xuống đất để đi tới · nút ⛵ Về tàu để rời đảo',2500);return}
     if(TU_DAO.group){const th=ray.intersectObject(TU_DAO.group,true)[0];if(th&&th.object.userData.tuDao){const k=th.object.userData.tuDao;tuDaoTap(k==='cairn'||k==='shell'||k==='bin'?'island':k);return}}
@@ -1656,17 +1656,18 @@
   const fmtById=id=>PHOTO_FMT.find(f=>f.id===id)||PHOTO_FMT[0];
   // Khung xem trước: vùng ảnh sẽ chụp (khớp cách dựng ảnh trong capture)
   function placePhotoCrop(){const box=photoBox.querySelector('.bp-crop');if(!box)return;const F=fmtById(photoFmt),W=innerWidth,Hh=innerHeight;
-    if(!F.w){box.hidden=true;return}box.hidden=false;const T=F.w/F.h,A=W/Hh;let bw,bh;if(T<A){bh=Hh;bw=Hh*T}else{bw=W;bh=W/T}
+    box.classList.remove('f-white','f-gold','f-polaroid','f-film');if(photoFrame!=='none')box.classList.add('f-'+photoFrame);if(!F.w&&photoFrame==='none'){box.hidden=true;return}box.hidden=false;const T=F.w?F.w/F.h:W/Hh,A=W/Hh;let bw,bh;if(T<A){bh=Hh;bw=Hh*T}else{bw=W;bh=W/T}
     box.style.width=bw+'px';box.style.height=bh+'px';box.style.left=(W-bw)/2+'px';box.style.top=(Hh-bh)/2+'px';box.classList.toggle('round',!!F.round);
-    box.querySelector('b').textContent=F.label+' · '+F.w+'×'+F.h}
+    box.querySelector('b').textContent=F.label+(F.w?' · '+F.w+'×'+F.h:'')}
   addEventListener('resize',()=>{if(bayPhoto&&!bayPhoto.shooting)placePhotoCrop()});
   function renderPhotoBar(){
     const cb=(k,ic,t)=>'<button type="button" class="bp-cb" data-cam="'+k+'" title="'+t+'" aria-label="'+t+'">'+ic+'</button>';
     const chip=(attr,id,label,on)=>'<button type="button" class="bo-chip" '+attr+'="'+id+'" aria-pressed="'+on+'">'+label+'</button>';
     const pi=PHOTO_POSES.indexOf(bayPhoto.pose);
-    photoBox.innerHTML='<div class="bp-touch" aria-hidden="true"></div><div class="bp-count" id="bpCount" aria-live="assertive"></div><div class="bp-col" role="toolbar" aria-label="Điều khiển chụp ảnh">'+
+    photoBox.innerHTML='<div class="bp-touch" aria-hidden="true"></div><div class="bp-crop" hidden><b></b></div><div class="bp-count" id="bpCount" aria-live="assertive"></div><div class="bp-col" role="toolbar" aria-label="Điều khiển chụp ảnh">'+
       '<button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp ngay">📷</button>'+cb('zin','🔍＋','Zoom gần (phóng to)')+cb('zout','🔍－','Zoom xa (thu nhỏ)')+cb('u','▲','Hướng camera lên')+cb('d','▼','Hướng camera xuống')+cb('l','◀','Hướng camera sang trái')+cb('r','▶','Hướng camera sang phải')+
       '<button type="button" class="bp-cb" data-bp="pose" title="Đổi dáng: '+bayPhoto.pose.label+'" aria-label="Đổi dáng, đang là '+bayPhoto.pose.label+'">🧍<small>'+(pi+1)+'/'+PHOTO_POSES.length+'</small></button>'+
+      '<button type="button" class="bp-cb" data-bp="fmtn" title="Cỡ ảnh: '+fmtById(photoFmt).label+'" aria-label="Đổi cỡ ảnh">📐<small class="bp-lab">'+fmtById(photoFmt).label.split(' ')[0]+'</small></button><button type="button" class="bp-cb" data-bp="framen" title="Khung: '+(PHOTO_FRAME.find(f=>f.id===photoFrame)||PHOTO_FRAME[0]).label+'" aria-label="Đổi khung ảnh">🖼<small class="bp-lab">'+(PHOTO_FRAME.find(f=>f.id===photoFrame)||PHOTO_FRAME[0]).label.replace('Không khung','Không').replace('Viền ','')+'</small></button>'+
       '<button type="button" class="bp-cb" data-bp="flip" title="Đổi bên" aria-label="Đổi bên">↔</button><button type="button" class="bp-cb" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button><button type="button" class="bp-cb bp-x" data-bp="cancel" title="Thóat chụp ảnh" aria-label="Thóat chụp ảnh">✕</button></div><div class="bp-bar" hidden><div class="bp-cam">'+
       cb('zin','🔍＋','Zoom gần')+cb('zout','🔍－','Zoom xa')+'<i></i>'+cb('l','◀','Camera sang trái')+cb('u','▲','Camera lên cao')+cb('d','▼','Camera xuống thấp')+cb('r','▶','Camera sang phải')+'<i></i>'+cb('ol','⟲','Xoay vòng quanh sang trái')+cb('or','⟳','Xoay vòng quanh sang phải')+'<button type="button" class="bp-cb bp-reset" data-bp="reset" title="Đặt lại camera" aria-label="Đặt lại camera">↺</button></div><p class="bp-tip">Kéo màn hình để xoay quanh · chụm 2 ngón hoặc lăn chuột để zoom</p><div class="bo-row">'+PHOTO_POSES.map(p=>'<button type="button" class="bo-chip" data-pose="'+p.id+'" aria-pressed="'+(bayPhoto.pose.id===p.id)+'">'+p.label+'</button>').join('')+
       '<button type="button" class="bo-chip" data-bp="flip" title="Đổi góc chụp">↔ Đổi góc</button></div><div class="bp-actions"><button type="button" class="chip" data-bp="cancel">✕ Hủy</button><button type="button" class="bp-shutter" data-bp="shoot" aria-label="Chụp">📷</button><span></span></div></div>';
@@ -1698,11 +1699,12 @@
       for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{if(bayPhoto)bayPhoto.hold=null})}
     const el=photoBox.querySelector('.bp-touch'),pts=new Map();let pinch0=0,zoom0=1;
     el.addEventListener('pointerdown',e=>{if(!bayPhoto||bayPhoto.shooting)return;try{el.setPointerCapture(e.pointerId)}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      if(pts.size===2){const [p,q]=[...pts.values()];pinch0=Math.hypot(p.x-q.x,p.y-q.y)}});
+      if(pts.size===2){const [p,q]=[...pts.values()];pinch0=Math.hypot(p.x-q.x,p.y-q.y);el._a=Math.atan2(q.y-p.y,q.x-p.x);el._g={mode:null,s:0,a:0}}});
     el.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p||!bayPhoto||bayPhoto.shooting)return;const C=bayPhoto.cam;
       if(pts.size===1){const f=(camera.fov/57);C.yaw=camClamp(C.yaw+(e.clientX-p.x)/Math.max(320,innerWidth)*1.6*f,-1.4,1.4);C.pitch=camClamp(C.pitch+(e.clientY-p.y)/Math.max(320,innerHeight)*1.2*f,-.7,.7)}
       p.x=e.clientX;p.y=e.clientY;
-      if(pts.size===2&&pinch0>0){const [a,c]=[...pts.values()],d=Math.max(20,Math.hypot(a.x-c.x,a.y-c.y));photoZoom(pinch0/d);pinch0=d}});
+      if(pts.size===2&&pinch0>0){const [a,c]=[...pts.values()],d=Math.max(20,Math.hypot(a.x-c.x,a.y-c.y)),an=Math.atan2(c.y-a.y,c.x-a.x),G=el._g||(el._g={mode:null,s:0,a:0});let da=an-(el._a??an);da=Math.atan2(Math.sin(da),Math.cos(da));el._a=an;const f=pinch0/d;pinch0=d;
+        if(!G.mode){G.s+=Math.log(f);G.a+=da;if(Math.abs(G.a)>.14)G.mode='rot';else if(Math.abs(G.s)>.08)G.mode='zoom';else return}if(G.mode==='rot')viewYaw-=da;else photoZoom(f)}});/* hai ngón: xoay = camera quay vòng quanh người, chụm = zoom */
     for(const ev of ['pointerup','pointercancel'])el.addEventListener(ev,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0});
     el.addEventListener('wheel',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();photoZoom(Math.exp(e.deltaY*.0012))},{passive:false});
   }
@@ -1718,6 +1720,8 @@
     else if(b.dataset.fmt){photoFmt=b.dataset.fmt;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none';savePhotoOpts();renderPhotoBar()}
     else if(b.dataset.frame){photoFrame=b.dataset.frame;savePhotoOpts();renderPhotoBar()}
     else if(b.dataset.tag){photoTag=!photoTag;savePhotoOpts();renderPhotoBar()}
+    else if(b.dataset.bp==='fmtn'){const i=(PHOTO_FMT.findIndex(f=>f.id===photoFmt)+1)%PHOTO_FMT.length;photoFmt=PHOTO_FMT[i].id;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none';savePhotoOpts();renderPhotoBar();bayCaption('📐 Cỡ ảnh: '+PHOTO_FMT[i].label,1800)}
+    else if(b.dataset.bp==='framen'){const i=(PHOTO_FRAME.findIndex(f=>f.id===photoFrame)+1)%PHOTO_FRAME.length;photoFrame=PHOTO_FRAME[i].id;savePhotoOpts();renderPhotoBar();bayCaption('🖼 Khung: '+PHOTO_FRAME[i].label,1800)}
     else if(b.dataset.bp==='flip'){bayPhoto.side*=-1}
     else if(b.dataset.bp==='pose'){const i=(PHOTO_POSES.indexOf(bayPhoto.pose)+1)%PHOTO_POSES.length;bayPhoto.pose=PHOTO_POSES[i];renderPhotoBar();bayCaption('🧍 Dáng: '+bayPhoto.pose.label,1600)}
     else if(b.dataset.bp==='reset'){bayPhoto.cam={...CAM0}}

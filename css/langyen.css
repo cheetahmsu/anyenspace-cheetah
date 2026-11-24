@@ -256,3 +256,9 @@ body.immersive #zenJournalOpen{font-size:20px!important;line-height:1!important;
 body.yen-bay:not(.bay-island) #zenToolbar [data-zen=photo]{display:none!important}
 body.bay-photo-open #islandPad,body.bay-photo-open #islandBack,body.bay-photo-open #shellPills,body.bay-photo-open #shellPanel,body.bay-photo-open #camZoomBox,body.bay-photo-open #anyenCurrentLake,body.bay-photo-open #forestMapOpen,body.bay-photo-open #homeBtn{display:none!important}
 #bayPhoto.forest [data-bp=pose],#bayPhoto.forest [data-bp=flip]{display:none!important}
+
+#anyenPhotoBtn{display:none;position:fixed;z-index:72;right:64px;top:74px;border:1px solid #c8a96a;border-radius:999px;background:#c8a96a;color:#0b2824;font-weight:700;font-size:13px;padding:8px 12px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer}
+body.immersive:not(.yen-bay) #anyenPhotoBtn,body.immersive.yen-bay.bay-island #anyenPhotoBtn{display:block}
+body.bay-photo-open #anyenPhotoBtn,body.room-open #anyenPhotoBtn,body.sh-grid #anyenPhotoBtn,body.bay-outfit-open #anyenPhotoBtn{display:none!important}
+#bayPhoto .bp-cb small.bp-lab{display:block;font-size:9px;line-height:1.1;max-width:44px;white-space:normal}
+#bayPhoto .bp-crop.f-white{box-shadow:inset 0 0 0 10px rgba(251,248,241,.92),0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-gold{box-shadow:inset 0 0 0 6px #0d2f29,inset 0 0 0 9px #c8a96a,0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-polaroid{box-shadow:inset 0 0 0 12px #fbf8f1,inset 0 -52px 0 0 #fbf8f1,0 0 0 9999px rgba(6,20,18,.5)}#bayPhoto .bp-crop.f-film{box-shadow:inset 0 22px 0 0 #111,inset 0 -22px 0 0 #111,0 0 0 9999px rgba(6,20,18,.5)}

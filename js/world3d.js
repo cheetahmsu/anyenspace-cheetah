@@ -837,10 +837,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     // chuột (dòng/trang) và bàn di (pixel) đổi về cùng một thang; mỗi nấc tối đa ±18% để không giật
     const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1),f=Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012))));if(bayMode){bayZoomBy(f);return}setZoom(camZoom*f)},{passive:false});
   // Hai ngón: chỉ zoom (không xoay, không nâng camera); mỗi lần chạm thêm/bớt ngón thì lấy mốc lại nên không bị giật.
-  {let pinch0=0;const dist=t=>Math.max(10,Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY));
-    const anchor=e=>{pinch0=e.touches.length===2?dist(e.touches):0;if(e.touches.length>1)moved=true};
+  {let pinch0=0,ang0=0,g2=null;const dist=t=>Math.max(10,Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)),ang=t=>Math.atan2(t[1].clientY-t[0].clientY,t[1].clientX-t[0].clientX);
+    const anchor=e=>{pinch0=e.touches.length===2?dist(e.touches):0;if(e.touches.length===2){ang0=ang(e.touches);g2={mode:null,s:0,a:0}}else g2=null;if(e.touches.length>1)moved=true};
     renderer.domElement.addEventListener('touchstart',anchor,{passive:true});
-    renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length!==2||!pinch0)return;const d=dist(e.touches),f=Math.max(.8,Math.min(1.25,pinch0/d));pinch0=d;moved=true;if(bayMode)bayZoomBy(f);else setZoom(camZoom*f)},{passive:true});
+    /* hai ngón: chụm/mở để zoom, hoặc đặt hai ngón rồi xoay để camera quay vòng quanh nhân vật; mỗi lần chạm chỉ chọn một kiểu */
+    renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length!==2||!pinch0||!g2)return;const d=dist(e.touches),f=Math.max(.8,Math.min(1.25,pinch0/d)),a=ang(e.touches);let da=a-ang0;da=Math.atan2(Math.sin(da),Math.cos(da));pinch0=d;ang0=a;moved=true;
+      if(!g2.mode){g2.s+=Math.log(f);g2.a+=da;if(Math.abs(g2.a)>.14)g2.mode='rot';else if(Math.abs(g2.s)>.08)g2.mode='zoom';else return}
+      if(g2.mode==='rot'){if(typeof viewYaw==='number')viewYaw-=da;return}
+      if(bayMode)bayZoomBy(f);else setZoom(camZoom*f)},{passive:true});
     renderer.domElement.addEventListener('touchend',anchor,{passive:true});renderer.domElement.addEventListener('touchcancel',anchor,{passive:true})}
   {const box=document.createElement('div');box.id='camZoomBox';box.innerHTML='<button type="button" data-z="in" aria-label="Phóng to">＋</button><button type="button" data-z="out" aria-label="Thu nhỏ, nhìn toàn cảnh">－</button>';document.body.appendChild(box);
     box.addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const f=b.dataset.z==='in'?.8:1.25;if(bayMode)bayZoomBy(f,false,true);else setZoom(camZoom*f)})}
@@ -1168,7 +1172,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=04e3b65f').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=81a4d414').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1656,12 +1660,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const zoomBy=f=>{W.zf=Math.max(ZF[0],Math.min(ZF[1],W.zf*f))};
     rmCanvas.onpointerdown=e=>{W.yv=0;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{rmCanvas.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={ax:0,ay:0,axis:null,mv:0};else{if(drag)drag.mv=99;pinch0=pts.size===2?pd():0}};
     rmCanvas.onpointermove=e=>{const p=pts.get(e.pointerId);if(!p)return;let dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
-      if(pts.size===2&&pinch0){const d=pd();zoomBy(Math.max(.8,Math.min(1.25,pinch0/d)));pinch0=d;return}
+      if(pts.size===2&&pinch0){const d=pd(),[pa,pc]=[...pts.values()],a=Math.atan2(pc.y-pa.y,pc.x-pa.x);if(W.ga==null){W.ga=a;W.g2={mode:null,s:0,a:0}}let da=a-W.ga;da=Math.atan2(Math.sin(da),Math.cos(da));W.ga=a;const f=Math.max(.8,Math.min(1.25,pinch0/d));pinch0=d;const G=W.g2;
+        if(!G.mode){G.s+=Math.log(f);G.a+=da;if(Math.abs(G.a)>.14)G.mode='rot';else if(Math.abs(G.s)>.08)G.mode='zoom';else return}if(G.mode==='rot'){W.yo-=da;W.yoT=performance.now()}else zoomBy(f);return}/* hai ngón xoay: camera quay vòng quanh nhân vật */
       if(!drag||pts.size!==1)return;
       if(!drag.axis){drag.ax+=dx;drag.ay+=dy;const ax=Math.abs(drag.ax),ay=Math.abs(drag.ay);if(Math.max(ax,ay)<8)return;drag.axis=ax>=ay*.8?'x':'y';drag.mv=99;dx=drag.ax;dy=drag.ay}
       if(drag.axis==='x'){const dyaw=dx/Math.max(320,innerWidth)*3.5,n=performance.now();W.yo-=dyaw;W.yv=-dyaw/Math.max(8,n-swT)*1000;swT=n;W.yoT=n}
       else{W.pl=Math.max(-.4,Math.min(.35,W.pl+dy/Math.max(320,innerHeight)*1.6));W.yoT=performance.now()}};
-    const endP=e=>{if(!pts.delete(e.pointerId))return;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;return d};
+    const endP=e=>{if(!pts.delete(e.pointerId))return;W.ga=null;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;return d};
     rmCanvas.onpointerup=e=>{const d=endP(e);if(!d)return;if(d.axis==='x'&&performance.now()-swT<90&&Math.abs(W.yv)>.3){W.inert=true}else W.yv=0;if(d.mv>8)return;
       const nt=performance.now();if(W.lt&&nt-W.lt.t<330&&Math.hypot(e.clientX-W.lt.x,e.clientY-W.lt.y)<28){W.lt=null;W.zf=W.zf>.85?.65:1;W.yo=0;W.pl=0;return}W.lt={t:nt,x:e.clientX,y:e.clientY};
       const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
