@@ -882,4 +882,77 @@
       people:list=>window.dispatchEvent(new CustomEvent('anyen-space-people',{detail:{id:'nha_van_hoa',n:list.length,me:S.me,list}})),
       lanternAll:()=>{for(let i=0;i<36;i++)placeLantern('t'+i,'Lời chúc bình an số '+(i+1),'Khách '+(i+1))},skip:s=>{if(S.show)S.show.at-=s*1000}};
   }
-  __roomsExport({roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa});
+  // Nhà Sắc · hoa lan (House of Sight): nhà kính trưng 6 dòng lan; chạm chậu để xem, Thiền ngắm hoa 2 phút.
+  // Cổng Viverse là lối riêng bên hông nhà, không mở từ trong nhà.
+  function roomNhaSac(st){st.target.set(0,.9,-.6);st.dist=4.4;st.pitch=.14;st.minD=1.1;st.maxD=6;
+    rmHint('Nhà Sắc · chạm một chậu lan để ngắm gần · Kéo để nhìn quanh');
+    const iron=mat('#2f3a33',.5),glass=new THREE.MeshStandardMaterial({color:'#e3f2ea',roughness:.1,metalness:.1,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide});
+    // khung kính: song sắt trên tường sau và hai bên, mái kính có xà
+    for(let i=-3;i<=3;i++)rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.05,4,.05),iron),i*1.15,2,-3.42);
+    for(const y of [1.1,2.4])rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(8,.05,.05),iron),0,y,-3.42);
+    for(const sx of [-3.92,3.92])for(let i=-2;i<=2;i++)rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.05,4,.05),iron),sx,2,i*1.3);
+    rAdd(st,new THREE.Mesh(new THREE.PlaneGeometry(8,7),glass),0,3.95,0).rotation.x=Math.PI/2;
+    for(let i=-3;i<=3;i++)rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.06,.06,7),iron),i*1.15,3.9,0);
+    const sky=new THREE.DirectionalLight('#f4fff4',1.1);sky.position.set(-1,6,1);st.sc.add(sky);st.sc.background=new THREE.Color('#203328');
+    // lối sỏi trắng và bục gỗ trưng lan hình vòng cung
+    rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(1.2,.02,4),mat('#d8d2c2')),0,.01,1.4);
+    const deck=mat('#6b4e36'),soil=mat('#3b2c20');
+    // kệ ba tầng sát tường sau với các chậu lan nhỏ
+    for(const [k,y,z] of [[0,.45,-3.05],[1,.9,-3.2],[2,1.35,-3.3]]){rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(6.6,.06,.34),deck),0,y,z);for(const x of [-3.2,3.2])rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.06,y,.06),iron),x,y/2,z)}
+    const KINDS=[
+      {id:'ho_diep',name:'Lan Hồ Điệp',sci:'Phalaenopsis',col:'#f6f0f4',lip:'#d0507a',n:5,size:.065,arch:1.6,note:'Cánh tròn, xếp như đàn bướm đậu trên một cành cong.',look:'Nhìn đường cong của cành hoa, từ gốc ra đến nụ cuối.'},
+      {id:'dia_lan',name:'Địa lan',sci:'Cymbidium',col:'#d9cf7a',lip:'#a0402e',n:8,size:.06,arch:.25,note:'Lan đất, lá dài như lá kiếm, ngồng hoa thẳng mọc từ gốc; được trồng nhiều ở Đà Lạt.',look:'Nhìn màu chuyển từ cánh sang môi hoa, nhìn chấm đỏ nhỏ ở giữa.'},
+      {id:'hoang_thao',name:'Lan Hoàng thảo',sci:'Dendrobium',col:'#c78bc9',lip:'#7a2c78',n:6,size:.05,arch:.6,cane:true,note:'Thân có đốt như đốt trúc, hoa mọc dọc theo đốt.',look:'Nhìn từng đốt thân, đếm chậm các đốt như đếm hơi thở.'},
+      {id:'lan_hai',name:'Lan Hài',sci:'Paphiopedilum',col:'#c7b27a',lip:'#7c4a2a',n:1,size:.085,arch:.15,slipper:true,note:'Môi hoa phồng thành túi như chiếc hài; Việt Nam có nhiều loài lan hài quý.',look:'Nhìn chiếc túi của môi hoa, nhìn ánh sáng trượt trên bề mặt bóng.'},
+      {id:'vu_nu',name:'Lan Vũ nữ',sci:'Oncidium',col:'#f0c93a',lip:'#e6b21e',n:14,size:.035,arch:.9,spray:true,note:'Chùm hoa vàng nhỏ, mỗi bông như một vũ công xoè váy.',look:'Nhìn cả chùm như một đám mây vàng, rồi chọn một bông nhỏ nhất.'},
+      {id:'vanda',name:'Lan Vanda',sci:'Vanda',col:'#7f6ac0',lip:'#5a3f9a',n:6,size:.075,arch:.2,hang:true,note:'Treo trong giỏ, rễ khí sinh buông dài hút hơi ẩm từ không khí.',look:'Nhìn những sợi rễ buông xuống, nhìn khoảng trống giữa chúng.'}];
+    const petalG=new THREE.SphereGeometry(1,10,6),stemM=mat('#5f7a3a'),leafM=new THREE.MeshStandardMaterial({color:'#4f7a3a',roughness:.55,side:THREE.DoubleSide});
+    function flower(k){const g=new THREE.Group(),pm=new THREE.MeshStandardMaterial({color:k.col,roughness:.45,side:THREE.DoubleSide}),lm=new THREE.MeshStandardMaterial({color:k.lip,roughness:.4});
+      for(let i=0;i<5;i++){const a=i/5*Math.PI*2+Math.PI/2,p=new THREE.Mesh(petalG,pm),w=i===1||i===4?1.15:.8;p.scale.set(w*.55,1,.12);p.position.set(Math.cos(a)*.85,Math.sin(a)*.85,0);p.rotation.z=a-Math.PI/2;g.add(p)}
+      const lip=new THREE.Mesh(petalG,lm);if(k.slipper){lip.scale.set(.7,.8,.75);lip.position.set(0,-.55,.35)}else{lip.scale.set(.45,.55,.3);lip.position.set(0,-.35,.15)}g.add(lip);
+      g.scale.setScalar(k.size);return g}
+    function orchid(k){const g=new THREE.Group(),pot=new THREE.Mesh(new THREE.CylinderGeometry(.16,.12,.24,14),k.hang?mat('#7a5a38'):mat(k.id==='ho_diep'?'#ece6da':'#a4583a'));pot.position.y=.12;g.add(pot);
+      const s=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.02,14),soil);s.position.y=.235;g.add(s);
+      const nl=k.cane?0:k.id==='dia_lan'?7:4;for(let i=0;i<nl;i++){const a=i/nl*Math.PI*2+.3,l=new THREE.Mesh(petalG,leafM);if(k.id==='dia_lan'){l.scale.set(.03,.42,.01);l.position.set(Math.sin(a)*.08,.6,Math.cos(a)*.08);l.rotation.set(Math.cos(a)*.35,0,-Math.sin(a)*.35)}else{l.scale.set(.07,.012,.2);l.position.set(Math.sin(a)*.14,.27,Math.cos(a)*.14);l.rotation.y=a;l.rotation.x=-.25}g.add(l)}
+      if(k.cane)for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,.75,6),stemM);c.position.set((i-1)*.06,.6,(i%2)*.04);c.rotation.z=(i-1)*.12;g.add(c);for(let j=0;j<5;j++){const r=new THREE.Mesh(new THREE.TorusGeometry(.021,.004,4,8),mat('#8a9a5a'));r.rotation.x=Math.PI/2;r.position.set(c.position.x+Math.sin(c.rotation.z)*-(j*.14-.3),.3+j*.14,c.position.z);g.add(r)}}
+      if(k.hang)for(let i=0;i<9;i++){const r=new THREE.Mesh(new THREE.CylinderGeometry(.006,.004,.5+Math.random()*.4,4),mat('#b9b9a0'));r.position.set((Math.random()-.5)*.24,-.25,(Math.random()-.5)*.24);g.add(r)}
+      // ngồng hoa: một đường cong, hoa xếp dần về ngọn
+      const base=new THREE.Vector3(0,.25,0),top=new THREE.Vector3(.25*k.arch+.05,.95+(k.hang?-.1:0),.12*k.arch),mid=new THREE.Vector3(.05,.8,0);
+      if(k.id==='dia_lan'){top.set(.12,1.05,.05);mid.set(.04,.7,.02)}else if(k.hang){top.set(.38,-.05,.12);mid.set(.3,.5,.05)}
+      const curve=new THREE.QuadraticBezierCurve3(base,mid,top);g.add(new THREE.Mesh(new THREE.TubeGeometry(curve,16,.008,5),stemM));
+      const fl=[];for(let i=0;i<k.n;i++){const u=k.n===1?1:.45+.55*i/(k.n-1),f=flower(k),p=curve.getPoint(u);
+        if(k.spray){p.x+=Math.sin(i*2.4)*.12;p.y+=Math.cos(i*1.7)*.06;p.z+=Math.cos(i*2.4)*.1}
+        f.position.copy(p);f.position.z+=.03;if(i===k.n-1&&k.n>3)f.scale.multiplyScalar(.6);f.rotation.y=Math.sin(i)*.4;g.add(f);fl.push(f)}
+      g.userData.flowers=fl;g.userData.kind=k;return g}
+    // 6 chậu chính trên bục vòng cung, Vanda treo từ xà mái
+    const spots=[[-1.9,-1.2],[-1.15,-1.85],[-.38,-2.1],[.38,-2.1],[1.15,-1.85]],pots=[];
+    rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.5,.32,40,1,false,Math.PI*.62,Math.PI*.76),deck),0,.16,.2);
+    KINDS.forEach((k,i)=>{const o=orchid(k);if(k.hang){o.position.set(1.95,1.95,-1.25);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.7,4),iron);ch.position.y=.95;o.add(ch)}else{const [x,z]=spots[i];o.position.set(x,.32,z);o.rotation.y=Math.atan2(-x,2-z)*.6}
+      st.sc.add(o);pots.push(o);rTap(st,o,()=>focus(i))});
+    // chậu nhỏ trang trí trên kệ (bản sao thu nhỏ)
+    for(let t=0;t<3;t++)for(let j=0;j<6;j++){const k=KINDS[(j+t*2)%5],o=orchid(k);o.scale.setScalar(.55);o.position.set(-2.75+j*1.1+(t%2)*.3,[.48,.93,1.38][t],[-3.05,-3.2,-3.3][t]);o.rotation.y=j;st.sc.add(o)}
+    // tọa cụ trước bục để ngồi ngắm
+    rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.3,.32,.12,16),mat('#6e4a33')),0,.06,.9);
+    const want={tx:0,ty:.9,tz:-.6,dist:4.4,pitch:.14};let cur=-1,sess=null;
+    st.tick.push(t=>{const a=.08;st.target.x+=(want.tx-st.target.x)*a;st.target.y+=(want.ty-st.target.y)*a;st.target.z+=(want.tz-st.target.z)*a;if(want.dist!=null){st.dist+=(want.dist-st.dist)*a;if(Math.abs(want.dist-st.dist)<.01)want.dist=null}
+      for(const [i,o] of pots.entries()){const sway=Math.sin(t*.8+i)*.012;for(const [j,f] of o.userData.flowers.entries())f.rotation.z=sway*(1+j*.2)}
+      if(sess)sky.intensity=1.1+Math.sin(t*2*Math.PI/10)*.35});
+    function focus(i){cur=i;const o=pots[i],p=new THREE.Vector3();o.getWorldPosition(p);const k=KINDS[i];want.tx=p.x;want.ty=p.y+(k.hang?.35:.75);want.tz=p.z;want.dist=1.6;st.yawC=st.yaw=Math.atan2(-p.x,1);
+      rmHint(k.name+' · '+k.sci+' · '+k.note);render()}
+    function overview(){cur=-1;want.tx=0;want.ty=.9;want.tz=-.6;want.dist=4.4;st.yawC=0;render()}
+    function render(){const k=KINDS[cur];
+      rmPanel.innerHTML='<p>'+(sess?'🧘 '+(KINDS[sess.i].look)+' · còn '+sess.left+'s':k?'<b>'+k.name+'</b> <i>'+k.sci+'</i> · '+k.note:'Sắc là cửa của mắt. Chọn một chậu lan, nhìn thật chậm, không cần gọi tên điều mình thấy.')+'</p>'+
+        '<div class="rm-row">'+KINDS.map((x,i)=>'<button data-ns="f'+i+'"'+(i===cur?' class="rm-gold"':'')+'>🌸 '+x.name.replace('Lan ','')+'</button>').join('')+'</div>'+
+        '<div class="rm-row"><button class="rm-gold" data-ns="sess">'+(sess?'⏹ Dừng thiền ngắm hoa':'🧘 Thiền ngắm hoa 2 phút')+'</button>'+(cur>=0&&!sess?'<button data-ns="all">↩ Nhìn toàn nhà</button>':'')+'</div>'+
+        '<p class="rm-quote">🌀 Muốn sang cảnh Viverse “ORCHID hoa lan”, hãy ra Cổng Viverse bên hông nhà.</p>'}
+    const LOOKS=['Thở vào, mắt mở nhẹ. Thở ra, để ánh nhìn mềm lại.','Nhìn màu sắc như lần đầu được thấy.','Nếu ý nghĩ trôi đi, nhẹ nhàng đưa mắt về bông hoa.','Nhìn cả khoảng trống quanh bông hoa.','Một bông hoa nở không vội. Hơi thở cũng không cần vội.','Mỉm cười với bông hoa, rồi khép mắt một hơi thở.'];
+    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-ns]')?.dataset.ns;if(!a)return;
+      if(a[0]==='f'){if(sess)return;focus(+a.slice(1));return}
+      if(a==='all'){overview();return}
+      if(a==='sess'){if(sess){clearInterval(sess.id);sess=null;sky.intensity=1.1;rmHint('Đã dừng thiền ngắm hoa');render();return}
+        const i=cur>=0?cur:Math.floor(Math.random()*KINDS.length);focus(i);sess={i,left:120,id:0};strike(262,6,.08,[[1,1],[2.76,.3]]);rmHint(LOOKS[0]);render();
+        sess.id=setInterval(()=>{if(!roomOpen||!st.run){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)rmHint(LOOKS[(120-sess.left)/20%LOOKS.length]);
+          if(sess.left<=0){clearInterval(sess.id);sess=null;sky.intensity=1.1;strike(196,8,.1,[[1,1],[2.76,.3]]);rmHint('🙏 Buổi thiền ngắm hoa đã xong · Mang ánh nhìn dịu dàng này ra ngoài kia')}
+          const p=rmPanel.querySelector('p');if(p&&sess)p.textContent='🧘 '+KINDS[sess.i].look+' · còn '+sess.left+'s';else render()},1000)}};
+    st.cleanup=()=>{if(sess)clearInterval(sess.id)}}
+  __roomsExport({roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa});

@@ -1,15 +1,15 @@
-// LÀNG YÊN · Âm thanh Rừng Yên: Im lặng, Nhạc thiền nhẹ nhàng, Tiếng chuông.
+// LÀNG YÊN · Âm thanh Rừng Yên: Nhạc thiền nhẹ nhàng (mặc định), Thỉnh thoảng tiếng chuông, Im lặng.
 // Mọi âm thanh tạo trực tiếp bằng Web Audio trên thiết bị (không dùng file nhạc), nên không có vấn đề bản quyền và không tốn mạng.
 // Lựa chọn lưu ở localStorage 'anyen-forest-sound'. Chỉ phát khi đang ở Rừng Yên 3D; tạm dừng khi vào nhà/phòng, Vịnh Yên,
 // Nhà Sắc, bản đồ, lễ tụng Kathina hoặc khi ẩn ứng dụng; tự phát lại khi trở về rừng.
 (()=>{
   const KEY='anyen-forest-sound';
   const MODES={
-    silent:{icon:'🔇',label:'Im lặng',note:'Chỉ có tiếng gió trong lòng'},
-    music:{icon:'🎶',label:'Nhạc thiền nhẹ nhàng',note:'Nền ấm, nốt nhạc thưa và êm'},
-    bell:{icon:'🔔',label:'Tiếng chuông',note:'Chuông xoay ngân mỗi nửa phút'}
+    music:{icon:'🎶',label:'Nhạc thiền nhẹ nhàng',note:'Mặc định · nền ấm, nốt thưa, lâu lâu một tiếng chuông'},
+    bell:{icon:'🔔',label:'Thỉnh thoảng tiếng chuông',note:'Chuông xoay ngân, cách nhau chừng một phút'},
+    silent:{icon:'🔇',label:'Im lặng',note:'Chỉ có tiếng gió trong lòng'}
   };
-  let mode='silent';try{const s=localStorage.getItem(KEY);if(MODES[s])mode=s}catch(e){}
+  let mode='music';try{const s=localStorage.getItem(KEY);if(MODES[s])mode=s}catch(e){}
 
   const css=document.createElement('style');
   css.textContent='#forestSoundBtn{display:none;position:fixed;z-index:72;right:12px;top:250px;width:44px;height:44px;border:1px solid #a18a5e;border-radius:12px;background:#19483b;color:#f5e6c9;font-size:20px;line-height:1;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}'
@@ -71,10 +71,13 @@
       tone(bus,scale[i],t,{attack:.5,decay:4.5,gain:.045});if(Math.random()<.3)tone(bus,scale[Math.max(0,i-2)],t+.9,{attack:.6,decay:4,gain:.03});
       if(Math.random()<.12)tone(bus,scale[i]/2,t,{attack:1.2,decay:6,gain:.03,type:'triangle'});
       st.timers.push(setTimeout(step,2500+Math.random()*3500))};
-    st.timers.push(setTimeout(step,1200));return st}
+    st.timers.push(setTimeout(step,1200));
+    // Lâu lâu một tiếng chuông xoay rất nhẹ hòa vào nhạc (2–3 phút một lần).
+    const soft=ac.createGain();soft.gain.value=.45;soft.connect(bus);const ring=()=>{if(live!==st)return;bowl(soft,ac.currentTime+.05,[196,174.61,220][Math.floor(Math.random()*3)]);st.timers.push(setTimeout(ring,120000+Math.random()*60000))};
+    st.timers.push(setTimeout(ring,45000+Math.random()*30000));return st}
 
   function startBell(){const st=newBus(1.05);const bases=[196,174.61,220];let n=0;
-    const ring=()=>{if(live!==st)return;bowl(st.bus,ac.currentTime+.05,bases[n++%bases.length]);st.timers.push(setTimeout(ring,28000+Math.random()*6000))};
+    const ring=()=>{if(live!==st)return;bowl(st.bus,ac.currentTime+.05,bases[n++%bases.length]);st.timers.push(setTimeout(ring,45000+Math.random()*45000))};
     st.timers.push(setTimeout(ring,400));return st}
 
   function stopLive(){if(!live)return;const st=live;live=null;st.timers.forEach(clearTimeout);
