@@ -1,11 +1,11 @@
-// LÀNG YÊN · Âm thanh Rừng Yên: Nhạc thiền nhẹ nhàng (mặc định), Thỉnh thoảng tiếng chuông, Im lặng.
+// LÀNG YÊN · Âm thanh Rừng Yên: Nhạc thiền nhẹ nhàng (mặc định, không chuông), Thỉnh thoảng tiếng chuông, Im lặng.
 // Mọi âm thanh tạo trực tiếp bằng Web Audio trên thiết bị (không dùng file nhạc), nên không có vấn đề bản quyền và không tốn mạng.
 // Lựa chọn lưu ở localStorage 'anyen-forest-sound'. Chỉ phát khi đang ở Rừng Yên 3D; tạm dừng khi vào nhà/phòng, Vịnh Yên,
 // Nhà Sắc, bản đồ, lễ tụng Kathina hoặc khi ẩn ứng dụng; tự phát lại khi trở về rừng.
 (()=>{
   const KEY='anyen-forest-sound';
   const MODES={
-    music:{icon:'🎶',label:'Nhạc thiền nhẹ nhàng',note:'Mặc định · nền ấm, nốt thưa, lâu lâu một tiếng chuông'},
+    music:{icon:'🎶',label:'Nhạc thiền nhẹ nhàng',note:'Mặc định · nền ấm thư thái, nốt đàn thưa, không có chuông'},
     bell:{icon:'🔔',label:'Thỉnh thoảng tiếng chuông',note:'Chuông xoay ngân, cách nhau chừng một phút'},
     silent:{icon:'🔇',label:'Im lặng',note:'Chỉ có tiếng gió trong lòng'}
   };
@@ -61,20 +61,20 @@
 
   function newBus(peak){const st={timers:[],nodes:[],bus:ac.createGain()};const t=ac.currentTime;st.bus.gain.setValueAtTime(0,t);st.bus.gain.linearRampToValueAtTime(peak,t+2.5);st.bus.connect(master);st.bus.connect(verbIn);return st}
   function startMusic(){const st=newBus(1),bus=st.bus;
-    // Nền ấm: quãng năm Rê–La, hai dao động lệch nhau một chút, lọc thấp, âm lượng "thở" rất chậm.
-    const pad=ac.createGain(),lp=ac.createBiquadFilter(),lfo=ac.createOscillator(),lfoG=ac.createGain();pad.gain.value=.05;lp.type='lowpass';lp.frequency.value=520;
-    lfo.frequency.value=.07;lfoG.gain.value=.02;lfo.connect(lfoG);lfoG.connect(pad.gain);pad.connect(lp);lp.connect(bus);lfo.start();st.nodes.push(lfo);
-    [[73.42,'sine',1],[146.83,'triangle',.5],[147.4,'triangle',.45],[220,'sine',.32],[293.66,'sine',.12]].forEach(([f,t,a])=>{const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=a;o.connect(g);g.connect(pad);o.start();st.nodes.push(o)});
-    // Giai điệu thưa: ngũ cung Rê (D E F# A B), nốt êm, cách nhau 2,5–6 giây, thỉnh thoảng hai nốt liền.
+    // Nhạc thiền thư thái, KHÔNG có tiếng chuông (chuông là lựa chọn riêng): nền pad ấm chuyển hợp âm rất chậm
+    // (Rê maj7 → Si thứ 7 → Sol maj7 → La sus), giai điệu ngũ cung thưa, nốt mềm như đàn hạc, lọc thấp cho dịu tai.
+    const pad=ac.createGain(),lp=ac.createBiquadFilter(),lfo=ac.createOscillator(),lfoG=ac.createGain();pad.gain.value=.045;lp.type='lowpass';lp.frequency.value=700;lp.Q.value=.3;
+    lfo.frequency.value=.05;lfoG.gain.value=.015;lfo.connect(lfoG);lfoG.connect(pad.gain);pad.connect(lp);lp.connect(bus);lfo.start();st.nodes.push(lfo);
+    const CH=[[73.42,146.83,220,277.18,369.99],[61.74,123.47,185,220,293.66],[49,98,146.83,246.94,293.66],[55,110,164.81,220,293.66]];
+    const voices=CH[0].map((f,k)=>{const o=ac.createOscillator(),o2=ac.createOscillator(),g=ac.createGain();o.type=k<2?'sine':'triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*1.003;g.gain.value=[.9,.55,.32,.2,.14][k];o.connect(g);o2.connect(g);g.connect(pad);o.start();o2.start();st.nodes.push(o,o2);return [o,o2]});
+    let ci=0;const chord=()=>{if(live!==st)return;ci=(ci+1)%CH.length;const t=ac.currentTime;voices.forEach(([o,o2],k)=>{const f=CH[ci][k];o.frequency.cancelScheduledValues(t);o2.frequency.cancelScheduledValues(t);o.frequency.setValueAtTime(o.frequency.value,t);o2.frequency.setValueAtTime(o2.frequency.value,t);o.frequency.linearRampToValueAtTime(f,t+4);o2.frequency.linearRampToValueAtTime(f*1.003,t+4)});st.timers.push(setTimeout(chord,16000))};
+    st.timers.push(setTimeout(chord,16000));
+    const harp=(f,t,g)=>{tone(bus,f,t,{attack:.03,decay:3.6,gain:g,type:'triangle'});tone(bus,f*2,t,{attack:.02,decay:1.6,gain:g*.25})};
     const scale=[293.66,329.63,369.99,440,493.88,587.33,659.25,739.99];let last=3;
-    const step=()=>{if(live!==st)return;const t=ac.currentTime+.05;let i=Math.max(0,Math.min(scale.length-1,last+Math.round((Math.random()-.5)*4)));last=i;
-      tone(bus,scale[i],t,{attack:.5,decay:4.5,gain:.045});if(Math.random()<.3)tone(bus,scale[Math.max(0,i-2)],t+.9,{attack:.6,decay:4,gain:.03});
-      if(Math.random()<.12)tone(bus,scale[i]/2,t,{attack:1.2,decay:6,gain:.03,type:'triangle'});
-      st.timers.push(setTimeout(step,2500+Math.random()*3500))};
-    st.timers.push(setTimeout(step,1200));
-    // Lâu lâu một tiếng chuông xoay rất nhẹ hòa vào nhạc (2–3 phút một lần).
-    const soft=ac.createGain();soft.gain.value=.45;soft.connect(bus);const ring=()=>{if(live!==st)return;bowl(soft,ac.currentTime+.05,[196,174.61,220][Math.floor(Math.random()*3)]);st.timers.push(setTimeout(ring,120000+Math.random()*60000))};
-    st.timers.push(setTimeout(ring,45000+Math.random()*30000));return st}
+    const step=()=>{if(live!==st)return;const t=ac.currentTime+.05;let i=Math.max(0,Math.min(scale.length-1,last+Math.round((Math.random()-.5)*3)));last=i;
+      harp(scale[i],t,.03);if(Math.random()<.35)harp(scale[Math.max(0,i-2)],t+.7,.02);if(Math.random()<.2)harp(scale[Math.min(scale.length-1,i+1)],t+1.4,.018);
+      st.timers.push(setTimeout(step,3000+Math.random()*3500))};
+    st.timers.push(setTimeout(step,2000));return st}
 
   function startBell(){const st=newBus(1.05);const bases=[196,174.61,220];let n=0;
     const ring=()=>{if(live!==st)return;bowl(st.bus,ac.currentTime+.05,bases[n++%bases.length]);st.timers.push(setTimeout(ring,45000+Math.random()*45000))};
