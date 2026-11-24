@@ -446,7 +446,7 @@
   const TD_MED_FOOT=[TD_MED.x-TD_MED.h-1.8,TD_MED.z],TD_GAZ_FOOT=[TD_GAZ.x+TD_GDIR[0]*(TD_GAZ.r+TD_GRUN+.9),TD_GAZ.z+TD_GDIR[1]*(TD_GAZ.r+TD_GRUN+.9)];
   const tdBez=(a,c,b,n)=>{const o=[];for(let i=0;i<=n;i++){const t=i/n,u=1-t;o.push([u*u*a[0]+2*u*t*c[0]+t*t*b[0],u*u*a[1]+2*u*t*c[1]+t*t*b[1]])}return o};
   const TD_LEFT=tdBez(TD_JUNC,[-22,-17],TD_MED_FOOT,16),TD_RIGHT=tdBez(TD_JUNC,[-22,15],TD_GAZ_FOOT,16);
-  const TD_BEACH=tdBez(TD_GAZ_FOOT,[-30,30],[-31,6],10).concat([[TD_PIER_START[0]+3,0]]);
+  const TD_BEACH=tdBez(TD_GAZ_FOOT,[-21,29],[-31,6],10).concat([[TD_PIER_START[0]+3,0]]);
   const TD_WALK_HOUSE=[TD_PIER_START,TD_STEP];
   const tdSegD=(x,z,P)=>{let m=1e9;for(let i=0;i<P.length-1;i++){const [ax,az]=P[i],[bx,bz]=P[i+1],vx=bx-ax,vz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz||1)));m=Math.min(m,Math.hypot(ax+vx*t-x,az+vz*t-z))}return m};
   const tdOnPaths=(x,z,pad)=>tdSegD(x,z,[[TD_PIER_START[0]-8,0],TD_STEP])<pad||tdSegD(x,z,TD_LEFT)<pad||tdSegD(x,z,TD_RIGHT)<pad||tdSegD(x,z,TD_BEACH)<pad*.8;
@@ -486,7 +486,7 @@
     const rock=(x,z,s,k)=>{const o=P(rockG,rockMs[k%3],x,tdTerrainY(x,z)+s*.25,z);o.scale.set(s*(1.2+.3*Math.sin(k)),s*(.7+.2*Math.cos(k*1.7)),s*(1+.25*Math.sin(k*2.3)));o.rotation.set(.3*k,.7*k,.2*k);return o};
     {let k=0;for(const [a0,a1,n] of [[1.72,2.35,9],[-2.35,-1.72,9],[.55,1.6,10],[-1.6,-.55,10]])for(let i=0;i<n;i++){const a=a0+(a1-a0)*(i+.5)/n+.05*Math.sin(i*3.1),rr=.93+.12*((i*7+3)%5)/4,R=tdR(a)*rr,x=TD_O[0]+Math.cos(a)*R,z=TD_O[1]+Math.sin(a)*R;
         if(tdInBuild(x,z,.5)||tdOnPaths(x,z,2.5))continue;const s=1.4+1.6*((i*5+k)%4)/3;rock(x,z,s,k++);if(i%2===0){const b=rock(x+Math.cos(a+1)*s*1.4,z+Math.sin(a+1)*s*1.4,s*.6,k++)}}
-      for(const [x,z,s] of [[-28,-30,1.6],[-36,-24,1.1],[-25,33,1.4],[-30,26,.9],[-44,-14,1.3],[-46,16,1.5],[-42,30,1.2],[-41,-31,1.6]])rock(x,z,s,k++);
+      for(const [x,z,s] of [[-28,-30,1.6],[-36,-24,1.1],[-25,33,1.4],[-37,29,.9],[-44,-14,1.3],[-46,16,1.5],[-42,30,1.2],[-41,-31,1.6]])rock(x,z,s,k++);
       for(const [x,z,s] of [[-8,-8,1.2],[-9,8.5,1.1],[-12,-10,.8],[-11,10.5,.7]])rock(x,z,s,k++)}/* đá cảnh hai bên lối lên nhà */
     // ---- cầu tàu gỗ (giữ nguyên chỗ du thuyền cập), lan can dây, đèn lồng, biển ĐẢO YÊN ở đầu bãi
     const pier=new THREE.Group();g.add(pier);const X0=-TU_DAO.r-44,X1=-TU_DAO.r+4;
@@ -557,8 +557,8 @@
       const st=new THREE.Group();st.position.set(Math.cos(sa)*R,0,Math.sin(sa)*R);st.rotation.y=-sa+Math.PI/2;gaz.add(st);const n=Math.ceil((Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/.2);
       for(let i=0;i<n;i++)box(st,0,Y-.1-(i+1)*(Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/n+.1,(i+.5)*TD_GRUN/n,1.6,.1,TD_GRUN/n+.05,woodL);
       for(const s of [-1,1]){const yb=tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]);beam(st,[s*.85,Y+.9,0],[s*.85,yb+.9,TD_GRUN],.05,wood);beam(st,[s*.85,Y-.1,0],[s*.85,yb,TD_GRUN],.08,darkW);cyl(st,s*.85,yb+.45,TD_GRUN,.06,.06,.9,wood,6)}}
-    // ---- bãi biển gần chòi ngắm biển: hai ghế nằm gỗ nệm trắng quay ra biển, dù trắng che phía đầu ghế
-    {const C=[-11,35.7],out=[-.47,.88],land=[.47,-.88],perp=[.88,.47],th=Math.atan2(-out[1],out[0]);
+    // ---- bãi biển bên phải (phía chòi), giữa dải cát: hai ghế nằm gỗ nệm trắng quay ra biển, dù trắng che phía đầu ghế
+    {const C=[-29.5,21.7],out=[-.866,.5],land=[.866,-.5],perp=[.5,.866],th=Math.atan2(-out[1],out[0]);
       for(const s2 of [-1,1]){const x=C[0]+perp[0]*1.15*s2,z=C[1]+perp[1]*1.15*s2,y=tdTerrainY(x,z),lg=new THREE.Group();lg.position.set(x,y,z);lg.rotation.y=th;g.add(lg);
         box(lg,0,.32,0,2.1,.1,.75,woodL);const bk=box(lg,-1.05,.62,0,.85,.1,.75,woodL);bk.rotation.z=-.85;box(lg,.15,.42,0,1.7,.1,.68,whiteM);for(const sx of [-.85,.85])for(const sz of [-.3,.3])cyl(lg,sx,.15,sz,.04,.04,.3,darkW,5)}
       const ux=C[0]+land[0]*.5,uz=C[1]+land[1]*.5,uy=tdTerrainY(ux,uz);cyl(g,ux,uy+1.35,uz,.05,.05,2.7,darkW,6);
