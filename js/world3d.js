@@ -1156,7 +1156,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=58270ea9').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=fb34748d').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -2187,7 +2187,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     bayMode=true;walkRoute.length=0;pendingSeat=null;pendingBoat=false;wishDestination=null;walkingKeys.clear();
     camera.far=2600;camera.updateProjectionMatrix();{const nm=document.querySelector('.immersive-name');if(nm)nm.textContent='✧ LÀNG YÊN - VỊNH YÊN'}{const ex=document.getElementById('exit3D');if(ex){ex.textContent='✕ Về Làng Yên';ex.setAttribute('aria-label','Rời vịnh, về trang chính Làng Yên')}}scene.fog=null;viewYaw=0;walkPitch=.05;bayGroup.visible=true;document.body.classList.add('yen-bay');
     const applyLight=d=>{const m=d.map;scene.background=new THREE.Color(m.sky_color);scene.fog=new THREE.FogExp2(m.fog_color,Number(m.fog_density));hemiLight.color.set(m.hemi_sky);hemiLight.groundColor.set(m.hemi_ground);hemiLight.intensity=Number(m.hemi_intensity);sun.color.set(m.sun_color);sun.intensity=Number(m.sun_intensity);sun.position.set(...m.sun_position)};
-    const ready=d=>{if(!bayMode)return;if(!bayBuilt)buildBay(d);restoreBayState();applyLight(d);updateBay(0);camera.position.copy(bayCam);refreshBayHud();let seenO=false;try{seenO=!!localStorage.getItem(BAY_OUTFIT_SEEN)}catch(e){seenO=true}if(!seenO)setTimeout(openBayOutfit,500);bayCaption('⛵ Du thuyền Yên · Vịnh Hạ Long · Chạm mặt nước để tàu đi tới, vuốt để nhìn quanh',6500)};
+    const ready=d=>{if(!bayMode)return;if(!bayBuilt)buildBay(d);restoreBayState();const resume=!bayTour&&!bayPause&&!bayShip.path.length&&window.__bayResumeSnap;/* rời vịnh khi đang ở Đảo Yên: lần sau vào lại thì tàu chờ ở cầu tàu với chuyến cũ */applyLight(d);updateBay(0);camera.position.copy(bayCam);refreshBayHud();let seenO=false;try{seenO=!!localStorage.getItem(BAY_OUTFIT_SEEN)}catch(e){seenO=true}if(!seenO)setTimeout(openBayOutfit,500);bayCaption('⛵ Du thuyền Yên · Vịnh Hạ Long · Chạm mặt nước để tàu đi tới, vuốt để nhìn quanh',6500);if(resume)window.__bayResumeSnap()};
     if(bayData)ready(bayData);else{bayCaption('Đang tải bản đồ vịnh…',8000);loadBayData().then(ready).catch(()=>bayCaption('Chưa tải được bản đồ vịnh, vui lòng thử lại',6000))}
     document.getElementById('zenHint').textContent='⛵ Vịnh Hạ Long · Chạm mặt nước để tàu đi tới';
   }
