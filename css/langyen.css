@@ -252,3 +252,7 @@ button,a,label,summary,select,input,textarea,[role=button],[onclick]{-webkit-tap
 @media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:max(16px,1em)!important}}
 body:not(.bay-island) #zenToolbar [data-zen=shell],body:not(.bay-island) #zenToolbar [data-zen=cairn]{display:none!important}
 body.immersive #zenJournalOpen{font-size:20px!important;line-height:1!important;padding:7px 9px!important;min-width:40px;text-align:center}
+
+body.yen-bay:not(.bay-island) #zenToolbar [data-zen=photo]{display:none!important}
+body.bay-photo-open #islandPad,body.bay-photo-open #islandBack,body.bay-photo-open #shellPills,body.bay-photo-open #shellPanel,body.bay-photo-open #camZoomBox,body.bay-photo-open #anyenCurrentLake,body.bay-photo-open #forestMapOpen,body.bay-photo-open #homeBtn{display:none!important}
+#bayPhoto.forest [data-bp=pose],#bayPhoto.forest [data-bp=flip]{display:none!important}

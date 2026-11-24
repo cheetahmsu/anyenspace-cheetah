@@ -790,7 +790,7 @@
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
     I.moving=I.path.length>0;I.t+=dt;
-    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){const C=TD_ACT.cairn;I.yaw=Math.atan2(C.x-I.x,C.z-I.z);cairnAdd()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(t==='rinse')shRinseNow();else if(t==='pickstart')shPickStart();else if(t==='station'){const S=TD_ACT.station;if(S)I.yaw=Math.atan2(S.x-I.x,S.z-I.z)}else if(String(t).startsWith('bin:'))takeBin(+t.slice(4));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='house'){window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
+    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){const C=TD_ACT.cairn;I.yaw=Math.atan2(C.x-I.x,C.z-I.z);cairnAdd()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(t==='rinse')shRinseNow();else if(t==='pickstart')shPickStart();else if(t==='station'){const S=TD_ACT.station;if(S)I.yaw=Math.atan2(S.x-I.x,S.z-I.z)}else if(String(t).startsWith('bin:'))takeBin(+t.slice(4));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='house'){if(bayPhoto)closePhoto();window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
   // ---- Xếp đá cân bằng / nhặt vỏ sò
   function tdGoTo(sx,sz,then,cap){const I=bayIsland;if(!I)return;tdStand();if(Math.hypot(I.x-sx,I.z-sz)<.9){I.path=[];I.then=then;return}const p=tdRoute(I.x,I.z,sx,sz);if(!p){bayCaption('Chỗ đó chưa đi tới được, hãy chạm chỗ khác trên đảo',2500);return}I.path=p;I.then=then;if(cap)bayCaption(cap,3000)}
   function tdNearStand(x,z,r,side){const I=bayIsland,cy=(bayIsland.cam0||0)+viewYaw,fx=Math.sin(cy),fz=Math.cos(cy);let best=null,bd=1e9;for(let k=0;k<16;k++){const a=k*Math.PI/8,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(!tdWalkable(px,pz))continue;const d=Math.hypot(px-I.x,pz-I.z)+(side?4*Math.abs(-Math.cos(a)*fx-Math.sin(a)*fz):0);/* side: đứng cạnh, không che vật trước camera */if(d<bd){bd=d;best=[px,pz]}}return best||[x,z]}
@@ -959,12 +959,15 @@
       for(const q of keep)window.dispatchEvent(new CustomEvent('anyen-bag-add',{detail:{kind:'shell',label:shName(q.s,q.t),own:true,data:{s:q.s,t:q.t,where:'Đảo Yên'}}}));bayCaption('🎒 Đã cất '+keep.map(q=>shName(q.s,q.t)).join(', ')+' vào Túi An Yên',5000)}
     for(const q of keep){b.g.remove(q.g)}b.items=L.filter(x=>!keep.includes(x));const rest=shSeaAll(true);if(rest)setTimeout(()=>bayCaption('🌊 '+rest+' vỏ còn lại đã trả về biển',3500),2600);A.sel=null;A.trayName='';shPanel(null);shSeq(1.4,()=>{},()=>shEnd(true),false)}
   // ---- Xếp hình trên bãi cát: tự xếp → hỏi ưng chưa → ưng thì camera lên cao ngắm bờ biển, chụp ảnh / nhặt thêm / xếp lại
-  function shArtSpot(){const I=bayIsland,a=Math.atan2(I.z-TD_O[1],I.x-TD_O[0]);/* nền cát cao, phía trong bờ (xa nước) */
-    for(const d of [2.4,2,1.6,2.8,1.2]){const x=I.x-Math.cos(a)*d,z=I.z-Math.sin(a)*d,[r]=tdRho(x,z);if(tdWalkable(x,z)&&r>tdSandEdge(a)-.02)return [x,z,a]}return [I.x-Math.cos(a)*1.6,I.z-Math.sin(a)*1.6,a]}
+  function shArtSpot(){const I=bayIsland,A=TD_ACT,a0=Math.atan2(I.z-TD_O[1],I.x-TD_O[0]);/* bãi cát trống, cao, xa mép nước: cả 36 ô đều nằm trên cát khô, không đè đồ vật */
+    const things=[...A.decor,...A.beach,...A.bins,A.station,A.cairn].filter(Boolean).map(o=>[o.x,o.z]),half=(GRID_N-1)/2*GRID_S+.3;
+    const ok=(cx,cz,f)=>{const rx=f[1],rz=-f[0];for(let i=-1;i<=1;i+=.5)for(let j=-1;j<=1;j+=.5){const x=cx+rx*i*half+f[0]*j*half,z=cz+rz*i*half+f[1]*j*half,[r,a]=tdRho(x,z),se=tdSandEdge(a);if(r<se+.012||r>se+(1-se)*.5||!tdWalkable(x,z))return false;for(const [ox,oz] of things)if(Math.hypot(x-ox,z-oz)<.7)return false}return true};
+    let best=null;for(let k=0;k<=40&&!best;k++)for(const sg of k?[1,-1]:[1]){const a=a0+sg*k*.025,se=tdSandEdge(a);for(const u of [.3,.22,.38,.15]){const r=(se+(1-se)*u)*tdR(a),cx=TD_O[0]+Math.cos(a)*r,cz=TD_O[1]+Math.sin(a)*r,f=[-Math.cos(a),-Math.sin(a)];if(ok(cx,cz,f)){best=[cx,cz,a,f];break}}if(best)break}
+    if(best)return best;for(const d of [2.4,2,1.6,2.8,1.2]){const x=I.x-Math.cos(a0)*d,z=I.z-Math.sin(a0)*d,[r]=tdRho(x,z);if(tdWalkable(x,z)&&r>tdSandEdge(a0)-.02)return [x,z,a0]}return [I.x-Math.cos(a0)*1.6,I.z-Math.sin(a0)*1.6,a0]}
   /* lưới 6×6 ô mờ trên cát: khách tự chọn vỏ trong giỏ rồi chạm ô để đặt, chạm vỏ đã đặt để nhấc lên đổi chỗ */
   const GRID_N=6,GRID_S=.46,GRID_G=new THREE.PlaneGeometry(GRID_S*.86,GRID_S*.86).rotateX(-Math.PI/2),GRID_M=new THREE.MeshBasicMaterial({color:'#fffaf0',transparent:true,opacity:.26,depthWrite:false}),GRID_MS=new THREE.MeshBasicMaterial({color:'#ffe08a',transparent:true,opacity:.5,depthWrite:false});
   function shGridStart(){const A=TD_ACT,I=bayIsland;if(!I)return;let R=A.art;const b=A.bins[A.carry];if(A.hand&&b&&b.items.length<SH_CAP){const q=A.hand;A.hand=null;q.clean=true;q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...binSock(A.carry,b.items.length));q.g.scale.setScalar(.4);b.items.push(q)}
-    if(!R){if(!b||!b.items.length){bayCaption('Chưa có vỏ sò nào để xếp',3000);return}const [cx,cz,a]=shArtSpot(),fx=cx-I.x,fz=cz-I.z,fl=Math.hypot(fx,fz)||1;R=A.art={cx,cz,a,f:[fx/fl,fz/fl],cells:Array(GRID_N*GRID_N).fill(null),sel:null}}
+    if(!R){if(!b||!b.items.length){bayCaption('Chưa có vỏ sò nào để xếp',3000);return}const [cx,cz,a,ff]=shArtSpot(),fx=cx-I.x,fz=cz-I.z,fl=Math.hypot(fx,fz)||1;R=A.art={cx,cz,a,f:ff||[fx/fl,fz/fl],cells:Array(GRID_N*GRID_N).fill(null),sel:null};if(ff){const sx=cx-ff[0]*((GRID_N/2)*GRID_S+.9),sz=cz-ff[1]*((GRID_N/2)*GRID_S+.9);if(tdWalkable(sx,sz))tdGoTo(sx,sz,null,null)}/* khách bước tới đứng trước lưới, phía biển */}
     if(!R.grid){const g=new THREE.Group(),[fx,fz]=R.f,rx=fz,rz=-fx;R.pos=[];R.cellM=[];for(let i=0;i<GRID_N*GRID_N;i++){const row=Math.floor(i/GRID_N),col=i%GRID_N,u=(col-(GRID_N-1)/2)*GRID_S,w=((GRID_N-1)/2-row)*GRID_S,x=R.cx+rx*u+fx*w,z=R.cz+rz*u+fz*w;R.pos.push([x,z]);
         const m=new THREE.Mesh(GRID_G,GRID_M);m.position.set(x,tdTerrainY(x,z)+.03,z);m.rotation.y=Math.atan2(fx,fz);m.renderOrder=2;m.userData.tuDao='cell';m.userData.cell=i;g.add(m);R.cellM.push(m)}TU_DAO.group.add(g);R.grid=g}
     R.cells.forEach((q,i)=>{if(q)q.g.traverse(o=>{o.userData.tuDao='artshell';o.userData.cell=i})});
@@ -1579,6 +1582,9 @@
     const acc=active?o.acc:[];w.hat.visible=acc.includes('hat');w.glasses.visible=acc.includes('glasses');w.scarf.visible=acc.includes('scarf');
   }
   function bayDress(sitting){wearSea(bw,meOutfit,meTorso,bayOutfit,sitting,bayMode)}
+  window.__anyenPhoto=()=>openPhoto();/* nút 📸 trên thanh công cụ: Đảo Yên và Rừng Yên */
+  window.__forestPhotoCam=dt=>{const PC=bayPhoto&&bayPhoto.cam;if(!PC)return;if(bayPhoto.hold&&!bayPhoto.shooting)camStep(PC,bayPhoto.hold[0],bayPhoto.hold[1]*dt);camera.rotateOnWorldAxis(bayUpY,PC.yaw);camera.rotateX(PC.pitch);const fv=(bayPhoto.base?.fov||camera.fov)/PC.zoom;if(Math.abs(camera.fov-fv)>.01){camera.fov=fv;camera.updateProjectionMatrix()}};
+  window.__shellMesh=(s,t)=>shMesh(s,t,false);window.__binMesh=k=>buildBin(k).g;
   window.__bayWear={make:makeSeaWear,wear:wearSea,outfit:()=>bayOutfit,base:()=>bayBaseStyle()};/* phòng trong nhà trên Đảo Yên mặc cùng bộ đồ đi biển */
   // Xem trước trong bảng trang phục: một người đứng, một người ngồi thiền trên tọa cụ, xoay nhẹ.
   let bayPrev=null;
@@ -1682,7 +1688,7 @@
   const CAM_RATE={zin:['zoom',.9],zout:['zoom',-.9],l:['yaw',.55],r:['yaw',-.55],u:['pitch',.4],d:['pitch',-.4]};
   // Zoom khi chụp ảnh giống lúc bình thường: thu nhỏ = camera lùi xa, lên cao (xa hết cỡ → ngắm tàu từ xa);
   // phóng to = lại gần; đã gần hết cỡ mà vẫn phóng to thì zoom ống kính (tele) tới 4×.
-  function photoZoom(f){const C=bayPhoto&&bayPhoto.cam;if(!C)return;
+  function photoZoom(f){const C=bayPhoto&&bayPhoto.cam;if(!C)return;if(!bayMode){C.zoom=Math.max(1,Math.min(4,C.zoom/f));return}/* rừng: zoom ống kính */
     if(f>1){if(C.zoom>1.001)C.zoom=Math.max(1,C.zoom/f);else bayZoomBy(f,true)}
     else{if(bayView==='far'||bayZoom>BZ_MIN+1e-3)bayZoomBy(f,true);else C.zoom=Math.min(4,C.zoom/f)}}
   function camStep(C,k,v){if(k==='zoom')photoZoom(Math.exp(-v));else if(k==='pitch')C.pitch=camClamp(C.pitch+v,-.7,.7);else if(k==='yaw')C.yaw=camClamp(C.yaw+v,-1.4,1.4)}
@@ -1700,12 +1706,13 @@
     for(const ev of ['pointerup','pointercancel'])el.addEventListener(ev,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0});
     el.addEventListener('wheel',e=>{if(!bayPhoto||bayPhoto.shooting)return;e.preventDefault();photoZoom(Math.exp(e.deltaY*.0012))},{passive:false});
   }
-  function openPhoto(){if(!bayMode||!bayBuilt)return;closeSheet();closeMapBox();if(bayOutfitOpen)closeBayOutfit(false);
-    bayShip.group.updateMatrixWorld(true);const base={fov:camera.fov,lp:bayShip.group.worldToLocal(camera.position.clone()),ld:camera.getWorldDirection(new THREE.Vector3()).applyQuaternion(bayShip.group.getWorldQuaternion(new THREE.Quaternion()).invert())};
+  function openPhoto(){const forest=!bayMode;if(forest&&(!document.body.classList.contains('immersive')||roomOpen))return;if(!forest&&!bayBuilt)return;if(!forest){closeSheet();closeMapBox();if(bayOutfitOpen)closeBayOutfit(false)}
+    if(forest){bayPhoto={pose:PHOTO_POSES[0],side:1,shooting:false,cam:{...CAM0},hold:null,autoPaused:false,base:{fov:camera.fov},forest:true};meTag.visible=false;renderPhotoBar();photoBox.classList.add('open','forest');document.body.classList.add('bay-photo-open');const h=document.getElementById('zenHint');if(h)h.textContent='📷 Vuốt hoặc dùng cột bên phải để chỉnh góc rồi bấm chụp';return}
+    photoBox.classList.remove('forest');bayShip.group.updateMatrixWorld(true);const base={fov:camera.fov,lp:bayShip.group.worldToLocal(camera.position.clone()),ld:camera.getWorldDirection(new THREE.Vector3()).applyQuaternion(bayShip.group.getWorldQuaternion(new THREE.Quaternion()).invert())};
     const autoPaused=!bayPause&&(bayShip.path.length>0||(typeof bayTour!=='undefined'&&!!bayTour));if(autoPaused){const vy=viewYaw;pauseShip();viewYaw=vy}
     bayPhoto={pose:PHOTO_POSES[0],side:1,shooting:false,cam:{...CAM0},hold:null,autoPaused,base};meTag.visible=false;renderPhotoBar();photoBox.classList.add('open');document.body.classList.add('bay-photo-open');
     bayCaption('📷 Chỉnh góc ở cột bên phải rồi bấm chụp'+(autoPaused?' · tàu tạm dừng':''),3000)}
-  function closePhoto(){if(!bayPhoto)return;clearInterval(photoTick);document.getElementById('bpCount')?.classList.remove('show');const ap=bayPhoto.autoPaused,fv=bayPhoto.base?.fov;bayPhoto=null;if(fv&&camera.fov!==fv){camera.fov=fv;camera.updateProjectionMatrix()}if(ap&&bayPause)resumeShip();photoBox.classList.remove('open');document.body.classList.remove('bay-photo-open');meTag.visible=true;meHead.rotation.set(0,0,0);me.rotation.z=0}
+  function closePhoto(){if(!bayPhoto)return;clearInterval(photoTick);document.getElementById('bpCount')?.classList.remove('show');const ap=bayPhoto.autoPaused,fv=bayPhoto.base?.fov;bayPhoto=null;if(fv&&camera.fov!==fv){camera.fov=fv;camera.updateProjectionMatrix()}if(ap&&bayPause)resumeShip();photoBox.classList.remove('open','forest');document.body.classList.remove('bay-photo-open');meTag.visible=true;meHead.rotation.set(0,0,0);me.rotation.z=0}
   photoBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!bayPhoto||bayPhoto.shooting)return;
     if(b.dataset.pose){bayPhoto.pose=PHOTO_POSES.find(p=>p.id===b.dataset.pose)||PHOTO_POSES[0];renderPhotoBar()}
     else if(b.dataset.fmt){photoFmt=b.dataset.fmt;if(photoFmt==='avatar'&&photoFrame==='polaroid')photoFrame='none';savePhotoOpts();renderPhotoBar()}
@@ -1721,7 +1728,7 @@
     bayPhoto.shooting=true;clearInterval(photoTick);capture();
   }
   function capture(){
-    if(!bayPhoto)return;meTag.visible=false;updateBay(0);camera.position.copy(bayCam);camera.lookAt(bayLook);
+    if(!bayPhoto)return;meTag.visible=false;if(bayMode){updateBay(0);camera.position.copy(bayCam);camera.lookAt(bayLook)}
     const F=fmtById(photoFmt);let shot;
     if(F.w){// dựng ảnh ở đúng kích thước: giữ góc nhìn dọc nếu ảnh hẹp hơn màn hình, thu góc nhìn dọc nếu ảnh rộng hơn (khớp khung xem trước)
       const sz=renderer.getSize(new THREE.Vector2()),pr=renderer.getPixelRatio(),fov0=camera.fov,asp0=camera.aspect,T=F.w/F.h,A=sz.x/sz.y;
@@ -1746,7 +1753,7 @@
       const W2=iw,H2=ih,X0=ml,Y0=mt;
       // khung mềm và dòng tên địa danh
       if(!fr||fr==='none'){const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,30,26,.35)');g.fillStyle=vg;g.fillRect(0,0,W,H)}
-      const S=Math.max(1,W2/900);let place='Vịnh Hạ Long';try{const st=bayStatus();if(st&&/Ở |Đang ở /.test(st.text)){const nm=st.text.replace(/^Đang ở |^Ở /,'');let rg='halong';for(const p of bayData.props)if(p.kind==='landmark'&&shortName(p.name)===nm)rg=lmRegion(p);place=nm+' · '+(REGION_NAME[rg]||'Vịnh Hạ Long')}}catch(e){}
+      const S=Math.max(1,W2/900);let place='Vịnh Hạ Long';if(bayIsland)place='Đảo Yên · Vịnh Yên';else if(!bayMode){const l=(document.getElementById('anyenCurrentLake')?.textContent||'').replace(/^[^\p{L}]+/u,'').trim();place='Rừng Yên'+(l?' · '+l:'')}else try{const st=bayStatus();if(st&&/Ở |Đang ở /.test(st.text)){const nm=st.text.replace(/^Đang ở |^Ở /,'');let rg='halong';for(const p of bayData.props)if(p.kind==='landmark'&&shortName(p.name)===nm)rg=lmRegion(p);place=nm+' · '+(REGION_NAME[rg]||'Vịnh Hạ Long')}}catch(e){}
       const d=new Date(),line=place+' · '+d.toLocaleDateString('vi-VN');g.textBaseline='middle';
       if(fr==='polaroid'){if(photoTag){const cy=Y0+H2+mb/2;g.textAlign='center';g.fillStyle='#4a3b2a';g.font='italic 600 '+Math.round(mb*.26)+'px Georgia, serif';g.fillText('✧ Làng Yên',W/2,cy-mb*.14,W*.9);g.font=Math.round(mb*.17)+'px system-ui, sans-serif';g.fillStyle='#6d5d49';g.fillText(line,W/2,cy+mb*.2,W*.9);g.textAlign='left'}}
       else if(round){if(fr==='film'){g.strokeStyle='#111';g.lineWidth=base*.05;g.beginPath();g.arc(W/2,H/2,base/2-base*.06,0,Math.PI*2);g.stroke()}if(fr==='gold'||fr==='white'){g.strokeStyle=fr==='gold'?'#c8a96a':'#fbf8f1';g.lineWidth=base*.03;g.beginPath();g.arc(W/2,H/2,base/2-base*.05,0,Math.PI*2);g.stroke()}}
