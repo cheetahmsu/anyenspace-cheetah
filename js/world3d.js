@@ -560,21 +560,24 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const grassM=SM('#5f9a3c');for(let k=0;k<14;k++){const a=k*2.4,r=1.2+(k%4)*.18,bl=new THREE.Mesh(new THREE.ConeGeometry(.06,.3+(k%3)*.08,4),grassM);bl.position.set(Math.cos(a)*r,.15,Math.sin(a)*r);bl.rotation.z=(k%2?.25:-.2);g.add(bl)}
     for(const [a,r,s2] of [[.4,1.75,.22],[2.6,1.7,.18],[4.3,1.78,.25]]){const rk=pebble(s2*1.3,s2*.7,'#a7a091',31+a*10);rk.position.set(Math.cos(a)*r,s2*.35,Math.sin(a)*r);g.add(rk)}
     scene.add(g);nonBo.push(g)}
-  for(const p of [GATHER]){const g=new THREE.Group();g.position.set(p.x,terrainHeight(p.x,p.z),p.z);const parts=[],stoneF='#b8b1a1',stoneD='#9e9786';
-    const L=(pts,seg=28)=>GL(pts,seg),add=(geo,c,y=0)=>{geo.translate(0,y,0);parts.push([geo,c])};
-    // basin: low wall with a rounded lip
-    add(L([[NONBO_R-.16,.02],[NONBO_R-.16,.42],[NONBO_R-.1,.5],[NONBO_R+.02,.52],[NONBO_R+.1,.46],[NONBO_R+.1,.08],[NONBO_R+.16,0]],40),stoneF);
-    // turned pedestal and three tiers of bowls
-    add(L([[.34,0],[.34,.14],[.24,.22],[.17,.42],[.21,.56],[.16,.66],[.12,.95],[.15,1.02],[.1,1.12]],18),stoneD);
-    const bowl=(R,y)=>{add(L([[0,-.24*R],[.32*R,-.22*R],[.72*R,-.12*R],[R,-.02],[R+.03,.05],[R-.03,.07],[R-.06,.01]],32),stoneF,y)};
-    bowl(.95,1.16);add(L([[.11,0],[.08,.18],[.1,.32],[.06,.5]],14),stoneD,1.17);bowl(.6,1.72);add(L([[.07,0],[.05,.16],[.07,.26],[.04,.38]],12),stoneD,1.73);bowl(.34,2.13);
-    add(L([[.05,0],[.07,.08],[.04,.16],[.055,.24],[0,.38]],10),stoneD,2.14);
-    g.add(new THREE.Mesh(mergeColored(parts),houseMat));
-    // still water in the basin and the bowls
-    for(const [r,y] of [[NONBO_R-.17,.4],[.89,1.19],[.55,1.75],[.3,2.15]]){const w=new THREE.Mesh(new THREE.CircleGeometry(r,28),fountainPoolMat);w.rotation.x=-Math.PI/2;w.position.y=y;g.add(w)}
-    // curtains of water spilling over each rim to the level below
-    for(const [r0,y0,r1,y1] of [[.98,1.2,1.08,.41],[.63,1.76,.72,1.2],[.37,2.16,.44,1.76]]){const c=new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,y0-y1,28,1,true),fountainWaterMat);c.position.y=(y0+y1)/2;g.add(c)}
-    const jet=new THREE.Mesh(new THREE.CylinderGeometry(.015,.05,.32,10,1,true),fountainWaterMat);jet.position.y=2.6;g.add(jet);
+  /* 3.41: Sân đón: thay đài nước bằng tác phẩm đá cân bằng cá tính: vòm đá hai chân nghiêng chụm vào nhau giữ viên khoá,
+     tháp zigzag lệch trái phải có viên nghiêng, và cầu bập bênh một phiến dài đặt trên một điểm tựa nhỏ. Tất cả trong vòng chặn NONBO_R+.35. */
+  {const p=GATHER,g=new THREE.Group();g.position.set(p.x,terrainHeight(p.x,p.z),p.z);const SM=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
+    const peb=(w,h,d,col,seed)=>{const geo=new THREE.IcosahedronGeometry(1,2),P=geo.attributes.position;let sd=seed;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;const k1=rnd()*6,k2=rnd()*6,k3=rnd()*6;
+      for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=1+.08*Math.sin(x*2.3+k1)*Math.cos(z*2.1+k2)+.05*Math.sin(y*3+k3);P.setXYZ(i,x*w*n,y*h*n,z*d*n)}geo.computeVertexNormals();return new THREE.Mesh(geo,SM(col))};
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.8,.14,28),SM('#b3aa98'));base.position.y=.07;g.add(base);const grav=new THREE.Mesh(new THREE.CylinderGeometry(1.55,1.55,.02,28),SM('#d6cfbf'));grav.position.y=.15;g.add(grav);
+    const S=new THREE.Group();S.scale.setScalar(1.45);g.add(S);const put=(m,x,y,z,rx,ry,rz,top)=>{m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,rz||0);(top?g:S).add(m);return m};
+    // vòm đá: hai chân 4 viên nghiêng dần vào giữa, viên khoá dài nằm ngang trên đỉnh
+    const cols=['#8f8a80','#a9a293','#7c776d','#bdb5a3','#968f82','#cbc3b0'];
+    for(const s of [-1,1]){let y=.16;for(let k=0;k<4;k++){const h=.16-k*.012,x=s*(1.05-k*.17),m=peb(.24-k*.02,h,.2,cols[(k+(s>0?2:0))%6],7+k*13+(s>0?5:0));put(m,x,y+h,.35,0,k*.6,s*(.18+k*.12));y+=h*1.75}}
+    put(peb(.62,.12,.2,'#d2cab7',91),0,1.32,.35,0,0,.04);put(peb(.12,.1,.11,'#9a9486',33),.06,1.5,.35,0,.3,.5);
+    // tháp zigzag lệch, có viên nghiêng 35°
+    {let y=.16;const Z=[[.3,.13,.25,0,0],[.24,.12,.2,.12,0],[.26,.07,.18,-.08,.62],[.2,.12,.17,.1,0],[.17,.11,.15,-.07,-.4],[.15,.1,.13,.06,0],[.1,.09,.09,-.02,.9]];Z.forEach(([w,h,d,dx,tilt],k)=>{const m=peb(w,h,d,cols[(k*2+1)%6],51+k*7);put(m,dx,y+h,-.75,0,k*1.1,tilt);y+=h*(tilt?1.45:1.8)})}
+    // cầu bập bênh: phiến dài trên điểm tựa nhỏ, hai đầu có viên cuội
+    put(peb(.1,.12,.1,'#7c776d',71),1.0,.27,-.75);put(peb(.5,.05,.12,'#c4bca9',73),1.0,.43,-.75,0,.4,-.08);put(peb(.09,.07,.08,'#8f8a80',75),1.0+Math.cos(.4)*.38,.53-.03,-.75-Math.sin(.4)*.38);put(peb(.07,.06,.07,'#a9a293',77),1.0-Math.cos(.4)*.36,.52+.03,-.75+Math.sin(.4)*.36);
+    // vài viên cuội nằm rải và cỏ lá dài
+    for(let k=0;k<7;k++){const a=k*.9+.3,r=1.15+(k%3)*.15;put(peb(.09+(k%3)*.03,.05,.08,cols[k%6],101+k),Math.cos(a)*r,.18,Math.sin(a)*r,0,a,0,true)}
+    const gm=SM('#5f9a3c');for(let k=0;k<10;k++){const a=k*.63+1.7,r=1.5,b=new THREE.Mesh(new THREE.ConeGeometry(.05,.34+(k%3)*.08,4),gm);b.position.set(Math.cos(a)*r,.3,Math.sin(a)*r);b.rotation.z=(k%2?.3:-.25);g.add(b)}
     scene.add(g);nonBo.push(g)}
   // Zig-zag stone stairs up the south face of the hill (no lamps along the paths).
   {const slabMat=mat('#6c6758'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
@@ -1721,7 +1724,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=5faf4b37').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=cdb96a1f').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   function makeRoom(wall,floor,opt){const bare=!!(opt&&opt.bare);const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}
@@ -1938,7 +1941,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // ---------------------------------------------------------------- Quán trà
   const TEA_WORDS=['Uống trà là uống cái tĩnh lặng của lá.','Chén trà ấm nhất là chén trà được mời bằng cả tấm lòng.','Hãy uống trà chậm rãi, như thể trái đất đang xoay quanh chén trà của bạn.','Nước sôi rồi lặng, trà mới thơm. Lòng lặng rồi, lời mới hiền.','Một chén trà, một người bạn, đủ cho một buổi chiều an.','Rót trà cho người khác trước, lòng mình cũng ấm theo.'];
-  const ROOM_BUILDERS={nha_hoa_lan:['#cfd9cc','#8a7a62',st=>roomNhaSac(st)],chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#6a5040','#5a4636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}],van_hoa:['#42362A','#4a3826',st=>roomNhaVanHoa(st),{bare:true,venue:'nha_van_hoa'}]};
+  const ROOM_BUILDERS={nha_hoa_lan:['#cfd9cc','#8a7a62',st=>roomNhaSac(st)],chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#c9a57a','#7a5636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}],van_hoa:['#42362A','#4a3826',st=>roomNhaVanHoa(st),{bare:true,venue:'nha_van_hoa'}]};
   function openRoom(h){const b=ROOM_BUILDERS[h.id];if(!b||roomOpen||bayMode)return Promise.resolve();
     if(!roomsReady){if(openRoom.waiting)return openRoom.waiting;const hint=document.getElementById('zenHint');if(hint)hint.textContent='Đang mở '+(h.name||'phòng')+'…';
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
@@ -2105,7 +2108,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function katSwish(){const ac=audio();if(!ac)return;const n=Math.floor(ac.sampleRate*.28),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.sin(i/n*Math.PI);
     const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;f.type='bandpass';f.frequency.setValueAtTime(1800,ac.currentTime);f.frequency.linearRampToValueAtTime(3400,ac.currentTime+.28);f.Q.value=2.5;g.gain.value=.05;src.connect(f).connect(g).connect(ac.destination);src.start()}
   // ---- 2. sewing room (opened like the other houses)
-  ROOM_BUILDERS.tinh_that=['#4a3a2a','#6b5238',st=>roomTinhThat(st)];
+  ROOM_BUILDERS.tinh_that=['#e6d6b6','#8a6040',st=>roomTinhThat(st)];
   // ---- 3. procession: walk to the front of the terrace, then three rounds clockwise (statue on the right)
   katPill.addEventListener('click',()=>{
     if(kat.phase==='fetch'){fetchRobe();return}
