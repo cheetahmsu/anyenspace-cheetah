@@ -517,6 +517,7 @@ var ACT={
  'nha-vi':['🍵','Thưởng trà ở Nhà Vị','index.html?vao=nha-vi'],
  'nha-cham':['🏺','Nặn gốm ở Nhà Chạm','index.html?vao=nha-cham'],
  'nhat-so':['🐚','Nhặt và xếp vỏ sò ở Đảo Yên','index.html?vao=nhat-so'],
+ 'xep-da':['🪨','Xếp đá cân bằng ở Đảo Yên','index.html?vao=xep-da'],
  'van-hoa':['🏛️','Phòng 36 người ở Nhà Văn Hóa','index.html?vao=nha-van-hoa'],
  'cong-dong':['♧','Cộng đồng Yên','index.html?vao=cong-dong'],
  'trang-hat':['📿','Lần tràng hạt 108','index.html?vao=trang-hat'],
@@ -544,11 +545,13 @@ function suggest(r){
  if(!gotG)add('rung-thong','Một vòng dạo giữa rừng thông, nhìn và nghe thật chậm.');
  /* 3 · Tính, hoặc Healer khi cần sâu hơn */
  if(heavy>=4){add('healer','Nhiều câu trả lời cho thấy bạn đang mệt hoặc căng kéo dài. Một buổi riêng với Healer sẽ đi sâu hơn.')}
- else{var t3={lang:[['nhat-ky','Bạn hướng vào bên trong. Viết vài dòng cho chính mình.'],['trang-hat','Bạn hướng vào bên trong. Lần từng hạt trong yên lặng.']],
+ else{var t3={lang:[['xep-da','Bạn hướng vào bên trong. Xếp từng viên đá theo một hơi thở, để tâm lặng lại.'],['nhat-ky','Bạn hướng vào bên trong. Viết vài dòng cho chính mình.'],['trang-hat','Bạn hướng vào bên trong. Lần từng hạt trong yên lặng.']],
   ket:[['van-hoa','Bạn trọng sự gắn kết. Ngồi cùng mọi người ở phòng 36 người.'],['cong-dong','Bạn trọng sự gắn kết. Ghé Cộng đồng Yên.']],
   kham:[['vinh-yen','Bạn thích khám phá. Một chuyến du thuyền qua các đảo đá.'],['van-hoa','Bạn cởi mở. Cùng hoạt động với mọi người ở Nhà Văn Hóa.']],
-  sang:[['nhat-so','Bạn sáng tạo. Nhặt vỏ sò và xếp thành hình của riêng bạn.'],['nha-cham','Bạn sáng tạo. Nặn một món gốm theo ý mình.']],
+  sang:[['nhat-so','Bạn sáng tạo. Nhặt vỏ sò và xếp thành hình của riêng bạn.'],['xep-da','Bạn sáng tạo. Xếp một tháp đá cân bằng của riêng bạn trên bãi biển.'],['nha-cham','Bạn sáng tạo. Nặn một món gốm theo ý mình.']],
   ly:[['trang-hat','Bạn ngăn nắp, thiên về lý trí. Lần 108 hạt, đếm từng hơi thở.'],['nhat-ky','Bạn ngăn nắp. Ghi lại ngày hôm nay vào Nhật ký.']]}[r.tinh]||[['nhat-ky','Viết vài dòng cho chính mình sau bộ câu hỏi này.']];
+  /* nhóm sáng tạo: ngày lẻ gợi ý Nhặt vỏ sò trước, ngày chẵn gợi ý Xếp đá trước */
+  if(r.tinh==='sang'&&new Date().getDate()%2===0)t3=[t3[1],t3[0]].concat(t3.slice(2));
   t3.some(function(x){return add(x[0],x[1])});}
  ['tinh-tam','rung-thong','nhat-ky','thap-huong','vinh-yen'].forEach(function(k){if(out.length<3)add(k,'Một khoảng dừng nhẹ cho hôm nay.')});
  return out.slice(0,3);
