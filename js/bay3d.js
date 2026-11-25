@@ -1164,7 +1164,7 @@
   function refreshIslandHud(){islandHud.hidden=!(bayIsland||bayPlay)||!bayMode;islandPad.hidden=islandHud.hidden;if(islandHud.hidden)walkingKeys.clear()}
   islandHud.addEventListener('click',()=>bayPlay?playBack():islandBack());
   // ===== Trượt phao & Chèo kayak: chỉ mở khi du thuyền đang neo (đứng yên). Khách thay đồ bơi (áo thun ngắn, quần short, áo phao cam),
-  // trượt cầu trượt hơi lớn (trắng, viền xanh) từ boong tầng 2 xuống biển, hoặc xuống bục đuôi tàu ngồi kayak đôi; sau đó bơi / chèo tự do khắp vịnh.
+  // trượt cầu trượt hơi trắng kem viền xanh ngọc (cổng vòm viền vàng trên boong cao, hoa sen vàng trên mặt trượt) xuống biển, hoặc xuống bục đuôi tàu ngồi kayak đôi; sau đó bơi / chèo tự do khắp vịnh.
   // Không đi xuyên thân tàu, cầu trượt, đá, đảo, bờ (đĩa chặn lấy từ dữ liệu đảo như lưới dò đường, không cộng khoảng an toàn của tàu).
   // Bấm vào du thuyền (hoặc ⛵ Về tàu) để về: gần thì bơi / chèo tới thang đuôi tàu, xa thì chuyển cảnh về thẳng đuôi tàu; lên tàu thì thay lại đồ cũ.
   // Hình dáng tham khảo cầu trượt hơi trên du thuyền và kayak sit-on-top hai chỗ trên các du thuyền vịnh Hạ Long (chỉ lấy dáng, không chép tên hãng).
@@ -1192,18 +1192,37 @@
       for(let k=0;k<K;k++){const s=k/(K-1)*2-1,q=p.clone().addScaledVector(lat,s*W/2).addScaledVector(nrm,off-.05*s*s);pos.push(q.x,q.y,q.z);if(i&&k){const a=(i-1)*K+k-1,b=i*K+k-1;idx.push(a,b,a+1,b,b+1,a+1)}}}
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();return new THREE.Mesh(geo,playMat(col,{roughness:.4,side:THREE.DoubleSide}))}
   function playOffset(curve,N,a,b){const up=new THREE.Vector3(0,1,0),lat=new THREE.Vector3(),nrm=new THREE.Vector3(),out=[];for(let i=0;i<=N;i++){const u=i/N,p=curve.getPointAt(u),tg=curve.getTangentAt(u);lat.crossVectors(tg,up).normalize();nrm.crossVectors(lat,tg).normalize();out.push(p.clone().addScaledVector(lat,a).addScaledVector(nrm,b))}return new THREE.CatmullRomCurve3(out)}
-  // Cầu trượt hơi: gác lên lan can boong tầng 2 mạn trái (+x), dốc ~50° xuống nước, lòng máng trắng, hai ống hơi trắng có viền xanh dương bên ngoài, chân đế xòe nổi trên mặt nước
-  function playBuild(){if(PLAY.built||!bayShip.ex)return;PLAY.built=true;const g=bayShip.group,L=shipL(),B=shipB(),SV=PLAY.SV,W=PLAY.W;
-    const curve=new THREE.CatmullRomCurve3([[B-.5,6.55,SV],[B+.5,6.25,SV],[B+2.2,4.35,SV],[B+3.8,2.25,SV],[B+5.2,.75,SV],[B+6.6,.26,SV],[B+7.9,.2,SV]].map(a=>new THREE.Vector3(...a)));PLAY.curve=curve;
-    const slide=new THREE.Group(),white='#f4f6f8',blue='#2357b8';
-    slide.add(playStrip(curve,40,W,0,white),playStrip(curve,40,W+.5,-.36,blue));
-    for(const sx of [-1,1]){slide.add(new THREE.Mesh(new THREE.TubeGeometry(playOffset(curve,40,sx*(W/2+.1),.34),60,.36,12,false),playMat(white,{roughness:.38})));
-      slide.add(new THREE.Mesh(new THREE.TubeGeometry(playOffset(curve,40,sx*(W/2+.2),-.05),60,.33,12,false),playMat(blue,{roughness:.4})));
-      for(const [u,nb,c,r] of [[0,.34,white,.36],[1,.34,white,.36],[0,-.05,blue,.33]]){const p=playOffset(curve,1,sx*(W/2+(c===white?.1:.2)),nb).points[u],s=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),playMat(c,{roughness:.38}));s.position.copy(p);slide.add(s)}}
-    {const e=curve.getPointAt(1),foot=new THREE.Mesh(new THREE.BoxGeometry(1.9,.42,W+1.3),playMat(blue,{roughness:.4}));foot.position.set(e.x+.55,.02,SV);slide.add(foot);
-     const top=new THREE.Mesh(new THREE.BoxGeometry(1.7,.06,W+1.05),playMat(white,{roughness:.38}));top.position.set(e.x+.55,.25,SV);slide.add(top);
-     for(const sx of [-1,1]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,1.9,12),playMat(white,{roughness:.38}));t.rotation.z=Math.PI/2;t.position.set(e.x+.55,.3,SV+sx*(W/2+.55));slide.add(t)}}
-    {const lip=new THREE.Mesh(new THREE.BoxGeometry(.5,.18,W+.6),playMat(blue,{roughness:.4}));lip.position.set(B-.55,6.45,SV);slide.add(lip)}
+  // Cầu trượt hơi (theo ảnh thiết kế của chị): bắt đầu từ cổng vòm xanh ngọc viền vàng trên boong cao (tầng 3) mạn trái (+x), mặt trượt trắng kem có hoa sen vàng,
+  // hai ống hơi trắng kem bọc viền xanh ngọc cùng tông thân tàu, dốc rồi lượn cong xuống đế nổi xanh ngọc có dây viền vàng trên mặt nước
+  function playLotusTex(){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),gold=x.createLinearGradient(0,40,0,220);gold.addColorStop(0,'#f3d58a');gold.addColorStop(1,'#b8862e');x.strokeStyle=gold;x.fillStyle='rgba(222,178,84,.42)';x.lineWidth=11;x.lineJoin='round';
+    const petal=(a,len,w)=>{x.save();x.translate(128,178);x.rotate(a);x.beginPath();x.moveTo(0,0);x.bezierCurveTo(-w,-len*.4,-w*.5,-len*.85,0,-len);x.bezierCurveTo(w*.5,-len*.85,w,-len*.4,0,0);x.fill();x.stroke();x.restore()};
+    for(const [a,l,w] of [[-1.15,78,30],[1.15,78,30],[-.6,104,36],[.6,104,36],[0,128,40]])petal(a,l,w);
+    x.beginPath();x.moveTo(40,196);x.quadraticCurveTo(128,222,216,196);x.stroke();x.beginPath();x.moveTo(70,214);x.quadraticCurveTo(128,232,186,214);x.stroke();
+    const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+  function playBuild(){if(PLAY.built||!bayShip.ex)return;PLAY.built=true;const g=bayShip.group,L=shipL(),B=shipB(),SV=PLAY.SV,W=PLAY.W,TOP=2.62+2*2.85;
+    const curve=new THREE.CatmullRomCurve3([[B-.6,TOP+.36,SV],[B+.5,TOP+.05,SV],[B+2.3,TOP-2.6,SV],[B+3.9,TOP-5.2,SV],[B+5.3,1.3,SV],[B+6.7,.38,SV],[B+8.2,.24,SV]].map(a=>new THREE.Vector3(...a)));PLAY.curve=curve;
+    const slide=new THREE.Group(),cream='#f6f0e2',teal=bayShip.ex.hull_color||'#2f8c8a',goldM=playMat('#d9b25a',{roughness:.3,metalness:.6});
+    slide.add(playStrip(curve,48,W,0,cream),playStrip(curve,48,W+.5,-.36,teal));
+    for(const sx of [-1,1]){slide.add(new THREE.Mesh(new THREE.TubeGeometry(playOffset(curve,48,sx*(W/2+.1),.34),70,.36,12,false),playMat(cream,{roughness:.38})));
+      slide.add(new THREE.Mesh(new THREE.TubeGeometry(playOffset(curve,48,sx*(W/2+.22),-.05),70,.33,12,false),playMat(teal,{roughness:.4})));
+      for(const [u,nb,c,r] of [[1,.34,cream,.36],[1,-.05,teal,.33]]){const p=playOffset(curve,1,sx*(W/2+(c===cream?.1:.22)),nb).points[u],s=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),playMat(c,{roughness:.38}));s.position.copy(p);slide.add(s)}}
+    // hoa sen vàng trên mặt trượt, gần đỉnh
+    {const u=.24,p=curve.getPointAt(u),tg=curve.getTangentAt(u),lot=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshStandardMaterial({map:playLotusTex(),transparent:true,roughness:.3,metalness:.35,emissive:'#6b4a12',emissiveIntensity:.25,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));
+     const nrm=new THREE.Vector3().crossVectors(new THREE.Vector3().crossVectors(tg,new THREE.Vector3(0,1,0)).normalize(),tg).normalize();lot.position.copy(p).addScaledVector(nrm,.03);{const yv=tg.clone().negate(),xv=new THREE.Vector3().crossVectors(yv,nrm);lot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xv,yv,nrm))}/* ngọn sen hướng lên đỉnh cầu trượt */slide.add(lot);PLAY.lotus=lot}
+    // đế nổi xanh ngọc, mặt trên trắng kem, dây viền vàng
+    {const e=curve.getPointAt(1),cx=e.x+.6,foot=new THREE.Mesh(new THREE.BoxGeometry(2.1,.46,W+1.4),playMat(teal,{roughness:.4}));foot.position.set(cx,.02,SV);slide.add(foot);
+     const top=new THREE.Mesh(new THREE.BoxGeometry(1.8,.06,W+1.05),playMat(cream,{roughness:.38}));top.position.set(cx,.26,SV);slide.add(top);
+     for(const sx of [-1,1]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,2.1,12),playMat(teal,{roughness:.4}));t.rotation.z=Math.PI/2;t.position.set(cx,.32,SV+sx*(W/2+.6));slide.add(t)}
+     const front=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,W+1.5,12),playMat(teal,{roughness:.4}));front.rotation.x=Math.PI/2;front.position.set(cx+1.05,.3,SV);slide.add(front);
+     const pts=[];for(let k=0;k<=24;k++){const a=k/24;pts.push(new THREE.Vector3(cx+1.1-.0,.22+Math.abs(Math.sin(a*Math.PI*6))*-.12+.04,SV-(W/2+.75)+a*(W+1.5)))}slide.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,.035,6,false),goldM));
+     for(const sx of [-1,1]){const q=[];for(let k=0;k<=16;k++){const a=k/16;q.push(new THREE.Vector3(cx-1.05+a*2.1,.26-Math.abs(Math.sin(a*Math.PI*4))*.12,SV+sx*(W/2+.92)))}slide.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(q),32,.035,6,false),goldM))}}
+    // cổng vòm trên boong cao: khung xanh ngọc, viền vàng, sàn gỗ nối với mặt trượt
+    {const arch=new THREE.Group(),R=W/2+.55,H=2.2,tealM=playMat(teal,{roughness:.4});arch.position.set(B-.75,TOP,SV);
+     for(const sx of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.32,H,.32),tealM);post.position.set(0,H/2,sx*R);arch.add(post);const gp=new THREE.Mesh(new THREE.BoxGeometry(.36,H,.06),goldM);gp.position.set(.02,H/2,sx*(R-.18));arch.add(gp)}
+     const top=new THREE.Mesh(new THREE.TorusGeometry(R,.18,10,32,Math.PI),tealM);top.rotation.y=Math.PI/2;top.position.y=H;arch.add(top);
+     const gt=new THREE.Mesh(new THREE.TorusGeometry(R-.2,.05,8,32,Math.PI),goldM);gt.rotation.y=Math.PI/2;gt.position.set(.05,H,0);arch.add(gt);
+     const gt2=new THREE.Mesh(new THREE.TorusGeometry(R+.19,.045,8,32,Math.PI),goldM);gt2.rotation.y=Math.PI/2;gt2.position.set(.05,H,0);arch.add(gt2);
+     const plat=new THREE.Mesh(new THREE.BoxGeometry(1.4,.14,W+.9),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.72,map:deckPlankTex('#a07e60')}));plat.position.set(.2,.1,0);arch.add(plat);slide.add(arch)}
     slide.traverse(o=>{o.userData.bayPlay='slide'});g.add(slide);PLAY.slide=slide;
     const deck=new THREE.Mesh(new THREE.BoxGeometry(B*1.5,.2,1.7),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.72,map:deckPlankTex('#a07e60')}));deck.position.set(0,.5,-L-.75);g.add(deck);
     const lad=new THREE.Group(),steel=playMat('#dfe3e6',{metalness:.8,roughness:.25});for(const sx of [-.36,.36]){const r=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,2.6,6),steel);r.position.set(sx,-.1,-L-1.62);lad.add(r);const h=new THREE.Mesh(new THREE.TorusGeometry(.32,.035,6,10,Math.PI),steel);h.position.set(sx,1.2,-L-1.3);h.rotation.y=Math.PI/2;lad.add(h)}
@@ -1237,7 +1256,7 @@
   function inPoly(P,x,z){let ins=false;for(let a=0,b=P.length-1;a<P.length;b=a++){const [x1,z1]=P[a],[x2,z2]=P[b];if((z1>z)!==(z2>z)&&x<x1+(z-z1)*(x2-x1)/(z2-z1))ins=!ins}return ins}
   function playBlocked(x,z){const P=bayPlay;if(!P)return true;const L=shipL(),B=shipB(),[u,v]=bayToShip(x,z),pad=P.kind==='kayak'?1:.55;
     if(Math.abs(u)<B+pad&&v>-L-2.2&&v<L+pad)return 'ship';
-    if(u>B-1&&u<B+9.2+pad&&Math.abs(v-PLAY.SV)<PLAY.W/2+1.2+pad)return 'ship';
+    if(u>B-1&&u<B+10.4+pad&&Math.abs(v-PLAY.SV)<PLAY.W/2+1.2+pad)return 'ship';
     if(u<-B+.5&&u>-B-2.4-pad&&v>-L+.6-pad&&v<-L+6.4+pad)return 'ship';
     for(const [cx,cz,r] of P.obs.discs)if(Math.hypot(x-cx,z-cz)<r+pad)return 'rock';
     for(const pts of P.obs.lands)if(inPoly(pts,x,z))return 'rock';
@@ -1265,7 +1284,7 @@
     playObs(S.x,S.z);if(bayView!=='bow'&&bayView!=='sundeck')setBayView('bow');else{bayView='bow';viewYaw=0}bayZoom=Math.min(bayZoom,1.5);bayCamYaw=null;
     playWearSwim(true);bayFade();/* chuyển cảnh: thay đồ bơi, mặc áo phao */
     if(P.kind==='kayak'){[P.x,P.z]=playLaunch();P.yaw=S.heading+Math.PI;PLAY.kayak.visible=true;PLAY.kayakTied.visible=false;bayCaption('🦺 Đã thay đồ bơi, mặc áo phao · xuống bục đuôi tàu, ngồi vào kayak…',3800)}
-    else bayCaption('🦺 Đã thay đồ bơi, mặc áo phao · lên đỉnh cầu trượt ở boong tầng 2…',3800);
+    else bayCaption('🦺 Đã thay đồ bơi, mặc áo phao · lên cổng cầu trượt trên boong cao…',3800);
     P.cam=null;document.body.classList.add('bay-play');refreshIslandHud();return true}
   function playGoTo(x,z){const P=bayPlay;if(!P||!/^(swim|kayak)$/.test(P.phase))return;const d=Math.hypot(x-P.x,z-P.z),R=PLAY.tap;
     if(d>R){x=P.x+(x-P.x)/d*R;z=P.z+(z-P.z)/d*R}playObs(P.x,P.z);
@@ -1284,10 +1303,10 @@
   function playUpdate(dt){const P=bayPlay;if(!P)return;const S=bayShip,t=performance.now()/1000,L=shipL(),B=shipB(),wy=(x,z)=>bayWaveY(x,z,t)*.9,ease=u=>u*u*(3-2*u);P.t+=dt;
     for(const m of PLAY.splash){if(!m.visible)continue;m.userData.t+=dt;const u=m.userData.t;if(u<0){m.material.opacity=0;continue}const k=1+u*3.2;m.scale.set(k,k,1);m.material.opacity=Math.max(0,.75*(1-u/1.1));if(u>1.1)m.visible=false}
     const loc=(u,v,y)=>{const [x,z]=shipToBay(u,v);P.x=x;P.z=z;P.y=y},out=S.heading+Math.PI/2;bayAvatar.lean=0;
-    if(P.phase==='top'||P.phase==='slide'){const cv=PLAY.curve,u=P.phase==='top'?0:Math.min(1,Math.pow(P.t/1.7,1.6)),p=cv.getPointAt(u);loc(p.x,p.z,p.y+.05);const tg=cv.getTangentAt(u);
+    if(P.phase==='top'||P.phase==='slide'){const cv=PLAY.curve,u=P.phase==='top'?0:Math.min(1,Math.pow(P.t/2,1.6)),p=cv.getPointAt(u);loc(p.x,p.z,p.y+.05);const tg=cv.getTangentAt(u);
       P.yaw=out;bayAvatar.sit=1;bayAvatar.lean=P.phase==='slide'?-Math.atan2(-tg.y,Math.hypot(tg.x,tg.z))*.5:0;
       if(P.phase==='top'&&P.t>1.8){P.phase='slide';P.t=0;bayCaption('🛝 Trượt xuống biển nào!',2200)}else if(P.phase==='slide'&&u>=1){P.phase='splash';P.t=0;P.sx=p.x;P.sy=p.y}}
-    else if(P.phase==='splash'){const u=Math.min(1,P.t/.9),e=ease(u),uu=P.sx+(B+11.6-P.sx)*e,[x,z]=shipToBay(uu,PLAY.SV);P.x=x;P.z=z;const w=wy(x,z)-PLAY.depth;P.y=u<.4?P.sy+(w-.5-P.sy)*(u/.4):w-.5*Math.sin(Math.PI*Math.min(1,(u-.4)/.6))*.9;
+    else if(P.phase==='splash'){const u=Math.min(1,P.t/.9),e=ease(u),uu=P.sx+(B+12.8-P.sx)*e,[x,z]=shipToBay(uu,PLAY.SV);P.x=x;P.z=z;const w=wy(x,z)-PLAY.depth;P.y=u<.4?P.sy+(w-.5-P.sy)*(u/.4):w-.5*Math.sin(Math.PI*Math.min(1,(u-.4)/.6))*.9;
       if(!P.splashed&&P.y<.1){P.splashed=1;playSplash(P.x,P.z)}bayAvatar.sit=u<.4?1:0;P.yaw=out;
       if(u>=1){P.phase='swim';P.t=0;P.cam=null;bayFade();bayCamYaw=null;bayCaption('🏊 Bơi tự do trên vịnh · chạm mặt nước để bơi tới, bấm vào du thuyền để về tàu',6000)}}
     else if(P.phase==='board'||P.phase==='unboard'){const u=Math.min(1,P.t/1.2),e=ease(P.phase==='board'?u:1-u),[lx,lz]=playLaunch(),[dx,dz]=shipToBay(0,-L-.8),ky=P.phase==='board'?S.heading+Math.PI:P.kyaw;
@@ -1310,7 +1329,7 @@
   // Camera cố định khi trượt, xuống / lên kayak, leo thang: đặt ngoài mạn tàu nhìn vào người (sau lưng người lúc đó là thân tàu, camera sẽ bị che)
   const playCamV=new THREE.Vector3(),playCamL=new THREE.Vector3();
   function playCamFixed(dt,at){const P=bayPlay;if(!P)return false;const L=shipL(),B=shipB();let o=null;
-    if(/^(top|slide|splash)$/.test(P.phase))o=[B+10.5,4.4,PLAY.SV+10.5];else if(/^(board|unboard)$/.test(P.phase))o=[6.5,3.2,-L-10];else if(P.phase==='climb')o=[6,3.4,-L-9];if(!o)return false;
+    if(/^(top|slide|splash)$/.test(P.phase))o=[B+12.5,5.6,PLAY.SV+12.5];else if(/^(board|unboard)$/.test(P.phase))o=[6.5,3.2,-L-10];else if(P.phase==='climb')o=[6,3.4,-L-9];if(!o)return false;
     const [x,z]=shipToBay(o[0],o[2]),dx=x+BAY.x-at.x,dz=z+BAY.z-at.z,c=Math.cos(viewYaw),s=Math.sin(viewYaw),k=Math.max(.6,bayZoomS);
     playCamV.set(at.x+(dx*c+dz*s)*k,Math.max(1.2,o[1]*Math.min(1.4,k)+(P.phase==='slide'||P.phase==='top'?at.y*.35:0)),at.z+(-dx*s+dz*c)*k);
     if(!P.cam){P.cam=playCamV.clone()}P.cam.lerp(playCamV,Math.min(1,(dt||0)*2.5));camera.position.copy(P.cam);playCamL.set(at.x,at.y+.7,at.z);camera.lookAt(playCamL);return true}
