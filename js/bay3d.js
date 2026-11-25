@@ -600,7 +600,11 @@
     const pathG=new THREE.Group();g.add(pathG);
     {const sl=[stoneL,M('#bdb39d',.9),M('#d4cbb6',.9)];let k=0;for(let x=TD_PIER_START[0]+5.6;x<TD_STEP[0]+.6;x+=1.15){const o=box(pathG,x,tdGroundY(x,0)+.06,0,.95,.16,3.3,sl[k%3]);o.rotation.y=.015*Math.sin(k*2.1);k++}}
     // lối đá bước cong sang phòng thiền và chòi ngắm biển
-    {const stG=new THREE.CylinderGeometry(.62,.68,.14,7);let k=0;for(const L of [TD_LEFT,TD_RIGHT]){for(let i=1;i<L.length;i++){const [ax,az]=L[i-1],[bx,bz]=L[i],d=Math.hypot(bx-ax,bz-az),nx=-(bz-az)/d,nz=(bx-ax)/d;
+    // lối sang Nhà Thiền: một hàng đá lát bát giác lớn đặt so le như ảnh mẫu; lối sang chòi giữ đá bước đôi
+    {const ocG=new THREE.CylinderGeometry(.74,.8,.18,8),ocM=[M('#c9c4b9',.9),M('#b9b3a7',.92)];let k=0;const L=TD_LEFT;
+      for(let i=1;i<L.length;i++){const [ax,az]=L[i-1],[bx,bz]=L[i],d=Math.hypot(bx-ax,bz-az),nx=-(bz-az)/d,nz=(bx-ax)/d;
+        for(let t=.6;t<d;t+=1.7){const s=.38*Math.sin(k*2.2),xx=ax+(bx-ax)*t/d+nx*s,zz=az+(bz-az)*t/d+nz*s;const o=P(ocG,ocM[k%2],xx,tdTerrainY(xx,zz)+.06,zz,pathG);o.rotation.y=k*.37;o.scale.setScalar(.92+.12*Math.cos(k*1.7));k++}}}
+    {const stG=new THREE.CylinderGeometry(.62,.68,.14,7);let k=0;for(const L of [TD_RIGHT]){for(let i=1;i<L.length;i++){const [ax,az]=L[i-1],[bx,bz]=L[i],d=Math.hypot(bx-ax,bz-az),nx=-(bz-az)/d,nz=(bx-ax)/d;
         for(let t=.5;t<d;t+=1.15){const x=ax+(bx-ax)*t/d,z=az+(bz-az)*t/d;for(const s of [-.55,.55]){const xx=x+nx*s,zz=z+nz*s;const o=P(stG,k%2?stoneL:M('#bfb5a0',.9),xx,tdTerrainY(xx,zz)+.05,zz,pathG);o.rotation.y=k*1.3;o.scale.set(.85+.2*Math.sin(k),1,.75+.2*Math.cos(k));k++}}}}}
     // ---- nhà chính: nền đá ốp, sàn gỗ, hiên trước, tường kính khung gỗ, cửa đôi, mái ngói nâu bốn mái, bậc đá rộng
     const house=new THREE.Group();g.add(house);const FY=TD_FY,hx0=TD_H.x0,hx1=TD_H.x1,hz=TD_H.z;
@@ -626,27 +630,65 @@
     {/* bậc đá rộng từ hiên xuống, gờ đá hai bên, bụi hoa hai bên chân bậc */const n=Math.max(3,Math.ceil((FY-TD_SBOT)/.17)),W=6.6;
       for(let i=0;i<n;i++){const top=FY-(i+1)*(FY-TD_SBOT)/n,x=hx0-(i+.5)*TD_SR/n,hgt=top-(TD_SBOT-.8);box(house,x,top-hgt/2+.02,0,TD_SR/n+.03,hgt,W,i%2?stoneL:M('#d2c9b4',.9))}
       for(const s of [-1,1]){const cheek=box(house,hx0-TD_SR/2,(FY+TD_SBOT)/2-.1,s*(W/2+.3),TD_SR+.2,.6,.6,stoneD);cheek.rotation.z=Math.atan2(FY-TD_SBOT,TD_SR);cheek.scale.x=Math.hypot(TD_SR,FY-TD_SBOT)/TD_SR}}
-    // ---- phòng nhỏ nghỉ ngơi và thiền (bên trái): nền đá, sàn gỗ, vách giấy sáng, mặt trước mở nhìn ra biển, mái ngói bốn mái
+    // ---- Nhà Thiền (bên trái), dựng lại theo ảnh mẫu 25/11: bệ đá xám cao có ba bậc cấp rộng, sàn gỗ ấm chừa viền hiên quanh nhà, khung cột gỗ nâu sẫm;
+    // mặt tiền: cửa kính đôi tay nắm đồng ở giữa, hai cánh song gỗ hai bên, kính ở hai góc; hai hông vách kính khung gỗ; vách sau kem ấm treo tranh trăng tròn.
+    // Nhìn qua kính: bàn trà thấp có bonsai và bộ ấm, hai bồ đoàn trên chiếu, kệ gốm bên trái, đèn giấy đứng bên phải, bàn thờ thấp tượng Phật nhỏ.
+    // Mái gỗ bốn mái thấp, đua rộng, viền gỗ dày, lằn ván; đèn lồng giấy treo ở góc mái trước bên trái.
     const med=new THREE.Group();med.position.set(TD_MED.x,0,TD_MED.z);g.add(med);
-    {const Y=TD_MY,h=TD_MED.h,base=Y-2.2;box(med,0,(Y+base)/2,0,h*2,Y-base,h*2,stone);box(med,0,Y-.05,0,h*2-.3,.12,h*2-.3,woodL);
-      {const gb=tdTerrainY(TD_MED.x-h-1,TD_MED.z);for(let i=0;i<3;i++){const top=Y-(i+1)*(Y-gb)/3.2,hgt=top-gb+.6;box(med,-h-.25-i*.5,top-hgt/2,0,.52,hgt,2.6,stoneL)}}/* bậc lên phía trước */
-      const H=2.9,w=h-.6;for(const [x,z] of [[-w,-w],[-w,w],[w,-w],[w,w],[w,0],[0,-w],[0,w]])cyl(med,x,Y+H/2,z,.11,.12,H,wood,8);/* bỏ cột giữa mặt tiền: không chắn tượng và lối vào */
-      {const dw=w*.44,paper=M('#f3ead6',.9,{emissive:'#ffdca6',emissiveIntensity:.3});box(med,-w-.02,Y+H-.12,0,.16,.14,dw*2+.2,darkW);box(med,-w-.02,Y+.03,0,.16,.06,dw*2+.2,darkW);/* ray trên, ray dưới */
-        for(const s of [-1,1]){const zc=s*(dw/2+.01)+s*-.04;box(med,-w-.04+(s>0?-.05:0),Y+(H-.2)/2+.02,zc,.05,H-.3,dw,paper);/* hai cánh cửa lùa giấy dó khung gỗ */
-          for(const k of [-.5,-.17,.17,.5])box(med,-w-.08+(s>0?-.05:0),Y+(H-.2)/2+.02,zc+k*dw*.98,.04,H-.3,.05,darkW);for(let y=.35;y<H-.3;y+=.42)box(med,-w-.08+(s>0?-.05:0),Y+y,zc,.04,.04,dw,darkW);
-          box(med,-w-.1+(s>0?-.05:0),Y+1.1,s*.12,.05,.3,.05,gold)}/* tay nắm */
-        const sign=P(new THREE.BoxGeometry(.06,.34,1.3),darkW,-w-.12,Y+H+.36,0,med);void sign}
+    {const Y=TD_MY,h=TD_MED.h,w=h-.6,H=2.9,base=Y-2.4,TB=Y+H-.45/* thanh ngang trên (ô kính đầu cửa) */;
+      const plinth=M('#9e9a92',.95),plinthTop=M('#b6b1a7',.9),deck=M('#b8743f',.7),frame=M('#5a3622',.75),stepM=[M('#c2beb5',.92),M('#b0aca3',.92)],
+        roofM=M('#8a583b',.85,{flatShading:true,side:THREE.DoubleSide}),wallW=M('#f2e6cc',.9,{emissive:'#ffd9a0',emissiveIntensity:.35}),dkW=M('#3e2a1e',.8);
+      // bệ đá, gờ đá, sàn gỗ có ván
+      box(med,0,(Y-.14+base)/2,0,h*2,Y-.14-base,h*2,plinth);box(med,0,Y-.1,0,h*2+.12,.1,h*2+.12,plinthTop);
+      box(med,0,Y-.02,0,w*2+.7,.1,w*2+.7,deck);for(let z=-w-.2;z<w+.3;z+=.45)box(med,0,Y+.033,z,w*2+.7,.008,.025,frame);
+      // ba bậc đá rộng phía trước, mỗi bậc là một khối đá xám chồng thấp dần
+      {const gb=tdTerrainY(TD_MED.x-h-1.3,TD_MED.z),rise=(Y-gb)/4;for(let i=0;i<3;i++){const top=Y-(i+1)*rise,hgt=top-gb+.6;box(med,-h-.3-i*.55,top-hgt/2,0,.6,hgt,3.6-i*.1,stepM[i%2])}}
+      // khung: cột vuông bốn góc và giữa các ô, dầm trên, ngưỡng dưới, thanh ngang đầu ô kính
+      const post=(x,z,s=.16)=>box(med,x,Y+H/2,z,s,H,s,frame);
+      for(const x of [-w,w])for(const z of [-w,w])post(x,z,.22);
+      for(const z of [-2.2,-1.1,1.1,2.2])post(-w,z);for(const s of [-1,1])for(const x of [-w/3,w/3])post(x,s*w);for(const s of [-1,1])post(w,s*w/2);
+      for(const s of [-1,1]){box(med,0,Y+H,s*w,w*2+.3,.22,.24,frame);box(med,s*w,Y+H,0,.24,.22,w*2+.3,frame);
+        box(med,0,Y+.07,s*w,w*2,.12,.14,frame);box(med,-w,TB,s*(w+1.1)/2,.1,.08,w-1.1,frame);box(med,0,TB,s*w,w*2,.08,.1,frame)}
+      box(med,w,Y+.07,0,.14,.12,w*2,frame);
+      // mặt tiền: kính góc, song gỗ, cửa kính đôi
+      for(const s of [-1,1]){box(med,-w,Y+H/2,s*(w+2.2)/2,.04,H-.1,w-2.2,glass);
+        const zc=s*1.65;box(med,-w+.01,Y+H/2,zc,.03,H-.1,1.1,M('#f4e7c9',.9,{emissive:'#ffd59a',emissiveIntensity:.45}));/* song gỗ trên nền giấy sáng ấm */
+        for(let k=-4;k<=4;k++)box(med,-w-.04,(Y+.14+TB)/2,zc+k*.12,.04,TB-Y-.14,.035,frame);
+        for(let y=Y+.45;y<TB-.1;y+=.42)box(med,-w-.05,y,zc,.05,.04,1.08,frame)}
+      for(const s of [-1,1]){const zc=s*.55;box(med,-w+.02,Y+(TB-Y)/2,zc,.03,TB-Y-.1,1.0,glass);/* cánh kính */
+        for(const k of [-.5,.5])box(med,-w-.03,Y+(TB-Y)/2,zc+k*.98,.06,TB-Y-.1,.07,frame);box(med,-w-.03,Y+.16,zc,.06,.12,1.0,frame);box(med,-w-.03,TB-.06,zc,.06,.08,1.0,frame);
+        box(med,-w-.09,Y+1.15,s*.12,.04,.55,.04,gold)}/* tay nắm đồng dài */
+      box(med,-w-.01,(TB+Y+H)/2,0,.03,Y+H-TB-.1,2.2,glass);
       med.userData.medDoor=true;
-      box(med,w,Y+H/2,0,.12,H-.2,w*2,M('#6e5038'));/* vách gỗ sau tượng */
-      for(const s of [-1,1]){box(med,0,Y+H/2,s*w,w*2,H-.2,.06,M('#f3ead6',.9,{emissive:'#ffdca6',emissiveIntensity:.25}));for(let x=-w+.5;x<w;x+=.5)box(med,x,Y+H/2,s*(w+.04),.04,H-.2,.05,darkW)}
-      for(const s of [-1,1])box(med,-w,Y+H/2,s*w*.72,.06,H-.2,w*.56,glass);/* hai cánh kính trượt mở hai bên cửa */
-      box(med,0,Y+H,0,w*2+.3,.16,w*2+.3,wood);hipRoof(med,-h-.8,h+.8,-h-.8,h+.8,Y+H+.1,2.1,tile);
-      box(med,w-.45,Y+.4,0,.7,.8,1.5,darkW);/* bệ thờ */const bd=new THREE.Group();bd.position.set(w-.45,Y+.8,0);med.add(bd);/* tượng Phật ngồi thiền */
+      // hai hông: vách kính khung gỗ; vách sau kem ấm
+      for(const s of [-1,1])box(med,0,Y+H/2,s*w,w*2,H-.1,.04,glass);
+      box(med,w-.04,Y+H/2,0,.1,H-.1,w*2-.1,wallW);for(const s of [-1,1])box(med,w-.1,Y+H/2,s*w*.5,.06,H-.1,.1,frame);
+      {/* tranh trăng tròn: khung gỗ tròn, nền giấy ngà, vầng trăng, dáng núi mực */const mc=new THREE.Group();mc.position.set(w-.12,Y+1.85,0);med.add(mc);
+        const ring=P(new THREE.TorusGeometry(.62,.05,8,32),frame,0,0,0,mc);ring.rotation.y=Math.PI/2;
+        const disc=P(new THREE.CircleGeometry(.6,32),M('#efe3c6',.9,{emissive:'#ffe3b0',emissiveIntensity:.25}),-.01,0,0,mc);disc.rotation.y=-Math.PI/2;
+        const moon=P(new THREE.CircleGeometry(.2,24),M('#f6d58c',.8,{emissive:'#ffcc70',emissiveIntensity:.6}),-.02,.18,-.12,mc);moon.rotation.y=-Math.PI/2;
+        for(const [z,s2] of [[.12,.32],[-.2,.24]]){const m=P(new THREE.ConeGeometry(s2,s2*1.1,3),M('#6d6a62',.95),-.025,-.6+s2*.55+.18,z,mc);m.scale.z=.05;m.rotation.y=Math.PI/2}}
+      // bàn thờ thấp sát vách sau, tượng Phật nhỏ trước tranh trăng, hai đèn nến
+      box(med,w-.45,Y+.22,0,.55,.4,2.4,dkW);const bd=new THREE.Group();bd.position.set(w-.45,Y+.42,0);bd.scale.setScalar(.62);med.add(bd);
       cyl(bd,0,.12,0,.42,.46,.24,gold,16);P(new THREE.SphereGeometry(.36,16,12),gold,0,.45,0,bd).scale.set(1,.8,1.1);P(new THREE.SphereGeometry(.2,14,10),gold,0,.85,0,bd);P(new THREE.SphereGeometry(.17,14,10),gold,0,1.12,0,bd);P(new THREE.SphereGeometry(.07,8,6),gold,0,1.3,0,bd);
-      const halo=P(new THREE.TorusGeometry(.42,.03,6,24),gold,.12,1.1,0,bd);halo.rotation.y=Math.PI/2;
-      cyl(med,-.4,Y+.12,0,.38,.42,.22,M('#7a3e2e',.9),16);box(med,-1.6,Y+.18,0,1.6,.1,1.2,darkW);/* bồ đoàn, chiếu */
-      for(const s of [-1,1]){cyl(med,w-.45,Y+.86,s*.6,.05,.05,.12,whiteM,8);P(new THREE.SphereGeometry(.045,6,5),warm,w-.45,Y+.97,s*.6,med)}
-      cyl(med,-.9,Y+.25,-1.4,.22,.18,.3,M('#3d5a48'),10);P(new THREE.SphereGeometry(.2,8,6),flowerM[1],-.9,Y+.5,-1.4,med)}
+      for(const s of [-1,1]){cyl(med,w-.45,Y+.5,s*.9,.06,.06,.14,whiteM,8);P(new THREE.SphereGeometry(.06,8,6),warm,w-.45,Y+.62,s*.9,med)}
+      // chiếu, bàn trà thấp, bonsai, bộ ấm, hai bồ đoàn
+      box(med,-.2,Y+.045,0,3.2,.02,2.4,M('#cdbb8e',.95));
+      box(med,.35,Y+.34,0,.85,.07,1.5,dkW);for(const a of [-1,1])for(const b of [-1,1])box(med,.35+a*.33,Y+.17,b*.65,.08,.32,.08,dkW);
+      {const bx=.45,bz=-.35;box(med,bx,Y+.43,bz,.32,.12,.22,M('#3d4a52',.6));cyl(med,bx,Y+.6,bz,.025,.035,.3,M('#5b3b26'),6);
+        for(const [dx,dy,dz,r] of [[0,.8,0,.17],[-.1,.7,.14,.12],[.06,.72,-.13,.11]]){const f=P(new THREE.SphereGeometry(r,10,7),leafM[0],bx+dx,Y+dy,bz+dz,med);f.scale.y=.6}}
+      {const tea=M('#e7e0d2',.4);P(new THREE.SphereGeometry(.09,12,8),tea,.3,Y+.46,.25,med).scale.y=.8;for(const z of [.45,.55])cyl(med,.15,Y+.41,z-.1,.04,.035,.06,tea,10)}
+      for(const s of [-1,1])cyl(med,-.55,Y+.13,s*.5,.3,.33,.18,M('#d8c49a',.95),18);
+      // kệ gốm bên trái (góc trước), đèn giấy đứng bên phải
+      {const kx=-w+.75,kz=-w+.28;for(const y of [.02,.55,1.08,1.6])box(med,kx,Y+y+.03,kz,1.1,.05,.36,frame);for(const s of [-1,1])box(med,kx+s*.53,Y+.85,kz,.05,1.7,.36,frame);
+        const cer=['#7d8f86','#c9b28c','#4f5d63','#a9744e','#e7dfcf','#6e7c5d'].map(c=>M(c,.5));let k=0;for(const y of [.05,.58,1.11])for(const dx of [-.3,0,.3]){const c=cer[k++%6],r=.08+.03*(k%3);const v=P(new THREE.SphereGeometry(r,12,8),c,kx+dx,Y+y+.06+r*.9,kz,med);v.scale.y=1.1+.3*(k%2)}}
+      {const lx=-w+.5,lz=w-.5;box(med,lx,Y+.35,lz,.06,.7,.06,frame);box(med,lx,Y+.9,lz,.38,.62,.38,warm);for(const y of [.6,1.2])box(med,lx,Y+y,lz,.42,.04,.42,frame)}
+      // mái gỗ bốn mái thấp đua rộng, viền gỗ dày, lằn ván
+      {const R=h+1.15,y0=Y+H+.2,rh=1.75;hipRoof(med,-R,R,-R,R,y0,rh,roofM);box(med,0,y0-.13,0,R*2-.1,.02,R*2-.1,M('#9a6a45',.85));/* trần hiên gỗ ấm dưới mái đua */
+        for(const s of [-1,1]){box(med,0,y0-.02,s*R,R*2+.08,.26,.1,dkW);box(med,s*R,y0-.02,0,.1,.26,R*2+.08,dkW)}
+        for(const t of [.18,.36,.54,.72]){const r=R*(1-t),y=y0+rh*t+.035;for(const [a,b] of [[[-r,y,-r],[r,y,-r]],[[r,y,-r],[r,y,r]],[[r,y,r],[-r,y,r]],[[-r,y,r],[-r,y,-r]]])beam(med,a,b,.025,dkW)}}
+      // đèn lồng giấy treo ở góc mái trước bên trái
+      {const lx=-h-.55,lz=-h-.55,ly=Y+H-.55;beam(med,[lx,Y+H+.25,lz],[lx,ly+.3,lz],.015,dkW);box(med,lx,ly,lz,.5,.42,.5,warm);for(const y of [-.23,.23])box(med,lx,ly+y,lz,.56,.05,.56,dkW);for(const a of [-1,1])for(const b of [-1,1])box(med,lx+a*.25,ly,lz+b*.25,.04,.44,.04,dkW)}}
     // ---- chòi ngắm biển (bên phải): bát giác trên cột cao, lan can, mái nón lá màu vàng nâu, bàn ghế, cầu thang về phía lối đá
     const gaz=new THREE.Group();gaz.position.set(TD_GAZ.x,0,TD_GAZ.z);g.add(gaz);
     {const Y=TD_GY,R=TD_GAZ.r;cyl(gaz,0,Y-.12,0,R+.25,R+.25,.26,woodL,8);
