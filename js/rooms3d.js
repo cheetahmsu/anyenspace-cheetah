@@ -735,11 +735,12 @@
       S.assign=assign;const mine=assign[S.me];S.myC=mine==null?(S.pickC||0):mine%6;
       const hosts=S.list.filter(p=>p.host).sort((a,b)=>(a.t||0)-(b.t||0));S.leader=S.joined?((hosts[0]||[...S.list].sort((a,b)=>(a.t||0)-(b.t||0)||String(a.id).localeCompare(String(b.id)))[0]||{id:S.me}).id):S.me;
       for(let i=0;i<36;i++)seats.setColorAt(i,SEAT_OFF);for(const [id,i] of Object.entries(assign))seats.setColorAt(i,id===S.me?SEAT_ME:SEAT_ON);seats.instanceColor.needsUpdate=true;
-      let n=0;for(const [id,i] of Object.entries(assign)){const [x,z]=seatPos(i),p=id===S.me?{col:myColor()}:list.find(q=>q.id===id)||{},yaw=Math.atan2(-x*.15,SZ-z);/* quay mặt về sân khấu */
+      let n=0;S.sitIds=[];for(const [id,i] of Object.entries(assign)){if(id===S.me&&st.walk)continue;S.sitIds.push(id);const [x,z]=seatPos(i),p=id===S.me?{col:myColor()}:list.find(q=>q.id===id)||{},yaw=Math.atan2(-x*.15,SZ-z);/* quay mặt về sân khấu */
         dummy.position.set(x,.2,z);dummy.rotation.set(0,yaw,0);dummy.scale.setScalar(1);dummy.updateMatrix();sitBody.setMatrixAt(n,dummy.matrix);sitBody.setColorAt(n,new THREE.Color(/^#[0-9a-f]{6}$/i.test(p.col||'')?p.col:'#c9b48c'));
         dummy.position.set(x,.2+.78,z);dummy.scale.set(1,1.2,1);dummy.updateMatrix();sitHead.setMatrixAt(n,dummy.matrix);n++}
       sitBody.count=sitHead.count=n;sitBody.instanceMatrix.needsUpdate=sitHead.instanceMatrix.needsUpdate=true;if(sitBody.instanceColor)sitBody.instanceColor.needsUpdate=true;sitBody.boundingSphere=null;
       CPOS.forEach((_,k)=>tables.setColorAt(k,new THREE.Color(k===S.myC?'#f6dca0':'#ffffff')));tables.instanceColor.needsUpdate=true}
+    function walkToMySeat(){const i=S.assign[S.me];if(i==null||!st.walk||!st.walk.goSeat)return;const [x,z,a]=seatPos(i);st.camOv=false;st.walk.goSeat({x,z,a:Math.atan2(-x*.15,SZ-z),y:.2,ax:x+Math.sin(a)*.5,az:z+Math.cos(a)*.5})}
     const clusterOf=id=>{const i=S.assign[id];return i==null?null:i%6};
     // ---- màn chiếu 16:9
     function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
@@ -785,8 +786,13 @@
     function releaseMine(w){w=clean(w,60);if(!w){rmHint('Viết một lời chúc bình an ngắn trước khi thả đèn nhé');return}S.myWish=w;placeLantern(S.me,w,myName());send({k:'l',w});rmHint('🏮 Đèn hoa của bạn đang bay lên vòm mái · chạm một đèn để đọc lời chúc');goView('roof');render()}
     // ---- góc nhìn (trượt mềm)
     const VIEWS={overview:[0,1.1,-.8,0,.34,8.6],stage:[0,1.8,-3.3,0,.16,4.4],roof:[0,4.4,-.6,0,-.22,6.4],gallery:[-HW+.1,2.5,2.65,Math.PI/2,.04,3.6],wall:[HW-.1,2.8,2.65,-Math.PI/2,.04,3.6],tea:[HW-.6,1.2,2.2,-Math.PI/2+.3,.25,3]};
-    let tw=null;function goView(k){let v=VIEWS[k];if(k==='mine'){const [x,z]=CPOS[S.myC];v=[x,.8,z-.4,0,.5,4.6]}if(!v)return;tw={a:[st.target.x,st.target.y,st.target.z,st.yaw,st.pitch,st.dist],b:v,t0:performance.now()};st.yawC=v[3]}
-    st.minD=2.4;st.maxD=9.2;st.target.set(0,1.5,1.5);st.yaw=0;st.pitch=.12;st.dist=6;goView('overview');
+    /* có nhân vật đi lại: góc máy dựng sẵn bắt đầu từ đúng chỗ camera đang đứng, giữ tới khi người chơi bước đi (world3d st.camOv) */
+    let tw=null;function goView(k){let v=VIEWS[k];if(k==='mine'){const [x,z]=CPOS[S.myC];v=[x,.8,z-.4,0,.5,4.6]}if(!v)return;
+      if(st.walk&&!st.camOv){const f=new THREE.Vector3();st.cam.getWorldDirection(f);st.dist=5;st.pitch=Math.asin(Math.max(-1,Math.min(1,-f.y)));st.yaw=Math.atan2(-f.x,-f.z);st.target.copy(st.cam.position).addScaledVector(f,5);st.target.y-=.4}
+      v=v.slice();{const asp=st.cam.aspect||1.6;if(asp<1)v[5]=Math.min(st.maxD,v[5]/Math.sqrt(asp))}/* điện thoại dọc: lùi xa hơn cho vừa khung */v[3]=st.yaw+Math.atan2(Math.sin(v[3]-st.yaw),Math.cos(v[3]-st.yaw));st.camOv=true;tw={a:[st.target.x,st.target.y,st.target.z,st.yaw,st.pitch,st.dist],b:v,t0:performance.now()};st.yawC=v[3]}
+    st.minD=2.4;st.maxD=9.2;st.target.set(0,1.5,1.5);st.yaw=0;st.pitch=.12;st.dist=6;goView('overview');if(st.walk)st.camOv=false;
+    /* bàn, bục ngồi và quầy trà là vật cản: nhân vật đi vòng, không xuyên qua */
+    st.blocks=CPOS.map(([x,z])=>[x-1.2,z-1.2,x+1.2,z+1.2]).concat([[HW-.95,1.1,HW,4.2]]);
     // ---- chương trình biểu diễn (đồng bộ mốc giây sync_ts: mỗi máy tính thời điểm bắt đầu theo đồng hồ của người dẫn trừ độ lệch)
     let vidEl=null,vidTex=null;
     function stopVideo(){if(vidEl){try{vidEl.pause()}catch(e){}vidEl.removeAttribute('src');try{vidEl.load()}catch(e){}vidEl=null}if(vidTex){vidTex.dispose();vidTex=null}scrMat.map=scrT;scrMat.needsUpdate=true}
@@ -854,14 +860,14 @@
     if(window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({col:myColor()});
     (async()=>{try{if(typeof window.anyenAuthClient!=='function')return;const c=await window.anyenAuthClient();if(!c)return;const {data}=await c.rpc('anyen_my_role');S.role=String(data||'guest');if(/therapist|admin/.test(S.role)&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({host:true})}catch(e){}})();
     function pickSeat(i){if(!(i>=0&&i<36))return;const who=Object.entries(S.assign).find(([id,j])=>j===i);if(who&&who[0]!==S.me){rmHint('Bục này đã có '+nameOf(who[0])+' ngồi · chạm một bục trống (màu tối) để ngồi');return}
-      S.pickS=i;S.pickC=i%6;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({s:i,c:i%6});computeSeats();wave(i%6);voice(CL[i%6][2],1);rmHint('🧘 Bạn đã ngồi vào bục '+(Math.floor(i/6)+1)+' cụm '+CL[i%6][0]+' · '+CL[i%6][1]);render()}
-    function pickCluster(k){if(k<0||k>5)return;S.pickC=k;S.pickS=null;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k,s:-1});computeSeats();wave(k);voice(CL[k][2],1);rmHint('🎶 Bạn ngồi cụm '+CL[k][0]+' · '+CL[k][1]+' · bấm phím 1–5 để hòa tấu');render()}
+      S.pickS=i;S.pickC=i%6;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({s:i,c:i%6});computeSeats();walkToMySeat();wave(i%6);voice(CL[i%6][2],1);rmHint('🧘 Bạn đã ngồi vào bục '+(Math.floor(i/6)+1)+' cụm '+CL[i%6][0]+' · '+CL[i%6][1]);render()}
+    function pickCluster(k){if(k<0||k>5)return;S.pickC=k;S.pickS=null;if(S.joined&&window.anyenSpaceChat&&window.anyenSpaceChat.meta)window.anyenSpaceChat.meta({c:k,s:-1});computeSeats();walkToMySeat();wave(k);voice(CL[k][2],1);rmHint('🎶 Bạn ngồi cụm '+CL[k][0]+' · '+CL[k][1]+' · bấm phím 1–5 để hòa tấu');render()}
     // ---- chạm trong phòng: dùng vị trí ngón tay cuối cùng để biết chạm vào bàn nào, đèn nào, ô nào
     let lastP=null;on(rmCanvas,'pointerdown',e=>{lastP={x:e.clientX,y:e.clientY}});
     const ray=new THREE.Raycaster();function hitOf(obj){if(!lastP)return null;const rc=rmCanvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((lastP.x-rc.left)/rc.width*2-1,-(lastP.y-rc.top)/rc.height*2+1),st.cam);return ray.intersectObject(obj,false)[0]||null}
-    rTap(st,tables,()=>{const h=hitOf(tables);if(h&&h.instanceId!=null){S.tab='jam';pickCluster(h.instanceId);goView('mine')}});
+    rTap(st,tables,()=>{const h=hitOf(tables);if(h&&h.instanceId!=null){S.tab='jam';pickCluster(h.instanceId);if(!st.walk)goView('mine')}});
     rTap(st,seats,()=>{const h=hitOf(seats);if(h&&h.instanceId!=null)pickSeat(h.instanceId)});
-    rTap(st,sitBody,()=>{const h=hitOf(sitBody);if(!h||h.instanceId==null)return;const e=Object.entries(S.assign)[h.instanceId];if(e)rmHint(e[0]===S.me?'🧘 Đây là chỗ của bạn · chạm một bục trống để đổi chỗ':'🧘 '+nameOf(e[0])+' đang ngồi ở cụm '+CL[e[1]%6][0])});
+    rTap(st,sitBody,()=>{const h=hitOf(sitBody);if(!h||h.instanceId==null)return;const id=(S.sitIds||[])[h.instanceId],e=id!=null&&[id,S.assign[id]];if(e)rmHint(e[0]===S.me?'🧘 Đây là chỗ của bạn · chạm một bục trống để đổi chỗ':'🧘 '+nameOf(e[0])+' đang ngồi ở cụm '+CL[e[1]%6][0])});
     rTap(st,lanterns,()=>{const h=hitOf(lanterns);if(!h||h.instanceId==null)return;const it=[...S.lantern.values()].find(x=>x.slot===h.instanceId);if(it){S.readL=it.id;rmHint('🏮 '+clean(it.name,24)+': “'+it.w+'”');S.tab='lantern';render()}});
     rTap(st,screen,()=>{S.tab=S.quiz?'quiz':'stage';goView('stage');render()});
     rTap(st,gallery,()=>{S.tab='tea';S.sub='gallery';goView('gallery');const h=hitOf(gallery);if(h&&h.uv){const px=h.uv.x*512,py=(1-h.uv.y)*512,col=Math.max(0,Math.min(2,Math.floor((px-16)/162))),row=Math.max(0,Math.min(2,Math.floor((py-36)/158)));S.galSel=row*3+col}if(GAL.state!=='ready')loadGallery();render()});
