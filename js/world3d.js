@@ -1280,7 +1280,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=84b7e3a5').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=d943b4ac').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1732,6 +1732,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
   function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=27d6d6f2').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
+  /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
+  window.anyenOpenHouse=id=>{if(bayMode||boatRide||roomOpen)return false;const h=[...SENSE_HOUSES,VAN_HOA,TINH_THAT,NHA_SAC].find(x=>x&&x.id===id);if(!h||!h.door)return false;walkRoute.length=0;pendingSeat=null;mePosition.set(h.door[0],0,h.door[1]);walkYaw=h.rot+Math.PI;arriveHouse(h);return true};
   function makeRoom(wall,floor,opt){const bare=!!(opt&&opt.bare);const r=roomRenderer||(roomRenderer=new THREE.WebGLRenderer({canvas:rmCanvas,antialias:true}));r.setPixelRatio(Math.min(2,devicePixelRatio||1));r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}
     if(!bare){const fl=new THREE.Mesh(new THREE.BoxGeometry(8,.1,7),mat(floor));fl.position.y=-.05;sc.add(fl);for(let i=-3;i<=3;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.02,.002,7),mat('#3a2a1e'));s.position.set(i*1.1,.001,0);sc.add(s)}
