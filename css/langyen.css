@@ -267,6 +267,7 @@ body.bay-photo-open #anyenPhotoBtn,body.room-open #anyenPhotoBtn,body.sh-grid #a
 #anyenPhotoBtn,#islandPad,#islandBack,body.immersive #camZoomBox{display:none!important}
 body:not(.bay-island) #zenToolbar [data-zen=boat],body.bay-photo-open #zenToolbar [data-zen=boat],body.room-open #zenToolbar [data-zen=boat]{display:none!important}
 body.bay-island #zenToolbar [data-zen=bell],body.bay-island #zenToolbar [data-zen=ritual]{display:none!important}/* Thỉnh chuông & Nghi thức chỉ có bên trong Nhà Thiền (bảng trong phòng) */
+body.yen-bay:not(.bay-island) #zenToolbar [data-zen=ritual]{display:none!important}/* 3.42: đang trên thuyền dạo vịnh: bỏ nút Nghi thức (laptop và điện thoại) */
 /* Rừng Yên: thanh công cụ dọc bên phải như Đảo Yên, nằm dưới nút Nhật ký, Bản đồ và nút nhạc */
 body.immersive:not(.yen-bay) #zenToolbar{flex-direction:column!important;left:auto!important;right:calc(env(safe-area-inset-right,0px) + 10px)!important;bottom:auto!important;top:calc(env(safe-area-inset-top,0px) + 306px)!important;transform:none!important;width:auto!important;padding:3px!important;gap:3px!important;border-radius:14px!important;opacity:.92}
 body.immersive:not(.yen-bay) #zenToolbar button{flex:0 0 auto!important;width:46px!important;min-width:0!important;min-height:40px!important;height:40px!important;font-size:15px!important;padding:2px!important;gap:0!important;border-radius:11px!important;display:flex;flex-direction:column;align-items:center;justify-content:center}
