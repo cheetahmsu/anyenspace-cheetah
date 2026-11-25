@@ -438,3 +438,12 @@ body:not(.immersive) .mode-label{display:none}
 @media(min-width:761px){#navSignIn{grid-column:6!important}}
 @media(max-width:760px){#navSignIn{grid-column:span 2!important}}
 #navSignIn{margin:0!important;width:auto}
+/* ---- Menu trên chỉ giữ nút chưa có ở phần dưới (3D, Tĩnh Tâm, Nghi thức, Nhật ký, Âm nhạc đã có ô riêng) ---- */
+.top .nav .nav-trung{display:none!important}
+@media(min-width:761px){
+ .top .nav{grid-template-columns:repeat(6,minmax(0,1fr))!important;max-width:900px}
+ #navSignIn{grid-column:auto!important}
+ #home>.dock{grid-template-columns:3fr 4fr!important}
+ .dock-house:nth-child(1){--n:3}
+}
+@media(max-width:760px){#navSignIn{grid-column:auto!important}}
