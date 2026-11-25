@@ -311,3 +311,46 @@ body.immersive:not(.yen-bay) #zenToolbar button span,body.immersive:not(.yen-bay
  .dock-house>button span{color:#3a5230}
  .dock-house>button:hover{background:#fff3dc}
 }
+/* ---- Ngôi nhà kính mái rêu (Kiểu 1) cho cả laptop và điện thoại · hồ sen dưới chân trang ---- */
+.nav-group{display:contents}
+.dock-house>button span{color:inherit!important}
+.lotus-pond{position:relative;z-index:3;height:220px;margin-top:-1px;overflow:hidden;background:#06201c}
+.lotus-pond svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lotus-pond .m{display:none}
+@media(min-width:761px){
+ .connections-strip{display:none}
+ .top .nav{flex:1;align-items:center;justify-content:center;gap:6px}
+ .nav-group{display:flex;gap:2px;padding:3px;border:1px solid #c8a96a33;border-radius:26px;background:#ffffff06}
+ .nav-group button,.nav-group .nav-external{padding:8px 12px}
+ #navSignIn{margin-left:auto}
+ .top{flex-wrap:nowrap}
+ .scene-controls{display:none}
+ #home.hero{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);column-gap:30px;align-items:center}
+ #home>.eyebrow{grid-column:1;grid-row:1}#home>h1{grid-column:1;grid-row:2;white-space:nowrap}#home>p{grid-column:1;grid-row:3}
+ #home>.cta{grid-column:1;grid-row:4;justify-self:start}
+ #home>#enter3D{grid-column:2;grid-row:2;align-self:end;justify-self:end;margin:0 0 12px;min-width:280px}
+ #home>#enterBay{grid-column:2;grid-row:3/5;align-self:start;justify-self:end;margin:0;min-width:280px}
+ #home>br{display:none}
+ #home>.dock{grid-column:1/-1;grid-row:5;display:grid;grid-template-columns:1fr 2fr;gap:22px;margin-top:30px}
+ .dock-house{--n:3}.dock-house:nth-child(1){--n:2}.dock-house:nth-child(2){--n:4}
+ .dock-house:nth-child(3){grid-column:1/-1;grid-template-columns:200px 1fr!important}
+ .dock-house>button{max-width:none}
+ .dock-house .connections-links{align-self:center}
+}
+.dock-house .d-only{display:none}
+@media(min-width:761px){.dock-house .d-only{display:flex}}
+@media(max-width:760px){
+ .lotus-pond{height:200px}.lotus-pond .m{display:block}.lotus-pond .d{display:none}
+ .dock{display:grid!important;grid-template-columns:1fr;gap:18px}
+ .dock-house{--n:3}.dock-house:last-child{--n:2}
+}
+/* Phong cách chung của ngôi nhà: mái rêu hình thang, tường kính tối mờ, nút trong suốt */
+.dock-house{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:8px;padding:0 10px 12px;align-content:start;position:relative;filter:none!important;background:linear-gradient(#06201c80,#06201c80) 0 38px/100% calc(100% - 38px) no-repeat!important;border:0;border-bottom:2px solid #f4ecd955;border-radius:0 0 16px 16px;margin:0 6px}
+.dock-roof{display:block;grid-column:1/-1;margin:0 -16px 6px!important;text-align:center;background:linear-gradient(#5d7b4a,#3a5230);color:#f4ecd9;font:600 17px Georgia,serif;letter-spacing:1px;padding:11px;clip-path:polygon(4% 0,96% 0,100% 100%,0 100%);border-radius:8px 8px 0 0}
+.dock-house>button{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:16px;padding:12px 4px;background:#0a302a8c!important;border:1px solid #dfc38966!important;color:#f4e8d0!important}
+.dock-house>button:hover{background:#235347b3!important}
+@media(min-width:761px){.dock-house{display:grid}}
+@media(max-width:760px){.dock-house>button{display:flex}.dock .m-dup{display:none!important}}
+.dock .m-only{display:none}
+@media(max-width:760px){.dock .m-only{display:flex}}
+@media(min-width:761px){.nav-group .nav-external{border-color:transparent;background:transparent}.nav-group .nav-external:hover{border-color:#c8a96a80}}
