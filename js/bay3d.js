@@ -734,7 +734,7 @@
      const sm=['#8d8a80','#a39e92','#6f6c64','#b5ae9f','#7d7a71','#9a9488','#c2bba9','#857f74'].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.95,flatShading:true}));
      const base=new THREE.Mesh(stoneG,sm[2]);base.scale.set(.8,.24,.65);base.position.y=.1;cg.add(base);
      const pile=[];for(let i=0;i<7;i++){const m=new THREE.Mesh(stoneG,sm[i]),sc=.36-i*.035,a=i*2.3;m.scale.set(sc,sc*.42,sc*.85);m.position.set(1.15+Math.cos(a)*.38,sc*.36,.25+Math.sin(a)*.38);m.rotation.y=a;m.userData.home=m.position.clone();m.userData.homeR=a;cg.add(m);pile.push(m)}
-     /* 3.41: bỏ tháp đá cairn cũ trên bãi trái (đã có Vườn đá cân bằng) */g.remove(cg);
+     /* 3.41 bỏ tháp đá cũ nhưng quên gán TD_ACT.cairn nên nút Xếp đá không chạy; nay giữ đống đá để tự xếp, đặt lại chỗ sau khi dựng Vườn đá */
      // ---- Vườn đá cân bằng trên bãi trái gần Nhà Thiền: bộ 36 viên ST01–ST36 (mỗi viên một model: kích thước, dáng, vân riêng), dùng lại cho 5 tác phẩm
      {const S=.03;/* 1 cm ngoài đời = 3 cm trong cảnh để nhìn rõ trên điện thoại */
       const ST=[[28,20,12,'#bcb7ac','spk','#2e2c28'],[26,18,11,'#c99f68','spk','#6a4a2a'],[24,17,10,'#8b8a84','vein','#ece6d8'],[22,16,10,'#d28a48','band','#f4ecdc'],[20,14,9,'#dcd6ca','spk','#1e1c1a'],[19,13,8,'#9c9a76','pore','#6e6c50'],[18,12,8,'#d8c39e','plain',''],[17,12,7,'#5f5f5d','pore','#3a3a38'],[16,11,7,'#7c8a5e','vein','#d8dcc0'],
@@ -774,6 +774,12 @@
       // (5) Tác phẩm đá trên nền đá tự nhiên · 6 viên, điểm nhận diện của bãi
       {const n0=sg.children.length,[x,z]=find(9.5,1.2),top=boulder(x,z,.85,.45,.7,0);stack([8,18,25,30,35,36],x,z,top,{dx:[0,.02,-.02,.015,-.01,0]});tag('Tác phẩm đá trên nền đá tự nhiên · 6 viên',n0);ARTS.push(['base',x,z]);TD_COLL.push([x,z,1.3])}
       TD_ACT.stoneArts=ARTS}
+     /* đống đá để tự xếp: tránh 5 tác phẩm của Vườn đá, gần bãi trước Nhà Thiền */
+     {const arts=TD_ACT.stoneArts||[],far=(x,z)=>arts.every(q=>Math.hypot(q[1]-x,q[2]-z)>2.8);let p=null;
+      for(let rr=0;rr<16&&!p;rr++)for(let k=0;k<16&&!p;k++){const x=cs[0]+Math.cos(k*.393)*rr,z=cs[1]+Math.sin(k*.393)*rr;if(sandAt(x,z)&&clear(x,z,1.6)&&far(x,z))p=[x,z]}
+      if(p)cg.position.set(p[0],tdTerrainY(p[0],p[1]),p[1]);
+      const hit=new THREE.Mesh(SH_HIT_G,SH_HIT_M);hit.scale.set(1.5,.8,1.3);hit.position.set(.55,.3,.1);cg.add(hit);
+      TD_ACT.cairn={g:cg,x:cg.position.x,z:cg.position.z,pile,n:0,h:.3,anim:null};TD_COLL.push([cg.position.x,cg.position.z,.7])}
      TD_ACT.g=g;TD_ACT.clear=clear;const hitM=SH_HIT_M;
      /* 3 mẫu Khay / Giỏ đặt sẵn trên bãi cạnh Chòi ngắm cảnh */
      /* cả 3 đồ đựng đặt chung một chỗ: một tấm chiếu cói nhỏ trên bãi cát cạnh Chòi ngắm cảnh */
