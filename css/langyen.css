@@ -466,3 +466,12 @@ body:not(.immersive) .mode-label{display:none}
  .dock-house>a.house-tile{font-size:13px;padding:12px 2px;border-radius:16px}
  .dock-house:nth-child(1)>button{font-size:13px!important}
 }
+/* ---- Gom hai thanh Hiểu mình và Chăm sóc mình thành một thanh chung; các ô nút giữ nguyên ---- */
+@media(min-width:761px){
+ .dock-house:nth-child(1)>.dock-roof{width:calc(200% + 26px);position:relative;z-index:1}
+ .dock-house:nth-child(2)>.dock-roof{visibility:hidden}
+}
+@media(max-width:760px){
+ .dock-house:nth-child(2)>.dock-roof{display:none!important}
+ .dock-house:nth-child(1){margin-bottom:-2px!important}
+}
