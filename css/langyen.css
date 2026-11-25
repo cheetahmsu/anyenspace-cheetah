@@ -330,7 +330,8 @@ body.immersive:not(.yen-bay) #zenToolbar button span,body.immersive:not(.yen-bay
  #home>br{display:none}
  #home>.dock{grid-column:1/-1;grid-row:5;display:grid;grid-template-columns:1fr 2fr;gap:22px;margin-top:30px}
  .dock-house{--n:3}.dock-house:nth-child(1){--n:2}.dock-house:nth-child(2){--n:4}
- .dock-house:nth-child(3){grid-column:1/-1;grid-template-columns:200px 1fr!important}
+ .dock-house:nth-child(3){grid-column:1/-1;grid-template-columns:1fr!important}
+ .dock-house .connections-links{justify-content:center;padding:6px 0}
  .dock-house>button{max-width:none}
  .dock-house .connections-links{align-self:center}
 }
@@ -338,7 +339,7 @@ body.immersive:not(.yen-bay) #zenToolbar button span,body.immersive:not(.yen-bay
 @media(min-width:761px){.dock-house .d-only{display:flex}}
 @media(max-width:760px){
  .dock{display:grid!important;grid-template-columns:1fr;gap:18px}
- .dock-house{--n:3}.dock-house:last-child{--n:2}
+ .dock-house{--n:3}.dock-house:last-child{--n:1}
 }
 /* Phong cách chung của ngôi nhà: mái rêu hình thang, tường kính tối mờ, nút trong suốt */
 .dock-house{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:8px;padding:0 10px 12px;align-content:start;position:relative;filter:none!important;background:linear-gradient(#06201c80,#06201c80) 0 38px/100% calc(100% - 38px) no-repeat!important;border:0;border-bottom:2px solid #f4ecd955;border-radius:0 0 16px 16px;margin:0 6px}
