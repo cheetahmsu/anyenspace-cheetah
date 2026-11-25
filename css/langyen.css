@@ -280,3 +280,34 @@ body.immersive:not(.yen-bay) #zenToolbar button span,body.immersive:not(.yen-bay
 #roomBox.rm-ui-off .rm-walkpad,#roomBox.rm-ui-off .rm-hint,#roomBox.rm-ui-off .rm-panel{display:none!important}
 #roomBox:not(.rm-ui-off) .rm-walkpad{bottom:44px!important}
 #roomBox.niem-quiet:not(.peek) .rm-ui-tog{opacity:0;pointer-events:none}
+/* ---- Trang chủ · ba ngôi nhà (Kiểu 2): laptop giữ nguyên dock 7 nút; điện thoại xếp theo Hiểu mình · Chăm sóc mình · Kết nối với nhau và ẩn nút trùng ---- */
+.dock-house{display:contents}.dock-roof,.dock .m-only{display:none}
+@media(max-width:760px){
+ .nav .m-dup,.dock .m-dup{display:none!important}
+ .top{position:relative;padding:14px 4vw 12px!important;gap:10px!important}
+ .top .nav{gap:6px}
+ .top .nav button,.top .nav-external{border:1px solid #c8a96a44;padding:7px 12px;font-size:13px}
+ .scene-controls{top:14px!important;right:4vw!important;gap:6px}
+ .scene-controls button{width:34px;height:34px;padding:0}
+ .main{justify-content:flex-start;padding:24px 4vw 20px}
+ #home.hero{display:flex;flex-direction:column}
+ #home>br{display:none}
+ #home>.cta{order:4;width:100%;margin:2px 0 12px;padding:14px;font-size:16px}
+ #home>#enter3D{order:5}#home>#enterBay{order:6}#home>.dock{order:7}
+ #home>.portal-entry{width:100%;margin:0 0 12px}
+ .dock{display:flex;flex-direction:column;gap:18px;margin-top:14px}
+ .dock-house{display:block;filter:drop-shadow(0 14px 22px #0007)}
+ .dock-roof{display:block;background:linear-gradient(#5d7b4a,#3a5230);color:#f4ecd9;font:600 17px Georgia,serif;letter-spacing:1px;text-align:center;padding:11px;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);border-radius:8px 8px 0 0}
+ .dock-house{--n:3}
+ .dock-house:last-child{--n:2}
+ .dock-house>button,.dock .m-only{display:flex}
+ .dock-house{background:none}
+ .dock-house>button{float:none}
+ .dock-house::after{content:none}
+ .dock-house{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:8px}
+ .dock-roof{grid-column:1/-1;margin:0 -8px 0}
+ .dock-house{background:linear-gradient(#f4ecd9,#f4ecd9) 0 44px/100% calc(100% - 44px) no-repeat;padding:0 8px 10px;border-radius:0 0 14px 14px}
+ .dock-house>button{min-width:0;max-width:none;background:#fffaf0;color:#23352b;border:1px solid #d8c9a6;border-radius:14px;padding:12px 4px;font-size:13px}
+ .dock-house>button span{color:#3a5230}
+ .dock-house>button:hover{background:#fff3dc}
+}
