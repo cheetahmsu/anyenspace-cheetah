@@ -1730,7 +1730,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=27d6d6f2').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=869b9858').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   window.anyenOpenHouse=id=>{if(bayMode||boatRide||roomOpen)return false;const h=[...SENSE_HOUSES,VAN_HOA,TINH_THAT,NHA_SAC].find(x=>x&&x.id===id);if(!h||!h.door)return false;walkRoute.length=0;pendingSeat=null;mePosition.set(h.door[0],0,h.door[1]);walkYaw=h.rot+Math.PI;arriveHouse(h);return true};
@@ -1750,7 +1750,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
     rmCanvas.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;if(!pts.size)drag=null};rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:1);st.dist=Math.max(st.minD,Math.min(st.maxD,st.dist*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.005:.001))))))};
     const resize=()=>{const w=rmCanvas.clientWidth||600,h=rmCanvas.clientHeight||400;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};resize();st.resize=resize;
-    const t0=performance.now();let tl=t0;const loop=()=>{if(!st.run)return;const nw=performance.now(),dt=(nw-tl)/1000;tl=nw;const t=(nw-t0)/1000;for(const f of st.tick)f(t);if(st.walk)st.walk.update(dt);else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
+    const t0=performance.now();let tl=t0;const loop=()=>{if(!st.run)return;const nw=performance.now(),dt=(nw-tl)/1000;tl=nw;const t=(nw-t0)/1000;for(const f of st.tick)f(t);if(st.walk){st.walk.update(dt);/* phòng có góc máy dựng sẵn (Nhà Văn Hóa: sân khấu, vòm đèn, tường): giữ góc đó tới khi người chơi bước đi */if(st.camOv){if(st.walk.dest||st.walk.keys.size)st.camOv=false;else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}}}else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
     return st}
   // ---- Đi lại trong phòng: nhân vật của bạn bước đi, camera luôn ở sau lưng (trễ mượt như ngoài rừng) và tự lùi đủ xa để thấy cả phòng.
   const ROOM_WALK={default:{hw:3.5,hd:3.1,cx:0,cz:0,start:[0,2.1],cap:9,front:6,maxD:11},
@@ -1758,7 +1758,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     tu_gia_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.6],cap:2.5,front:2.2,maxD:8.5,fov:66},tu_dao_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.6],cap:2.5,front:2.2,maxD:8.5,fov:66},
     dao_yen_thien:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.5],cap:2.6,front:2.2,maxD:8.5,fov:66},
     dao_yen_nha:{hw:5.75,hd:3.75,cx:0,cz:0,start:[0,3.1],cap:3.1,front:2.6,maxD:9.5,fov:66},
-    van_hoa:{hw:7.3,hd:4.9,cx:0,cz:.3,zmin:-2.3,start:[0,3],cap:6.2,front:0,maxD:11,fov:74,capAt:z=>4.6+Math.max(0,5.4-Math.abs(z))/5.4*2.2-.4}};
+    van_hoa:{hw:7.3,hd:4.9,cx:0,cz:.3,zmin:-2.3,start:[2.3,4.4],cap:6.2,front:0,maxD:11,fov:74,capAt:z=>4.6+Math.max(0,5.4-Math.abs(z))/5.4*2.2-.4}};
   function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
@@ -1793,13 +1793,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     // chạm: vật tương tác thì mở, sàn thì bước tới; kéo một ngón để xoay nhìn quanh; chụm/lăn để zoom
     // Cùng quy tắc với Rừng Yên và Vịnh Yên: vuốt ngang xoay góc nhìn (có quán tính), vuốt dọc nâng/hạ camera, hai ngón chụm/mở để zoom, chạm đúp để zoom gần/xa.
     const pts=new Map(),pd=()=>{const [a,c]=[...pts.values()];return Math.max(10,Math.hypot(a.x-c.x,a.y-c.y))};let pinch0=0,drag=null,swV=0,swT=0;const ZF=[.55,1.7];
-    const zoomBy=f=>{W.zf=Math.max(ZF[0],Math.min(ZF[1],W.zf*f))};
+    const zoomBy=f=>{if(st.camOv){st.dist=Math.max(st.minD,Math.min(st.maxD,st.dist*f));return}W.zf=Math.max(ZF[0],Math.min(ZF[1],W.zf*f))};
     rmCanvas.onpointerdown=e=>{W.yv=0;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{rmCanvas.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={ax:0,ay:0,axis:null,mv:0};else{if(drag)drag.mv=99;pinch0=pts.size===2?pd():0}};
     rmCanvas.onpointermove=e=>{const p=pts.get(e.pointerId);if(!p)return;let dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
       if(pts.size===2&&pinch0){const d=pd(),[pa,pc]=[...pts.values()],a=Math.atan2(pc.y-pa.y,pc.x-pa.x);if(W.ga==null){W.ga=a;W.g2={mode:null,s:0,a:0}}let da=a-W.ga;da=Math.atan2(Math.sin(da),Math.cos(da));W.ga=a;const f=Math.max(.8,Math.min(1.25,pinch0/d));pinch0=d;const G=W.g2;
         if(!G.mode){G.s+=Math.log(f);G.a+=da;if(Math.abs(G.a)>.14)G.mode='rot';else if(Math.abs(G.s)>.08)G.mode='zoom';else return}if(G.mode==='rot'){W.yo-=da;W.yoT=performance.now()}else zoomBy(f);return}/* hai ngón xoay: camera quay vòng quanh nhân vật */
       if(!drag||pts.size!==1)return;
       if(!drag.axis){drag.ax+=dx;drag.ay+=dy;const ax=Math.abs(drag.ax),ay=Math.abs(drag.ay);if(Math.max(ax,ay)<8)return;drag.axis=ax>=ay*.8?'x':'y';drag.mv=99;dx=drag.ax;dy=drag.ay}
+      if(st.camOv){if(drag.axis==='x')st.yaw=Math.max(st.yawC-.9,Math.min(st.yawC+.9,st.yaw-dx*.006));else st.pitch=Math.max(-.3,Math.min(.6,st.pitch+dy*.004));return}/* đang ở góc máy dựng sẵn: kéo để nhìn quanh góc đó */
       if(drag.axis==='x'){const dyaw=dx/Math.max(320,innerWidth)*3.5,n=performance.now();W.yo-=dyaw;W.yv=-dyaw/Math.max(8,n-swT)*1000;swT=n;W.yoT=n}
       else{W.pl=Math.max(-.4,Math.min(.35,W.pl+dy/Math.max(320,innerHeight)*1.6));W.yoT=performance.now()}};
     const endP=e=>{if(!pts.delete(e.pointerId))return;W.ga=null;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;return d};
