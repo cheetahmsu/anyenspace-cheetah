@@ -1334,7 +1334,7 @@
     x.beginPath();x.moveTo(40,196);x.quadraticCurveTo(128,222,216,196);x.stroke();x.beginPath();x.moveTo(70,214);x.quadraticCurveTo(128,232,186,214);x.stroke();
     const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
   function playBuild(){if(PLAY.built||!bayShip.ex)return;PLAY.built=true;const g=bayShip.group,L=shipL(),B=shipB(),SV=PLAY.SV,W=PLAY.W,TOP=2.62+2*2.85;
-    const curve=new THREE.CatmullRomCurve3([[B-.6,TOP+.36,SV],[B+.5,TOP+.05,SV],[B+2.3,TOP-2.6,SV],[B+3.9,TOP-5.2,SV],[B+5.3,1.3,SV],[B+6.7,.38,SV],[B+8.2,.24,SV]].map(a=>new THREE.Vector3(...a)));PLAY.curve=curve;
+    const curve=new THREE.CatmullRomCurve3([[B-.6,TOP+.36,SV],[B+.5,TOP+.05,SV],[B+2.3,TOP-2.6,SV],[B+3.9,TOP-5.2,SV],[B+5.3,1.3,SV],[B+6.7,.46,SV],[B+8.2,.36,SV]].map(a=>new THREE.Vector3(...a)));PLAY.curve=curve;
     const slide=new THREE.Group(),cream='#f6f0e2',teal=bayShip.ex.hull_color||'#2f8c8a',goldM=playMat('#d9b25a',{roughness:.3,metalness:.6});
     slide.add(playStrip(curve,48,W,0,cream),playStrip(curve,48,W+.5,-.36,teal));
     for(const sx of [-1,1]){slide.add(new THREE.Mesh(new THREE.TubeGeometry(playOffset(curve,48,sx*(W/2+.1),.34),70,.36,12,false),playMat(cream,{roughness:.38})));
@@ -1440,8 +1440,8 @@
     if(P.phase==='top'||P.phase==='slide'){const cv=PLAY.curve,u=P.phase==='top'?0:Math.min(1,Math.pow(P.t/2,1.6)),p=cv.getPointAt(u);loc(p.x,p.z,p.y+.05);const tg=cv.getTangentAt(u);
       P.yaw=out;bayAvatar.sit=1;bayAvatar.lean=P.phase==='slide'?-Math.atan2(-tg.y,Math.hypot(tg.x,tg.z))*.5:0;
       if(P.phase==='top'&&P.t>1.8){P.phase='slide';P.t=0;bayCaption('🛝 Trượt xuống biển nào!',2200)}else if(P.phase==='slide'&&u>=1){P.phase='splash';P.t=0;P.sx=p.x;P.sy=p.y}}
-    else if(P.phase==='splash'){const u=Math.min(1,P.t/.9),e=ease(u),uu=P.sx+(B+12.8-P.sx)*e,[x,z]=shipToBay(uu,PLAY.SV);P.x=x;P.z=z;const w=wy(x,z)-PLAY.depth;P.y=u<.4?P.sy+(w-.5-P.sy)*(u/.4):w-.5*Math.sin(Math.PI*Math.min(1,(u-.4)/.6))*.9;
-      if(!P.splashed&&P.y<.1){P.splashed=1;playSplash(P.x,P.z)}bayAvatar.sit=u<.4?1:0;P.yaw=out;
+    else if(P.phase==='splash'){/* ngồi trượt hết mặt đế phao rồi mới nhún nhảy xuống biển, không chìm vào phao */const u=Math.min(1,P.t/1.5),w=wy(...shipToBay(B+12.8,PLAY.SV))-PLAY.depth,PAD=.34,EDGE=B+9.75;let uu;if(u<.35){const a=u/.35;uu=P.sx+(EDGE-P.sx)*(a*(2-a));P.y=P.sy+.05+(PAD-P.sy-.05)*a;bayAvatar.sit=1}else{const b=(u-.35)/.65;uu=EDGE+(B+12.8-EDGE)*(1-(1-b)*(1-b));if(b<.6){const k=b/.6;P.y=PAD*(1-k)+(w-.45)*k+3.2*k*(1-k)}else P.y=(w-.45)+.45*ease((b-.6)/.4);bayAvatar.sit=0}{const [x,z]=shipToBay(uu,PLAY.SV);P.x=x;P.z=z}
+      if(!P.splashed&&u>.5&&P.y<.1){P.splashed=1;playSplash(P.x,P.z)}P.yaw=out;
       if(u>=1){P.phase='swim';P.t=0;P.cam=null;bayFade();bayCamYaw=null;bayCaption('🏊 Bơi tự do trên vịnh · chạm mặt nước để bơi tới, bấm vào du thuyền để về tàu',6000)}}
     else if(P.phase==='board'||P.phase==='unboard'){const u=Math.min(1,P.t/1.2),e=ease(P.phase==='board'?u:1-u),[lx,lz]=playLaunch(),[dx,dz]=shipToBay(0,-L-.8),ky=P.phase==='board'?S.heading+Math.PI:P.kyaw;
       playKay(lx,lz,ky,wy(lx,lz));P.x=dx+(lx-dx)*e;P.z=dz+(lz-dz)*e;P.y=.6+(wy(lx,lz)+PLAY.seat-.6)*e+Math.sin(Math.PI*e)*.35;P.yaw=ky;bayAvatar.sit=e>.6?1:0;
