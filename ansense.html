@@ -78,6 +78,13 @@ footer{padding:26px 0 44px;border-top:1px solid rgba(200,169,106,.2);display:fle
 .srow b{font-size:12px;letter-spacing:2.5px}.srow div{margin-top:2px;font-size:14.5px;color:#c9d5cc}
 .three{padding:20px}.three .k{font-size:11px;letter-spacing:2.5px;color:var(--gold)}.three h3{font:600 17px system-ui;margin:6px 0 0;color:var(--ivory)}.three p{margin:2px 0 12px;font-size:14px;color:var(--mut)}.three .btn{width:100%;min-height:46px;font-size:15px}
 .stack{display:flex;flex-direction:column;gap:10px}
+.sugcard{margin-top:22px;padding:22px;border-color:rgba(216,181,117,.55);background:linear-gradient(160deg,#17493d,#0a2d25)}
+.sug{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(4,32,27,.55);text-decoration:none;min-height:64px}
+.sug:hover,.sug:focus-visible{border-color:rgba(216,181,117,.9)}
+.sug .ic{flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(216,181,117,.14)}
+.sug .tx{flex:1;min-width:0}.sug b{display:block;font-weight:600;font-size:15.5px;color:var(--ivory)}.sug small{display:block;margin-top:3px;font-size:13px;line-height:1.45;color:var(--mut)}
+.sug .go{flex:none;font-size:13px;color:var(--gold);white-space:nowrap}
+@media(max-width:420px){.sug .go{display:none}}
 /* khoang lang */
 .kl{text-align:center;padding-block:10px 40px}
 .orb{position:relative;width:min(62vw,240px);aspect-ratio:1;margin:26px auto;border-radius:50%;display:flex;align-items:center;justify-content:center}
@@ -187,6 +194,7 @@ footer{padding:26px 0 44px;border-top:1px solid rgba(200,169,106,.2);display:fle
 </div>
 <div class="row" style="margin-top:14px;gap:10px"><button class="btn sm" id="shareBtn" style="flex:1">Chia sẻ thẻ</button><button class="btn ghost sm" id="retake" style="flex:1">Làm lại bộ này</button></div>
 <p class="note" id="rNext" style="margin-top:14px"></p>
+<div class="card sugcard" id="rSug" hidden><div class="eyebrow" style="font-size:11px">Gợi ý cho bạn hôm nay</div><h2 style="font-size:24px;line-height:1.2;margin-top:6px">Ba hoạt động ở Làng Yên</h2><p style="margin:6px 0 0;font-size:13.5px;color:var(--mut)">Chọn theo kết quả bốn lớp của bạn. Bấm vào là đi thẳng tới đó.</p><div class="stack" id="rSugList" style="margin-top:14px"></div></div>
 <div class="eyebrow" style="margin-top:28px;font-size:11px">Bốn lớp của bạn</div>
 <div class="stack" id="rLayers" style="margin-top:14px"></div>
 <div class="eyebrow" style="margin-top:32px;font-size:11px" id="rKicker"></div>
@@ -376,6 +384,7 @@ function writeJournal(){
    var b=BODY[d.body]||BODY.binh,s=STATE[d.state]||STATE.hoa;
    return {set:d.set+1,name:SETS[d.set].n,redo:!!d.redo,start:d.start||d.at,end:d.at,
     when:fmtTime(d.start||d.at),dur:d.start?fmtDur(d.at-d.start):'',body:b.n,state:s.n,tinh:d.tinh?TINH[d.tinh]:'',
+    sug:(d.sug||[]).filter(function(x){return ACT[x.k]}).map(function(x){return {t:ACT[x.k][0]+' '+ACT[x.k][1],why:x.why,href:ACT[x.k][2]}}),
     qa:d.answers.map(function(a,j){var i=d.set*9+j,q=Q[i];return {n:i+1,q:q[2],a:a==null?'':LETTER[a]+'. '+q[3+a][0]}})}});
   localStorage.setItem('yenAnsenseLog',JSON.stringify(log));
  }catch(e){}
@@ -467,8 +476,8 @@ $('#qBack').onclick=function(){if(store.cur&&store.cur.step>0){store.cur.step--;
 function finish(){
  var c=store.cur,s=c.set;
  store.last[s]=c.answers.slice(0,9);
- var r=compute(s);
- store.done.push({set:s,start:c.start,at:Date.now(),answers:c.answers.slice(0,9),redo:!!c.redo,body:r.body,state:r.state,tinh:r.tinh});
+ var r=compute(s);r.sug=suggest(r);
+ store.done.push({set:s,start:c.start,at:Date.now(),answers:c.answers.slice(0,9),redo:!!c.redo,body:r.body,state:r.state,tinh:r.tinh,sug:r.sug});
  if(store.done.length>60)store.done=store.done.slice(-60);
  if(!c.redo)store.next=(s+1)%4;
  store.result=r;store.cur=null;save();renderResult();show('result');
@@ -491,6 +500,60 @@ function compute(si){
 }
 function short(t){return t.replace(/[.]$/,'').split(/[,:]/)[0]}
 
+/* ---------- GỢI Ý CHO BẠN HÔM NAY: 3 hoạt động ở Làng Yên, bấm vào đi thẳng tới đó ---------- */
+var ACT={
+ 'tinh-tam':['🪷','Tĩnh Tâm 3 phút','index.html?vao=tinh-tam'],
+ 'thinh-chuong':['🥣','Thỉnh Chuông','index.html?vao=thinh-chuong'],
+ 'toa-thien':['🧘','Toạ thiền ở Nhà Niệm','index.html?vao=nha-niem'],
+ 'bat-buong-bo':['💧','Bát Nước Buông Bỏ ở Nhà Niệm','index.html?vao=nha-niem'],
+ 'vinh-yen':['⛵','Du thuyền Vịnh Yên','index.html?vao=vinh-yen'],
+ 'rung-thong':['🌲','Dạo Rừng Thông','index.html?vao=rung-thong'],
+ 'thap-huong':['🪔','Thắp hương, dâng hoa sen','index.html?vao=thap-huong'],
+ 'mua':['🌧','Âm nhạc · tiếng mưa','index.html?vao=am-nhac&nghe=mua'],
+ 'nhac':['🎹','Âm nhạc · nhạc thiền, piano','index.html?vao=am-nhac&nghe=nhac'],
+ 'chuong':['🔔','Âm nhạc · chuông Tây Tạng','index.html?vao=am-nhac&nghe=chuong'],
+ 'loi':['🎶','Âm nhạc · nhạc có lời','index.html?vao=am-nhac&nghe=loi'],
+ 'nhat-ky':['✎','Viết Nhật ký bình an','index.html?vao=nhat-ky'],
+ 'nha-vi':['🍵','Thưởng trà ở Nhà Vị','index.html?vao=nha-vi'],
+ 'nha-cham':['🏺','Nặn gốm ở Nhà Chạm','index.html?vao=nha-cham'],
+ 'nhat-so':['🐚','Nhặt và xếp vỏ sò ở Đảo Yên','index.html?vao=nhat-so'],
+ 'van-hoa':['🏛️','Phòng 36 người ở Nhà Văn Hóa','index.html?vao=nha-van-hoa'],
+ 'cong-dong':['♧','Cộng đồng Yên','index.html?vao=cong-dong'],
+ 'trang-hat':['📿','Lần tràng hạt 108','index.html?vao=trang-hat'],
+ 'healer':['🗓','Đặt lịch với Healer','lich.html']};
+/* Câu Giác → hoạt động theo lựa chọn A–D (số câu tính từ 1) */
+var GACT={7:['rung-thong','vinh-yen','toa-thien','nhac'],8:['mua','nhac','chuong','loi'],9:['tinh-tam','nhac','nhat-ky','cong-dong'],18:['thap-huong','thap-huong','thap-huong','thap-huong'],
+ 28:['rung-thong','toa-thien','rung-thong','thap-huong'],29:['rung-thong','vinh-yen','vinh-yen','thap-huong'],30:['mua','nhac','chuong','loi'],31:['nha-vi','nha-vi','nha-vi','nha-vi'],32:['rung-thong','tinh-tam','nha-cham','nhat-so'],33:['tinh-tam','nhac','rung-thong','nhat-ky'],34:['thap-huong','trang-hat','thinh-chuong',null]};
+function suggest(r){
+ var out=[],used={};
+ function add(k,why){if(!k||used[k]||!ACT[k])return false;if((k==='toa-thien'&&used['bat-buong-bo'])||(k==='bat-buong-bo'&&used['toa-thien']))return false;used[k]=1;out.push({k:k,why:why});return true}
+ var s=STATE[r.state].n,b=BODY[r.body].n;
+ /* nặng: nhiều lựa chọn C/D ở các câu Thân, Tâm của bộ vừa làm */
+ var heavy=0,ans=store.last[r.set]||[];ans.forEach(function(a,j){var q=Q[r.set*9+j];if((q[0]==='Thân'||q[0]==='Tâm')&&a>=2)heavy++});
+ /* 1 · Thân, Tâm */
+ var t1={tinh:['bat-buong-bo','Hôm nay bạn đang căng và quá tải. Thả một nỗi lo vào bát nước rồi để nó tan.'],
+  an:[r.body==='hu'?'tinh-tam':'toa-thien',r.body==='hu'?'Đầu óc chưa thả lỏng, cơ thể lại dễ hụt sức. Ba phút thở chậm là đủ.':'Đầu óc còn nhiều suy nghĩ. Ngồi yên một lúc ở Nhà Niệm để tâm lắng xuống.'],
+  khoi:['thinh-chuong','Cơ thể đang uể oải, cần một cú đẩy nhẹ. Một tiếng chuông để bắt đầu lại.'],
+  giao:['tinh-tam','Lòng đang cần ấm lại. Ba phút thở cùng nhạc nền dịu.'],
+  hoa:['toa-thien','Hôm nay bạn đang khá cân bằng. Toạ thiền để giữ nhịp an này lâu hơn.']}[r.state];
+ if(r.body==='hu'&&r.state!=='an'&&r.state!=='tinh')t1=['tinh-tam','Thể trạng nền '+b+': dễ hụt sức, ngủ chưa sâu. Ba phút thở chậm giúp cơ thể nghỉ.'];
+ add(t1[0],t1[1]);
+ /* 2 · Giác: ưu tiên câu Giác của bộ vừa làm, rồi các bộ trước */
+ var order=[r.set,(r.set+3)%4,(r.set+2)%4,(r.set+1)%4],gotG=false;
+ order.forEach(function(si){if(gotG)return;var a=store.last[si];if(!a)return;for(var j=8;j>=0&&!gotG;j--){var n=si*9+j+1,m=GACT[n];if(!m||a[j]==null)continue;var k=m[a[j]];if(k&&add(k,'Bạn chọn “'+short(Q[n-1][3+a[j]][0])+'” ở câu '+n+'. Hoạt động này hợp với điều nuôi dưỡng bạn.'))gotG=true}});
+ if(!gotG)add('rung-thong','Một vòng dạo giữa rừng thông, nhìn và nghe thật chậm.');
+ /* 3 · Tính, hoặc Healer khi cần sâu hơn */
+ if(heavy>=4){add('healer','Nhiều câu trả lời cho thấy bạn đang mệt hoặc căng kéo dài. Một buổi riêng với Healer sẽ đi sâu hơn.')}
+ else{var t3={lang:[['nhat-ky','Bạn hướng vào bên trong. Viết vài dòng cho chính mình.'],['trang-hat','Bạn hướng vào bên trong. Lần từng hạt trong yên lặng.']],
+  ket:[['van-hoa','Bạn trọng sự gắn kết. Ngồi cùng mọi người ở phòng 36 người.'],['cong-dong','Bạn trọng sự gắn kết. Ghé Cộng đồng Yên.']],
+  kham:[['vinh-yen','Bạn thích khám phá. Một chuyến du thuyền qua các đảo đá.'],['van-hoa','Bạn cởi mở. Cùng hoạt động với mọi người ở Nhà Văn Hóa.']],
+  sang:[['nhat-so','Bạn sáng tạo. Nhặt vỏ sò và xếp thành hình của riêng bạn.'],['nha-cham','Bạn sáng tạo. Nặn một món gốm theo ý mình.']],
+  ly:[['trang-hat','Bạn ngăn nắp, thiên về lý trí. Lần 108 hạt, đếm từng hơi thở.'],['nhat-ky','Bạn ngăn nắp. Ghi lại ngày hôm nay vào Nhật ký.']]}[r.tinh]||[['nhat-ky','Viết vài dòng cho chính mình sau bộ câu hỏi này.']];
+  t3.some(function(x){return add(x[0],x[1])});}
+ ['tinh-tam','rung-thong','nhat-ky','thap-huong','vinh-yen'].forEach(function(k){if(out.length<3)add(k,'Một khoảng dừng nhẹ cho hôm nay.')});
+ return out.slice(0,3);
+}
+
 /* ---------- KẾT QUẢ ---------- */
 function renderResult(){
  var r=store.result;if(!r)return;
@@ -503,6 +566,9 @@ function renderResult(){
   ['TÍNH',r.tinh?TINH[r.tinh]+'.':'Sẽ rõ hơn sau Bộ 3 · '+SETS[2].n+'.','#c3a0bd'],
   ['GIÁC',gl.length?gl.join(' · ')+'.':'Sẽ rõ hơn sau Bộ 4 · '+SETS[3].n+'.','#d8b575']];
  $('#rLayers').innerHTML=L.map(function(x){return '<div class="srow" style="border-left-color:'+x[2]+'"><b>'+x[0]+'</b><div>'+x[1]+'</div></div>'}).join('');
+ if(!r.sug)try{r.sug=suggest(r)}catch(e){r.sug=[]}
+ var sg=r.sug||[];$('#rSug').hidden=!sg.length;
+ $('#rSugList').innerHTML=sg.map(function(x,i){var a=ACT[x.k];return '<a class="sug" href="'+a[2]+'"><span class="ic">'+a[0]+'</span><span class="tx"><b>'+(i+1)+'. '+a[1]+'</b><small>'+x.why+'</small></span><span class="go">Đi tới →</span></a>'}).join('');
  var d=lastDone();
  $('#rNext').innerHTML=(d&&d.start?'Thời gian thực hiện: '+fmtDur(d.at-d.start)+'. ':'')+'Kết quả đã ghi vào <a href="index.html" style="color:var(--gold)">Nhật ký bình an</a>, mục Kết quả AnSense. Lần vào sau: <b>'+setLabel(store.next)+'</b>.';
  $('#rKicker').textContent='Gợi ý cho trạng thái '+s.n.toUpperCase();
