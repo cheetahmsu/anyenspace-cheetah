@@ -376,3 +376,49 @@ body:not(.immersive) .mode-label{display:none}
  #home>*{flex:0 0 100%}
  #home>.portal-entry.sq{flex:0 0 calc(50% - 6px);width:auto;margin:0 0 14px}
 }
+/* ---- Nút theo ảnh mẫu chị Hương (25/11): thanh tên nhà bo tròn xanh rêu, ô nút viền vàng nổi, menu dạng viên ---- */
+.dock-house{background:none!important;border:0!important;padding:0!important;margin:0!important;gap:12px!important;filter:none!important}
+.dock-roof{clip-path:none!important;margin:0 0 4px!important;border-radius:999px!important;background:linear-gradient(180deg,#7a9a63,#4d6f3d 55%,#3f6033)!important;border:1px solid #d9c48a99;box-shadow:inset 0 1px 0 #ffffff40,inset 0 -2px 4px #0003,0 6px 16px #0006;color:#f6ecd2!important;font:600 22px Georgia,serif!important;letter-spacing:.5px!important;padding:9px 12px!important;text-shadow:0 1px 2px #0006}
+.dock-house>button{background:linear-gradient(180deg,#2f5b3f,#1b3f2e)!important;border:1.5px solid #d6b878!important;border-radius:18px!important;box-shadow:inset 0 1px 0 #ffffff2e,inset 0 0 14px #e3c27f22,0 8px 18px #0007;color:#f6ecd2!important;font-size:16px;padding:14px 6px!important}
+.dock-house>button:hover{background:linear-gradient(180deg,#386a4a,#214a36)!important}
+.house-links{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.house-links>a,.house-links summary{display:inline-flex;align-items:center;gap:7px;border:1.5px solid #d6b878;border-radius:999px;background:linear-gradient(180deg,#2f5b3f,#1b3f2e);box-shadow:inset 0 1px 0 #ffffff2e,0 6px 14px #0006;color:#f6ecd2;text-decoration:none;font-size:14px;padding:9px 18px;cursor:pointer;list-style:none}
+.house-links summary::-webkit-details-marker{display:none}
+.house-links i{font-style:normal}
+.cta{background:linear-gradient(180deg,#f3dca4,#d9b56e 60%,#c89d55)!important;box-shadow:0 0 0 1px #f6e3b4aa,0 0 22px #e3c27f66,0 8px 22px #0007;color:#1f2f25!important}
+@media(min-width:761px){
+ .top .nav{gap:10px}
+ .nav-group{border:0!important;background:none!important;padding:0!important;gap:10px!important}
+ .nav-group:nth-child(2){border:1.5px solid #c8a96a77!important;border-radius:999px;padding:3px 8px!important;gap:4px!important}
+ .nav-group:not(:nth-child(2))>button,.nav-group:not(:nth-child(2))>.nav-external,#navSignIn{border:1.5px solid #c8a96a77!important;border-radius:999px;background:#ffffff08!important}
+ .nav button.active{background:linear-gradient(180deg,#7a8a52,#4f6534)!important;border-color:#e3c27f!important;color:#fbf0d2!important;box-shadow:0 0 14px #e3c27f44}
+ #home>.dock{gap:28px 26px!important}
+ .dock-house>button{font-size:17px}
+ .dock-house>button span{font-size:30px}
+ .dock-house:nth-child(3){gap:16px!important}
+}
+@media(max-width:760px){
+ .connections-strip{display:none!important}
+ .top .nav{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;width:100%}
+ .top .nav button,.top .nav .nav-external{border:1.5px solid #c8a96a88!important;border-radius:999px!important;padding:9px 6px!important;font-size:14px!important;text-align:center;justify-content:center;display:flex;align-items:center;background:#ffffff08}
+ .top .nav button.active{background:linear-gradient(180deg,#7a8a52,#4f6534)!important;border-color:#e3c27f!important;color:#fbf0d2!important;font-weight:600}
+ #navSignIn{grid-column:1/-1}
+ .dock{gap:14px!important}
+ .dock-house:nth-child(1){--n:3}.dock-house:nth-child(2){--n:4}.dock-house:nth-child(3){--n:5}
+ .dock-house>button{font-size:14px!important;padding:12px 2px!important;border-radius:16px!important}
+ .dock-house:nth-child(2)>button{font-size:13px!important}
+ .dock-roof{font-size:19px!important;padding:7px!important}
+ .dock .m-only[data-go="community"]{display:none!important}
+ .house-links{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+ .house-links>a,.house-links summary{flex-direction:column;justify-content:center;text-align:center;border-radius:14px;padding:9px 3px;font-size:11px;line-height:1.25;height:100%;gap:4px}
+ .house-links i{font-size:18px}
+ .house-links .wellnest-link{position:static}
+}
+@media(max-width:760px){
+ .house-links>*{min-width:0}
+ .house-links>a,.house-links summary{overflow-wrap:anywhere;font-size:10.5px;padding:9px 2px}
+ .house-links .wellnest-link{display:flex;flex-direction:column}
+ .house-links .wellnest-link>summary{flex:1}
+ .house-links .wellnest-link[open]{grid-column:1/-1}
+}
+@media(max-width:760px){.house-links{align-items:stretch!important}}
