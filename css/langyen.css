@@ -359,3 +359,20 @@ body:not(.immersive) .shade{opacity:.35}
 body:not(.immersive) .mode-label{display:none}
 .connections-strip,.footer{background:transparent!important;border-top-color:transparent!important}
 @media(max-width:760px),(max-aspect-ratio:4/5){body:not(.immersive) .scene{background-image:url(../img/nen-dien-thoai.webp)}}
+/* ---- Hai cổng Rừng Yên · Vịnh Yên thành 2 ô vuông (ảnh mẫu chị Hương gửi). Chữ vẫn giữ trong nút cho trình đọc màn hình. ---- */
+.portal-entry.sq{position:relative;display:block;padding:0;border:0;border-radius:10.5%/11.2%;aspect-ratio:600/561;background:url(../img/o-rung-yen.webp) center/100% 100% no-repeat!important;box-shadow:0 14px 36px #0009;transition:transform .2s,filter .2s}
+.portal-entry.sq.bay{background-image:url(../img/o-vinh-yen.webp)!important}
+.portal-entry.sq>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.portal-entry.sq:hover,.portal-entry.sq:focus-visible{transform:translateY(-3px);filter:brightness(1.08)}
+@media(min-width:761px){
+ #home.hero{grid-template-columns:minmax(0,1fr) 200px 200px;column-gap:16px}
+ #home>h1{margin-right:14px}
+ #home>#enter3D,#home>#enterBay{grid-row:1/5;align-self:center;justify-self:stretch;min-width:0;width:100%;margin:0}
+ #home>#enter3D{grid-column:2}#home>#enterBay{grid-column:3}
+}
+@media(min-width:1300px){#home.hero{grid-template-columns:minmax(0,1fr) 220px 220px}}
+@media(max-width:760px){
+ #home.hero{flex-direction:row;flex-wrap:wrap;column-gap:12px}
+ #home>*{flex:0 0 100%}
+ #home>.portal-entry.sq{flex:0 0 calc(50% - 6px);width:auto;margin:0 0 14px}
+}
