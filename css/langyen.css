@@ -475,3 +475,8 @@ body:not(.immersive) .mode-label{display:none}
  .dock-house:nth-child(2)>.dock-roof{display:none!important}
  .dock-house:nth-child(1){margin-bottom:-2px!important}
 }
+/* ---- Nút trang chủ trong suốt để thấy ảnh nền phía sau ---- */
+.dock-house>button,.dock-house>a.house-tile,.house-links>a,.house-links summary{background:rgba(20,58,42,.28)!important;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:inset 0 1px 0 #ffffff26,0 6px 16px #0004!important}
+.dock-house>button:hover,.dock-house>a.house-tile:hover,.house-links>a:hover,.house-links summary:hover{background:rgba(40,90,62,.42)!important}
+.dock-roof{background:linear-gradient(180deg,rgba(122,154,99,.55),rgba(63,96,51,.55))!important;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.top .nav button,.top .nav .nav-external{background:rgba(255,255,255,.04)!important}
