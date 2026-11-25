@@ -1712,9 +1712,15 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Nhà gốm: nặn gốm Chăm đi lùi quanh đôn (không bàn xoay), chuốt, khắc hoa văn, phơi, rồi nung lộ thiên ngoài bãi.
   let roomOpen=false,room=null;
   const roomBox=document.createElement('section');roomBox.id='roomBox';roomBox.setAttribute('role','dialog');roomBox.hidden=true;
-  roomBox.innerHTML='<div class="rm-top"><strong id="roomTitle"></strong><button type="button" data-rm="back">🚪 Ra cửa</button></div><div class="rm-stage"><canvas id="roomCanvas"></canvas><div class="rm-hint" id="roomHint"></div><div class="rm-breath" id="roomBreath" hidden><div class="rm-orb"></div><span></span></div></div><div class="rm-panel" id="roomPanel"></div>';
+  roomBox.innerHTML='<div class="rm-top"><strong id="roomTitle"></strong><button type="button" data-rm="back">🚪 Ra cửa</button></div><div class="rm-stage"><canvas id="roomCanvas"></canvas><div class="rm-hint" id="roomHint"></div><div class="rm-breath" id="roomBreath" hidden><div class="rm-orb"></div><span></span></div><button type="button" class="rm-ui-tog" id="roomUiTog" aria-expanded="false" aria-label="Hiện nút đi lại và bảng thông tin"><svg viewBox="0 0 48 16" aria-hidden="true"><path d="M4 13L24 3L44 13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="rm-panel" id="roomPanel"></div>';
   document.body.appendChild(roomBox);
   const rmCanvas=roomBox.querySelector('#roomCanvas'),rmPanel=roomBox.querySelector('#roomPanel'),rmHint=t=>{roomBox.querySelector('#roomHint').textContent=t};
+  // Trong nhà: mặc định ẩn nút đi lại, lời hướng dẫn và bảng thông tin để xem 3D toàn màn hình; nút mũi tên ^ (chạm hoặc vuốt lên/xuống) để hiện/ẩn.
+  const rmTog=roomBox.querySelector('#roomUiTog');
+  function setRoomUi(show){roomBox.classList.toggle('rm-ui-off',!show);rmTog.setAttribute('aria-expanded',show?'true':'false');rmTog.setAttribute('aria-label',show?'Ẩn nút đi lại và bảng thông tin':'Hiện nút đi lại và bảng thông tin');requestAnimationFrame(()=>{if(room&&room.resize)room.resize()})}
+  {let y0=null;rmTog.addEventListener('pointerdown',e=>{e.stopPropagation();y0=e.clientY;try{rmTog.setPointerCapture(e.pointerId)}catch(_){}});
+    rmTog.addEventListener('pointerup',e=>{e.stopPropagation();if(y0==null)return;const dy=e.clientY-y0;y0=null;const off=roomBox.classList.contains('rm-ui-off');setRoomUi(dy<-18?true:dy>18?false:off)});
+    rmTog.addEventListener('pointercancel',()=>{y0=null});rmTog.addEventListener('click',e=>{e.stopPropagation();if(e.detail===0)setRoomUi(roomBox.classList.contains('rm-ui-off'))})}
   // ---- sound: a small synth on the shared audio context (unlocked by the tap that opened the room)
   function audio(){unlockChime();return chimeCtx}
   function strike(freq,dur=6,gain=.12,partials=[[1,1],[2.76,.35],[5.4,.12]]){const ac=audio();if(!ac)return;const t0=ac.currentTime;
@@ -1946,7 +1952,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(!roomsReady){if(openRoom.waiting)return openRoom.waiting;const hint=document.getElementById('zenHint');if(hint)hint.textContent='Đang mở '+(h.name||'phòng')+'…';
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
    if(typeof activityBusy==='function'&&activityBusy()){askFinish(()=>openRoom(h));return}audio();roomOpen=true;roomOutside=bayMode?null:{h,x:mePosition.x,z:mePosition.z,viewYaw,walkYaw,walkPitch,lookOffset,camZoom,camLift:typeof camLift!=='undefined'?camLift:1};window.dispatchEvent(new CustomEvent('anyen-space',{detail:{space:b[3]&&b[3].solo?'solo:'+h.id:'room:'+((b[3]&&b[3].venue)||h.id)}}));walkRoute.length=0;walkingKeys.clear();window.dispatchEvent(new CustomEvent('langyen-audio-stop',{detail:{except:null}}));
-    roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);enableWalk(room,h.id);room.resize();}
+    roomBox.querySelector('#roomTitle').textContent=h.icon+' '+h.name;roomBox.hidden=false;document.body.classList.add('room-open');room=makeRoom(b[0],b[1],b[3]);b[2](room);enableWalk(room,h.id);setRoomUi(false);room.resize();}
   let roomOutside=null;
   const EXIT_CAM_SIDE=-Math.PI*.4;/* camera đứng bên trái nhân vật lúc vừa ra cửa */
   function roomOutRestore(){const O=roomOutside;roomOutside=null;if(!O||bayMode||!document.body.classList.contains('immersive'))return null;const h=O.h,yaw=h&&h.door?h.rot+Math.PI:O.viewYaw;
