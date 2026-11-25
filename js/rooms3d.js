@@ -1178,7 +1178,20 @@
     // đèn lồng giấy treo, cây xanh góc
     for(const x of [-1.8,1.8]){const l=P(new THREE.SphereGeometry(.26,14,10),M('#f6e6c4',{emissive:'#ffcc80',emissiveIntensity:.9}),x,H-.75,.6);l.scale.y=1.25;B(.02,.5,.02,woodD,x,H-.25,.6);const pl=new THREE.PointLight('#ffd49a',.9,6,1.6);pl.position.set(x,H-.9,.6);sc.add(pl)}
     for(const [x,z] of [[-HW+.45,-HD+.45],[HW-.45,-HD+.45]]){C(.22,.18,.36,M('#3d5a48'),x,.18,z,12);for(let k=0;k<5;k++){const lf=P(new THREE.ConeGeometry(.12,.9,5),M(k%2?'#4f7a3a':'#3f6a2a'),x+Math.cos(k*1.3)*.08,.75,z+Math.sin(k*1.3)*.08);lf.rotation.set(Math.sin(k*1.3)*.3,0,Math.cos(k*1.3)*.3)}}
-    st.blocks=[[-1.45,-HD,1.45,AZ+.65],[-2.5,AZ,-1.7,AZ+.8],[-HW,-HD,-HW+.7,-HD+.7],[HW-.7,-HD,HW,-HD+.7]];
+    // 25/11 theo ảnh mẫu Nhà Thiền: tranh trăng tròn sau tượng Phật, góc trà (bàn trà thấp, bonsai, bộ ấm, hai bồ đoàn), kệ gốm vách trái, hai đèn giấy đứng ở góc cửa
+    {const moon=new THREE.Group();moon.position.set(0,2.15,-HD+.07);sc.add(moon);P(new THREE.TorusGeometry(.92,.06,8,40),woodD,0,0,0,moon);
+      P(new THREE.CircleGeometry(.9,40),M('#efe3c6',{emissive:'#ffe3b0',emissiveIntensity:.25}),0,0,.01,moon);P(new THREE.CircleGeometry(.28,28),M('#f6d58c',{emissive:'#ffcc70',emissiveIntensity:.5}),.38,.36,.02,moon);
+      for(const [x,s2] of [[-.35,.5],[.3,.36]]){const m=P(new THREE.ConeGeometry(s2,s2*1.1,3),M('#7a766c'),x,-.9+s2*.55+.25,.02,moon);m.scale.z=.05}}
+    const TX=3.0,TZ=.8,inkM=M('#3e2a1e',{roughness:.6});
+    B(.75,.07,1.15,inkM,TX,.34,TZ);for(const a of [-1,1])for(const b of [-1,1])B(.07,.31,.07,inkM,TX+a*.3,.155,TZ+b*.5);
+    B(.3,.12,.22,M('#3d4a52',{roughness:.6}),TX,.43,TZ-.3);C(.025,.035,.3,M('#5b3b26'),TX,.6,TZ-.3,6);
+    for(const [dx,dy,dz,r] of [[0,.8,0,.17],[-.12,.7,.12,.12],[.1,.72,-.1,.11]]){const f=P(new THREE.SphereGeometry(r,10,7),M('#3f6a2a'),TX+dx,dy,TZ-.3+dz);f.scale.y=.6}
+    {const tea=M('#e7e0d2',{roughness:.4});P(new THREE.SphereGeometry(.09,12,8),tea,TX,.46,TZ+.15).scale.y=.8;for(const z of [.38,.5])C(.04,.035,.06,tea,TX+.18,.41,TZ+z,10)}
+    for(const z of [TZ-.95,TZ+.95])C(.3,.33,.18,M('#d8c49a'),TX,.09,z,18);
+    {const KX=-HW+.25;for(const y of [.03,.6,1.17,1.74])B(.4,.05,1.3,woodD,KX,y,.1);for(const z of [-.55,.75])B(.4,1.8,.05,woodD,KX,.9,z);
+      const cer=['#7d8f86','#c9b28c','#4f5d63','#a9744e','#e7dfcf','#6e7c5d'];let k=0;for(const y of [.06,.63,1.2])for(const z of [-.3,.1,.5]){const r=.08+.03*(k%3);const v=P(new THREE.SphereGeometry(r,12,8),M(cer[k%6],{roughness:.45}),KX,y+r*.9,z);v.scale.y=1.1+.3*(k%2);k++}}
+    for(const x of [-HW+.45,HW-.45]){B(.06,.7,.06,woodD,x,.35,HD-.45);B(.38,.62,.38,M('#f6e6c4',{emissive:'#ffcc80',emissiveIntensity:.9}),x,.95,HD-.45);for(const y of [.64,1.26])B(.42,.04,.42,woodD,x,y,HD-.45)}
+    st.blocks=[[-1.45,-HD,1.45,AZ+.65],[-2.5,AZ,-1.7,AZ+.8],[-HW,-HD,-HW+.7,-HD+.7],[HW-.7,-HD,HW,-HD+.7],[TX-.45,TZ-1.3,TX+.45,TZ+1.3],[-HW,-.65,-HW+.5,.85],[-HW,HD-.7,-HW+.7,HD],[HW-.7,HD-.7,HW,HD]];
     // nghi thức
     let incT=0;st.tick.push(t=>{if(!sticks.visible)return;for(const p of smoke){const u=((t*.18+p.userData.o)%1);p.position.set(Math.sin(u*9+p.userData.o*6)*.06*u*3,1.08+u*1.6,AZ+.42+Math.cos(u*7)*.04);p.material.opacity=.32*(1-u)*Math.min(1,u*6);p.scale.setScalar(1+u*3)}for(const [f,l] of flames)if(f.visible){l.intensity=1.1+Math.sin(t*13+f.position.x)*.15}});
     const RIT={incense:['🪔 Dâng hương','Nén hương đã thắp · khói hương nhẹ bay, tâm lắng xuống',()=>{sticks.visible=true}],flower:['🪷 Dâng hoa sen','Hoa sen đã dâng trước bàn thờ',()=>{lotus.visible=true}],candle:['🕯 Dâng đèn','Hai ngọn đèn đã thắp sáng',()=>{for(const [f,l] of flames){f.visible=true;l.intensity=1.1}}],vase:['💐 Dâng hoa','Hai bình hoa đã cắm hoa tươi',()=>{for(const v of vases)v.visible=true}]};
