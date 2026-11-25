@@ -49,6 +49,13 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Tạm lưu trạng thái tàu khi xuống đảo:** lúc bước xuống Đảo Yên, vị trí, hướng tàu, tốc độ ×1/×5, góc nhìn, độ zoom, hướng nhìn và chuyến đang đi (tour và điểm dừng, hoặc điểm đến) được lưu trên máy (`yen_bay_island_snap`). Bấm **⛵ Về tàu** thì nạp lại; nếu đang dở chuyến thì tàu chờ ở cầu tàu (⏸), bấm ▶ để đi tiếp. Rời vịnh khi đang trên đảo thì lần sau vào lại cũng như vậy. Trên đảo ẩn thanh điều khiển tàu, tên không gian đổi thành Làng Yên - Đảo Yên. Rời cầu tàu mà mũi đang quay vào đảo thì tàu lùi ra rồi mới tiến.
 - **Xuống Đảo Yên là sang không gian riêng:** vùng đảo của vịnh ẩn đi (có lớp mờ chuyển cảnh), chỉ còn Đảo Yên, du thuyền neo ở cầu tàu, thuyền gỗ và thuyền nan đậu quanh đảo, vòng núi đá xa và hai hòn gần nhất (Trống Mái, Đỉnh Hương). Về tàu thì vịnh hiện lại.
 
+### Hang xuyên thủy và danh thắng vẽ lại (bản 26/11)
+- **Hang Luồn, Hang Sáng Tối, Hồ Ba Hầm:** khối núi đá có đường hang thấp sát mặt nước (cửa hang quay về phía tàu, mỏm đá nhô trên cửa), đi xuyên qua là hồ nước kín quây bởi vòng vách đá dựng phủ cây. Khách **bơi hoặc chèo kayak xuyên qua hang vào hồ** được (vật cản `archLayout` / `archBlocked`: vòng vách trừ lòng hang); du thuyền vẫn đỗ bên ngoài. Có đò chở khách trong hồ và chờ ngoài cửa hang.
+- **Hòn Chó Đá:** dáng chó ngồi (chân sau, ngực, đầu có mõm, hai tai). **Hòn Rùa:** mai rùa tròn thấp, đầu rùa nhô ra.
+- **Đảo có hang (Thiên Cung, Sửng Sốt, Mê Cung…):** cửa hang vòm đáy bằng có gờ đá, bến nổi và bậc đá từ mặt nước lên cửa hang.
+- Đò gỗ mới: thân thon hai đầu cong, mui cói, người chèo đội nón lá (dùng chung cho làng chài).
+- Chụp thử: `window.__bayCam([x,y,z],[tx,ty,tz])` đặt camera cố định (toạ độ vịnh), `window.__bayCam(null)` để trả lại.
+
 ### Dữ liệu dùng chung của vịnh
 - Tệp tĩnh `data/world-halong_bay.json` (không gọi Supabase), cùng cấu trúc 4 lớp với `data/world-pine_forest.json`: `map` (Lớp 1, kèm `time_slots` buổi sáng / bình minh-hoàng hôn / buổi tối; hiện bật buổi sáng), `nature` (biển, bờ đất, 333 đảo đá lớn nhất theo 8 dáng (cộng các danh thắng, đảo check-in và đảo trên tour dựng riêng), luồng tàu; khi dựng tự rải thêm mỏm đá phụ ven các đảo lớn ngoài luồng tàu), `buildings` + `rooms` (Lớp 2: du thuyền và các phòng chờ dựng nội thất), `props` (Lớp 3: danh thắng, thuyền gỗ, phao, lịch trình `kind: "tour"` với các điểm dừng `landmark` · `dwell` giây · `note`), `npcs` (Lớp 4: chưa bật).
 - Toạ độ chiếu từ vĩ độ/kinh độ thật quanh cảng Tuần Châu, 1 đơn vị = 4 m; kích thước đảo được phóng đại. Mỗi danh thắng ghi rõ `precision` (`source` có nguồn công bố, `approx` ước lượng) và `source`.
