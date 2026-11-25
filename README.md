@@ -50,7 +50,11 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Xuống Đảo Yên là sang không gian riêng:** vùng đảo của vịnh ẩn đi (có lớp mờ chuyển cảnh), chỉ còn Đảo Yên, du thuyền neo ở cầu tàu, thuyền gỗ và thuyền nan đậu quanh đảo, vòng núi đá xa và hai hòn gần nhất (Trống Mái, Đỉnh Hương). Về tàu thì vịnh hiện lại.
 
 ### Hang xuyên thủy và danh thắng vẽ lại (bản 26/11)
-- **Hang Luồn, Hang Sáng Tối, Hồ Ba Hầm:** khối núi đá có đường hang thấp sát mặt nước (cửa hang quay về phía tàu, mỏm đá nhô trên cửa), đi xuyên qua là hồ nước kín quây bởi vòng vách đá dựng phủ cây. Khách **bơi hoặc chèo kayak xuyên qua hang vào hồ** được (vật cản `archLayout` / `archBlocked`: vòng vách trừ lòng hang); du thuyền vẫn đỗ bên ngoài. Có đò chở khách trong hồ và chờ ngoài cửa hang.
+- **Hang xuyên thủy vẽ theo mô tả thật** (showcaves.com, vietnamtourism.com, localvietnam.com, orientalsails.com): hồ nước kín, bốn phía vách đá vôi dựng đứng phủ cây, lối vào duy nhất là đường hang thấp sát mặt nước; tàu lớn neo ngoài, khách sang đò hoặc kayak ở bến phao trước cửa hang.
+  - **Hang Luồn:** hang dài, hẹp (~4 m), trần thấp (2,5–4 m).
+  - **Hang Sáng Tối:** hang Sáng rộng, thoáng (lối chính) và hang Tối hẹp, thấp, tối hơn ở một bên.
+  - **Hồ Ba Hầm:** ba hồ tròn nối nhau: hang vào dài và tối, hang thứ hai ngắn, hang thứ ba hẹp nhất (bán kính danh thắng tăng 36 → 60 để đủ chỗ cho ba hồ).
+  - Khách **bơi hoặc chèo kayak xuyên hang vào hồ** (`archLayout`: hồ, đường hang, vùng núi; `archBlocked`: vật cản; `archRoute`: chạm mặt hồ phía sau thì tự đi đúng các đường hang).
 - **Hòn Chó Đá:** dáng chó ngồi (chân sau, ngực, đầu có mõm, hai tai). **Hòn Rùa:** mai rùa tròn thấp, đầu rùa nhô ra.
 - **Đảo có hang (Thiên Cung, Sửng Sốt, Mê Cung…):** cửa hang vòm đáy bằng có gờ đá, bến nổi và bậc đá từ mặt nước lên cửa hang.
 - Đò gỗ mới: thân thon hai đầu cong, mui cói, người chèo đội nón lá (dùng chung cho làng chài).
