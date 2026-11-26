@@ -157,16 +157,16 @@
         const steep=1-baySm(.3,.7,Math.abs(ny)),u=px*.83+pz*.61,run=baySm(1.5,.25*ch.D[i]+.0,1-t+.35);
         const sd=baySm(.62,.92,.5+.5*Math.sin(u*1.7+Math.sin(u*.23)*3.1))*(.55+.45*Math.sin(u*.37+wy*.018)),so=baySm(.78,.96,.5+.5*Math.sin(u*2.9+1.7+Math.sin(u*.41)*2.3));
         c.lerp(rockStreak,sd*steep*baySm(4,14,wy)*.42);c.lerp(rockOchre,so*steep*baySm(6,18,wy)*.3*(.6+.4*run));
-        if(ch.O[i]){/* tông đá riêng cho danh thắng vẽ theo ảnh mẫu: 1 xám trắng, chân vàng nâu (Trống Mái) · 2 xám sẫm, chân trắng vàng (Chó Đá) · 3 xám sáng, chân trắng vàng (vách núi) */
+        const tuft=baySm(.5,.8,.5+.5*Math.sin(px*.07+wy*.13+Math.sin(pz*.05)*2.)*Math.sin(pz*.08-wy*.09+Math.sin(px*.04)*1.7))*baySm(.25,.6,t);
+        if(ch.O[i]){/* tông đá riêng cho danh thắng vẽ theo ảnh mẫu: 1 xám trắng, chân vàng nâu (Trống Mái) · 2 xám sẫm, chân trắng vàng (Chó Đá) · 3 xám sáng, chân trắng vàng (vách núi, Đỉnh Hương) · 4 như 3 nhưng là đảo lớn có rừng: cây bụi thưa và to hơn (Ti Tốp, Thiên Cung, Sửng Sốt) */
           const o=ch.O[i],base0=(1-baySm(1.2,4.2,wy))*baySm(-1.5,.2,wy);if(o===2)c.lerp(rockDark,.75*(1-crev*.4));else c.lerp(rockPale,(o===1?.7:.5)*(1-crev*.6));
           // vân đá: khe nứt dọc sẫm, gờ lớp ngang, mảng loang sáng tối, vệt rêu đen chảy xuống từ gờ
           const uu=px*.71-pz*.7,vv=px*.7+pz*.71,crack=baySm(.86,.97,Math.abs(Math.sin(uu*.9+Math.sin(wy*.21+vv*.3)*1.6))),bed=baySm(.8,.95,Math.abs(Math.sin(wy*1.15+Math.sin(uu*.35)*.9))),
             mott=.5+.5*Math.sin(uu*.33+wy*.27)*Math.sin(vv*.41-wy*.19),drip=baySm(.7,.92,.5+.5*Math.sin(uu*2.3+Math.sin(vv*.7)*2))*baySm(2,8,wy);
           c.lerp(rockCrev,crack*.55+bed*.3);c.multiplyScalar(.88+mott*.28);c.lerp(rockStreak,drip*.35);
           c.lerp(o===1?rockOchreBase:rockCream,base0*.8);
-          if(ny>.35&&wy>2.6&&crev<.6&&!(o===2&&(wy>14.5||bayHash(Math.floor(px*7),Math.floor(pz*7),3)<.4))){const key=Math.floor(px/1.7)+','+Math.floor(wy/1.7)+','+Math.floor(pz/1.7);if(!bushSeen.has(key)&&bayHash(Math.floor(px*3),Math.floor(pz*3),Math.floor(wy*3))<(ny>.75?.5:.28)){bushSeen.add(key);bush.push(px,wy,pz,ny)}}}
+          if(ny>(o>=3?.12:.35)&&wy>2.6&&crev<.6&&(o<3||ny>.35||tuft>.3)&&!(o===2&&(wy>14.5||bayHash(Math.floor(px*7),Math.floor(pz*7),3)<.4))){const cs=o===4?4.2:1.7,key=Math.floor(px/cs)+','+Math.floor(wy/cs)+','+Math.floor(pz/cs);if(!bushSeen.has(key)&&bayHash(Math.floor(px*3),Math.floor(pz*3),Math.floor(wy*3))<(o===4?(ny>.75?.12:.3):ny>.75?.5:.28)){bushSeen.add(key);bush.push(px,wy,pz,o===4?ny+1:ny)}}}
         // mảng cây bám vách và gờ đá (nhiều ở nửa trên)
-        const tuft=baySm(.5,.8,.5+.5*Math.sin(px*.07+wy*.13+Math.sin(pz*.05)*2.)*Math.sin(pz*.08-wy*.09+Math.sin(px*.04)*1.7))*baySm(.25,.6,t);
         const o=ch.O[i],green=o===1||o===2?Math.max(baySm(o===1?.72:.6,.92,ny)*.9,tuft*(o===1?.25:.4)):ch.S[i]?1:Math.max(baySm(.3,.68,ny),baySm(ch.D[i]-.12,ch.D[i]+.04,t),(hh>.72&&t>.3)?.65:0,t>.3?.14:0,tuft*.9);
         gr[i]=green*baySm(-.1,.2,ny)*baySm(2.6,3.8,wy)*(1-crev*.85);
         col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
@@ -174,7 +174,7 @@
       const m=new THREE.Mesh(g,bayRockMat);bayGroup.add(m);meshes.push(m);
       // cây bụi bám gờ, khe và đỉnh đá của các danh thắng vẽ theo ảnh mẫu (Trống Mái, Chó Đá): mỗi bụi 3 khối tròn xanh đậm nhạt
       if(bush.length){const cnt=bush.length/4*3,im=new THREE.InstancedMesh(BUSH_GEO,bushMat,cnt),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let j=0;
-        for(let b=0;b<bush.length;b+=4){const bx=bush[b],by=bush[b+1],bz=bush[b+2],top=bush[b+3]>.75,sz=(top?1.05:.7)*(.75+bayHash(Math.floor(bx*5),Math.floor(bz*5),7)*.6);
+        for(let b=0;b<bush.length;b+=4){const bx=bush[b],by=bush[b+1],bz=bush[b+2],top=bush[b+3]>.75,sz=(top?1.05:.7)*(bush[b+3]>1?1.8:1)*(.75+bayHash(Math.floor(bx*5),Math.floor(bz*5),7)*.6);
           for(let q=0;q<3;q++){const a=q*2.1+bx,d=q?sz*.55:0,s2=sz*(q?.7:1);T.set(bx+Math.cos(a)*d,by+s2*.35-(q?.15*sz:0),bz+Math.sin(a)*d);S.set(s2,s2*.72,s2);M4.compose(T,Q,S);im.setMatrixAt(j,M4);
             C.set(BUSH_COLS[(b/4+q)%4]);im.setColorAt(j,C);j++}}
         im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;bayGroup.add(im)}
@@ -433,14 +433,14 @@
       // Đảo có hang: mỗi nơi một dáng theo mô tả thật (showcaves.com, Ban quản lý vịnh): cửa hang ~25 m trên mặt nước có bậc đá, riêng
       // Hang Nhà Trò và hang Soi Nhụ nằm sát mép nước.
       const px=-fz,pz=fx,P=(u,v)=>[x+fx*u+px*v,z+fz*u+pz*v],sat=(n,sh,hm,rm,d0,d1)=>{for(let j=0;j<n;j++){const a=f+.55+j*(2*Math.PI-1.1)/(n-1)+(bayHash(k,j,4)-.5)*.2,d=r*(d0+bayHash(k,j,3)*(d1-d0));
-        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(rm+bayHash(k,j,1)*.12),h*(hm+bayHash(k,j,2)*.45),k+j+1,{shape:sh[j%sh.length]})}};
+        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(rm+bayHash(k,j,1)*.12),h*(hm+bayHash(k,j,2)*.45),k+j+1,{shape:sh[j%sh.length],pale:4})}};
       if(p.id==='dong_thien_cung'){
         // Đảo Đầu Gỗ: khối núi lớn kéo dài, vách bắc dựng đứng có hai cửa hang Thiên Cung và Đầu Gỗ cạnh nhau, chung một bến
-        addKarst(x,z,r*.5,h*1.05,k,{taper:.08,dome:.5,sx:1.7,sz:.85,rot:f+Math.PI/2,ribs:12,ribAmp:.13,saddle:.35});sat(5,[0,3,1,5],.4,.16,.55,.75);
+        addKarst(x,z,r*.5,h*1.05,k,{taper:.08,dome:.5,sx:1.7,sz:.85,rot:f+Math.PI/2,ribs:12,ribAmp:.13,saddle:.35,pale:4});sat(5,[0,3,1,5],.4,.16,.55,.75);
         const c1=caveMouth(...P(0,-r*.32),f,r*.38,h*.2,r*.11,r*.1),c2=caveMouth(...P(0,r*.3),f,r*.38,h*.26,r*.12,r*.11);caveStairs(...P(0,-r*.32),f,c1,r*.62);caveStairs(...P(0,r*.3),f,c2,r*.62)}
       else if(p.id==='hang_sung_sot'){
         // Đảo Bồ Hòn: núi cao đỉnh tròn, lối dốc lên hang có cây hai bên (đường bậc chữ chi)
-        addKarst(x,z,r*.52,h*1.15,k,{taper:.06,dome:.45,sx:1.25,rot:f+Math.PI/2,ribs:10,ribAmp:.12,bulge:.08});sat(6,[2,0,4,3],.45,.15,.55,.78);
+        addKarst(x,z,r*.52,h*1.15,k,{taper:.06,dome:.45,sx:1.25,rot:f+Math.PI/2,ribs:10,ribAmp:.12,bulge:.08,pale:4});sat(6,[2,0,4,3],.45,.15,.55,.78);
         caveStairs(x,z,f,caveMouth(x,z,f,r*.45,h*.3,r*.13,r*.12),r*.75,true)}
       else if(p.id==='dong_me_cung'){
         // Đảo Lom Bò: hai đỉnh nhọn nối yên ngựa, cầu tàu nhỏ, bậc đá thẳng lên cửa hang
@@ -490,7 +490,10 @@
         addKarst(x,z,r*.95,.35,k+1,{round:true,dome:.9,sx:1.3,sz:.9,rot,notch:0});addKarst(x,z,r*.55,h,k,{taper:.18,dome:.22,sx:1.2,sz:.9,rot,ribs:6,ribAmp:.1,notch:.28,rough:.18})}else{
       // đế vững (rạn đá thấp quanh chân), thân thắt vừa phải rồi nở ra như chiếc lư hương
       addKarst(x,z,r*.85,.4,k+1,{round:true,dome:.9,sx:1.6,sz:.85,rot,notch:0});
-      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22})}
+      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22,pale:p.id==='hon_dinh_huong'?3:0});
+      if(p.id==='hon_dinh_huong'){/* đỉnh bằng phủ kín cây bụi thành nhiều cụm (ảnh thực tế), thêm vài bụi bám mép vách */
+        for(let j=0;j<14;j++){const a=j*2.4,d=(j?.25+.55*Math.sqrt(j/14):0)*r*.58,cx=d*Math.cos(a)*1.45*1.15,cz=d*Math.sin(a)*.72*1.15;
+          treeClump(x+Math.cos(rot)*cx-Math.sin(rot)*cz,h*(.9-.08*d/(r*.58)),z+Math.sin(rot)*cx+Math.cos(rot)*cz,r*(.09+bayHash(k,j,6)*.04),j)}}}
     }
     else if(q.shape==='dog'&&p.id==='hon_cho_da'){
       // Hòn Chó Đá (vẽ theo ảnh mẫu chị gửi: chính diện, nghiêng, sau): khối đá xám sẫm dáng chú chó ngồi ngẩng đầu, mõm hướng ra biển,
@@ -525,8 +528,8 @@
     }
     else if(q.shape==='titop'){
       // Ti Tốp: đỉnh vách giật cấp, vai núi phía sau, bãi cát khô và cát ẩm hình lưỡi liềm, hai mũi đá ôm bãi, lầu vọng cảnh 2 mái đỏ
-      addKarst(x,z,r*.62,h*1.5,k,{taper:.14,dome:.34,steps:2,ribs:7,rough:.2});
-      addKarst(x-fx*r*.4,z-fz*r*.4,r*.45,h*1.05,k+1,{taper:.15,dome:.42,ribs:6,rough:.2});
+      addKarst(x,z,r*.62,h*1.5,k,{taper:.14,dome:.34,steps:2,ribs:7,rough:.2,pale:4});
+      addKarst(x-fx*r*.4,z-fz*r*.4,r*.45,h*1.05,k+1,{taper:.15,dome:.42,ribs:6,rough:.2,pale:4});
       const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.38,Math.PI*.76),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
       sand(.78,1.12,.28,'#efe3c4');sand(1.1,1.26,.2,'#c9b48e');
       for(const s of [-1,1]){const a=f+s*Math.PI*.42;addKarst(x+Math.cos(a)*r*1.08,z+Math.sin(a)*r*1.08,r*.2,h*.38,k+5+s,{shape:6,rot:a})}
