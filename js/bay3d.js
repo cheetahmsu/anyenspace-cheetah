@@ -145,11 +145,12 @@
     c.lerp(rockCrev,Math.min(1,crev*1.1)*.6);
     c.lerp(rockWet,(1-baySm(2.4,3.6,wy))*.55);c.lerp(rockNotch,(1-baySm(.6,2.6,wy))*baySm(-.6,.2,wy)*.65);
   }
+  const BUSH_GEO=new THREE.IcosahedronGeometry(1,1),bushMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9}),BUSH_COLS=['#5f8f33','#4c7a2a','#76a443','#3f6a25'];
   function finishKarsts(){
     const c=new THREE.Color(),meshes=[];
     for(const ch of bayChunks.values()){
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(ch.P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(ch.UV,2));g.setIndex(ch.I);g.computeVertexNormals();
-      const N=g.attributes.normal,n=ch.T.length,col=new Float32Array(n*3),gr=new Float32Array(n);
+      const N=g.attributes.normal,n=ch.T.length,col=new Float32Array(n*3),gr=new Float32Array(n),bush=[],bushSeen=new Set();
       for(let i=0;i<n;i++){const t=ch.T[i],hh=ch.H[i],px=ch.P[i*3],wy=ch.P[i*3+1],pz=ch.P[i*3+2],ny=N.getY(i),crev=ch.R[i];
         paintRock(c,wy,px,pz,hh,crev);
         // vệt nước chảy dọc vách dựng: vệt sẫm đen xám và vệt vàng gỉ, dài từ mép rừng xuống, nhạt dần về chân
@@ -157,7 +158,13 @@
         const sd=baySm(.62,.92,.5+.5*Math.sin(u*1.7+Math.sin(u*.23)*3.1))*(.55+.45*Math.sin(u*.37+wy*.018)),so=baySm(.78,.96,.5+.5*Math.sin(u*2.9+1.7+Math.sin(u*.41)*2.3));
         c.lerp(rockStreak,sd*steep*baySm(4,14,wy)*.42);c.lerp(rockOchre,so*steep*baySm(6,18,wy)*.3*(.6+.4*run));
         if(ch.O[i]){/* tông đá riêng cho danh thắng vẽ theo ảnh mẫu: 1 xám trắng, chân vàng nâu (Trống Mái) · 2 xám sẫm, chân trắng vàng (Chó Đá) · 3 xám sáng, chân trắng vàng (vách núi) */
-          const o=ch.O[i],base0=(1-baySm(1.2,4.2,wy))*baySm(-1.5,.2,wy);if(o===2)c.lerp(rockDark,.75*(1-crev*.4));else c.lerp(rockPale,(o===1?.7:.5)*(1-crev*.6));c.lerp(o===1?rockOchreBase:rockCream,base0*.8)}
+          const o=ch.O[i],base0=(1-baySm(1.2,4.2,wy))*baySm(-1.5,.2,wy);if(o===2)c.lerp(rockDark,.75*(1-crev*.4));else c.lerp(rockPale,(o===1?.7:.5)*(1-crev*.6));
+          // vân đá: khe nứt dọc sẫm, gờ lớp ngang, mảng loang sáng tối, vệt rêu đen chảy xuống từ gờ
+          const uu=px*.71-pz*.7,vv=px*.7+pz*.71,crack=baySm(.86,.97,Math.abs(Math.sin(uu*.9+Math.sin(wy*.21+vv*.3)*1.6))),bed=baySm(.8,.95,Math.abs(Math.sin(wy*1.15+Math.sin(uu*.35)*.9))),
+            mott=.5+.5*Math.sin(uu*.33+wy*.27)*Math.sin(vv*.41-wy*.19),drip=baySm(.7,.92,.5+.5*Math.sin(uu*2.3+Math.sin(vv*.7)*2))*baySm(2,8,wy);
+          c.lerp(rockCrev,crack*.55+bed*.3);c.multiplyScalar(.88+mott*.28);c.lerp(rockStreak,drip*.35);
+          c.lerp(o===1?rockOchreBase:rockCream,base0*.8);
+          if(ny>.35&&wy>2.6&&crev<.6&&!(o===2&&(wy>14.5||bayHash(Math.floor(px*7),Math.floor(pz*7),3)<.4))){const key=Math.floor(px/1.7)+','+Math.floor(wy/1.7)+','+Math.floor(pz/1.7);if(!bushSeen.has(key)&&bayHash(Math.floor(px*3),Math.floor(pz*3),Math.floor(wy*3))<(ny>.75?.5:.28)){bushSeen.add(key);bush.push(px,wy,pz,ny)}}}
         // mảng cây bám vách và gờ đá (nhiều ở nửa trên)
         const tuft=baySm(.5,.8,.5+.5*Math.sin(px*.07+wy*.13+Math.sin(pz*.05)*2.)*Math.sin(pz*.08-wy*.09+Math.sin(px*.04)*1.7))*baySm(.25,.6,t);
         const o=ch.O[i],green=o===1||o===2?Math.max(baySm(o===1?.72:.6,.92,ny)*.9,tuft*(o===1?.25:.4)):ch.S[i]?1:Math.max(baySm(.3,.68,ny),baySm(ch.D[i]-.12,ch.D[i]+.04,t),(hh>.72&&t>.3)?.65:0,t>.3?.14:0,tuft*.9);
@@ -165,6 +172,12 @@
         col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
       g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));g.computeBoundingSphere();
       const m=new THREE.Mesh(g,bayRockMat);bayGroup.add(m);meshes.push(m);
+      // cây bụi bám gờ, khe và đỉnh đá của các danh thắng vẽ theo ảnh mẫu (Trống Mái, Chó Đá): mỗi bụi 3 khối tròn xanh đậm nhạt
+      if(bush.length){const cnt=bush.length/4*3,im=new THREE.InstancedMesh(BUSH_GEO,bushMat,cnt),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let j=0;
+        for(let b=0;b<bush.length;b+=4){const bx=bush[b],by=bush[b+1],bz=bush[b+2],top=bush[b+3]>.75,sz=(top?1.05:.7)*(.75+bayHash(Math.floor(bx*5),Math.floor(bz*5),7)*.6);
+          for(let q=0;q<3;q++){const a=q*2.1+bx,d=q?sz*.55:0,s2=sz*(q?.7:1);T.set(bx+Math.cos(a)*d,by+s2*.35-(q?.15*sz:0),bz+Math.sin(a)*d);S.set(s2,s2*.72,s2);M4.compose(T,Q,S);im.setMatrixAt(j,M4);
+            C.set(BUSH_COLS[(b/4+q)%4]);im.setColorAt(j,C);j++}}
+        im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;bayGroup.add(im)}
     }
     bayChunks.clear();return meshes;
   }
