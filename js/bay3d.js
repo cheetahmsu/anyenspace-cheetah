@@ -706,17 +706,18 @@
       for(const [u,v] of [[.62,.2],[.6,-.05],[.66,.45]]){const [hx,hz]=P(u,v),pp=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1,4,8),decoMat(u>.61?'#e2512c':'#2f6fb0'));pp.position.set(hx,1.1,hz);bayGroup.add(pp)}
     }
     else if(q.shape==='toad'){
-      // Hòn Con Cóc (vẽ theo ảnh mẫu chị gửi): khối đá xám dạng phiến nghiêng hẳn sang trái như chú cóc vươn mình ra biển, đá phân lớp
-      // nứt chéo, đỉnh có một cụm cây tán xoè, vài bụi bám sườn; chân là thềm đá thấp lô nhô sát mặt nước kéo dài về bên trái.
-      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u+px*v,z+fz*u+pz*v],A=f+Math.PI/2,o1={pale:2};
-      addKarst(...P(0,-1),r*.55,h*.42,k+1,{taper:.15,dome:.3,sx:1.15,sz:.7,rot:A,lean:.22,ribs:7,ribAmp:.12,rough:.22,notch:.45,steps:2,...o1});
-      addKarst(...P(0,2.6),r*.44,h*.62,k+2,{y0:h*.36,taper:.05,dome:.28,sx:1.25,sz:.62,rot:A,lean:.55,ribs:8,ribAmp:.14,rough:.2,steps:4,...o1});
+      // Hòn Con Cóc: khối đá như chú cóc ngồi vươn mình ra biển; chân là thềm đá thấp lô nhô sát mặt nước kéo dài về bên trái.
+      // 26/11 vẽ lại cho rõ dáng: thân cóc ngồi xổm tròn bè, lưng-đầu là phiến đá dày nối liền thân, ngửa nghiêng lên trời,
+      // hai chân trước là hai u đá tròn sát nước; đá xám sáng có mảng sáng tối, mảng xanh phủ lưng và đỉnh, không vẽ cây.
+      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u+px*v,z+fz*u+pz*v],A=f+Math.PI/2,o1={pale:3};
+      addKarst(...P(0,0),r*.72,h*.55,k+1,{taper:.12,dome:.55,sx:1.3,sz:.85,rot:A,ribs:6,ribAmp:.1,rough:.16,notch:.42,...o1});
+      addKarst(...P(-.5,.6),r*.44,h*.82,k+2,{y0:h*.3,taper:.1,dome:.5,sx:1.2,sz:.72,rot:A,lean:.5,ribs:6,ribAmp:.1,rough:.14,...o1});
+      {/* hai mắt cóc: hai u đá tròn nhỏ trên đỉnh đầu */const [hx,hz]=P(-.5,.6),L=.5*h*.82*.86,ex=hx+Math.cos(A)*L,ez=hz+Math.sin(A)*L;
+        for(const s2 of [-1,1])addKarst(ex-Math.sin(A)*r*.2*s2,ez+Math.cos(A)*r*.2*s2,r*.11,r*.16,k+8+s2,{y0:h*.3+h*.82*.9,round:true,dome:.95,rot:A,...o1})}
+      for(const v of [-3.6,3.2]){const [ax,az]=P(r*.62,v);addKarst(ax,az,r*.22,h*.16,k+5+Math.round(v),{round:true,dome:.9,sx:1.2,notch:0,rot:A,...o1})}
       // thềm đá thấp lô nhô dưới chân, kéo dài sang trái
       for(let j=0;j<14;j++){const v=-r*1.1+j*r*.36+(bayHash(k,j,1)-.5)*2,u=(bayHash(k,j,2)-.5)*r*.9,[ax,az]=P(u,v),sz=r*(.16+bayHash(k,j,3)*.2),m=new THREE.Mesh(new THREE.IcosahedronGeometry(1,0),decoMat(['#7f7a70','#8e877a','#6f6a62'][j%3]));
         m.material.flatShading=true;m.scale.set(sz*1.3,.6+bayHash(k,j,4)*1.3,sz);m.position.set(ax,.1,az);m.rotation.set(bayHash(k,j,5)*.4,j*1.7,bayHash(k,j,6)*.4);bayGroup.add(m)}
-      // cụm cây tán xoè trên đỉnh và vài bụi bám sườn
-      {const top=h*.36+h*.62,tv=2.6+.55*(h*.62),[cx,cz]=P(0,tv);treeClump(cx,top+.6,cz,2.3,1);treeClump(...[P(.6,tv-1.6)[0],top-.4,P(.6,tv-1.6)[1]],1.4,2)}
-      for(const [u,v,y,sz] of [[r*.4,4.5,h*.55,1.2],[-r*.3,1.5,h*.4,1],[r*.35,7,h*.75,1.1]]){const [cx,cz]=P(u,v);treeClump(cx,y,cz,sz,v)}
     }
     else if(q.shape==='mountain'){
       // Núi Bài Thơ (vẽ theo ảnh mẫu chị gửi): khối núi đá vôi lớn sát bờ Hòn Gai, nhiều đỉnh nhọn nhấp nhô, đỉnh giữa cao nhất; sườn phủ
