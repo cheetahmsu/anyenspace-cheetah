@@ -506,3 +506,9 @@ body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerf
 .dock-roof{background:rgba(90,175,130,.24)!important;border:1.5px solid #d6b878!important}
 /* Rà soát 26/11 (chiều): ô Khám phá trong suốt để lộ mặt trăng và đèn của ảnh nền ngay sau biểu tượng thuyền; làm mờ nhẹ phần nền phía sau ô để biểu tượng và chữ rõ, ô vẫn trong */
 .portal-entry.sq{-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+/* Viền dịu mắt: giảm độ sáng viền tất cả các nút trên trang chủ */
+.dock-house>button,.dock-house>a.house-tile,.house-links>a,.house-links summary,.portal-entry.sq,.dock-roof,.cta{border:1px solid rgba(214,184,120,.38)!important}
+.cta{border-color:rgba(233,207,143,.45)!important}
+.top .nav button,.top .nav .nav-external,.scene-controls button{border-color:rgba(200,169,106,.32)!important}
+.portal-entry.sq:hover,.portal-entry.sq:focus,.portal-entry.sq:focus-visible{outline:none!important;border-color:rgba(214,184,120,.6)!important}
+.dock-house>button:focus-visible,.dock-house>a.house-tile:focus-visible,.house-links>a:focus-visible,.cta:focus-visible{outline:1px solid rgba(214,184,120,.55)!important;outline-offset:2px}
