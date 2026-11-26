@@ -1986,27 +1986,50 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const rx=2.7,rz=pz-.85;for(const s of [-1,1])P(GB(.06,1.7,.06),'#5a3a22',rx+s*.75,pb+.85,rz);P(GC(.025,.025,1.6,6),'#5a3a22',rx,pb+1.68,rz,{rz:Math.PI/2});for(const s of [-1,1])P(GB(.5,.05,.06),'#5a3a22',rx+s*.75,pb+.03,rz);
       ['#d99a2b','#c98a1c','#b8741a','#9a5a2a','#7a4a2a'].forEach((c,k)=>P(GB(.26,1.05,.08),c,rx-.6+k*.3,pb+1.1,rz+.02,{rz:(k%2?.03:-.03)}))}});
     g.position.set(TINH_THAT.x,terrainHeight(TINH_THAT.x,TINH_THAT.z),TINH_THAT.z);g.rotation.y=TINH_THAT.rot;g.userData.house=TINH_THAT;scene.add(g);TINH_THAT.group=g}
-  // ===== Cổng Viverse (bên hông Nhà hoa lan, phía lối vào chính): vòm đá + màn cổng xoáy sáng; bước vào là mở thế giới ORCHID hoa lan
+  // ===== Cổng Viverse (bên hông Nhà hoa lan, phía lối vào chính): nhà gỗ nhỏ mái dốc hai bên, ván nâu ấm, hoa sen trên đầu hồi,
+  // cửa vòm lớn với màn xoáy sáng ngọc lam – tím nhạt – hồng nhạt, hai bụi cẩm tú cầu xanh tím ở chân cổng; bước vào là mở thế giới ORCHID hoa lan.
+  // Phần gỗ và hoa gộp thành một khối tô màu theo đỉnh, không thêm đèn thật (nhẹ máy điện thoại).
   const vivU={t:{value:0}};
-  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),stoneC='#7a7466',stoneD='#5f5a4e',goldC='#c8a96a',R=2.25,PH=4.6;
-    P(GB(VIV.W,.3,VIV.D+.6),stoneD,0,.15,0);P(GB(VIV.W-.6,.12,VIV.D),stoneC,0,.36,0);
-    for(const s of [-1,1]){P(GB(.7,PH,.8),stoneC,s*(R+.35),.42+PH/2,0);P(GB(.9,.3,1),stoneD,s*(R+.35),.57,0);P(GB(.86,.22,.96),stoneD,s*(R+.35),.42+PH+.11,0);
-      for(let k=0;k<3;k++)P(GB(.74,.05,.84),goldC,s*(R+.35),1.3+k*1.25,0)}
-    {const arch=new THREE.TorusGeometry(R+.35,.36,8,28,Math.PI);P(arch,stoneC,0,.42+PH+.22,0);const trim=new THREE.TorusGeometry(R+.35,.06,6,28,Math.PI);P(trim,goldC,0,.42+PH+.22,.37)}
-    P(new THREE.OctahedronGeometry(.32,0),goldC,0,.42+PH+.22+R+.35+.5,0);
+  {const g=new THREE.Group(),parts=[],P=(...a)=>parts.push(HP(...a)),wood='#9a6a3e',woodL='#b8854f',woodD='#64402a',groove='#76502f',
+      BW=4.4,BD=VIV.D+.4,WH=3.1,RISE=1.55,R=1.2,AH=1.75,pb=.22,zf=BD/2;
+    // bậc gỗ thấp
+    P(GB(BW+.5,pb,BD+.5),woodD,0,pb/2,0);P(GB(BW+.6,.05,BD+.6),'#7a5232',0,pb+.02,0);P(GB(2.9,.12,.45),'#7a5232',0,.06,zf+.45);
+    // mặt tiền: tường hồi năm cạnh có khoét cửa vòm
+    const fs=new THREE.Shape();fs.moveTo(-BW/2,0);fs.lineTo(BW/2,0);fs.lineTo(BW/2,WH);fs.lineTo(0,WH+RISE);fs.lineTo(-BW/2,WH);fs.lineTo(-BW/2,0);
+    const hole=new THREE.Path();hole.moveTo(-R,0);hole.lineTo(R,0);hole.lineTo(R,AH);hole.absarc(0,AH,R,0,Math.PI,false);hole.lineTo(-R,0);fs.holes.push(hole);
+    const front=new THREE.ExtrudeGeometry(fs,{depth:.18,bevelEnabled:false,curveSegments:16});P(front,wood,0,pb,zf-.18);
+    P(GB(BW,WH,.16),wood,0,pb+WH/2,-zf+.08);for(const s of [-1,1])P(GB(.16,WH,BD-.2),wood,s*(BW/2-.08),pb+WH/2,0);
+    // rãnh ván dọc trên mặt tiền (né cửa vòm)
+    for(let x=-BW/2+.32;x<BW/2-.1;x+=.36){const top=WH+RISE*(1-Math.abs(x)/(BW/2))-.08;const y0=Math.abs(x)<R+.08?AH+Math.sqrt(Math.max(0,(R+.08)**2-x*x)):0;if(top-y0>.1)P(GB(.025,top-y0,.02),groove,x,pb+(y0+top)/2,zf+.005)}
+    // khung cửa vòm gỗ sáng
+    for(const s of [-1,1])P(GB(.16,AH,.12),woodL,s*(R+.08),pb+AH/2,zf+.04);
+    P(new THREE.TorusGeometry(R+.08,.08,6,20,Math.PI),woodL,0,pb+AH,zf+.04);P(GB(2*R+.36,.1,.16),woodL,0,pb+.05,zf+.04);
+    // mái gỗ dốc hai bên, đua ra trước và sau, viền diềm sáng ở đầu hồi
+    {const ang=Math.atan2(RISE,BW/2),len=Math.hypot(BW/2,RISE)+.5,RL=BD+.6;
+      for(const s of [-1,1]){const cx=s*(BW/4+.14),cy=pb+WH+RISE/2+.16;P(GB(len,.14,RL),woodD,cx,cy,0,{rz:-s*ang});
+        for(const zz of [RL/2-.04,-RL/2+.04])P(GB(len,.22,.08),woodL,cx,cy-.03,zz,{rz:-s*ang});
+        for(let k=-2;k<=2;k++)P(GB(len,.02,.03),'#4a2e1b',cx,cy+.08,k*RL/5.5,{rz:-s*ang})}
+      P(GB(.18,.18,RL+.05),'#4a2e1b',0,pb+WH+RISE+.3,0,{rz:Math.PI/4})}
     g.add(new THREE.Mesh(mergeColored(parts),houseMat));
-    // màn cổng: xoáy ánh sáng xanh ngọc – tím, chuyển động chậm
-    const sh=new THREE.Shape();sh.moveTo(-R,0);sh.lineTo(-R,PH+.22);sh.absarc(0,PH+.22,R,Math.PI,0,true);sh.lineTo(R,0);sh.lineTo(-R,0);
-    const pm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{t:vivU.t,R:{value:R},H:{value:PH+.22+R}},
+    // hoa sen vàng nhạt trên đầu hồi
+    {const cv=document.createElement('canvas');cv.width=cv.height=128;const c=cv.getContext('2d');c.fillStyle='#6a4528';c.beginPath();c.arc(64,64,62,0,Math.PI*2);c.fill();c.strokeStyle='#d9b878';c.lineWidth=4;c.beginPath();c.arc(64,64,56,0,Math.PI*2);c.stroke();ctIcon(c,'lotus',64,78,1.05,'#f1dca6');
+      const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({map:t}));m.position.set(0,pb+WH+.5,zf+.02);g.add(m)}
+    // màn cổng: xoáy ánh sáng ngọc lam – tím nhạt – hồng nhạt, chuyển động chậm
+    const sh=new THREE.Shape();sh.moveTo(-R,0);sh.lineTo(-R,AH);sh.absarc(0,AH,R,Math.PI,0,true);sh.lineTo(R,0);sh.lineTo(-R,0);
+    const pm=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{t:vivU.t,H:{value:AH+R}},
       vertexShader:'varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader:'uniform float t,R,H;varying vec2 vP;void main(){vec2 c=vec2(0.,H*.48);vec2 d=vP-c;float r=length(d)/(H*.55),a=atan(d.y,d.x);'+
-        'float sw=sin(a*3.+r*9.-t*1.6)*.5+.5,ring=sin(r*18.-t*2.4)*.5+.5;vec3 c1=vec3(.22,.78,.78),c2=vec3(.55,.36,.86),c3=vec3(1.,.93,.78);'+
-        'vec3 col=mix(c1,c2,sw);col=mix(col,c3,smoothstep(.35,0.,r)*.85+ring*.12);float al=.55+.35*smoothstep(1.,.2,r);gl_FragColor=vec4(col,al);}'});
-    const portal=new THREE.Mesh(new THREE.ShapeGeometry(sh,24),pm);portal.position.set(0,.42,0);g.add(portal);
-    const cv=document.createElement('canvas');cv.width=512;cv.height=160;const cx=cv.getContext('2d');cx.fillStyle='#2c2238';cx.fillRect(0,0,512,160);cx.strokeStyle='#c8a96a';cx.lineWidth=6;cx.strokeRect(6,6,500,148);
-    cx.fillStyle='#f4e2b9';cx.textAlign='center';cx.textBaseline='middle';cx.font='bold 54px sans-serif';cx.fillText('CỔNG VIVERSE',256,62);cx.font='30px sans-serif';cx.fillStyle='#d9c6ea';cx.fillText('🌸 ORCHID hoa lan · thế giới 3D',256,118);
-    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const board=new THREE.Mesh(new THREE.PlaneGeometry(2.6,.81),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));board.position.set(0,.42+PH+.22+R+.35+.05,.45);board.position.y=.42+PH-.7;board.position.z=.05;
-    board.position.set(0,.42+PH+.22+R*.58,.42);g.add(board);
+      fragmentShader:'uniform float t,H;varying vec2 vP;void main(){vec2 d=vP-vec2(0.,H*.5);float r=length(d)/(H*.5),a=atan(d.y,d.x);'+
+        'float s1=sin(a*2.+r*6.5-t*1.1)*.5+.5,s2=sin(a*2.+r*6.5-t*1.1+2.1)*.5+.5;vec3 teal=vec3(.42,.86,.82),lav=vec3(.72,.62,.95),pink=vec3(1.,.76,.88),wh=vec3(.97,.97,1.);'+
+        'vec3 col=mix(mix(teal,lav,s1),pink,s2*.6);col=mix(col,wh,smoothstep(.3,0.,r)*.8);gl_FragColor=vec4(col,.93);}'});
+    const portal=new THREE.Mesh(new THREE.ShapeGeometry(sh,16),pm);portal.position.set(0,pb,zf-.12);g.add(portal);
+    // hai bụi cẩm tú cầu xanh tím ở chân cổng + biển nhỏ "Cổng Viverse" bên trái
+    {const fl=[],F=(...a)=>fl.push(HP(...a)),blues=['#6f86d8','#8a7ad0','#5f93d6','#9a86dc'];
+      for(const s of [-1,1]){const hx=s*(BW/2+.35),hz=zf+.35;for(let k=0;k<5;k++){const a=k*1.3+s,xx=hx+Math.cos(a)*.32,zz=hz+Math.sin(a)*.25;
+        F(new THREE.IcosahedronGeometry(.24,0),'#3f6a34',xx,.2,zz,{s:[1.3,.7,1.3]});F(new THREE.IcosahedronGeometry(.23,1),blues[(k+(s>0?1:0))%4],xx,.5+(k%2)*.1,zz)}}
+      F(GC(.04,.05,1.1,6),'#5a3a22',-BW/2-1.3,.55,zf+.5);g.add(new THREE.Mesh(mergeColored(fl),houseMat));
+      const cv=document.createElement('canvas');cv.width=256;cv.height=72;const c=cv.getContext('2d');c.fillStyle='#4a3020';c.fillRect(0,0,256,72);c.strokeStyle='#c9a46a';c.lineWidth=3;c.strokeRect(4,4,248,64);
+      c.fillStyle='#f4e2b9';c.font='bold 28px serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Cổng Viverse',128,38);
+      const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const b=new THREE.Mesh(new THREE.PlaneGeometry(1.1,.31),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));b.position.set(-BW/2-1.3,1.12,zf+.53);g.add(b)}
     g.position.set(VIV.x,terrainHeight(VIV.x,VIV.z),VIV.z);g.rotation.y=VIV.rot;g.userData.house=null;scene.add(g);window.__vivGroup=g;addFadeable(g,VIV.x,VIV.z,3.4)}
   // ===== Tư Gia (bờ đông Hồ Sen): nhà gỗ mái ngói, hiên trước nhìn ra hồ sen; Góc Gieo Hạt ngay cạnh nhà
   {/* 3.41: Tư Gia theo ảnh phối cảnh: nhà một tầng mái ngói xanh rêu, tường kem, khung gỗ, biển "Tư Gia" hoa sen, cửa gỗ hai cánh mở, cửa sổ ô vuông sáng ấm,
