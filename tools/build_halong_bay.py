@@ -36,6 +36,8 @@ LANDMARKS = [
      "Gần Hòn Trống Mái, phía bắc", "Như một lư hương dâng lên trời"),
     ("hon_trong_mai", "Hòn Trống Mái", 20.9030, 107.0440, "pair", 24, 30, "approx",
      "Cách cảng Tuần Châu khoảng 5 km, phía nam Hòn Đỉnh Hương (Ban quản lý vịnh)", "Biểu tượng du lịch Hạ Long: đôi gà đá tựa vào nhau"),
+    ("hon_con_coc", "Hòn Con Cóc", 20.9000, 107.0369, "toad", 9, 20, "approx",
+     "Vị trí ước lượng trên tuyến tham quan gần Trống Mái, Đỉnh Hương; dáng vẽ theo ảnh mẫu", "Khối đá nghiêng như chú cóc vươn mình ra biển"),
     ("lang_chai_ba_hang", "Làng chài Ba Hang", 20.8895, 107.0605, "village", 0, 0, "approx",
      "Khu Ba Hang, phía nam Trống Mái", "Những nhà bè nổi bình yên giữa vòng đá"),
     ("dao_ti_top", "Đảo Ti Tốp", 20.8589, 107.0809, "titop", 58, 28, "source",
@@ -49,7 +51,7 @@ LANDMARKS = [
     # ---- Vịnh Lan Hạ (Hải Phòng): phía nam vịnh Hạ Long, phía đông đảo Cát Bà ----
     ("hang_sang_toi", "Hang Sáng Tối", 20.7900, 107.0790, "arch", 34, 30, "approx",
      "Phía bắc vịnh Lan Hạ, tuyến kayak quen thuộc", "Hang xuyên thủy, tối rồi bừng sáng ra hồ nước lặng"),
-    ("ba_trai_dao", "Hòn Ba Trái Đào", 20.7680, 107.0860, "trio", 26, 22, "approx",
+    ("ba_trai_dao", "Hòn Ba Trái Đào", 20.7680, 107.0860, "trio", 40, 26, "approx",
      "Giữa vịnh Lan Hạ", "Ba đỉnh đá tròn như ba trái đào, ôm bãi cát nhỏ"),
     ("dao_khi", "Đảo Khỉ · Cát Dứa", 20.7370, 107.0850, "beach", 44, 26, "approx",
      "Khoảng 10 phút đi thuyền từ bến Bèo, Cát Bà", "Bãi cát trắng và đàn khỉ sống tự do"),
@@ -58,6 +60,8 @@ LANDMARKS = [
     ("cau_bai_chay", "Cầu Bãi Cháy", 20.9560, 107.0712, "bridge", 0, 0, "approx",
      "Bắc qua eo Cửa Lục giữa Bãi Cháy và Hòn Gai", "Cây cầu dây văng nối hai bờ thành phố Hạ Long"),
     # ---- Bổ sung (bản đồ du lịch vịnh Hạ Long của vietnamtourism.com; hành trình vịnh Bái Tử Long, QĐ 2119/QĐ-UBND Quảng Ninh) ----
+    ("nui_bai_tho", "Núi Bài Thơ", 20.9485, 107.0846, "mountain", 110, 100, "approx",
+     "Sát bờ Hòn Gai, phía đông cầu Bãi Cháy (thật cao khoảng 200 m)", "Núi đá vôi nhiều đỉnh, điểm ngắm toàn cảnh vịnh"),
     ("dong_me_cung", "Động Mê Cung", 20.8665, 107.0620, "big_island", 62, 48, "approx",
      "Đảo Lom Bò, gần Ti Tốp (tuyến 2)", "Hang nhiều ngách như mê cung, cửa hang nhìn ra vịnh"),
     ("dao_soi_sim", "Đảo Soi Sim", 20.8710, 107.0890, "beach", 40, 30, "approx",
