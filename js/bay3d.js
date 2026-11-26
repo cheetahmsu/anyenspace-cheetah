@@ -1098,13 +1098,13 @@
       for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,x=Math.cos(a)*(R-.3),z=Math.sin(a)*(R-.3),gy=tdTerrainY(TD_GAZ.x+x,TD_GAZ.z+z);cyl(gaz,x,(Y+gy-.6)/2,z,.17,.2,Y-gy+.6,darkW,8);TD_GAZ_HIDE.push(cyl(gaz,x,Y+1.7,z,.12,.12,3.4,wood,8))}
       for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,b=(i+1.5)/8*Math.PI*2,gy=tdTerrainY(TD_GAZ.x+Math.cos(a)*(R-.3),TD_GAZ.z+Math.sin(a)*(R-.3)),gy2=tdTerrainY(TD_GAZ.x+Math.cos(b)*(R-.3),TD_GAZ.z+Math.sin(b)*(R-.3)),ym=Math.min(gy,gy2)+(Y-Math.min(gy,gy2))*.45;beam(gaz,[Math.cos(a)*(R-.3),ym,Math.sin(a)*(R-.3)],[Math.cos(b)*(R-.3),ym+.4,Math.sin(b)*(R-.3)],.07,wood)}/* giằng ngang giữa các cột chân */
       const sa=Math.atan2(TD_GDIR[1],TD_GDIR[0]);for(let i=0;i<8;i++){const a=i/8*Math.PI*2,b=(i+1)/8*Math.PI*2,m=(a+b)/2+Math.PI/8;if(Math.abs(Math.atan2(Math.sin(m-sa),Math.cos(m-sa)))<.4)continue;
-        beam(gaz,[Math.cos(a+Math.PI/8)*(R-.3),Y+.95,Math.sin(a+Math.PI/8)*(R-.3)],[Math.cos(b+Math.PI/8)*(R-.3),Y+.95,Math.sin(b+Math.PI/8)*(R-.3)],.05,wood);
-        for(let t=.2;t<1;t+=.2){const aa=a+Math.PI/8+(b-a)*t;cyl(gaz,Math.cos(aa)*(R-.3),Y+.5,Math.sin(aa)*(R-.3),.03,.03,.9,wood,5)}}
+        TD_GAZ_HIDE.push(beam(gaz,[Math.cos(a+Math.PI/8)*(R-.3),Y+.95,Math.sin(a+Math.PI/8)*(R-.3)],[Math.cos(b+Math.PI/8)*(R-.3),Y+.95,Math.sin(b+Math.PI/8)*(R-.3)],.05,wood));/* lan can: ẩn khi ngắm cảnh 360° */
+        for(let t=.2;t<1;t+=.2){const aa=a+Math.PI/8+(b-a)*t;TD_GAZ_HIDE.push(cyl(gaz,Math.cos(aa)*(R-.3),Y+.5,Math.sin(aa)*(R-.3),.03,.03,.9,wood,5))}}
       const roof=P(new THREE.ConeGeometry(R+1.4,3.0,8),M('#a98a5f',.95,{flatShading:true}),0,Y+4.9,0,gaz);roof.rotation.y=Math.PI/8;TD_GAZ_HIDE.push(roof,cyl(gaz,0,Y+3.4,0,R+.1,R+.1,.14,wood,8),P(new THREE.SphereGeometry(.24,8,6),gold,0,Y+6.5,0,gaz));
       cyl(gaz,0,Y+.45,0,.75,.75,.07,woodL,16);cyl(gaz,0,Y+.22,0,.08,.12,.45,darkW,8);for(let k=0;k<4;k++){const a=k/4*Math.PI*2+.4;box(gaz,Math.cos(a)*1.5,Y+.25,Math.sin(a)*1.5,.6,.08,.6,creamM)}
       const st=new THREE.Group();st.position.set(Math.cos(sa)*R,0,Math.sin(sa)*R);st.rotation.y=-sa+Math.PI/2;gaz.add(st);const n=Math.ceil((Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/.24);
       for(let i=0;i<n;i++)box(st,0,Y-.1-(i+1)*(Y-tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]))/n+.1,(i+.5)*TD_GRUN/n,1.6,.1,TD_GRUN/n+.05,woodL);
-      for(const s of [-1,1]){const yb=tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]);beam(st,[s*.85,Y+.9,0],[s*.85,yb+.9,TD_GRUN],.05,wood);beam(st,[s*.85,Y-.1,0],[s*.85,yb,TD_GRUN],.08,darkW);cyl(st,s*.85,yb+.45,TD_GRUN,.06,.06,.9,wood,6)}}
+      for(const s of [-1,1]){const yb=tdTerrainY(TD_GAZ_FOOT[0],TD_GAZ_FOOT[1]);TD_GAZ_HIDE.push(beam(st,[s*.85,Y+.9,0],[s*.85,yb+.9,TD_GRUN],.05,wood),cyl(st,s*.85,yb+.45,TD_GRUN,.06,.06,.9,wood,6));beam(st,[s*.85,Y-.1,0],[s*.85,yb,TD_GRUN],.08,darkW);}}
     // ---- bãi biển bên phải (phía chòi), giữa dải cát: hai ghế nằm gỗ nệm trắng quay ra biển, dù trắng che phía đầu ghế
     {const C=[-29.5,21.7],out=[-.866,.5],land=[.866,-.5],perp=[.5,.866],th=Math.atan2(-out[1],out[0]);TD_COLL.push([C[0],C[1],2.6],[C[0]+land[0]*1.4+perp[0]*2.2,C[1]+land[1]*1.4+perp[1]*2.2,.6]);
       for(const s2 of [-1,1]){const x=C[0]+perp[0]*1.15*s2,z=C[1]+perp[1]*1.15*s2,y=tdTerrainY(x,z),lg=new THREE.Group();lg.position.set(x,y,z);lg.rotation.y=th;g.add(lg);
