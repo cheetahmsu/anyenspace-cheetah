@@ -86,7 +86,7 @@
   const bayRockMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.95,vertexColors:true,map:bayTex.rock,normalMap:bayTex.normal,normalScale:new THREE.Vector2(1.3,1.3)});
   bayRockMat.onBeforeCompile=sh=>{sh.uniforms.leafMap={value:bayTex.leaf};
     sh.vertexShader='attribute float aGreen;varying float vGreen;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGreen=aGreen;');
-    sh.fragmentShader='uniform sampler2D leafMap;varying float vGreen;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{vec3 lf=texture2D(leafMap,vMapUv*1.7).rgb;float pch=(texture2D(leafMap,vMapUv*.23+.37).g-.2)*1.5;float g=smoothstep(.25,.7,vGreen+(lf.g-.2)*.8+pch*smoothstep(.0,.25,vGreen+.12));diffuseColor.rgb=mix(diffuseColor.rgb,lf*vec3(1.15,1.12,1.),g);}');};
+    sh.fragmentShader='uniform sampler2D leafMap;varying float vGreen;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{vec3 lf=texture2D(leafMap,vMapUv*1.7).rgb;lf=clamp((lf-.3)*1.28+.32,0.,1.);float pch=(texture2D(leafMap,vMapUv*.23+.37).g-.2)*1.5;float g=smoothstep(.33,.62,vGreen+(lf.g-.2)*.8+pch*smoothstep(.0,.25,vGreen+.12));diffuseColor.rgb=mix(diffuseColor.rgb,lf*vec3(1.15,1.12,1.),g);}');};
   addSeeThrough(bayRockMat);
   const bayChunks=new Map();// "cx,cz" -> {P,I,T,D,H,S,UV,R}
   const bayExtraRocks=[];// mỏm đá phụ và vòng đảo quanh làng chài: [x,z,bán kính chặn] cho lưới dò đường
@@ -113,20 +113,22 @@
   function addKarst(x,z,r,h,k,opt={}){
     if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};const KT=opt.hi?KTH:KT0;
     const key=Math.floor(x/900)+','+Math.floor(z/900);let ch=bayChunks.get(key);if(!ch){ch={P:[],I:[],T:[],D:[],H:[],S:[],UV:[],R:[],O:[]};bayChunks.set(key,ch)}
-    const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??1,dome=opt.dome??(.16+bayHash(k,2,5)*.14),rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
+    const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??1,dome0=opt.dome??(.16+bayHash(k,2,5)*.14),rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
     const floating=opt.y0!=null,yb=floating?opt.y0:-4,total=floating?h:h+4;
-    const sx=opt.sx||1,sz=(opt.sz||1)*(opt.squash||1),taper=opt.taper??.12,saddle=opt.saddle||0,tilt=opt.round?0:.05+bayHash(k,4,8)*.08;
+    /* 26/11 chị dặn bo tròn đỉnh nhọn: chỏm cao không quá ~1,1 lần bán kính chỗ bắt đầu chỏm, đầu chỏm tù hơn */
+    const dome=opt.round?dome0:Math.max(.05,Math.min(dome0,1.1*r*Math.max(.15,1-(opt.taper??.12)*(1-dome0))*Math.min(opt.sx||1,(opt.sz||1)*(opt.squash||1))/Math.max(1,h+4)));
+    const sx=opt.sx||1,sz=(opt.sz||1)*(opt.squash||1),taper=opt.taper??.12,saddle=opt.saddle||0,tilt=opt.round?0:.03+bayHash(k,4,8)*.04;
     const rough=opt.rough??(opt.round?.1:.18),ribN=opt.round?0:(opt.ribs??5),ribA=opt.ribAmp??.12,notch=floating?0:(opt.notch??.26),steps=opt.steps||0;
     const reps=Math.max(1,Math.round(2*Math.PI*r*Math.max(sx,1)/44)),vo=bayHash(k,3,7)*4;
     for(let i=0;i<KT.n;i++){const t=KT.t[i],al=KT.a[i];
       let prof=opt.cone?Math.pow(Math.max(0,1-t*.92),.9):1-taper*t+(opt.round?0:.06*Math.sin(Math.PI*t));
       if(steps){const f=t*steps,fl=Math.floor(f);prof*=1-.18*(fl+baySm(.6,1,f-fl))/steps}
-      if(t>1-dome){const u=(t-(1-dome))/dome;prof*=Math.pow(Math.max(0,1-u*u),.42)}
+      if(t>1-dome){const u=(t-(1-dome))/dome;prof*=Math.pow(Math.max(0,1-u*u),opt.round?.42:.34)}
       if(!opt.round&&!floating)prof*=1+.1*Math.exp(-((t/.1)**2));// chân loe nhẹ ra mặt nước
       if(pinch!==1)prof*=pinch+(1-pinch)*baySm(.04,.6,t);
       if(opt.bulge)prof*=1+opt.bulge*Math.exp(-(((t-(opt.bulgeAt??.72))/.15)**2));
       const hN=(1-saddle*.5)/(1+tilt),hRaw=(1-saddle*Math.pow(Math.sin(al),2))*(1+tilt*Math.cos(al-ph))/(1+tilt),hf=KT.ring[i]?hN+(hRaw-hN)*Math.min(1,prof*1.6):hN;
-      const lump=opt.round?0:baySm(.55,1,t)*(.08*Math.sin(al*2+ph*2.1)+.05*Math.sin(al*5+ph*.7)+.03*Math.sin(al*9+ph))*(KT.ring[i]?Math.min(1,prof*1.6):0);
+      const lump=opt.round?0:baySm(.55,1,t)*.45*(.08*Math.sin(al*2+ph*2.1)+.05*Math.sin(al*5+ph*.7)+.03*Math.sin(al*9+ph))*(KT.ring[i]?Math.min(1,prof*1.6):0);
       const wy=yb+t*total*(1-(1-hf)*baySm(.3,1,t))*(1+lump);
       // ngấn hàm ếch do sóng bào mòn sát mực nước (0..2,6) và các rãnh ăn mòn ngang
       if(notch)prof*=1-notch*baySm(-.25,.55,wy)*(1-baySm(1.9,2.7,wy));
@@ -135,7 +137,7 @@
       let crev=0;if(ribN){const rs=Math.abs(Math.sin(al*ribN*.5+ph+Math.sin(t*3.1+ph)*.35));crev=Math.pow(1-rs,6)*baySm(.06,.25,t)*(1-baySm(1-dome-.05,1-dome+.1,t))}
       const crown=baySm(.55,1,t);
       // mặt đá bào mòn không đều: nhiều lớp gợn theo cả góc lẫn chiều cao, lệch pha từng đảo
-      const nz=opt.round?1+.08*Math.sin(al*3+ph)+.05*Math.sin(al*5+t*4+ph):1+rough*(.75*Math.sin(al*2+ph+t*1.7)+.55*Math.sin(al*3+ph*1.9+t*3.3)+.35*Math.sin(al*5+ph*2.3+t*5.1)+.25*Math.sin(al*7-ph+t*7.3)+.3*(bayHash(al*5,t*9,k)-.5))+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
+      const nz=opt.round?1+.08*Math.sin(al*3+ph)+.05*Math.sin(al*5+t*4+ph):1+rough*(.75*Math.sin(al*2+ph+t*1.7)+.55*Math.sin(al*3+ph*1.9+t*3.3)+.35*Math.sin(al*5+ph*2.3+t*5.1)+.25*Math.sin(al*7-ph+t*7.3)+.3*(bayHash(al*5,t*9,k)-.5))*(1-.6*baySm(1-dome,1,t))+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
       const rr=r*prof*nz*KT.ring[i],px=Math.cos(al)*rr*sx+lean*t*t*total,pz=Math.sin(al)*rr*sz;
       ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);ch.R.push(crev);ch.O.push(opt.pale??(lmPale&&(r<30?3:4)));
       ch.UV.push(KT.u[i]*reps,wy/44+vo);}
