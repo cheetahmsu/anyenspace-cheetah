@@ -548,11 +548,11 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const fountainPoolMat=new THREE.MeshStandardMaterial({color:'#4f8288',metalness:.25,roughness:.18,transparent:true,opacity:.92});
   /* 26/11: hai sân có chồng đá theo mẫu chị gửi. Sân chân đồi: "Thiền Đá Cân Bằng", năm viên cuội xếp thẳng cân đối, rêu mặt trên, cuội nhỏ quanh chân.
      Sân đón (chị gọi là Sân chào, ở cổng làng): "Chồng Đá Tĩnh Tâm" theo mẫu chị gửi: phiến đá dựng cao nhọn đầu, mặt sần có vệt rêu,
-     tựa bên cạnh là chồng năm viên cuội tròn dẹt màu be ấm nhỏ dần lên trên (viên đáy rất to, có rêu); dương xỉ, hoa tím bông dài, cúc trắng, ụ rêu,
-     hai đèn đá ánh vàng ấm. Nền là đá lát xám sẫm xếp vòng đồng tâm (không cát), viền rêu. Màu đá xám ấm, be ấm, rêu xanh trầm hợp rừng thông.
-     Nhẹ máy: đá, cây, đèn gộp thành 1 khối tô màu theo đỉnh + 1 khối kính đèn phát sáng + 1 đĩa nền (1 texture canvas 256 px), không thêm đèn thật. */
+     tựa bên cạnh là chồng năm viên cuội tròn dẹt màu be ấm nhỏ dần lên trên (viên đáy rất to, có rêu); dương xỉ, hoa tím bông dài, cúc trắng, ụ rêu
+     (chị dặn không vẽ đèn ở hai sân). Nền là đá lát xám sẫm xếp vòng đồng tâm (không cát), viền rêu. Màu đá xám ấm, be ấm, rêu xanh trầm hợp rừng thông.
+     Nhẹ máy: đá, cây gộp thành 1 khối tô màu theo đỉnh + 1 đĩa nền (1 texture canvas 256 px) + viền rêu. */
   for(const p of ZEN_SAN){const g=new THREE.Group(),y0=terrainHeight(p.x,p.z);g.position.set(p.x,y0,p.z);
-    const parts=[],glows=[],MOSS=new THREE.Color('#58702f'),MOSS_D=new THREE.Color('#435a27'),tc=new THREE.Color();
+    const parts=[],MOSS=new THREE.Color('#58702f'),MOSS_D=new THREE.Color('#435a27'),tc=new THREE.Color();
     // tô màu theo đỉnh: rêu bám mặt trên (pháp tuyến hướng lên) loang theo nhiễu, đá có vân sáng tối nhẹ
     const add=(geo,base,moss=0,k=0,arr=parts)=>{const q=geo.index?geo.toNonIndexed():geo;q.computeVertexNormals();const P=q.attributes.position,N=q.attributes.normal,col=new Float32Array(P.count*3),cb=new THREE.Color(base);
       for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=Math.sin(x*4.1+k)*Math.cos(z*3.7+k*1.7)+.4*Math.sin(y*2.6+x*2.2+k),m=moss*(N.getY(i)*1.4+n*.35-.6);
@@ -581,11 +581,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     [[.95,.55,.82,.52,1.3],[.64,.2,.54,1.17,.9],[.4,.14,.34,1.44,0],[.5,.15,.42,1.66,.8],[.31,.18,.27,1.92,0]]
       .forEach(([w,h,d,y,m],k)=>add(T(peb(w,h,d,431+k*7),(k%2?.015:-.012),y,0,0,k*1.1,k%2?.03:-.02),k%2?STB:ST2,m,30+k));
     for(let k=0;k<9;k++){const a=k/9*Math.PI*2+.3,r=.95+(k%3)*.08,w=.09+(k%4)*.025;add(T(peb(w,w*.6,w*.85,461+k,1),Math.cos(a)*r,w*.3,Math.sin(a)*r*.85,0,a),k%2?ST3:ST,.2,k)}}
-    // hai đèn đá hai bên: đế, trụ, hộp đèn (kính sáng), mái bốn mái, núm
-    for(const [x,z,ry] of [[-1.75,.65,.35],[1.8,.55,-.35]]){const L=(geo,yy,c,m)=>add(T(geo,x,yy,z,0,ry),c,(m||0)*.35,x*3);
-      L(new THREE.BoxGeometry(.4,.14,.4),.07,ST3,.8);L(new THREE.CylinderGeometry(.09,.11,.3,6),.29,ST2);L(new THREE.BoxGeometry(.38,.06,.38),.47,ST2);
-      for(const [cx,cz] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const geo=new THREE.BoxGeometry(.05,.26,.05);geo.translate(cx*.14,0,cz*.14);L(geo,.63,ST3)}
-      add(T(new THREE.BoxGeometry(.26,.24,.26),x,.63,z,0,ry),'#ffe0a0',0,0,glows);const roof=new THREE.ConeGeometry(.36,.22,4);roof.rotateY(Math.PI/4);L(roof,.87,ST2);L(new THREE.SphereGeometry(.055,6,4),1.0,ST2)}
     // dương xỉ: mỗi khóm 7 lá nhọn xoè ra
     const fern=(x,z,s)=>{for(let k=0;k<7;k++){const a=k*.9+x,geo=new THREE.ConeGeometry(.06*s,.6*s,4,1);geo.translate(0,.3*s,0);geo.rotateX(.85);geo.rotateY(a);geo.translate(x,0,z);add(geo,k%2?'#4c7f37':'#5a8f41')}};
     // hoa tím dạng bông dài (kiểu oải hương, lupin) và cúc trắng nhuỵ vàng
@@ -598,7 +593,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     for(const [x,z,s] of (p===GATHER?[[-.2,1.2,1],[1.15,1.35,.9],[-1.3,1.45,.8],[.4,-1.1,.9]]:[[-.55,1.15,1.1],[.6,1.15,1.1],[-1.3,1.45,.8],[1.4,-1.2,.9]]))mound(x,z,s);
     for(const [x,z,s,sd] of [[-2.2,-.6,.26,351],[2.25,-.3,.24,353]])add(T(peb(s*1.3,s*.75,s,sd,1),x,s*.3,z,0,sd),ST3,1.2,sd);
     const stoneMesh=new THREE.Mesh(merge(parts),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,flatShading:true}));g.add(stoneMesh);
-    const glowMesh=new THREE.Mesh(merge(glows),new THREE.MeshStandardMaterial({color:'#ffc45c',emissive:'#ff9a1f',emissiveIntensity:1.6}));g.add(glowMesh);
     // nền đá xám sẫm (không phải cát): các vòng đá lát đồng tâm, mỗi vòng chia viên, mạch tối, viền rêu
     {const cv=document.createElement('canvas');cv.width=cv.height=256;const c=cv.getContext('2d');c.fillStyle='#2c2b28';c.fillRect(0,0,256,256);const r=seededRandom(78);
       for(let R=36,ring=0;R<128;R+=11,ring++){const n=Math.max(8,Math.round(2*Math.PI*R/16)),off=r()*6;for(let k=0;k<n;k++){const a0=off+k/n*Math.PI*2+.03,a1=off+(k+1)/n*Math.PI*2-.03,v=60+Math.floor(r()*18);
@@ -606,7 +600,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       c.fillStyle='#46443f';c.beginPath();c.arc(128,128,36,0,7);c.fill();
       const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const gr=new THREE.Mesh(new THREE.CircleGeometry(2.3,40),new THREE.MeshStandardMaterial({map:t,roughness:.95}));gr.rotation.x=-Math.PI/2;gr.position.y=.03;g.add(gr);
       const rim=new THREE.Mesh(new THREE.RingGeometry(2.28,2.55,40),new THREE.MeshStandardMaterial({color:'#3f5527',roughness:1}));rim.rotation.x=-Math.PI/2;rim.position.y=.025;g.add(rim)}
-    if(p===FOOT){const lamp=new THREE.PointLight('#ffc070',1.1,6,1.8);lamp.position.set(0,1.2,1.2);g.add(lamp)}/* giữ đúng số đèn thật như trước (chỉ Sân chân đồi có), cho nhẹ máy */
+    /* chị dặn không vẽ đèn ở hai sân này: không đèn đá, không đèn thật */
     scene.add(g);nonBo.push(g)}
   // Zig-zag stone stairs up the south face of the hill (no lamps along the paths).
   {const slabMat=mat('#6c6758'),edgeMat=mat('#5a5749');for(let i=0;i<STAIRS.length-1;i++){const [ax,az]=STAIRS[i],[bx,bz]=STAIRS[i+1],len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az);
