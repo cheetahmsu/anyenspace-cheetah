@@ -1800,7 +1800,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const sc=new THREE.Scene();sc.background=new THREE.Color('#1d2a24');const hemi=new THREE.HemisphereLight('#fff1d6','#3a2c20',1.6);sc.add(hemi);const key=new THREE.DirectionalLight('#ffd9a8',1.8);key.position.set(2,4,3);sc.add(key);if(!bare){const lamp=new THREE.PointLight('#ffcf8a',6,9,1.6);lamp.position.set(0,2.6,.5);sc.add(lamp)}
     if(!bare){const fl=new THREE.Mesh(new THREE.BoxGeometry(8,.1,7),mat(floor));fl.position.y=-.05;sc.add(fl);for(let i=-3;i<=3;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.02,.002,7),mat('#3a2a1e'));s.position.set(i*1.1,.001,0);sc.add(s)}
     const back=new THREE.Mesh(new THREE.BoxGeometry(8,4,.12),mat(wall));back.position.set(0,2,-3.5);sc.add(back);for(const sx of [-4,4]){const w=new THREE.Mesh(new THREE.BoxGeometry(.12,4,7),mat(wall));w.position.set(sx,2,0);sc.add(w)}
-    const beam=new THREE.Mesh(new THREE.BoxGeometry(8,.2,.2),mat('#4e3a2a'));beam.position.set(0,3.5,-3.3);sc.add(beam)}
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(8,.2,.2),mat('#4e3a2a'));beam.position.set(0,3.5,-3.3);sc.add(beam)
+    /* 26/11: phòng kín bốn phía: thêm vách trước có ô cửa và trần, để khi vào nhà chỉ thấy bên trong, không còn khoảng trống nhìn ra ngoài */
+    for(const sx of [-1,1]){const w=new THREE.Mesh(new THREE.BoxGeometry(3.3,4,.12),mat(wall));w.position.set(sx*2.35,2,3.5);sc.add(w)}
+    {const w=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.5,.12),mat(wall));w.position.set(0,3.25,3.5);sc.add(w);const fr=mat('#4e3a2a');for(const sx of [-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.1,2.5,.18),fr);p.position.set(sx*.72,1.25,3.5);sc.add(p)}const lt=new THREE.Mesh(new THREE.BoxGeometry(1.54,.12,.18),fr);lt.position.set(0,2.5,3.5);sc.add(lt);
+      const dr=new THREE.Mesh(new THREE.BoxGeometry(1.34,2.44,.04),mat('#6a4c34'));dr.position.set(0,1.22,3.53);sc.add(dr)}
+    if(!(opt&&opt.glassRoof)){const ce=new THREE.Mesh(new THREE.BoxGeometry(8,.1,7.1),mat(wall));ce.position.set(0,4.05,0);sc.add(ce);for(let i=-3;i<=3;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.14,.16,7.1),mat('#4e3a2a'));b.position.set(i*1.15,3.93,0);sc.add(b)}}}
     const cam=new THREE.PerspectiveCamera(50,1,.05,40);const st={r,sc,cam,yaw:0,pitch:.18,dist:4.6,target:new THREE.Vector3(0,.9,0),tick:[],picks:[],run:true,hemi,key,yawC:0,minD:2.6,maxD:6.5};
     // Một ngón kéo để nhìn quanh; hai ngón chụm/mở để lại gần / lùi xa (không xoay khi đang zoom).
     let drag=null;const pts=new Map(),pd=()=>{const [a,c]=[...pts.values()];return Math.max(10,Math.hypot(a.x-c.x,a.y-c.y))};let pinch0=0;
@@ -1815,13 +1820,14 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const t0=performance.now();let tl=t0;const loop=()=>{if(!st.run)return;const nw=performance.now(),dt=(nw-tl)/1000;tl=nw;const t=(nw-t0)/1000;for(const f of st.tick)f(t);if(st.walk){st.walk.update(dt);/* phòng có góc máy dựng sẵn (Nhà Văn Hóa: sân khấu, vòm đèn, tường): giữ góc đó tới khi người chơi bước đi */if(st.camOv){if(st.walk.dest||st.walk.keys.size)st.camOv=false;else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}}}else{cam.position.set(st.target.x+Math.sin(st.yaw)*Math.cos(st.pitch)*st.dist,st.target.y+Math.sin(st.pitch)*st.dist+.4,st.target.z+Math.cos(st.yaw)*Math.cos(st.pitch)*st.dist);cam.lookAt(st.target)}r.render(sc,cam);requestAnimationFrame(loop)};requestAnimationFrame(loop);
     return st}
   // ---- Đi lại trong phòng: nhân vật của bạn bước đi, camera luôn ở sau lưng (trễ mượt như ngoài rừng) và tự lùi đủ xa để thấy cả phòng.
-  const ROOM_WALK={default:{hw:3.5,hd:3.1,cx:0,cz:0,start:[0,2.1],cap:9,front:6,maxD:11},
+  /* 26/11: camera luôn ở trong bốn vách (chw, chd: nửa bề ngang, nửa bề sâu trong lòng nhà; cap: dưới trần), không lùi ra ngoài cửa */
+  const ROOM_WALK={default:{hw:3.5,hd:3.1,cx:0,cz:0,start:[0,.8],cap:3.4,chw:3.7,chd:3.25,maxD:11,fov:66},
     nha_niem:{R:4.5,fov:62,hw:4.3,hd:4.3,cx:0,cz:0,start:[0,3.2],cap:5.4,front:0,maxD:11},
-    tu_gia_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.6],cap:2.5,front:2.2,maxD:8.5,fov:66},tu_dao_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.6],cap:2.5,front:2.2,maxD:8.5,fov:66},
-    dao_yen_thien:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,2.5],cap:2.6,front:2.2,maxD:8.5,fov:66},
-    dao_yen_nha:{hw:5.75,hd:3.75,cx:0,cz:0,start:[0,3.1],cap:3.1,front:2.6,maxD:9.5,fov:66},
+    tu_gia_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,1.25],cap:2.6,chw:3.7,chd:3.3,maxD:8.5,fov:70},tu_dao_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,1.25],cap:2.6,chw:3.7,chd:3.3,maxD:8.5,fov:70},
+    dao_yen_thien:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,.3],cap:2.9,chw:3.7,chd:3.35,maxD:8.5,fov:70},
+    dao_yen_nha:{hw:5.75,hd:3.75,cx:0,cz:0,start:[0,1.3],cap:3.0,chw:5.7,chd:3.7,maxD:9.5,fov:70},
     van_hoa:{hw:7.3,hd:4.9,cx:0,cz:.3,zmin:-2.3,start:[2.3,4.4],cap:6.2,front:0,maxD:11,fov:74,capAt:z=>4.6+Math.max(0,5.4-Math.abs(z))/5.4*2.2-.4}};
-  function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;
+  function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;if(ROOM_WALK[id]&&ROOM_WALK[id].chd==null){delete cfg.chw;delete cfg.chd}/* nhà tự đặt khung camera riêng (Nhà Niệm, Nhà Văn Hóa) thì không lấy khung mặc định */
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
     const parts=outfitParts(g,torso),BW=roomFromIsland&&window.__bayWear,sw=BW?BW.make(g,head):null;/* vào nhà từ Đảo Yên: giữ nguyên bộ đồ đang mặc ngoài đảo */
@@ -1888,7 +1894,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       // nhìn thẳng vào nhân vật: giữa màn hình theo chiều ngang, trên đường 1/3 dưới
       const lx=W.x,lz=W.z;
       let px=lx+Math.sin(W.cy)*Math.cos(p)*D,pz=lz+Math.cos(W.cy)*Math.cos(p)*D,py=ty+Math.sin(p)*D;
-      px=Math.max(cfg.cx-cfg.hw+.3,Math.min(cfg.cx+cfg.hw-.3,px));pz=Math.max(cfg.cz-cfg.hd+.3,Math.min(cfg.cz+cfg.hd+cfg.front,pz));py=Math.min(py,cfg.capAt?cfg.capAt(pz):cfg.cap);
+      {const cw=cfg.chw||cfg.hw-.3;px=Math.max(cfg.cx-cw,Math.min(cfg.cx+cw,px));pz=Math.max(cfg.cz-(cfg.chd||cfg.hd-.3),Math.min(cfg.cz+(cfg.chd||cfg.hd+(cfg.front||0)),pz));/* camera bị vách chặn, đứng gần nhân vật hơn: hạ thấp theo, để vẫn nhìn ngang vào phòng thay vì chúi xuống sàn */if(cfg.chd){const hz=Math.hypot(px-lx,pz-lz);py=Math.min(py,asp<1?ty+1.3+hz*.75:ty+.75+hz*.5)}/* điện thoại dọc: góc cao hơn một chút để thấy rộng hơn */}py=Math.min(py,cfg.capAt?cfg.capAt(pz):cfg.cap);
       if(cfg.R){const d=Math.hypot(px-cfg.cx,pz-cfg.cz);if(d>cfg.R+.8){px=cfg.cx+(px-cfg.cx)/d*(cfg.R+.8);pz=cfg.cz+(pz-cfg.cz)/d*(cfg.R+.8)}}
       cam.position.set(px,py,pz);cam.lookAt(lx,ty,lz);cam.rotateX(Math.atan(Math.tan(vh)/3))};
     st.walk=W;st.walkAvatar=g;const oc=st.cleanup;st.cleanup=()=>{document.removeEventListener('keydown',key);document.removeEventListener('keyup',key);pad.remove();if(oc)oc()};
@@ -2012,7 +2018,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   }
   // ---------------------------------------------------------------- Quán trà
   const TEA_WORDS=['Uống trà là uống cái tĩnh lặng của lá.','Chén trà ấm nhất là chén trà được mời bằng cả tấm lòng.','Hãy uống trà chậm rãi, như thể trái đất đang xoay quanh chén trà của bạn.','Nước sôi rồi lặng, trà mới thơm. Lòng lặng rồi, lời mới hiền.','Một chén trà, một người bạn, đủ cho một buổi chiều an.','Rót trà cho người khác trước, lòng mình cũng ấm theo.'];
-  const ROOM_BUILDERS={nha_hoa_lan:['#cfd9cc','#8a7a62',st=>roomNhaSac(st)],chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#c9a57a','#7a5636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}],van_hoa:['#42362A','#4a3826',st=>roomNhaVanHoa(st),{bare:true,venue:'nha_van_hoa'}]};
+  const ROOM_BUILDERS={nha_hoa_lan:['#cfd9cc','#8a7a62',st=>roomNhaSac(st),{glassRoof:true}],chuong_gio:['#3f3424','#6b5238',st=>roomChuongGio(st)],xong_huong:['#4a3a2c','#5e4a36',st=>roomXongHuong(st)],quan_tra:['#3a3026','#6b5238',st=>roomQuanTra(st)],xuong_gom:['#c9a57a','#7a5636',st=>roomXuongGom(st)],nha_niem:['#4A3C2E','#5a452f',st=>roomNhaNiem(st),{bare:true,solo:true}],van_hoa:['#42362A','#4a3826',st=>roomNhaVanHoa(st),{bare:true,venue:'nha_van_hoa'}]};
   function openRoom(h){const b=ROOM_BUILDERS[h.id];if(!b||roomOpen||bayMode)return Promise.resolve();
     if(!roomsReady){if(openRoom.waiting)return openRoom.waiting;const hint=document.getElementById('zenHint');if(hint)hint.textContent='Đang mở '+(h.name||'phòng')+'…';
       return openRoom.waiting=loadRoomsModule().then(()=>{openRoom.waiting=null;return openRoom(h)}).catch(()=>{openRoom.waiting=null;if(hint)hint.textContent='Chưa tải được phòng, kiểm tra mạng rồi thử lại nhé'})}
