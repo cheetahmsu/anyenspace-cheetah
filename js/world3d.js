@@ -52,7 +52,7 @@ const wishLakes=[
 ];
 const lakeVisuals=new Map();let wishDestination=null;let selectedWishLake='Sen';window.anyenSelectedWishLake='Sen';
 // 3.32: Sáu hồ Lục Căn vẽ lại theo bộ mẫu three.js "6 hồ giác quan" và tranh tham khảo: nền hồ sẫm, mặt nước xanh ngọc,
-// viền đá cuội tròn dẹt (một InstancedMesh cho cả sáu hồ), lá súng nổi; Hồ Sắc có cá Koi bơi vòng, Hồ Thanh có gợn sóng
+// viền đá cuội tròn dẹt (một InstancedMesh cho cả sáu hồ), lá súng nổi; Hồ Sắc có ba cá Koi vàng, đỏ, cam bơi vòng, Hồ Thanh có gợn sóng
 // lan tròn, Hồ Niệm có vài bông sen trắng hồng nhỏ, thưa. Luống hoa của mỗi hồ dựng ở phần vườn hoa (FLOWER_GARDENS).
 const POND_WATER='#2a6a66',pondAnims=[];
 const pondStoneGeo=new THREE.DodecahedronGeometry(1,0),pondStoneMat=new THREE.MeshStandardMaterial({roughness:.9,flatShading:true});
@@ -69,13 +69,18 @@ for(const l of wishLakes){
      pondStones.setMatrixAt(i,m4.compose(v,q,sc));pondStones.setColorAt(i,stoneCols[i%5])}
    pondStones.instanceMatrix.needsUpdate=true;pondStones.instanceColor.needsUpdate=true;group.add(pondStones);
    const nPad=l.name==='Sắc'?8:l.name==='Niệm'?9:5,pondPads=new THREE.InstancedMesh(pondPadGeo,pondPadMat,nPad);for(let i=0;i<nPad;i++){const a=i*2.399+l.x*.1,r=POND_R*(.25+(i%3)*.17),s=.85+(i%3)*.2;e.set(0,a,0);q.setFromEuler(e);v.set(Math.cos(a)*r,.075,Math.sin(a)*r);sc.set(s*1.2,1,s*.85);pondPads.setMatrixAt(i,m4.compose(v,q,sc))}pondPads.instanceMatrix.needsUpdate=true;group.add(pondPads);
-   if(l.name==='Sắc'){// cá Koi trắng đỏ / trắng đen, mỗi con một lưới gộp, bơi vòng chậm
-     const fish=[];for(let i=0;i<4;i++){const P=[],add=(g,c)=>P.push([g,c]);const body=new THREE.SphereGeometry(.28,8,6);body.scale(1.55,.58,.72);add(body,'#f4eee2');
-       const patch=new THREE.SphereGeometry(.17,7,5);patch.scale(1,.34,.8);patch.translate(.12,.105,0);add(patch,i%2?'#242b2b':'#d83a32');
-       const tail=new THREE.BufferGeometry();tail.setAttribute('position',new THREE.Float32BufferAttribute([-.34,0,0,-.72,.18,.12,-.72,-.18,.12,-.34,0,0,-.72,-.18,-.12,-.72,.18,-.12,-.34,0,0,-.72,-.18,.12,-.72,.18,.12,-.34,0,0,-.72,.18,-.12,-.72,-.18,-.12],3));add(tail,'#f4eee2');
-       for(const z of [.17,-.17]){const eye=new THREE.SphereGeometry(.035,5,4);eye.translate(.32,.06,z);add(eye,'#242b2b')}
-       const f=new THREE.Mesh(mergeColored(P),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.58,flatShading:true}));f.scale.setScalar(1.6);f.userData={orbit:i/4*Math.PI*2,radius:POND_R*(.3+(i%3)*.12),phase:i*1.7,dir:i%2?1:-1};group.add(f);fish.push(f)}
-     pondAnims.push(t=>{for(const f of fish){const u=f.userData,a=u.orbit+u.dir*t*.12;f.position.set(Math.cos(a)*u.radius,.06+Math.sin(t*1.4+u.phase)*.02,Math.sin(a)*u.radius);f.rotation.y=-a-u.dir*Math.PI/2}})}
+   if(l.name==='Sắc'){// 3.33: chỉ ba con Koi, mỗi con một màu (vàng, đỏ, cam), nhỏ gọn cân với hồ; ba con dùng chung một vật liệu, đuôi vẫy nhẹ bằng cách lắc thân
+     const koiMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.5,flatShading:true,side:THREE.DoubleSide}),fish=[];
+     [['#f2c53d','#fbe7a1'],['#d8322c','#f08a7c'],['#f07a22','#f9bd88']].forEach(([c,fin],i)=>{const P=[],add=(g,col)=>P.push([g,col]);
+       const body=new THREE.SphereGeometry(.26,10,6);body.scale(1.6,.5,.66);add(body,c);
+       const head=new THREE.SphereGeometry(.17,8,5);head.scale(1.1,.6,.9);head.translate(.3,-.01,0);add(head,c);
+       const dorsal=new THREE.BufferGeometry();dorsal.setAttribute('position',new THREE.Float32BufferAttribute([.18,.11,0,-.24,.11,0,-.06,.24,0],3));add(dorsal,fin);
+       const tail=new THREE.BufferGeometry();tail.setAttribute('position',new THREE.Float32BufferAttribute([-.36,0,0,-.66,.02,.22,-.58,0,0,-.36,0,0,-.58,0,0,-.66,.02,-.22],3));add(tail,fin);
+       for(const z of [1,-1]){const pec=new THREE.BufferGeometry();pec.setAttribute('position',new THREE.Float32BufferAttribute([.2,-.04,.1*z,.02,-.05,.12*z,.06,-.05,.28*z],3));add(pec,fin);
+         const eye=new THREE.SphereGeometry(.028,5,4);eye.translate(.4,.04,.1*z);add(eye,'#1d2222')}
+       const f=new THREE.Mesh(mergeColored(P),koiMat);f.scale.setScalar(1.2);
+       f.userData={orbit:i*Math.PI*2/3,radius:POND_R*[.36,.56,.46][i],phase:i*2.1,dir:i===1?-1:1,speed:[.13,.1,.115][i]};group.add(f);fish.push(f)});
+     pondAnims.push(t=>{for(const f of fish){const u=f.userData,a=u.orbit+u.dir*t*u.speed,r=u.radius+Math.sin(t*.3+u.phase)*.35;f.position.set(Math.cos(a)*r,.09+Math.sin(t*1.2+u.phase)*.012,Math.sin(a)*r);f.rotation.y=-a-u.dir*Math.PI/2+Math.sin(t*3+u.phase)*.1}})}
    if(l.name==='Thanh'){// gợn sóng tròn lan dần từ giữa hồ: Thanh là âm thanh
      const rings=[0,1,2].map(k=>{const r=new THREE.Mesh(new THREE.RingGeometry(.92,1,40),new THREE.MeshBasicMaterial({color:'#e8fbf4',transparent:true,opacity:.5,depthWrite:false}));r.rotation.x=-Math.PI/2;r.position.y=.075;group.add(r);return r});
      pondAnims.push(t=>rings.forEach((r,k)=>{const u=((t*.25+k/3)%1);r.scale.setScalar(.3+u*2.6);r.material.opacity=.55*(1-u)}))}
