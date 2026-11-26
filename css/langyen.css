@@ -569,3 +569,5 @@ html.lite #home>.dock.lite-dock2{margin-top:0}
 html.lite #home>#liteBreath{order:1;grid-row:1}
 html.lite #home>#liteExp{order:8;grid-row:6}
 html.lite #home>.dock.lite-dock2{order:9;grid-row:7;grid-template-columns:1fr!important}
+html.lite body.immersive #exit3D{max-width:none!important;white-space:nowrap}
+html.lite #zenToolbar [data-zen="boat"]{display:none!important}
