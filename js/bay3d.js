@@ -88,6 +88,8 @@
     sh.vertexShader='attribute float aGreen;varying float vGreen;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGreen=aGreen;');
     sh.fragmentShader='uniform sampler2D leafMap;varying float vGreen;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{vec3 lf=texture2D(leafMap,vMapUv*1.7).rgb;float pch=(texture2D(leafMap,vMapUv*.23+.37).g-.2)*1.5;float g=smoothstep(.25,.7,vGreen+(lf.g-.2)*.8+pch*smoothstep(.0,.25,vGreen+.12));diffuseColor.rgb=mix(diffuseColor.rgb,lf*vec3(1.15,1.12,1.),g);}');};
   addSeeThrough(bayRockMat);
+  // vách đá ít hoa văn hơn cho Hang Luồn, Mắt Rồng, Con Cóc (26/11 chị dặn bớt hoa văn): cùng shader, gân nổi nhẹ đi
+  const bayRockSoftMat=bayRockMat.clone();bayRockSoftMat.normalScale=new THREE.Vector2(.45,.45);bayRockSoftMat.onBeforeCompile=bayRockMat.onBeforeCompile;bayRockSoftMat.customProgramCacheKey=bayRockMat.customProgramCacheKey;
   const bayChunks=new Map();// "cx,cz" -> {P,I,T,D,H,S,UV,R}
   const bayExtraRocks=[];// mỏm đá phụ và vòng đảo quanh làng chài: [x,z,bán kính chặn] cho lưới dò đường
   const bayArchMeshes=[];
@@ -171,31 +173,31 @@
           // vân đá: khe nứt dọc sẫm, gờ lớp ngang, mảng loang sáng tối, vệt rêu đen chảy xuống từ gờ
           const uu=px*.71-pz*.7,vv=px*.7+pz*.71,crack=baySm(.86,.97,Math.abs(Math.sin(uu*.9+Math.sin(wy*.21+vv*.3)*1.6))),bed=baySm(.8,.95,Math.abs(Math.sin(wy*1.15+Math.sin(uu*.35)*.9))),
             mott=.5+.5*Math.sin(uu*.33+wy*.27)*Math.sin(vv*.41-wy*.19),drip=baySm(.7,.92,.5+.5*Math.sin(uu*2.3+Math.sin(vv*.7)*2))*baySm(2,8,wy);
-          c.lerp(rockCrev,crack*.55+bed*.3);c.multiplyScalar(.88+mott*.28);c.lerp(rockStreak,drip*.35);
+          const v5=o===5?.5:1;c.lerp(rockCrev,(crack*.55+bed*.3)*v5);c.multiplyScalar(1-.12*v5+mott*.28*v5);c.lerp(rockStreak,drip*.35*v5);
           if(o===5){/* Hang Luồn (ảnh mẫu): vân dọc dày, mảng vàng cam loang trên vách dựng, chân vách sẫm ẩm */const st5=1-baySm(.35,.75,Math.abs(ny)),ora=baySm(.74,.94,.5+.5*Math.sin(uu*.38+vv*.21+Math.sin(wy*.08)*2.2))*baySm(3,10,wy)*st5;
-            c.lerp(rockOchre,ora*.65);c.lerp(rockWet,(1-baySm(.4,1.6,wy))*baySm(-1,.3,wy)*.6);
+            c.lerp(rockOchre,ora*.45);c.lerp(rockWet,(1-baySm(.4,1.6,wy))*baySm(-1,.3,wy)*.6);
             // vân chi tiết không lặp: mảng màu chuyển (nhiễu nhiều tầng), khe nứt dọc mảnh và nhánh, hốc đá sẫm, gờ sáng có bóng dưới
-            const m1=vn3(px*.09,wy*.06,pz*.09)*.6+vn3(px*.31,wy*.22,pz*.31)*.4,fk=vn3(px*.55,wy*.045,pz*.55),fk2=vn3(px*1.3+7,wy*.11,pz*1.3),cr1=1-Math.abs(fk*2-1),cr2=1-Math.abs(fk2*2-1),
+            const m1=vn3(px*.09,wy*.06,pz*.09)*.6+vn3(px*.31,wy*.22,pz*.31)*.4,fk=vn3(px*.55,wy*.045,pz*.55),cr1=1-Math.abs(fk*2-1),
               hol=baySm(.68,.8,vn3(px*.16+3,wy*.16,pz*.16)),lg=vn3(px*.05,wy*.9,pz*.05),ledge5=baySm(.82,.9,lg)-baySm(.9,.97,lg)*1.6;
-            c.multiplyScalar(.86+m1*.3);c.lerp(rockPale,baySm(.62,.85,m1)*.35);c.lerp(rockCrev,(baySm(.9,.985,cr1)*.6+baySm(.93,.99,cr2)*.4)*st5);
-            c.lerp(rockNotch,hol*st5*.55);if(ledge5>0)c.lerp(rockPale,ledge5*.5);else c.lerp(rockCrev,-ledge5*.35*st5)}
+            /* 26/11 chị dặn bớt hoa văn: giữ mảng màu loang, khe nứt mảnh và hốc nhạt đi một nửa, bỏ nhánh nứt thứ hai */c.multiplyScalar(.93+m1*.15);c.lerp(rockPale,baySm(.62,.85,m1)*.25);c.lerp(rockCrev,baySm(.92,.985,cr1)*.3*st5);
+            c.lerp(rockNotch,hol*st5*.25);if(ledge5>0)c.lerp(rockPale,ledge5*.3)}
           c.lerp(o===1?rockOchreBase:rockCream,base0*(o===5?.35:.8));
-          if(ny>(o>=3?.12:.35)&&wy>2.6&&crev<.6&&(o<3||ny>.35||tuft>.3)&&!(o===2&&(wy>14.5||bayHash(Math.floor(px*7),Math.floor(pz*7),3)<.4))){const cs=o===4?4.2:o===6?3.2:o===5?1.9:1.7,key=Math.floor(px/cs)+','+Math.floor(wy/cs)+','+Math.floor(pz/cs);if(!bushSeen.has(key)&&bayHash(Math.floor(px*3),Math.floor(pz*3),Math.floor(wy*3))<(o===4?(ny>.75?.12:.3):o===6?(ny>.5?.85:.6):o===5?(ny>.6?.85:.5):ny>.75?.5:.28)){bushSeen.add(key);bush.push(px,wy,pz,ny,N.getX(i),N.getZ(i),o)}}}
+          if(ny>(o>=3?.12:.35)&&wy>2.6&&crev<.6&&(o<3||ny>(o===5?.5:.35)||o!==5&&tuft>.3)&&!(o===2&&(wy>14.5||bayHash(Math.floor(px*7),Math.floor(pz*7),3)<.4))){const cs=o===4?4.2:o===6?3.2:o===5?4.4:1.7,key=Math.floor(px/cs)+','+Math.floor(wy/cs)+','+Math.floor(pz/cs);if(!bushSeen.has(key)&&bayHash(Math.floor(px*3),Math.floor(pz*3),Math.floor(wy*3))<(o===4?(ny>.75?.12:.3):o===6?(ny>.5?.85:.6):o===5?(ny>.6?.75:.3):ny>.75?.5:.28)){bushSeen.add(key);bush.push(px,wy,pz,ny,N.getX(i),N.getZ(i),o)}}}
         // mảng cây bám vách và gờ đá (nhiều ở nửa trên)
         const o=ch.O[i],green=o===6?Math.max(baySm(.15,.5,ny),tuft*.9)*(1-crev*.5):o===1||o===2||o===5?Math.max(baySm(o===2?.6:.72,.92,ny)*.9,tuft*(o===2?.4:o===5?.3:.25)):ch.S[i]?1:Math.max(baySm(.3,.68,ny),baySm(ch.D[i]-.12,ch.D[i]+.04,t),(hh>.72&&t>.3)?.65:0,t>.3?.14:0,tuft*.9);
         gr[i]=green*baySm(-.1,.2,ny)*baySm(2.6,3.8,wy)*(1-crev*.85);
         col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
       g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));g.computeBoundingSphere();
-      const m=new THREE.Mesh(g,bayRockMat);bayGroup.add(m);meshes.push(m);
+      const m=new THREE.Mesh(g,ch.O.includes(5)?bayRockSoftMat:bayRockMat);bayGroup.add(m);meshes.push(m);
       // cây bụi bám gờ, khe và đỉnh đá của các danh thắng vẽ theo ảnh mẫu (Trống Mái, Chó Đá): mỗi bụi 3 khối tròn xanh đậm nhạt
       if(bush.length){
         // mỗi bụi là vài khối tròn xanh; ở Hang Luồn (o=5) cây nhiều tầng tán, to nhỏ và sắc xanh khác nhau, cây bám vách rủ xuống
         const L=[],C=new THREE.Color();
         for(let b=0;b<bush.length;b+=7){const bx=bush[b],by=bush[b+1],bz=bush[b+2],ny=bush[b+3],nx=bush[b+4],nz=bush[b+5],o=bush[b+6],R=q=>bayHash(Math.floor(bx*5)+q*1.7,Math.floor(bz*5)-q,Math.floor(by*3)+q*.3);
-          if(o===5){const side=ny<.62,sz=(side?.75:1.1)*(.55+R(1)*1.1),nl=3+Math.floor(R(2)*4),base=BUSH_COLS[Math.floor(R(3)*4)];
+          if(o===5){const side=ny<.62,sz=(side?1.1:1.8)*(.6+R(1)*1),nl=2+Math.floor(R(2)*2),base=BUSH_COLS[Math.floor(R(3)*4)];
             for(let q=0;q<nl;q++){const a=R(10+q)*6.28,d=(q?.35+R(20+q)*.55:0)*sz,s2=sz*(q?.45+R(30+q)*.45:1),tier=(q%3)*sz*.32;C.set(base).offsetHSL((R(40+q)-.5)*.05,(R(50+q)-.4)*.2,(R(60+q)-.5)*.14);
               L.push(bx+Math.cos(a)*d+nx*sz*.2,by+s2*.3+tier-(side?sz*.2:0),bz+Math.sin(a)*d+nz*sz*.2,s2,s2*(.62+R(70+q)*.25),s2,C.r,C.g,C.b)}
-            if(side&&R(4)<.6){const hl=Math.hypot(nx,nz)||1;for(let q=0;q<2;q++){const dl=sz*(.9+R(80+q)*1.2),off=(q-.5)*sz*.7;C.set('#3d6b27').offsetHSL(0,0,(R(90+q)-.5)*.1);
+            if(side&&R(4)<.25){const hl=Math.hypot(nx,nz)||1;for(let q=0;q<2;q++){const dl=sz*(.9+R(80+q)*1.2),off=(q-.5)*sz*.7;C.set('#3d6b27').offsetHSL(0,0,(R(90+q)-.5)*.1);
               L.push(bx+nx/hl*sz*.45-nz/hl*off,by-dl*.55,bz+nz/hl*sz*.45+nx/hl*off,sz*.32,dl*.7,sz*.32,C.r,C.g,C.b)}}}
           else{const top=ny>.75,sz=(top?1.05:.7)*(o===4?1.8:o===6?2.2:1)*(.75+bayHash(Math.floor(bx*5),Math.floor(bz*5),7)*.6);
             for(let q=0;q<3;q++){const a=q*2.1+bx,d=q?sz*.55:0,s2=sz*(q?.7:1);C.set(BUSH_COLS[(b/7+q)%4]);L.push(bx+Math.cos(a)*d,by+s2*.35-(q?.15*sz:0),bz+Math.sin(a)*d,s2,s2*.72,s2,C.r,C.g,C.b)}}}
@@ -281,12 +283,12 @@
       if(tt===1){if(o.moss){/* trần hang sần sùi phủ rêu xanh, sáng dần về hai cửa (ảnh mẫu: nhìn từ trong hang ra) */const mo=vn3(x*.35,y*.5,z*.35)*.65+vn3(x*1.1,y*1.4,z*1.1)*.35,pit=baySm(.62,.78,vn3(x*.8+5,y*.9,z*.8));c.lerp(caveOlive,.55);c.lerp(mossC,.35*mo);c.lerp(rockCrev,pit*.5);c.lerp(rockPale,baySm(.6,.85,mo)*.3);c.multiplyScalar(1.1+.25*baySm(-1,th,y))}
         else c.multiplyScalar((o.dark?.45:.7)+.25*baySm(-1,th,y))}/* trong hang tối hơn */
       else if(o.moss){/* vách ngoài: vân nứt dọc, vệt vàng cam (ảnh mẫu: cửa hang) */const uu=x*.71-z*.7,crack=baySm(.86,.97,Math.abs(Math.sin(uu*.9+Math.sin(y*.21)*1.6))),ora=baySm(.8,.95,.5+.5*Math.sin(uu*.45+1.3))*baySm(3,9,y);
-        c.lerp(rockPale,.4);c.lerp(rockCrev,crack*.5);c.lerp(rockOchre,ora*.55)}
+        c.lerp(rockPale,.5);c.lerp(rockCrev,crack*.2);c.lerp(rockOchre,ora*.35)}
       col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
       gr[i]=tt===1?0:o.moss?Math.max(baySm(.78,.95,ny)*.6,baySm(.9,.98,up)*.4)*baySm(2.6,3.8,y)*(1-crev*.7):Math.max(baySm(.25,.7,ny),baySm(.72,.86,up)*.9,up>.3?.15:0)*baySm(-.1,.2,ny)*baySm(2.6,3.8,y)*(1-crev*.7)}
     geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));geo.computeBoundingSphere();
     if(o.moss){/* trần hang dùng vật liệu riêng không có vân sọc kéo dãn: chỉ màu đỉnh (đá sần, mảng rêu, hốc sẫm) */geo.addGroup(0,iIn,0);geo.addGroup(iIn,iInEnd-iIn,1);geo.addGroup(iInEnd,I.length-iInEnd,0)}
-    const m=new THREE.Mesh(geo,o.moss?[bayRockMat,caveMat]:bayRockMat);bayGroup.add(m);bayArchMeshes.push(m);return m}
+    const m=new THREE.Mesh(geo,o.moss?[bayRockSoftMat,caveMat]:bayRockMat);bayGroup.add(m);bayArchMeshes.push(m);return m}
   // ---- Phông tranh toàn cảnh 360°: nhiều lớp núi đá xa chìm trong sương, phía bắc là đồi bờ Hạ Long ----
   function paintBackdrop(p,sunAz){
     const W=4096,Hh=1024,cv=document.createElement('canvas');cv.width=W;cv.height=Hh;const g=cv.getContext('2d');
@@ -618,8 +620,8 @@
       const A=archLayout(p);let kk=k;
       for(const t of A.tunnels){const mx=(t.a[0]+t.b[0])/2,mz=(t.a[1]+t.b[1])/2;addTunnelMountain(mx,mz,Math.atan2(t.dz,t.dx),{hw:t.hw,th:t.th,D:t.len,W:t.W,H:t.H,k:kk++,dark:t.dark,moss:t.moss});
         if(t.moss){/* cây rậm nhiều tầng tán phủ trên lưng khối đá có hang (ảnh mẫu toàn cảnh, cửa hang): một lệnh vẽ cho cả cụm */
-          const NB=130,NL=4,im=new THREE.InstancedMesh(BUSH_GEO,bushMat,NB*NL),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let n=0;
-          for(let j=0;j<NB;j++){const al=(bayHash(kk,j,1)-.5)*t.len*1.05,c=(bayHash(kk,j,2)-.5)*1.9,y=t.H*Math.pow(Math.max(0,1-c*c),.2)*.98+.3,bx=mx+t.dx*al-t.dz*c*t.W,bz=mz+t.dz*al+t.dx*c*t.W,sz=.7+bayHash(kk,j,3)*1.4,base=BUSH_COLS[j%4];
+          const NB=60,NL=3,im=new THREE.InstancedMesh(BUSH_GEO,bushMat,NB*NL),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let n=0;
+          for(let j=0;j<NB;j++){const al=(bayHash(kk,j,1)-.5)*t.len*1.05,c=(bayHash(kk,j,2)-.5)*1.9,y=t.H*Math.pow(Math.max(0,1-c*c),.2)*.98+.3,bx=mx+t.dx*al-t.dz*c*t.W,bz=mz+t.dz*al+t.dx*c*t.W,sz=1+bayHash(kk,j,3)*1.8,base=BUSH_COLS[j%4];
             for(let q=0;q<NL;q++){const a=bayHash(kk,j,10+q)*6.28,d=q?sz*(.3+bayHash(kk,j,20+q)*.5):0,s2=sz*(q?.5+bayHash(kk,j,30+q)*.4:1);
               T.set(bx+Math.cos(a)*d,y+s2*.3+(q%2)*sz*.35,bz+Math.sin(a)*d);S.set(s2,s2*(.62+bayHash(kk,j,40+q)*.25),s2);M4.compose(T,Q,S);im.setMatrixAt(n,M4);
               C.set(base).offsetHSL((bayHash(kk,j,50+q)-.5)*.05,(bayHash(kk,j,60+q)-.4)*.2,(bayHash(kk,j,70+q)-.5)*.14);im.setColorAt(n,C);n++}}
@@ -803,8 +805,26 @@
       for(const [s,cn] of [[-1,true],[1,false],[.3,true]]){const sp=makeSampan(cn);sp.position.set(x+px*s*30-fx*(back-12),0,z+pz*s*30-fz*(back-12));sp.rotation.y=-f+(s>0?.2:-.3);bayGroup.add(sp)}
       // vòng đảo tháp đá vôi đa dạng bao quanh làng, chừa luồng tàu và lối vào phía tàu ghé
       for(const v of villageRocks(p))addKarst(v[0],v[1],v[2],v[3],v[4],{shape:v[5]})}
-    else if(q.shape==='pier'){const pier=new THREE.Mesh(new THREE.BoxGeometry(6,1,60),new THREE.MeshStandardMaterial({color:'#b9b1a2'}));pier.position.set(x,.6,z+22);bayGroup.add(pier);
-      for(let j=0;j<2;j++){const jk=makeJunk(['#7d5a3d','#8a6446'][j]);jk.position.set(x-6.5,0,z+10+j*16);jk.rotation.y=j%2?Math.PI/2:-Math.PI/2;bayGroup.add(jk)}}
+    else if(q.shape==='pier'){
+      // Cảng Tuần Châu (vẽ lại 26/11, gọn ít chi tiết): nhà ga trắng mái cong xanh nhạt trên bờ, kè đá dọc bờ có hàng dừa và cột cờ,
+      // cầu cảng bê tông rộng chìa ra biển, hai bên là du thuyền trắng nằm chờ khách
+      const g=new THREE.Group(),Z=z+22;g.userData.port=true;
+      decoBox(g,10,1.2,60,'#d4cfc4',x,.6,Z);decoBox(g,10.4,.5,.5,'#8f8a80',x,1.45,Z+30);
+      for(const s of [-1,1])decoBox(g,.25,.9,60,'#eeeae2',x+s*5,1.6,Z);
+      decoBox(g,150,2,12,'#d9d3c6',x,1,z-16);
+      // nhà ga: thân trắng, dải kính, mái cong
+      decoBox(g,64,12,16,'#f3f1eb',x,4,z-34);decoBox(g,64.4,2.4,16.4,'#6f9db3',x,6.6,z-34);
+      const rg=new THREE.CylinderGeometry(10,10,70,20,1,false,0,Math.PI);rg.rotateZ(Math.PI/2);const roof=new THREE.Mesh(rg,new THREE.MeshStandardMaterial({color:'#9cc3d3',roughness:.7,side:THREE.DoubleSide}));roof.scale.y=.42;roof.position.set(x,10,z-34);g.add(roof);
+      // hàng dừa dọc kè (một lệnh vẽ cho thân, một cho tán)
+      const NP=10,tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.35,7,5),decoMat('#8a6a4a'),NP),cr=new THREE.InstancedMesh(BUSH_GEO_LO,bushMat,NP),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();
+      for(let j=0;j<NP;j++){const px=x-66+j*14.6+(j>=5?2:-2);T.set(px,5.5,z-12);S.set(1,1,1);M4.compose(T,Q,S);tr.setMatrixAt(j,M4);T.set(px,9.3,z-12);S.set(2.6,1,2.6);M4.compose(T,Q,S);cr.setMatrixAt(j,M4);cr.setColorAt(j,C.set(BUSH_COLS[j%4]))}
+      g.add(tr,cr);
+      for(let j=0;j<3;j++){decoBox(g,.18,9,.18,'#e8e4dc',x-12+j*12,6,z-21);decoBox(g,.06,1.3,2,'#d2332b',x-12+j*12,9.6,z-20)}
+      // du thuyền trắng nằm chờ hai bên cầu cảng
+      for(const [s,dz] of [[-1,8],[1,18],[-1,36]]){const b=new THREE.Group();decoBox(b,5,1.6,18,'#f4f2ec',0,.5,0);decoBox(b,4.4,1.6,13,'#ffffff',0,2.1,-1);decoBox(b,4.6,.5,13.4,'#5f8fa6',0,2.4,-1);decoBox(b,3.4,1.3,7,'#f7f5f0',0,3.5,-2);
+        const bw=new THREE.Mesh(new THREE.ConeGeometry(2.5,4,4),decoMat('#f4f2ec'));bw.rotation.set(Math.PI/2,0,Math.PI/4);bw.scale.set(1,1,.32);bw.position.set(0,.5,10.5);b.add(bw);
+        b.position.set(x+s*9,0,z+dz);b.rotation.y=s>0?Math.PI:0;g.add(b)}
+      bayGroup.add(g)}
     else if(q.shape==='bridge'){const m=new THREE.MeshStandardMaterial({color:'#e9e6df',roughness:.6});const deck=new THREE.Mesh(new THREE.BoxGeometry(260,2.2,9),m);deck.position.set(x,20,z);bayGroup.add(deck);
       for(const sx of [-45,45]){const py=new THREE.Mesh(new THREE.BoxGeometry(4,64,4),m);py.position.set(x+sx,30,z);bayGroup.add(py);
         const pos=[];for(let j=1;j<=8;j++)for(const s of [-1,1]){pos.push(x+sx,58-j*1.5,z,x+sx+s*j*13,21,z)}const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));bayGroup.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:'#d9d6cf'})))}}
@@ -1999,8 +2019,8 @@
       if(n.kind==='land')for(const L of n.params.polygons){const s=new THREE.Shape(L.pts.map(([x,z])=>new THREE.Vector2(x,-z)));const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(1,L.height-6),bevelEnabled:L.height>4,bevelThickness:6,bevelSize:14,bevelSegments:3,curveSegments:4});geo.rotateX(-Math.PI/2);
         const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:L.color,roughness:1}));m.position.y=-4;bayGroup.add(m);bayLand.push(L);
         if(L.hills){const xs=L.pts.map(p=>p[0]),zs=L.pts.map(p=>p[1]),inP=(x,z)=>{let c=false;for(let a=0,b2=L.pts.length-1;a<L.pts.length;b2=a++){const [x1,z1]=L.pts[a],[x2,z2]=L.pts[b2];if((z1>z)!==(z2>z)&&x<(x2-x1)*(z-z1)/(z2-z1)+x1)c=!c}return c};
-          let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const r=L.hills>10?60+bayHash(k,3,3)*90:30+bayHash(k,3,3)*30;
-            if(!inP(x,z)||!inP(x+r*.8,z)||!inP(x-r*.8,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;const hh=r*(.45+bayHash(k,4,4)*.5)+L.height;streamAdd(x,z,()=>addKarst(x,z,r,hh,9000+k,{round:true,dome:.75}));made++}}}
+          let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const small=L.hills<=10,r=small?40+bayHash(k,3,3)*30:60+bayHash(k,3,3)*90;
+            const rx=r*(small?1.25:.8);if(!inP(x,z)||!inP(x+rx,z)||!inP(x-rx,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;/* đảo nhỏ (Tuần Châu): đồi thấp thoải, dài theo thân đảo, thay cho nửa vòm tròn */const hh=small?r*(.22+bayHash(k,4,4)*.15)+L.height:r*(.45+bayHash(k,4,4)*.5)+L.height;streamAdd(x,z,()=>addKarst(x,z,r,hh,9000+k,small?{round:true,dome:1,sx:1.5,sz:.85,rot:0}:{round:true,dome:.75}));made++}}}
       if(n.kind==='backdrop'){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
       if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>{const ex=fieldExtras(i,x,z,r,h,v);for(const e of ex)bayExtraRocks.push([e[0],e[1],e[2]*1.3]);
         streamAdd(x,z,()=>{addKarst(x,z,r,h,i*7+v,{shape:v});for(const e of ex)addKarst(e[0],e[1],e[2],e[3],e[4],{shape:e[5],rot:e[6]})})})
