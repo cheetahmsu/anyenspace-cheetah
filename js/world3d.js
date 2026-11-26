@@ -1280,7 +1280,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=e5a0babb').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=03223e9c').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -2406,8 +2406,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Nút đến ngay: Rừng Yên → Tư Gia; Vịnh Yên → Đảo Yên
   {const hb=document.createElement('button');hb.type='button';hb.id='homeBtn';document.body.appendChild(hb);
     const st=document.createElement('style');st.textContent='#homeBtn{display:none;position:fixed;z-index:72;left:calc(env(safe-area-inset-left,0px) + 12px);top:calc(env(safe-area-inset-top,0px) + 58px);border:1px solid #c8a96a;border-radius:999px;background:#19483bee;color:#f5e6c9;font-size:13px;padding:7px 12px;cursor:pointer}body.immersive #homeBtn{display:block}body.room-open #homeBtn,body.orchid-open #homeBtn,body.forest-map-open #homeBtn,body.bay-clean #homeBtn,body.bay-photo-open #homeBtn,body.bay-outfit-open #homeBtn,body.bay-map-open #homeBtn,body.kat-chant #homeBtn{display:none!important}body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 160px)}@media(max-width:800px){body.yen-bay #homeBtn{top:calc(env(safe-area-inset-top,0px) + 150px)}}';document.head.appendChild(st);
-    /* Vịnh Yên: nút Đảo Yên lên góc trên bên phải, ngay bên trái nút Về Làng Yên */const place=()=>{const ex=document.getElementById('exit3D'),r=bayMode&&ex&&ex.offsetParent?ex.getBoundingClientRect():null;if(r&&r.width){hb.style.left='auto';hb.style.right=(innerWidth-r.left+6)+'px';hb.style.top=r.top+'px';hb.style.height=r.height+'px'}else{hb.style.left=hb.style.right=hb.style.top=hb.style.height=''}};addEventListener('resize',place);
-    const label=()=>{place();hb.textContent=bayMode?'🏝 Đảo Yên':'🏡 Tư Gia';hb.title=bayMode?'Đi từ từ tới Đảo Yên của bạn (muốn tới liền: chọn Đảo Yên trong Bản đồ)':'Đi từ từ tới trước cửa Tư Gia (chạm cửa để vào nhà; muốn tới liền: chọn Tư Gia trong Bản đồ)'};label();setInterval(label,800);
+        const label=()=>{hb.textContent=bayMode?'🏝 Đảo Yên':'🏡 Tư Gia';hb.title=bayMode?'Đi từ từ tới Đảo Yên của bạn (muốn tới liền: chọn Đảo Yên trong Bản đồ)':'Đi từ từ tới trước cửa Tư Gia (chạm cửa để vào nhà; muốn tới liền: chọn Tư Gia trong Bản đồ)'};label();setInterval(label,800);
     hb.addEventListener('click',()=>{if(bayMode){window.__goTuDao&&window.__goTuDao(false);return}askFinish(()=>goHome(false,true))})}
   // Lịch trị liệu: vào thẳng Nhà đã đăng ký (Healer đến giờ phiên, khách đã được nhận). Nhà có phòng bên trong thì mở phòng;
   // Nhà chưa có phòng thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.
