@@ -26,6 +26,7 @@ Bản đồ gồm vịnh Hạ Long (Quảng Ninh) và vịnh Lan Hạ (Hải Ph�
 Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành trình (giữ nguyên tour/điểm đến), hiện hàng điều khiển xoay trái/phải (giữ nút), tự xoay 360°, nhìn về mũi tàu, chụp ảnh, ▶ đi tiếp hoặc ⏹ neo lại.
 - Bấm **Khám phá Vịnh Yên**: bạn đứng ở mũi một du thuyền 5 sao, xuất phát từ cảng Tuần Châu.
 - **Trang phục ở vịnh:** lần đầu vào vịnh mở bảng "Lên Du thuyền Yên" có xem trước dáng đứng và ngồi thiền. Năm kiểu: Thiền phục · Áo thun · quần jean · Vest lịch sự · Đầm maxi đi chơi · Áo dài truyền thống; màu như bảng màu cũ; tích chọn thêm Nón, Kính, Khăn. Chỉ dùng ở vịnh, mở lại bằng Menu → Trang phục.
+- **Gom nút (26/11):** hàng trên chỉ còn chip trạng thái kèm "Hành trình ▾" (mở bảng bốn thẻ Tour · Dạo vịnh · Điểm đến · Góc nhìn), ⏸ Ngắm cảnh, ⏩ Nhanh, 📷 Chụp ảnh, ⛶ Toàn cảnh, 🌊 Âm thanh. Không còn nút trùng chức năng; hàng dừng ngắm không lặp nút chụp ảnh; Menu ở vịnh ẩn ba mục chỉ chạy ở rừng (bản đồ rừng, dâng hoa, dâng y).
 - **Hàng trên (tàu):** chip trạng thái tàu (đang neo · đang đi tới, còn bao xa · tour điểm 2/5 · dừng ngắm, đi tiếp sau … giây · đang ở danh thắng), nút ⏹ khi tàu chạy, rồi bốn tùy chọn:
   - **🧭 Tour trải nghiệm:** chọn tour và đoạn "Từ … Đến …"; mỗi chặng ghi khoảng cách, thời gian trên web và thời gian ngoài đời (ước tính tàu du lịch 15 km/giờ).
   - **⛵ Dạo ngắm vịnh:** chọn điểm đến tiếp theo (gần đến xa) với khoảng cách và hai mốc thời gian, tàu tự chạy tới.

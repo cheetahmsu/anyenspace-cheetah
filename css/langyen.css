@@ -485,3 +485,8 @@ body:not(.immersive) .mode-label{display:none}
 body.immersive.yen-bay #zenToolbar button[data-zen="bell"] small{white-space:normal!important;width:min-content;line-height:1!important;text-align:center}
 /* Trang chủ điện thoại: bỏ hai nút xoay cảnh nền (trông như nút hoàn tác, không giúp gì cho người mới vào); vẫn vuốt được nền, phím mũi tên vẫn chạy */
 @media (max-width:800px){.scene-controls #left,.scene-controls #right{display:none}}
+/* Gom nút Vịnh Yên (26/11): Tour, Dạo vịnh, Điểm đến, Góc nhìn là bốn thẻ của bảng Hành trình, mở bằng chip trạng thái; không để nút trùng chức năng */
+#bayHUD .bay-st-more{flex:0 0 auto;opacity:.8;white-space:nowrap}
+@media (max-width:760px){#bayHUD .bay-st-more b{display:none}}
+/* ba mục này chỉ chạy ở Rừng Yên (bản đồ rừng, tượng Phật, nghi thức dâng y), ở vịnh bấm không có gì nên ẩn đi */
+body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerflowers"],body.yen-bay [data-zen-action="kathina"]{display:none!important}
