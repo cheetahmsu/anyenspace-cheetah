@@ -930,6 +930,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
       col.setXYZ(i,out.r,out.g,out.b)}
     col.needsUpdate=true;}
+  // 3.35: Vòng đá cuội viền bờ hồ sen hai cánh, cùng kiểu viền sáu hồ giác quan (đá tròn dẹt, năm sắc xám be). Đi dọc mép nước của hai cánh
+  // và hai bờ lạch giữa, chừa chỗ cầu vòm và Bến Sen. Một InstancedMesh cho cả vòng (một lần vẽ), nhẹ máy.
+  {const pts=[],STEP=.66,OUT=.18,skip=(x,z)=>Math.abs(x)<2.4||(Math.abs(x-BEN_SEN.x)<1.25&&z>0);
+    const keep=(x,z,a)=>{if(Math.abs(lakeSDF(x,z))>.03||skip(x,z))return;const ox=x+Math.cos(a)*OUT,oz=z+Math.sin(a)*OUT;if(lakeSDF(ox,oz)<OUT*.6)return;pts.push([ox,oz,a])};
+    for(const [cx,rx,rz] of LOTUS_LAKE.lobes){let t=0;while(t<Math.PI*2){const x=cx+rx*Math.cos(t),z=LOTUS_LAKE.z+rz*Math.sin(t);keep(x,z,Math.atan2(Math.sin(t)/rz,Math.cos(t)/rx));t+=STEP/Math.hypot(rx*Math.sin(t),rz*Math.cos(t))}}
+    for(const s of [-1,1])for(let x=-LOTUS_LAKE.channel[0]+STEP/2;x<LOTUS_LAKE.channel[0];x+=STEP)keep(x,LOTUS_LAKE.z+s*LOTUS_LAKE.channel[1],s*Math.PI/2);
+    const cols=['#77766a','#898779','#9b9787','#6d7069','#a6a08e'].map(c=>new THREE.Color(c)),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
+    const rim=new THREE.InstancedMesh(pondStoneGeo,pondStoneMat,pts.length);
+    pts.forEach(([x,z,a],i)=>{const s=.27+(i%4)*.028;e.set(.04*(i%3),a+(i%2)*.3,.06*(i%4));q.setFromEuler(e);v.set(x,Math.max(terrainHeight(x,z),-.05)+.09,z);sc.set(s*1.05,.14+(i%3)*.02,s*.82);
+      rim.setMatrixAt(i,m4.compose(v,q,sc));rim.setColorAt(i,cols[(i*7)%5])});
+    rim.instanceMatrix.needsUpdate=true;rim.instanceColor.needsUpdate=true;scene.add(rim)}
   // 3.16: Viền cỏ thấp quanh hồ sen, điểm xuyết hoa nhỏ. Hai cây liễu rũ bên bờ đã bỏ (26/11/2026); chỗ cũ vẫn để trống, không mọc thêm thông.
   const WILLOW_SPOTS=[{x:12.5,z:10.6},{x:-35,z:5}];
   {const rnd=seededRandom(5150),tufts=[],blooms=[];
