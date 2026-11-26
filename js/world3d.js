@@ -909,16 +909,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     sanctuary:{pos:[0,HILL.top+4,STATUE.z+11.3],look:[0,HILL.top+2.6,STATUE.z]}
   };
 
-  // Portal markers are part of the 3D scene and can be selected by click/tap.
-  const markers=[];
-  const addMarker=(zone,x,y,z)=>{
-    const group=new THREE.Group();group.position.set(x,y,z);
-    const halo=new THREE.Mesh(new THREE.TorusGeometry(.65,.055,9,48),new THREE.MeshBasicMaterial({color:'#e6c27e'}));group.add(halo);
-    const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,18,14),new THREE.MeshBasicMaterial({color:'#f3d59a'}));group.add(orb);
-    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.8,8),gold);stem.position.y=-.72;group.add(stem);
-    group.scale.setScalar(.7);scene.add(group);group.userData.zone=zone;markers.push(group);
-  };
-  addMarker('garden',-12,2.5,15);addMarker('lotus',9,2.2,8);addMarker('meditation',-7.2,HILL.top+1.8,STATUE.z+7.4);addMarker('sanctuary',7.2,HILL.top+1.8,STATUE.z+7.4);
+  // 4 vòng tròn chuyển cảnh trên cột vàng đã bỏ (26/11/2026); chuyển khu bằng các nút chọn khu.
   let currentLook=new THREE.Vector3(0,3,-13),targetLook=currentLook.clone();
   const targetPosition=new THREE.Vector3(...destinations.gate.pos);
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -954,8 +945,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const rect=renderer.domElement.getBoundingClientRect();pointer.x=(e.clientX-rect.left)/rect.width*2-1;pointer.y=-(e.clientY-rect.top)/rect.height*2+1;
     raycaster.setFromCamera(pointer,camera);if(bayMode){if(document.body.classList.contains('bay-clean')){document.body.classList.remove('bay-clean');return}bayTap(raycaster);return;}{const o=raycaster.ray.origin,d=raycaster.ray.direction,gh=raycaster.intersectObject(ground,false)[0],tMax=gh?gh.distance:200;let hit=null;for(let t=0;t<tMax;t+=.08){const x=o.x+d.x*t,z=o.z+d.z*t;if(Math.abs(x)>1.95||z<=BRIDGE_ARCH[0]||z>=BRIDGE_ARCH[1])continue;const y=o.y+d.y*t,h=bridgeHeight(z);if(y<=h+(Math.abs(x)>1.55?1.15:.2)&&y>=h-.5){hit=[x,z];break}/* mặt cầu, hoặc lan can hai bên */}
       if(hit){navigateTo(Math.max(-1.2,Math.min(1.2,hit[0])),Math.max(BRIDGE_ARCH[0]+.3,Math.min(BRIDGE_ARCH[1]-.3,hit[1])));return}}/* bấm trúng cầu: đi lên cầu tới đúng chỗ đó */
-    const hits=raycaster.intersectObjects(markers,true);
-    if(hits.length){let obj=hits[0].object;while(obj.parent&&!obj.userData.zone)obj=obj.parent;if(obj.userData.zone){selectZone(obj.userData.zone);return;}}
     const guestHits=raycaster.intersectObjects([...onlineAvatars.values()].map(v=>v.group),true);
     if(guestHits.length){window.dispatchEvent(new Event('anyen-greet'));document.getElementById('zenHint').textContent='🙏 Đã gửi lời chào bình an';return;}
     if(boatRide){if(!boatTap())document.getElementById('zenHint').textContent='🚣 Chờ một chút nhé';return;}
@@ -2453,7 +2442,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       else if(peer.gesture.kind==='hello')peer.group.rotation.z=Math.sin(u*Math.PI*4)*.07;
     }
     if(document.body.classList.contains('immersive')){const near=[...onlineAvatars.values()].some(p=>p.group.position.distanceTo(me.position)<7);document.querySelector('#nearGuest').textContent=near?'Có một khách tham quan gần bạn':'Dạo gần một người để chào'};
-    markers.forEach((m,i)=>{m.rotation.y=t*.3;m.children[0].rotation.z=t*.35;m.position.y=(i===0?2.5:i===1?2.2:i===2?2.8:4)+Math.sin(t*1.2+i)*.13});
+    
     flowers.forEach((f,i)=>f.position.y=f.userData.y0+Math.sin(t*.8+i)*.02);(window.anyenSmokePuffs||[]).forEach(o=>{o.mesh.position.x=Math.sin(t*.7+o.phase)*.07;o.mesh.material.opacity=.16+.11*Math.sin(t+o.phase)**2;});(window.anyenFlames||[]).forEach(o=>{o.mesh.scale.setScalar(.9+.12*Math.sin(t*6+o.phase));});
     for(const f of pondAnims)f(t);
     water.material.color.setHSL(.48,.31,.27+Math.sin(t*.5)*.01);renderer.render(scene,camera)
