@@ -512,3 +512,18 @@ body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerf
 .top .nav button,.top .nav .nav-external,.scene-controls button{border-color:rgba(200,169,106,.32)!important}
 .portal-entry.sq:hover,.portal-entry.sq:focus,.portal-entry.sq:focus-visible{outline:none!important;border-color:rgba(214,184,120,.6)!important}
 .dock-house>button:focus-visible,.dock-house>a.house-tile:focus-visible,.house-links>a:focus-visible,.cta:focus-visible{outline:1px solid rgba(214,184,120,.55)!important;outline-offset:2px}
+/* Nút "Nhẹ nhàng" sang trang lite: góc trên cùng bên phải */
+.top .nav .nav-lite{gap:6px;color:#f3ead2!important;border-color:#a9c79a99!important;background:linear-gradient(180deg,#5d7a5233,#2f4a3533)!important}
+.top .nav .nav-lite:hover{background:#a9c79a2a!important}
+.nav-lite-leaf{font-size:.95em;line-height:1}
+@media(min-width:761px){.top .nav{grid-template-columns:repeat(4,minmax(0,170px))!important}}
+@media(max-width:760px){
+ .top .nav .nav-lite{position:absolute;top:14px;right:calc(4vw + 42px);height:34px;padding:0 12px!important;font-size:13px!important;z-index:4}
+}
+@media(max-width:374px){
+ .top .nav .nav-lite{padding:0 10px!important;font-size:12px!important}
+ .top .nav .nav-lite .nav-lite-leaf{display:none}
+}
+/* Điện thoại: thu khoảng chữ dòng phụ của logo để nút "Nhẹ nhàng" không chạm chữ */
+@media(max-width:430px){.top .brand small{letter-spacing:2px}}
+@media(max-width:340px){.top .brand small{letter-spacing:1px}}
