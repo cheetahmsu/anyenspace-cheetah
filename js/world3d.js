@@ -493,7 +493,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   function onPaved(x,z){return (Math.abs(x)<1.9&&z>-37&&z<36)||Math.hypot(x-GATHER.x,z-GATHER.z)<GATHER.r||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r||stairsDistance(x,z)<1.5||Math.hypot(x-HILL.x,z-HILL.z)<HILL.flat-.3||branchDistance(x,z)<1.3}
   // Footbridge across the channel between the two lotus lobes, on the main axis from the gate to the hill.
   // It rises in a tall arch over the water (about 2.6 m at the middle) so a boat can pass underneath.
-  const flagPts=[],flagRand=seededRandom(77),NONBO_R=1.6,nonBo=[];
+  const flagPts=[],flagRand=seededRandom(77),NONBO_R=1.6,FOOT_IN=2.6,nonBo=[];/* FOOT_IN: sân sỏi chồng đá thiền ở Sân chân đồi rộng hơn */
   for(const pts of BRANCHES)for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],len=Math.hypot(bx-ax,bz-az),nx=-(bz-az)/len,nz=(bx-ax)/len;
     for(let t=.2;t<len;t+=.7){if(i===0&&t<FOOT.r-RING_R+30+.4&&Math.hypot(ax+(bx-ax)*t/len-FOOT.x,az+(bz-az)*t/len-FOOT.z)<FOOT.r)continue;for(let o=-.95;o<=.96;o+=.66){if(flagRand()<.2)continue;const w=.26+flagRand()*.12,x=ax+(bx-ax)*t/len+nx*(o+(flagRand()-.5)*.15),z=az+(bz-az)*t/len+nz*(o+(flagRand()-.5)*.15);if(Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT.r)continue;flagPts.push([x,z,w,.24+flagRand()*.1,0])}}}
   {const flat=(z0,z1)=>{const d=new THREE.Mesh(new THREE.BoxGeometry(3.6,.15,z1-z0),stone);d.position.set(0,.18,(z0+z1)/2);scene.add(d)};flat(BRIDGE_ARCH[0]-1.2,BRIDGE_ARCH[0]);
@@ -528,7 +528,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
 
   // Round stone plazas: Sân đón (where guests arrive) and Sân chân đồi (foot of the hill, where the stairs start).
   // Flagstones laid loosely over packed earth, a ring of larger dark stones at the edge.
-  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||Math.hypot(jx-p.x,jz-p.z)<NONBO_R+.25||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
+  for(const p of [GATHER,FOOT]){for(let z=p.z-p.r;z<=p.z+p.r;z+=.7)for(let x=p.x-p.r;x<=p.x+p.r;x+=.7){const jx=x+(flagRand()-.5)*.24,jz=z+(flagRand()-.5)*.24;if(Math.hypot(jx-p.x,jz-p.z)>p.r-.45||Math.hypot(jx-p.x,jz-p.z)<(p===FOOT?FOOT_IN:NONBO_R+.25)||flagRand()<.24)continue;flagPts.push([jx,jz,.27+flagRand()*.08,.27+flagRand()*.08,0])}
     const n=Math.round(p.r*2*Math.PI/.85);for(let k=0;k<n;k++){const a=k/n*Math.PI*2;flagPts.push([p.x+Math.cos(a)*(p.r-.1),p.z+Math.sin(a)*(p.r-.1),.36+flagRand()*.1,.3+flagRand()*.08,1])}}
   {const geo=new THREE.DodecahedronGeometry(1,0),cols=['#5c5a4f','#646155','#56544a','#6a665b','#5f6156'].map(h=>new THREE.Color(h)),edge=new THREE.Color('#4b4941'),mesh=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:1,flatShading:true}),flagPts.length);
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),sc=new THREE.Vector3();
@@ -541,25 +541,61 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(6,1);return t})();
   const fountainWaterMat=new THREE.MeshBasicMaterial({map:FOUNTAIN_TEX,color:'#dcefF2',transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide});
   const fountainPoolMat=new THREE.MeshStandardMaterial({color:'#4f8288',metalness:.25,roughness:.18,transparent:true,opacity:.92});
-  /* 3.40: Sân chân đồi (ngã ba): thay đài nước bằng tháp đá cân bằng trên bệ đá vuông hai bậc, bốn đèn lồng đá nhỏ, khóm oải hương, cỏ và vài tảng đá.
-     Mọi thứ nằm trong vòng tròn chặn NONBO_R+.35 quanh tâm sân nên không ai đi xuyên. */
-  let footCairnG=null;{const p=FOOT,g=new THREE.Group(),y0=terrainHeight(p.x,p.z);g.position.set(p.x,y0,p.z);const SM=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
-    const plinth=SM('#b9b2a2'),plinthL=SM('#cfc8b8');const b1=new THREE.Mesh(new THREE.BoxGeometry(2.1,.22,2.1),plinth);b1.position.y=.11;g.add(b1);const b2=new THREE.Mesh(new THREE.BoxGeometry(1.5,.2,1.5),plinthL);b2.position.y=.32;g.add(b2);
-    const pebble=(w,h,col,seed)=>{const geo=new THREE.IcosahedronGeometry(1,3),P=geo.attributes.position;let sd=seed;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;const k1=rnd()*6,k2=rnd()*6;
-      for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=1+.035*Math.sin(x*3+k1)*Math.cos(z*3+k2);P.setXYZ(i,x*w*n,(y>0?y*h:y*h*.75)*(1-.25*Math.pow(Math.abs(y),3)),z*w*n*.96)}geo.computeVertexNormals();return new THREE.Mesh(geo,SM(col))};
-    const SG=new THREE.Group();SG.position.y=.42;SG.scale.setScalar(1.4);g.add(SG);let y=0;const ST=[[.62,.17,'#d9cfbb'],[.55,.16,'#e6dcc7'],[.48,.15,'#cdc4b2'],[.41,.14,'#e2d7c1'],[.34,.13,'#d4cab6'],[.27,.12,'#e8decb'],[.2,.11,'#d8cebb']];
-    ST.forEach(([w,h,c],i)=>{const m=pebble(w,h,c,11+i*7);m.position.set((i%2?.012:-.01),y+h*.75,0);m.rotation.y=i*.7;m.rotation.z=(i%2?.05:-.04);SG.add(m);y+=h*1.62});
-    const knob=pebble(.11,.09,'#e9dfcc',99);knob.position.y=y+.07;SG.add(knob);
-    /* đèn lồng đá nhỏ ở bốn góc, ánh vàng ấm */
-    const lanM=SM('#a9a294'),glowM=new THREE.MeshStandardMaterial({color:'#ffe2a8',emissive:'#ffb648',emissiveIntensity:1.3});
-    for(const [sx,sz] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const L=new THREE.Group();L.position.set(sx*1.3,0,sz*1.3);g.add(L);const add=(geo,m,yy)=>{const o=new THREE.Mesh(geo,m);o.position.y=yy;L.add(o)};
-      add(new THREE.BoxGeometry(.22,.08,.22),lanM,.04);add(new THREE.CylinderGeometry(.05,.06,.22,8),lanM,.19);add(new THREE.BoxGeometry(.2,.16,.2),glowM,.38);add(new THREE.ConeGeometry(.2,.13,4),lanM,.53);L.children[L.children.length-1].rotation.y=Math.PI/4;add(new THREE.SphereGeometry(.035,6,4),lanM,.62)}
-    const lamp=new THREE.PointLight('#ffc070',1.2,6,1.8);lamp.position.set(0,1.2,0);g.add(lamp);
-    /* oải hương, cỏ, đá tảng quanh bệ */
-    footCairnG=g;/* oải hương thêm sau khi bộ hoa đã định nghĩa */
-    const grassM=SM('#5f9a3c');for(let k=0;k<14;k++){const a=k*2.4,r=1.2+(k%4)*.18,bl=new THREE.Mesh(new THREE.ConeGeometry(.06,.3+(k%3)*.08,4),grassM);bl.position.set(Math.cos(a)*r,.15,Math.sin(a)*r);bl.rotation.z=(k%2?.25:-.2);g.add(bl)}
-    for(const [a,r,s2] of [[.4,1.75,.22],[2.6,1.7,.18],[4.3,1.78,.25]]){const rk=pebble(s2*1.3,s2*.7,'#a7a091',31+a*10);rk.position.set(Math.cos(a)*r,s2*.35,Math.sin(a)*r);g.add(rk)}
-    scene.add(g);nonBo.push(g)}
+  /* 26/11: Sân chân đồi: chồng đá thiền theo bảng thiết kế "Chồng Đá Thiền Làng Yên" của chị: tảng đáy lớn, thân đá uốn chữ S,
+     ba phiến dẹt và viên tròn trên đỉnh, rêu phủ mặt trên; sân sỏi cào vòng tròn, viền rêu, hai chồng đá nhỏ, hai đèn đá sáng vàng ấm,
+     dương xỉ, hoa hồng nhạt và vài tảng đá rêu. Màu đá xám ấm, rêu xanh trầm cho hợp rừng thông lúc chiều.
+     Nhẹ máy: toàn bộ đá, cây, đèn gộp thành 1 khối tô màu theo đỉnh + 1 khối kính đèn phát sáng + 1 đĩa sỏi (1 texture canvas 256 px). */
+  let footCairnG=null;{const p=FOOT,g=new THREE.Group(),y0=terrainHeight(p.x,p.z);g.position.set(p.x,y0,p.z);
+    const parts=[],glows=[],MOSS=new THREE.Color('#58702f'),MOSS_D=new THREE.Color('#435a27'),tc=new THREE.Color();
+    // tô màu theo đỉnh: rêu bám mặt trên (pháp tuyến hướng lên) loang theo nhiễu, đá có vân sáng tối nhẹ
+    const add=(geo,base,moss=0,k=0,arr=parts)=>{const q=geo.index?geo.toNonIndexed():geo;q.computeVertexNormals();const P=q.attributes.position,N=q.attributes.normal,col=new Float32Array(P.count*3),cb=new THREE.Color(base);
+      for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=Math.sin(x*4.1+k)*Math.cos(z*3.7+k*1.7)+.4*Math.sin(y*2.6+x*2.2+k),m=moss*(N.getY(i)*1.4+n*.35-.6);
+        tc.copy(cb).multiplyScalar(1+.07*Math.sin(x*23+y*17+z*13));if(m>0)tc.lerp(n>0?MOSS:MOSS_D,Math.min(1,m*2.6));col[i*3]=tc.r;col[i*3+1]=tc.g;col[i*3+2]=tc.b}
+      q.setAttribute('color',new THREE.BufferAttribute(col,3));arr.push(q);return q};
+    const merge=list=>{let n=0;for(const q of list)n+=q.attributes.position.count;const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3);let o=0;
+      for(const q of list){pos.set(q.attributes.position.array,o*3);nor.set(q.attributes.normal.array,o*3);col.set(q.attributes.color.array,o*3);o+=q.attributes.position.count}
+      const out=new THREE.BufferGeometry();out.setAttribute('position',new THREE.BufferAttribute(pos,3));out.setAttribute('normal',new THREE.BufferAttribute(nor,3));out.setAttribute('color',new THREE.BufferAttribute(col,3));return out};
+    // viên đá cuội: khối cầu bóp dẹt, mép hơi gồ ghề
+    const peb=(w,h,d,seed,det=2)=>{const geo=new THREE.IcosahedronGeometry(1,det),P=geo.attributes.position;const r=seededRandom(seed),k1=r()*6,k2=r()*6;
+      for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),n=1+.06*Math.sin(x*2.6+k1)*Math.cos(z*2.3+k2)+.03*Math.sin(y*4+k1);P.setXYZ(i,x*w*n,(y>0?y*h:y*h*.8)*n,z*d*n)}return geo};
+    const T=(geo,x,y,z,rx=0,ry=0,rz=0)=>{if(rx)geo.rotateX(rx);if(ry)geo.rotateY(ry);if(rz)geo.rotateZ(rz);geo.translate(x,y,z);return geo};
+    const ST='#98938a',ST2='#a5a093',ST3='#8a857b',STL='#b3ad9e';
+    // tảng đáy lớn
+    add(T(peb(.78,.44,.66,301),0,.36,0,0,.3,0),ST,1.1,1);
+    // thân đá uốn chữ S: ống quét theo đường cong, bán kính đổi dần, mặt cắt hơi dẹt như dải đá
+    {const C=new THREE.CatmullRomCurve3([[.34,.56,0],[0,.66,0],[-.44,.84,0],[-.5,1.04,0],[-.16,1.2,0],[.3,1.3,0],[.46,1.37,0]].map(a=>new THREE.Vector3(...a))),TS=28,RS=12,geo=new THREE.TubeGeometry(C,TS,1,RS,false),P=geo.attributes.position,c=new THREE.Vector3(),v=new THREE.Vector3();
+      const rad=u=>.42-.13*Math.sin(Math.PI*Math.min(1,u*1.15))+.02*Math.sin(u*19);
+      for(let i=0;i<=TS;i++){const u=i/TS;C.getPointAt(u,c);const r=rad(u);for(let j=0;j<=RS;j++){const id=i*(RS+1)+j;v.fromBufferAttribute(P,id).sub(c);v.x*=r;v.y*=r*.8;v.z*=r*1.3;v.add(c);P.setXYZ(id,v.x,v.y,v.z)}}
+      add(geo,ST2,.9,2)}
+    // phiến dẹt và viên tròn trên đỉnh, một phiến nhỏ phủ rêu chìa sang phải
+    add(T(peb(.56,.1,.44,311),.22,1.47,0,0,.4,-.05),STL,.6,3);add(T(peb(.3,.07,.24,313),.56,1.6,.05,0,1.1,.12),ST,1.6,4);
+    add(T(peb(.46,.09,.36,317),.08,1.66,0,0,1.3,.06),ST2,.5,5);add(T(peb(.34,.08,.28,319),.04,1.82,0,0,.2,-.04),STL,.4,6);
+    add(T(peb(.17,.16,.17,323),.02,2.04,0),'#bdb7a8',0,7);
+    // hai chồng đá nhỏ phía sau, nghiêng trái phải
+    for(const [x,z,s,sd] of [[-1.5,-1.05,1.3,331],[1.55,-.85,1.1,341]]){let y=.02;[[.3,.13],[.25,.12],[.2,.1],[.15,.09]].forEach(([w,h],k)=>{add(T(peb(w*s,h*s,w*s*.85,sd+k,1),x+(k%2?.02:-.02),y+h*s*.8,z,0,k*1.2,k%2?.04:-.04),[ST,ST2,ST3,STL][k],k?.12:.7,sd+k);y+=h*s*1.6});add(T(peb(.09*s,.085*s,.09*s,sd+9,1),x,y+.07*s,z),'#bdb39d',0)}
+    // hai đèn đá phía trước: đế, trụ, hộp đèn (kính sáng), mái bốn mái, núm
+    for(const [x,z,ry] of [[-1.6,.95,.5],[1.65,.75,-.4]]){const L=(geo,yy,c,m)=>add(T(geo,x,yy,z,0,ry),c,(m||0)*.35,x*3);
+      L(new THREE.BoxGeometry(.36,.1,.36),.05,ST3,.8);L(new THREE.CylinderGeometry(.08,.1,.3,6),.25,ST2);L(new THREE.BoxGeometry(.34,.06,.34),.43,ST2);
+      for(const [cx,cz] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const geo=new THREE.BoxGeometry(.05,.24,.05);geo.translate(cx*.13,0,cz*.13);L(geo,.58,ST3)}
+      add(T(new THREE.BoxGeometry(.24,.22,.24),x,.58,z,0,ry),'#ffe0a0',0,0,glows);const roof=new THREE.ConeGeometry(.33,.2,4);roof.rotateY(Math.PI/4);L(roof,.8,ST2);L(new THREE.SphereGeometry(.05,6,4),.93,ST2)}
+    // tảng đá rêu quanh viền sân sỏi
+    for(const [x,z,s,sd] of [[-2.2,-.45,.34,351],[2.25,.15,.3,353],[-1.05,2.12,.26,355],[.95,-2.15,.28,357],[2.05,1.25,.18,359]])add(T(peb(s*1.3,s*.75,s,sd,1),x,s*.3,z,0,sd),ST3,1.2,sd);
+    // dương xỉ: mỗi khóm 6 lá nhọn xoè ra
+    const fern=(x,z,s)=>{for(let k=0;k<6;k++){const a=k*1.05+x,geo=new THREE.ConeGeometry(.06*s,.55*s,4,1);geo.translate(0,.27*s,0);geo.rotateX(.95);geo.rotateY(a);geo.translate(x,0,z);add(geo,k%2?'#4f8a38':'#5f9a44')}};
+    // hoa hồng nhạt: chùm bông nhỏ trên nền lá
+    const bloom=(x,z,n)=>{add(T(new THREE.IcosahedronGeometry(.14,0).scale(1.3,.6,1.3),x,.08,z),'#4a7a35');for(let k=0;k<n;k++){const a=k*2.4,r=.05+(k%3)*.06,h=.2+(k%4)*.06;add(T(new THREE.IcosahedronGeometry(.045,0),x+Math.cos(a)*r,h,z+Math.sin(a)*r),k%3?'#e6a6b9':'#f1c3cf')}};
+    for(const [x,z,s] of [[-2.0,.35,1],[1.95,-.55,.9],[-.75,-1.95,.85],[1.25,1.75,.9],[-2.35,1.4,.8],[2.4,-1.4,.8]])fern(x,z,s);
+    for(const [x,z,n] of [[-1.25,1.55,7],[2.05,1.75,6],[-2.05,-1.25,6],[1.5,-1.75,5],[-.2,2.3,5]])bloom(x,z,n);
+    const stoneMesh=new THREE.Mesh(merge(parts),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,flatShading:true}));g.add(stoneMesh);
+    const glowMesh=new THREE.Mesh(merge(glows),new THREE.MeshStandardMaterial({color:'#ffc45c',emissive:'#ff9a1f',emissiveIntensity:1.6}));g.add(glowMesh);
+    // sân sỏi cào: đĩa sỏi có vân vòng tròn đồng tâm quanh chồng đá, viền rêu bên ngoài
+    {const cv=document.createElement('canvas');cv.width=cv.height=256;const c=cv.getContext('2d');c.fillStyle='#aaa18a';c.fillRect(0,0,256,256);
+      const r=seededRandom(77);for(let i=0;i<1400;i++){c.fillStyle=r()<.5?'rgba(120,110,92,.18)':'rgba(240,234,220,.22)';c.fillRect(r()*256,r()*256,1.5,1.5)}
+      c.lineWidth=2.2;for(let R=40;R<128;R+=7.5){c.strokeStyle='rgba(138,128,108,.55)';c.beginPath();c.arc(128,128,R,0,7);c.stroke();c.strokeStyle='rgba(236,229,212,.5)';c.beginPath();c.arc(128,128,R+2.6,0,7);c.stroke()}
+      const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;const gr=new THREE.Mesh(new THREE.CircleGeometry(2.3,40),new THREE.MeshStandardMaterial({map:t,roughness:1}));gr.rotation.x=-Math.PI/2;gr.position.y=.03;g.add(gr);
+      const rim=new THREE.Mesh(new THREE.RingGeometry(2.28,2.62,40),new THREE.MeshStandardMaterial({color:'#435a29',roughness:1}));rim.rotation.x=-Math.PI/2;rim.position.y=.025;g.add(rim)}
+    const lamp=new THREE.PointLight('#ffc070',1.1,6,1.8);lamp.position.set(0,1.1,1.2);g.add(lamp);
+    footCairnG=g;scene.add(g);nonBo.push(g)}
   /* 3.41: Sân đón: thay đài nước bằng tác phẩm đá cân bằng cá tính: vòm đá hai chân nghiêng chụm vào nhau giữ viên khoá,
      tháp zigzag lệch trái phải có viên nghiêng, và cầu bập bênh một phiến dài đặt trên một điểm tựa nhỏ. Tất cả trong vòng chặn NONBO_R+.35. */
   {const p=GATHER,g=new THREE.Group();g.position.set(p.x,terrainHeight(p.x,p.z),p.z);const SM=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
@@ -1029,7 +1065,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(window.__homeHit&&window.__homeHit(x,z))return false;
     if(window.__vhHit&&window.__vhHit(x,z))return false;
     if(window.__gomHit&&window.__gomHit(x,z))return false;
-    if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
+    if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<FOOT_IN-.15)return false;
     // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
     const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
     if(hr<HILL.flat-.3)return !(hr<2.5||Math.hypot(x-STATUE.x,z-STATUE.z-2.7)<.7);
@@ -1497,7 +1533,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Bouquet: the stems arranged by the chosen layout, slot 0 is the centre/top; paper wrap and a ribbon at the waist.
   const BOUQUET_LAYOUTS={tron:'🔵 Tròn',thap:'🔺 Tháp',quat:'🪭 Quạt'};
   const flowerMatLo=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.55});/* vườn hoa: hàng trăm cây, vật liệu nhẹ cho điện thoại */
-  if(footCairnG)for(let k=0;k<8;k++){const a=k/8*Math.PI*2+Math.PI/8,r=1.62+(k%2)*.12;const lv=new THREE.Mesh(flowerGeo('lan'),flowerMatLo);lv.position.set(Math.cos(a)*r,0,Math.sin(a)*r);lv.scale.setScalar(1.15+(k%3)*.15);lv.rotation.y=k*1.3;footCairnG.add(lv)}/* khóm oải hương quanh tháp đá Sân chân đồi */
   const flowerMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.5,clearcoat:.35,clearcoatRoughness:.4,sheen:.4,sheenColor:new THREE.Color('#ffffff')});/* cánh mềm, hơi bóng */
   // Bó hoa theo ba kiểu tham khảo: Tròn (bó tay gói giấy kraft, hoa xếp thành vòm), Tháp (giỏ nan, hoa xếp hình tháp nhọn),
   // Quạt (hộp gỗ, hoa xòe rộng). Đầu hoa đặt lên một khung hình định sẵn, cuống gom vào trong giấy / giỏ / hộp;
