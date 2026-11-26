@@ -925,10 +925,10 @@
   const SH_MAT=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.32,metalness:0,clearcoat:.9,clearcoatRoughness:.18,side:THREE.DoubleSide}),SH_PEARL=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.25,metalness:.05,clearcoat:1,clearcoatRoughness:.12,iridescence:.7,iridescenceIOR:1.6,side:THREE.DoubleSide})/* bóng mềm kiểu Soft Minimal Luxury; xà cừ và ngọc trai có ánh ngũ sắc */,SH_SANDY=new THREE.MeshStandardMaterial({vertexColors:true,color:'#cdbb96',roughness:.95,side:THREE.DoubleSide});
   const shMat=s=>s===1||s===9?SH_PEARL:SH_MAT;
   const SH_HIT_G=new THREE.SphereGeometry(.85,6,4),SH_HIT_M=new THREE.MeshBasicMaterial({visible:false});
-  /* viền mảnh sát mép vỏ, không vẽ bóng: vỏ kín thì phủ một lớp mặt sau đẩy ra theo pháp tuyến rất mỏng (đường viền quanh dáng vỏ); vỏ hở thì vẽ đường nét theo mép và cạnh */const SH_EDGE_L=new THREE.LineBasicMaterial({color:'#4a3322',transparent:true,opacity:.9}),SH_EDGE_H=new THREE.MeshBasicMaterial({color:'#4a3322',side:THREE.BackSide}),SH_EDGE_C=new Map();
-  SH_EDGE_H.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(objectNormal) * 0.035;')};
-  function shEdge(g){let E=SH_EDGE_C.get(g);if(!E){const open=new THREE.EdgesGeometry(g,179.9).attributes.position.count>0;E={open,eg:open?new THREE.EdgesGeometry(g,65):null};SH_EDGE_C.set(g,E)}const e=E.open?new THREE.LineSegments(E.eg,SH_EDGE_L):new THREE.Mesh(g,SH_EDGE_H);e.raycast=()=>{};return e}
-  function shMesh(s,t,sandy){const g=shGeo(s,t),m=new THREE.Mesh(g,sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);m.add(shEdge(g));return m}
+  /* viền liền nét sát mép vỏ, cùng màu với màu đậm nhất của chính vỏ đó; không vẽ bóng: một lớp mặt sau đẩy ra theo pháp tuyến rất mỏng */const SH_EDGE_C=new Map();
+  function shEdgeMat(s,t){s=((s|0)%SH_N+SH_N)%SH_N;t=((t|0)%SH_T+SH_T)%SH_T;const k=s+'_'+t;let M=SH_EDGE_C.get(k);if(!M){const L=c=>{const x=new THREE.Color(c);return .2126*x.r+.7152*x.g+.0722*x.b},cs=SH_COL[s][t].slice().sort((p,q)=>L(p)-L(q)),c=new THREE.Color(cs[0]).multiplyScalar(.82);
+      M=new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});M.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(objectNormal) * 0.06;')};SH_EDGE_C.set(k,M)}return M}
+  function shMesh(s,t,sandy){const g=shGeo(s,t),m=new THREE.Mesh(g,sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);const e=new THREE.Mesh(g,shEdgeMat(s,t));e.raycast=()=>{};m.add(e);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
   const BIN_INFO=[{name:'Giỏ Mây Đan Mắt Cáo',short:'Giỏ Mây',ic:'🧺',style:'Giản Dị'},{name:'Khay Gốm Sóng Biển',short:'Khay Sóng Ngọc',ic:'🌊',style:'Sang Chảnh'},{name:'Đĩa Sứ Vỏ Sò Hồng Đào',short:'Đĩa Sò Hồng',ic:'🐚',style:'Hạnh Phúc'}];
   const SH_CAP=36;/* mỗi khay / giỏ đựng được cả 36 vỏ */
