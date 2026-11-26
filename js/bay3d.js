@@ -1,6 +1,6 @@
 // LÀNG YÊN · Vịnh Yên (nạp lười). Tách tự động từ js/world3d.js bằng tools/split_lazy.py; chạy bằng eval bên trong initialize3D.
   const BAY={x:0,z:20000};let bayPlay=null,playFly=null,playAnch=null;/* trượt phao / kayak khi tàu neo */
-  bayGroup=new THREE.Group();bayGroup.position.set(BAY.x,0,BAY.z);bayGroup.visible=false;scene.add(bayGroup);
+  bayGroup=new THREE.Group();bayGroup.position.set(BAY.x,0,BAY.z);bayGroup.visible=false;scene.add(bayGroup);const bayRoot=bayGroup;/* gốc cố định của cả vịnh (bayGroup bị gán tạm khi dựng từng vùng) */
   // bayWorld: mọi thứ của vịnh (bờ đất, đảo, danh thắng, thuyền neo). Khi bước xuống Đảo Yên thì ẩn cả nhóm này: đảo là một không gian riêng.
   const bayWorld=new THREE.Group();bayGroup.add(bayWorld);const bayLandGroup=new THREE.Group();bayWorld.add(bayLandGroup);let bayIslandScene=null;
   bayData=null,bayBuilt=false,bayLoading=null,bayStash=null;
@@ -242,7 +242,7 @@
       boats:L.boats.map(([u,v,ry,cn])=>[...o(u,v),-f+ry,cn]),docks:L.docks.map(([u,v])=>o(u,v))};
     A.R=Math.max(...A.hull.map(c=>Math.hypot(c[0]-p.x,c[1]-p.z)+c[2]))+12;return p._arch=A}
   // vật cản: vùng núi (hợp các đĩa hull) trừ các hồ và lòng các đường hang; đò và bến phao cũng là vật cản
-  function archInTunnel(t,x,z,pad){const ax=t.a[0]-t.dx*6,az=t.a[1]-t.dz*6,along=(x-ax)*t.dx+(z-az)*t.dz,perp=Math.abs(-(x-ax)*t.dz+(z-az)*t.dx);return along>0&&along<t.len+14&&perp<t.hw-pad-.4}/* lòng hang kéo dài quá hai cửa hang vài mét để không vướng mép vách */
+  function archInTunnel(t,x,z,pad){const ax=t.a[0]-t.dx*6,az=t.a[1]-t.dz*6,along=(x-ax)*t.dx+(z-az)*t.dz,perp=Math.abs(-(x-ax)*t.dz+(z-az)*t.dx);return along>0&&along<t.len+30&&perp<t.hw-pad-.4}/* lòng hang kéo dài quá hai cửa hang để không vướng mép vách; rà soát 26/11: phía cửa ngoài kéo dài tới 24 m vì vùng chặn của núi (hull) có thể nhô quá miệng hang (Hang Luồn cửa vòm rộng: hull nhô 10 m, trước đây bịt kín miệng hang nên không bơi, chèo vào được) */
   function archBlocked(A,x,z,pad){for(const b of A.boats)if(Math.hypot(x-b[0],z-b[1])<4.6+pad)return true;for(const d of A.docks)if(Math.hypot(x-d[0],z-d[1])<8+pad)return true;
     if(!A.hull.some(c=>Math.hypot(x-c[0],z-c[1])<c[2]+pad))return false;
     if(A.lakes.some(c=>Math.hypot(x-c[0],z-c[1])<c[2]-pad))return false;
@@ -1950,11 +1950,18 @@
       const isl=STREAM.island,near=L=>Math.hypot(L.x-TU_DAO.x,L.z-TU_DAO.z)<450;
       for(const c of STREAM.cells.values()){const d=cellDist(c,x,z);if(c.g){if(d>STREAM.DROP)streamDrop(c);else c.g.visible=!isl}else if(d<STREAM.LOAD&&!isl)todo.push([d,c])}
       for(const L of STREAM.lms){const d=Math.max(0,Math.hypot(L.x-x,L.z-z)-L.r),show=isl?near(L):d<STREAM.DROP;if(L.g)L.g.visible=show;else if(show&&d<STREAM.LOAD)todo.push([d,L])}
-      todo.sort((a,b)=>a[0]-b[0]);STREAM.todo=todo}
+      todo.sort((a,b)=>a[0]-b[0]);STREAM.todo=todo;lodScan()}
     const t0=performance.now(),budget=dt===0?40:6;
     while(STREAM.todo.length){const [d,c]=STREAM.todo[0];if(d>STREAM.NEAR&&performance.now()-t0>budget)break;STREAM.todo.shift();if(c.g)continue;
       const [g,ms]=streamBuild(c.fns?()=>{for(const f of c.fns)f()}:()=>{lmPale=4;try{buildLandmark(c.p)}finally{lmPale=0}});c.g=g;c.ms=ms}
   }
+  /* Rà soát 26/11: chi tiết nhỏ (cây bụi, vân đá, thuyền, ki-ốt...) ở đảo xa chỉ còn 1–3 điểm ảnh nhưng mỗi cái vẫn tốn một lượt vẽ
+     (đo trên điện thoại: ~1.500 lượt mỗi khung hình, 80% là những chi tiết này). Chi tiết nào nhìn nhỏ hơn ~2 điểm ảnh thì chuyển sang lớp 1
+     (camera chỉ vẽ lớp 0) cho tới khi lại gần; dùng lớp chứ không dùng .visible để không đụng các chỗ khác đang bật/tắt .visible. Vách đá và hang giữ nguyên. */
+  const LOD_A=.003,lodV=new THREE.Vector3(),lodS=new THREE.Sphere();
+  function lodScan(){camera.getWorldPosition(lodV);/* ngưỡng theo góc nhìn: góc nhìn hẹp (chụp ảnh, phóng to) thì giữ chi tiết xa hơn */const k=LOD_A*Math.tan((camera.fov||62)*Math.PI/360)/Math.tan(31*Math.PI/180)/(camera.zoom||1),keep=new Set(bayKarstMeshes);
+    bayRoot.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!o.geometry||keep.has(o))return;const G=o.geometry;if(!G.boundingSphere)G.computeBoundingSphere();lodS.copy(G.boundingSphere).applyMatrix4(o.matrixWorld);
+      const far=lodS.radius<15&&lodS.radius<lodS.center.distanceTo(lodV)*k;if(far!==!!o.userData.lodFar){o.userData.lodFar=far;o.layers.set(far?1:0)}})}
   const dbgRay=new THREE.Raycaster(),dbgDown=new THREE.Vector3(0,-1,0),dbgO=new THREE.Vector3();
   const dbgRock=(x,z)=>{dbgO.set(x+BAY.x,300,z+BAY.z);dbgRay.set(dbgO,dbgDown);const hs=dbgRay.intersectObjects(bayKarstMeshes.concat(TU_DAO.group?[TU_DAO.group]:[]),true);return hs.some(h=>h.point.y>.6)};
   window.__bayNav={rock:dbgRock,view:id=>setBayView(id),peak:id=>goPeak(id),trip:t=>openTrip(t),views:()=>openViews(),yaw:v=>{viewYaw=v},hull:()=>{const S=bayShip,L=S.len/2-1,sx=Math.sin(S.heading),sz=Math.cos(S.heading),B=4.5;return [[0,L],[0,0],[0,-L],[B,0],[-B,0],[B,L*.6],[-B,L*.6],[B,-L*.7],[-B,-L*.7]].some(([u,v])=>dbgRock(S.x+sx*v+sz*u,S.z+sz*v-sx*u))},hard:(x,z)=>!hardFree(x,z),block:(x,z)=>!navFree(x,z),bow:()=>shipBow(bayShip),sim:(n,dt)=>{const out=[];for(let i=0;i<n;i++){updateBay(dt);const S=bayShip,L=shipBowLen(S),sx=Math.sin(S.heading),sz=Math.cos(S.heading);out.push([S.x,S.z,S.heading,S.speed,S.path.length,!hardFree(S.x+sx*L,S.z+sz*L)||!hardFree(S.x,S.z)||!hardFree(S.x-sx*L,S.z-sz*L)])}return out}};
@@ -2302,10 +2309,12 @@
     const [kw,kh]=LM_SIZE[sh]||[0,0];let W=Math.max(30,r*kw),H=h*kh;if(sh==='village'){W=120;H=36}if(sh==='pier'){W=60;H=12}if(sh==='bridge'){W=300;H=40}
     const vf=57*Math.PI/180,asp=Math.max(.45,Math.min(2.2,aspO||camera.aspect||1.6)),hf=2*Math.atan(Math.tan(vf/2)*asp);
     const want=Math.max(h<30&&r<20?38:70,H/Math.tan(vf*.42),(W/2)/Math.tan(hf*.4))+r*(sh==='arch'?1.3:.6)+18;// +18: mũi tàu ở trước tâm tàu
-    const base=Math.atan2(vx,vz),front=[p.x+vx*(r*1.45+34),p.z+vz*(r*1.45+34)],isArch=sh==='arch',wantA=isArch?r*.92+Math.max(45,h*1.5)+18:want;
+    const base=Math.atan2(vx,vz),front=[p.x+vx*(r*1.45+34),p.z+vz*(r*1.45+34)],isArch=sh==='arch';let wantA=want;if(isArch){wantA=r*.92+Math.max(45,h*1.5)+18;/* rà soát 26/11: tàu neo phải chừa khoảng nước trước cửa hang (~28 m tính từ mũi tàu tới vách) để khách bơi, chèo kayak vòng qua mũi tàu vào hang; trước đây Hang Luồn chỉ còn khe ~6 m nên không vào được */try{const A=archLayout(p);let hr=r;for(const [hx,hz,rr] of A.hull)hr=Math.max(hr,Math.hypot(hx-p.x,hz-p.z)+rr);wantA=Math.max(wantA,hr+shipBowLen(bayShip)+28)}catch(e){}}
     for(const s of (isArch?[1,1.1,.92,1.2,.85]:[1,.9,.8,.7,.6,.5]))for(let k=0;k<(isArch?5:15);k++){const ang=base+(k%2?1:-1)*Math.ceil(k/2)*(isArch?.08:.15),d=wantA*s,qx=p.x+Math.sin(ang)*d,qz=p.z+Math.cos(ang)*d;
       const fx=p.x+Math.sin(ang)*(r*1.45+34),fz=p.z+Math.cos(ang)*(r*1.45+34);
       if(navFree(qx,qz)&&lineFree(qx,qz,fx,fz))return[qx,qz]}
+    /* hang/vòm: quanh cửa hang lưới đi tàu bị chặn nên đường nhìn thẳng ra cửa hang không qua được kiểm tra; khi đó lùi dọc trục nhìn tới chỗ nước thoáng đầu tiên, vẫn chừa khoảng trước cửa hang */
+    if(isArch)for(let d=wantA;d<wantA+160;d+=4){const qx=p.x+Math.sin(base)*d,qz=p.z+Math.cos(base)*d;if(navFree(qx,qz))return[qx,qz]}
     return p.params?.approach||[p.x+60,p.z]}
   function warpToLandmark(p,photo){
     if(!bayBuilt)return;if(bayPlay)playEnd(true);dropPause();endTour(false);bayShip.path=[];bayShip.dest=null;bayShip.stopped=true;bayMarker.visible=false;

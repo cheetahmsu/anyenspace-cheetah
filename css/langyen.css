@@ -504,3 +504,5 @@ body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerf
 .portal-entry.sq:hover,.portal-entry.sq:focus-visible{filter:brightness(1.1)!important}
 .cta{background:rgba(236,200,120,.24)!important;border:1.5px solid #e9cf8f!important;box-shadow:0 4px 12px #0002!important}
 .dock-roof{background:rgba(90,175,130,.24)!important;border:1.5px solid #d6b878!important}
+/* Rà soát 26/11 (chiều): ô Khám phá trong suốt để lộ mặt trăng và đèn của ảnh nền ngay sau biểu tượng thuyền; làm mờ nhẹ phần nền phía sau ô để biểu tượng và chữ rõ, ô vẫn trong */
+.portal-entry.sq{-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
