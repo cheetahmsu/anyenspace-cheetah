@@ -903,8 +903,9 @@
   /* 12 dáng theo ảnh «Bộ Sưu Tập 12 Loại Ốc – Vịnh Yên» (3 góc nhìn trước – trái – trên): dựng xong chuẩn hoá dài ~1 đơn vị, nằm trên mặt cát (y ≥ 0) */
   const shDots=(t,f,rows,cols,t0,t1,rad,asp=1.4)=>{const rt=(t-t0)/(t1-t0)*rows,ri=Math.round(rt);if(ri<0||ri>rows||t<t0-.02||t>t1+.02)return 0;const off=(ri%2)*.5,cf=f/TAU*cols-off,ci=Math.round(cf);return 1-shSm(rad*.72,rad,Math.hypot(rt-ri,(cf-ci)*asp))};
   const SH_FN=[
-    /* 01 Sò Điệp: nguyên mảnh quạt tròn ~230°, 20 rãnh tròn nổi, mép lượn sóng, hai tai vuông ở bản lề (bản lề quay về phía người xem) */ [72,18,(u,v)=>{const th=(u-.5)*3.9,R=.62*(.3+.7*Math.pow(Math.max(0,Math.cos(th*.62)),.55)),rib=Math.cos(th*20/3.9*TAU*.5),cr=Math.pow(Math.max(0,rib),1.3),r=v;
-      const ear=(1-shSm(.05,.3,r))*shSm(.9,1.5,Math.abs(th))*.2,rr=R*r*(1+.04*rib*r*r)+ear,h=.34*Math.pow(Math.max(0,1-r*r),.55)*(.55+.45*Math.cos(th*.5))+.04*cr*r;return [Math.sin(th)*rr,.015+h,Math.cos(th)*rr-.22,.05+.8*cr*r*r+.25*shSm(.8,1,r)]}],
+    /* 01 Sò Điệp: vỏ quạt liền mảng, viền ngoài tròn như đĩa đi qua bản lề; 17 gân tỏa từ bản lề ra mép, mép lượn sóng theo gân; vòm phồng nhẹ (bản lề quay về phía người xem) */ [80,22,(u,v)=>{const W=1.22,th=(u-.5)*2*W,D=.86,r=v,rib=Math.cos(th/W*Math.PI*8.5),cr=Math.max(0,rib),
+      ear=(1-shSm(.08,.34,r))*shSm(.62,1,Math.abs(th)/W)*.16,R=D*Math.pow(Math.cos(th),.85)+ear,rr=R*r*(1+.035*rib*shSm(.35,1,r)),x=Math.sin(th)*rr,zz=Math.cos(th)*rr,dc=Math.hypot(x,zz-D*.5)/(D*.5),
+      h=.2*Math.sqrt(Math.max(0,1-Math.min(1,dc)*Math.min(1,dc)))+.03*cr*shSm(.1,.6,r)+.01;return [x,h,zz-.3,.12+.75*cr*(.35+.65*r)+.2*shSm(.85,1,r)]}],
     /* 02 Ốc Xà Cừ: tròn mập, nhiều vòng xoắn lộ trên đỉnh, dải ánh xà cừ ngũ sắc theo đường xoắn */ [24,110,shHelix({T:3.8,c:.19,a:.48,d:.52,H:.72,col:(th,f)=>.55+.8*(.5+.5*Math.sin(th*1.3))+.35*Math.sin(f*2+th*.4)})],
     /* 03 Ốc Sứ: trứng bầu dục bóng sứ, đốm tròn đều, khe miệng dưới bụng */ [56,30,(u,v)=>{const f=u*TAU,a=Math.PI*v,x=.6*Math.sin(a)*Math.cos(f),z=.42*Math.sin(a)*Math.sin(f)*(1-.05*Math.cos(2*f)),y=.3+.3*Math.cos(a);
       const k=a>2.35?0:shDots(a/Math.PI,f,5,11,.08,.72,.36,1.6);return [x,Math.max(.02,y),z,k]}],
