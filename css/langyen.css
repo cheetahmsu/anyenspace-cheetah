@@ -499,3 +499,8 @@ body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerf
 .portal-entry.sq{box-shadow:none!important;filter:drop-shadow(0 6px 14px #0005)}
 .portal-entry.sq:hover,.portal-entry.sq:focus-visible{filter:drop-shadow(0 6px 14px #0005) brightness(1.1)}
 .top .nav button,.top .nav .nav-external,.scene-controls button{background:rgba(255,255,255,.03)!important;text-shadow:0 1px 3px #000a}
+/* Ô vuông viền đơn giản như các nút khác; Tĩnh Tâm vàng nhẹ; thanh tiêu đề xanh nhẹ, vẫn trong */
+.portal-entry.sq{border:1.5px solid #d6b878!important;border-radius:18px!important;background-color:rgba(255,255,255,.03)!important;box-shadow:0 0 0 1px #00000014,0 4px 12px #0002!important;filter:none!important;overflow:hidden}
+.portal-entry.sq:hover,.portal-entry.sq:focus-visible{filter:brightness(1.1)!important}
+.cta{background:rgba(236,200,120,.24)!important;border:1.5px solid #e9cf8f!important;box-shadow:0 4px 12px #0002!important}
+.dock-roof{background:rgba(90,175,130,.24)!important;border:1.5px solid #d6b878!important}
