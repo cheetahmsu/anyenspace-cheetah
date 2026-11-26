@@ -480,3 +480,4 @@ body:not(.immersive) .mode-label{display:none}
 .dock-house>button:hover,.dock-house>a.house-tile:hover,.house-links>a:hover,.house-links summary:hover{background:rgba(40,90,62,.42)!important}
 .dock-roof{background:linear-gradient(180deg,rgba(122,154,99,.55),rgba(63,96,51,.55))!important;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .top .nav button,.top .nav .nav-external{background:rgba(255,255,255,.04)!important}
+#zenToolbar svg.zi{width:1.45em;height:1.45em;display:block;margin:0 auto;flex:0 0 auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
