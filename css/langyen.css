@@ -490,3 +490,12 @@ body.immersive.yen-bay #zenToolbar button[data-zen="bell"] small{white-space:nor
 @media (max-width:760px){#bayHUD .bay-st-more b{display:none}}
 /* ba mục này chỉ chạy ở Rừng Yên (bản đồ rừng, tượng Phật, nghi thức dâng y), ở vịnh bấm không có gì nên ẩn đi */
 body.yen-bay [data-zen-action="forestmap"],body.yen-bay [data-zen-action="offerflowers"],body.yen-bay [data-zen-action="kathina"]{display:none!important}
+/* ---- Tất cả nút trang chủ trong suốt (26/11): chỉ giữ viền vàng và chữ, thấy rõ ảnh nền ---- */
+.dock-house>button,.dock-house>a.house-tile,.house-links>a,.house-links summary{background:rgba(255,255,255,.03)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 0 0 1px #00000014,0 4px 12px #0002!important;text-shadow:0 1px 3px #000c,0 0 8px #0008}
+.dock-house>button:hover,.dock-house>a.house-tile:hover,.house-links>a:hover,.house-links summary:hover{background:rgba(255,240,200,.10)!important}
+.dock-roof{background:rgba(110,150,90,.20)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:1.5px solid #d9c48acc!important;box-shadow:0 4px 12px #0002!important;text-shadow:0 1px 3px #000d,0 0 10px #0009!important}
+.cta{background:rgba(240,214,150,.14)!important;border:1.5px solid #e9cf8f!important;color:#fbefd0!important;box-shadow:0 0 14px #e3c27f33!important;text-shadow:0 1px 3px #000c}
+.cta:hover{background:rgba(240,214,150,.26)!important}
+.portal-entry.sq{box-shadow:none!important;filter:drop-shadow(0 6px 14px #0005)}
+.portal-entry.sq:hover,.portal-entry.sq:focus-visible{filter:drop-shadow(0 6px 14px #0005) brightness(1.1)}
+.top .nav button,.top .nav .nav-external,.scene-controls button{background:rgba(255,255,255,.03)!important;text-shadow:0 1px 3px #000a}
