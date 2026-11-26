@@ -105,6 +105,8 @@
   ];
   // opt.y0: khối nổi (đầu, mỏ, phiến đá) đặt từ độ cao y0, cao h; mặc định chân ngập từ -4.
   // opt.grooves: các rãnh ăn mòn ngang; opt.steps: vách giật cấp; opt.notch: độ sâu hàm ếch.
+  // tông đá mặc định cho khối đá trong danh thắng: 4 = vân đá + cây bụi bám gờ khe (cùng mức chi tiết Trống Mái đã duyệt); 0 ngoài danh thắng
+  let lmPale=0;
   function addKarst(x,z,r,h,k,opt={}){
     if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};
     const key=Math.floor(x/900)+','+Math.floor(z/900);let ch=bayChunks.get(key);if(!ch){ch={P:[],I:[],T:[],D:[],H:[],S:[],UV:[],R:[],O:[]};bayChunks.set(key,ch)}
@@ -132,7 +134,7 @@
       // mặt đá bào mòn không đều: nhiều lớp gợn theo cả góc lẫn chiều cao, lệch pha từng đảo
       const nz=opt.round?1+.08*Math.sin(al*3+ph)+.05*Math.sin(al*5+t*4+ph):1+rough*(.75*Math.sin(al*2+ph+t*1.7)+.55*Math.sin(al*3+ph*1.9+t*3.3)+.35*Math.sin(al*5+ph*2.3+t*5.1)+.25*Math.sin(al*7-ph+t*7.3)+.3*(bayHash(al*5,t*9,k)-.5))+crown*(.09*Math.sin(al*2+ph*1.7)+.06*Math.sin(al*4-ph))-ribA*crev;
       const rr=r*prof*nz*KT.ring[i],px=Math.cos(al)*rr*sx+lean*t*t*total,pz=Math.sin(al)*rr*sz;
-      ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);ch.R.push(crev);ch.O.push(opt.pale||0);
+      ch.P.push(x+px*cr-pz*sr,wy,z+px*sr+pz*cr);ch.T.push(t);ch.D.push(opt.round?.15:1-dome);ch.H.push(bayHash(k+i*.37,t*7,al));ch.S.push(opt.round?1:0);ch.R.push(crev);ch.O.push(opt.pale??(lmPale&&(r<30?3:4)));
       ch.UV.push(KT.u[i]*reps,wy/44+vo);}
     for(const j of KT.idx)ch.I.push(base+j);
   }
@@ -145,7 +147,7 @@
     c.lerp(rockCrev,Math.min(1,crev*1.1)*.6);
     c.lerp(rockWet,(1-baySm(2.4,3.6,wy))*.55);c.lerp(rockNotch,(1-baySm(.6,2.6,wy))*baySm(-.6,.2,wy)*.65);
   }
-  const BUSH_GEO=new THREE.IcosahedronGeometry(1,1),bushMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9}),BUSH_COLS=['#5f8f33','#4c7a2a','#76a443','#3f6a25'];
+  const BUSH_GEO=new THREE.IcosahedronGeometry(1,1),BUSH_GEO_LO=new THREE.IcosahedronGeometry(1,0)/* khối có rất nhiều bụi (đảo rừng lớn): dùng khối ít mặt cho nhẹ trên điện thoại */,bushMat=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9}),BUSH_COLS=['#5f8f33','#4c7a2a','#76a443','#3f6a25'];
   function finishKarsts(){
     const c=new THREE.Color(),meshes=[];
     for(const ch of bayChunks.values()){
@@ -173,7 +175,7 @@
       g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setAttribute('aGreen',new THREE.BufferAttribute(gr,1));g.computeBoundingSphere();
       const m=new THREE.Mesh(g,bayRockMat);bayGroup.add(m);meshes.push(m);
       // cây bụi bám gờ, khe và đỉnh đá của các danh thắng vẽ theo ảnh mẫu (Trống Mái, Chó Đá): mỗi bụi 3 khối tròn xanh đậm nhạt
-      if(bush.length){const cnt=bush.length/4*3,im=new THREE.InstancedMesh(BUSH_GEO,bushMat,cnt),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let j=0;
+      if(bush.length){const cnt=bush.length/4*3,im=new THREE.InstancedMesh(cnt>900?BUSH_GEO_LO:BUSH_GEO,bushMat,cnt),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),T=new THREE.Vector3(),C=new THREE.Color();let j=0;
         for(let b=0;b<bush.length;b+=4){const bx=bush[b],by=bush[b+1],bz=bush[b+2],top=bush[b+3]>.75,sz=(top?1.05:.7)*(bush[b+3]>1?1.8:1)*(.75+bayHash(Math.floor(bx*5),Math.floor(bz*5),7)*.6);
           for(let q=0;q<3;q++){const a=q*2.1+bx,d=q?sz*.55:0,s2=sz*(q?.7:1);T.set(bx+Math.cos(a)*d,by+s2*.35-(q?.15*sz:0),bz+Math.sin(a)*d);S.set(s2,s2*.72,s2);M4.compose(T,Q,S);im.setMatrixAt(j,M4);
             C.set(BUSH_COLS[(b/4+q)%4]);im.setColorAt(j,C);j++}}
@@ -490,7 +492,7 @@
         addKarst(x,z,r*.95,.35,k+1,{round:true,dome:.9,sx:1.3,sz:.9,rot,notch:0});addKarst(x,z,r*.55,h,k,{taper:.18,dome:.22,sx:1.2,sz:.9,rot,ribs:6,ribAmp:.1,notch:.28,rough:.18})}else{
       // đế vững (rạn đá thấp quanh chân), thân thắt vừa phải rồi nở ra như chiếc lư hương
       addKarst(x,z,r*.85,.4,k+1,{round:true,dome:.9,sx:1.6,sz:.85,rot,notch:0});
-      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22,pale:p.id==='hon_dinh_huong'?3:0});
+      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22,pale:3});
       if(p.id==='hon_dinh_huong'){/* đỉnh bằng phủ kín cây bụi thành nhiều cụm (ảnh thực tế), thêm vài bụi bám mép vách */
         for(let j=0;j<14;j++){const a=j*2.4,d=(j?.25+.55*Math.sqrt(j/14):0)*r*.58,cx=d*Math.cos(a)*1.45*1.15,cz=d*Math.sin(a)*.72*1.15;
           treeClump(x+Math.cos(rot)*cx-Math.sin(rot)*cz,h*(.9-.08*d/(r*.58)),z+Math.sin(rot)*cx+Math.cos(rot)*cz,r*(.09+bayHash(k,j,6)*.04),j)}}}
@@ -1753,7 +1755,7 @@
       todo.sort((a,b)=>a[0]-b[0]);STREAM.todo=todo}
     const t0=performance.now(),budget=dt===0?40:6;
     while(STREAM.todo.length){const [d,c]=STREAM.todo[0];if(d>STREAM.NEAR&&performance.now()-t0>budget)break;STREAM.todo.shift();if(c.g)continue;
-      const [g,ms]=streamBuild(c.fns?()=>{for(const f of c.fns)f()}:()=>buildLandmark(c.p));c.g=g;c.ms=ms}
+      const [g,ms]=streamBuild(c.fns?()=>{for(const f of c.fns)f()}:()=>{lmPale=4;try{buildLandmark(c.p)}finally{lmPale=0}});c.g=g;c.ms=ms}
   }
   const dbgRay=new THREE.Raycaster(),dbgDown=new THREE.Vector3(0,-1,0),dbgO=new THREE.Vector3();
   const dbgRock=(x,z)=>{dbgO.set(x+BAY.x,300,z+BAY.z);dbgRay.set(dbgO,dbgDown);const hs=dbgRay.intersectObjects(bayKarstMeshes.concat(TU_DAO.group?[TU_DAO.group]:[]),true);return hs.some(h=>h.point.y>.6)};
