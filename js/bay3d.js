@@ -1181,7 +1181,8 @@
       if(F.k==='path'){const cl=i<3?[-1.3,0]:i<5?[0,3]:[1.2,5],o=cl[0];return {x:tx*o,z:tz*o,on:i===cl[1]?null:i-1}}
       return {x:(F.dx?F.dx[i]:0),z:0,on:i?i-1:(D.boulder?'b':null)}});
     /* đá chờ xếp nằm trên cát, phía bên kia so với người */
-    const n=F.ids.length,r0=F.R+1.15;D.ms=F.ids.map((id,i)=>{const m=TD_ACT.stoneMake(id,F.asym);const a=Math.atan2(-S.pz,-S.px)+(i-(n-1)/2)*Math.min(.32,2.2/n),rr=r0+(i%2)*.35,x=Math.cos(a)*rr,z=Math.sin(a)*rr;
+    const n=F.ids.length,r0=F.R+1.15,col=camera.aspect<1&&F.k!=='circle'&&F.k!=='path';D.ms=F.ids.map((id,i)=>{const m=TD_ACT.stoneMake(id,F.asym);const a=Math.atan2(-S.pz,-S.px)+(i-(n-1)/2)*Math.min(.32,2.2/n),rr=r0+(i%2)*.35;let x=Math.cos(a)*rr,z=Math.sin(a)*rr;
+      /* điện thoại (màn dọc, khung ngang hẹp): xếp đá chờ thành một hàng sát bên tháp, kéo dài ra phía sau, để vẫn thấy đá trong khung khi tháp cao nửa màn hình */if(col){const lat=F.R+.05+i*.07,al=1+i*.4;x=-S.px*lat+S.ox*al;z=-S.pz*lat+S.oz*al}
       m.rotation.set(0,i*1.9%6.28,i%2?.05:-.04);m.position.set(x,0,z);g.add(m);m.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(m,true),wp=m.getWorldPosition(new THREE.Vector3());m.position.y=gy([x,z])-(bb.min.y-wp.y)-.02;m.userData.sand=m.position.clone();m.userData.sandR=m.rotation.clone();m.traverse(o=>{o.userData.tuDao=null});return m});
     {const bb=new THREE.Box3(),hs=D.ms.map(m=>{bb.setFromObject(m,true);return bb.max.y-bb.min.y});let H;if(F.k==='circle')H=2.4;else if(F.k==='path')H=Math.max(2.4,hs.slice(0,3).reduce((a,b)=>a+b,0));else{H=hs.reduce((a,b)=>a+b,0)*.97;if(D.boulder){bb.setFromObject(D.boulder,true);H+=bb.max.y-bb.min.y}}D.frameH=H}
     cdCam(F);D.i=0;if(D.mode==='thuong'){D.ans=F.ids.map(()=>({k:'tho',t:'',a:''}));D.ph='breath'}else D.ph='ask';cdShow()}

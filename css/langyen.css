@@ -481,3 +481,7 @@ body:not(.immersive) .mode-label{display:none}
 .dock-roof{background:linear-gradient(180deg,rgba(122,154,99,.55),rgba(63,96,51,.55))!important;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .top .nav button,.top .nav .nav-external{background:rgba(255,255,255,.04)!important}
 #zenToolbar svg.zi{width:1.45em;height:1.45em;display:block;margin:0 auto;flex:0 0 auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+/* Rà soát 26/11: ở Vịnh Yên nút dọc hẹp, nhãn "Thỉnh chuông" xuống hai dòng thay vì tràn ra ngoài nút */
+body.immersive.yen-bay #zenToolbar button[data-zen="bell"] small{white-space:normal!important;width:min-content;line-height:1!important;text-align:center}
+/* Trang chủ điện thoại: bỏ hai nút xoay cảnh nền (trông như nút hoàn tác, không giúp gì cho người mới vào); vẫn vuốt được nền, phím mũi tên vẫn chạy */
+@media (max-width:800px){.scene-controls #left,.scene-controls #right{display:none}}
