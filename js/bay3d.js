@@ -1305,7 +1305,7 @@
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
     I.moving=I.path.length>0;I.t+=dt;
-    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){cdOpen()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(t==='rinse')shRinseNow();else if(t==='pickstart')shPickStart();else if(t==='station'){const S=TD_ACT.station;if(S)I.yaw=Math.atan2(S.x-I.x,S.z-I.z)}else if(String(t).startsWith('bin:'))takeBin(+t.slice(4));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='med'){if(bayPhoto)closePhoto();window.__tuDaoSpot='Nhà Thiền';saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('med')},80)}else if(t==='house'){if(bayPhoto)closePhoto();window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
+    if(!I.path.length&&I.then){const t=I.then;I.then=null;if(t==='cairn'){cdOpen()}else if(String(t).startsWith('shell:'))pickShell(+t.slice(6));else if(t==='rinse')shRinseNow();else if(t==='faceart'){const R=TD_ACT.art||TD_ACT.done;if(R)I.yaw=Math.atan2(R.cx-I.x,R.cz-I.z)}else if(t==='pickstart')shPickStart();else if(t==='station'){const S=TD_ACT.station;if(S)I.yaw=Math.atan2(S.x-I.x,S.z-I.z)}else if(String(t).startsWith('bin:'))takeBin(+t.slice(4));else if(t==='porch'){I.yaw=Math.PI/2;bayCaption('🚪 Đã tới trước cửa nhà · bấm vào cửa để vào nhà',5000)}else if(t==='board')islandBoardNow(true);else if(t==='med'){if(bayPhoto)closePhoto();window.__tuDaoSpot='Nhà Thiền';saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('med')},80)}else if(t==='house'){if(bayPhoto)closePhoto();window.__tuDaoSpot='Nhà nghỉ trên đảo';const S=bayShip;saveBayState();islandBoardNow();exitBay();setTimeout(()=>{if(typeof openTuDaoSpace==='function')openTuDaoSpace('house')},80)}}}
   // ---- Xếp đá cân bằng / nhặt vỏ sò
   function tdGoTo(sx,sz,then,cap){const I=bayIsland;if(!I)return;tdStand();if(Math.hypot(I.x-sx,I.z-sz)<.9){I.path=[];I.then=then;return}const p=tdRoute(I.x,I.z,sx,sz);if(!p){bayCaption('Chỗ đó chưa đi tới được, hãy chạm chỗ khác trên đảo',2500);return}I.path=p;I.then=then;if(cap)bayCaption(cap,3000)}
   function tdNearStand(x,z,r,side){const I=bayIsland,cy=(bayIsland.cam0||0)+viewYaw,fx=Math.sin(cy),fz=Math.cos(cy);let best=null,bd=1e9;for(let k=0;k<16;k++){const a=k*Math.PI/8,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(!tdWalkable(px,pz))continue;const d=Math.hypot(px-I.x,pz-I.z)+(side?4*Math.abs(-Math.cos(a)*fx-Math.sin(a)*fz):0);/* side: đứng cạnh, không che vật trước camera */if(d<bd){bd=d;best=[px,pz]}}return best||[x,z]}
@@ -1446,7 +1446,7 @@
     const next=()=>{if(!TD_ACT.cd)return;if(k<0){cdEnd(true);bayCaption('🌊 Sóng đã mang tháp đá đi. Những điều bạn đặt xuống cũng nhẹ đi theo.',5500);return}const m=D.ms[k--];D.anim={k:'sea',t:0,m,from:m.position.clone(),to:m.position.clone().addScaledVector(out,1.6).add(new THREE.Vector3(0,-.4,0)),r0:m.rotation.clone(),r1:new THREE.Euler(0,m.rotation.y+1,0),done:()=>setTimeout(next,120)}};
     D.ph='sea';next()}
   function tdActAnim(dt){cdAnim(dt);
-    const A=TD_ACT;bayAvatar.crouch=0;if(A.seq){const S=A.seq;S.t+=dt;const u=Math.min(1,S.t/S.dur);if(S.crouch)bayAvatar.crouch=Math.sin(Math.PI*u);S.step(u,S.t,S.S);if(u>=1){A.seq=null;S.done&&S.done()}}
+    const A=TD_ACT;bayAvatar.crouch=(A.art||A.done)&&bayIsland&&!bayIsland.path.length?.9:0;/* ngồi xổm bên hình vỏ sò lúc xếp và ngắm */if(A.seq){const S=A.seq;S.t+=dt;const u=Math.min(1,S.t/S.dur);if(S.crouch)bayAvatar.crouch=Math.sin(Math.PI*u);S.step(u,S.t,S.S);if(u>=1){A.seq=null;S.done&&S.done()}}
     if(A.g&&bayIsland&&A.beach.length<6&&A.spawned<36&&performance.now()>A.nextSpawn){shSpawn();A.nextSpawn=performance.now()+1200}/* bãi luôn có 6 vỏ, nhặt tới đâu hiện bù từ từ tới đó, đủ 36 vỏ thì thôi */
     for(let i=A.tweens.length-1;i>=0;i--){const w=A.tweens[i];w.t+=dt;if(w.t<0)continue;const u=Math.min(1,w.t/w.dur),e=u*u*(3-2*u);w.g.position.lerpVectors(w.from,w.to,e);w.g.position.y+=Math.sin(Math.PI*u)*.7;if(u>=1){w.g.position.copy(w.to);if(w.kill)w.g.parent&&w.g.parent.remove(w.g);A.tweens.splice(i,1)}}}
   // ---- Dạo cát & bắt gặp: mép cát ẩm chỉ lấp ló 2–3 vỏ phủ cát; nhặt rồi sóng lại dạt vỏ khác vào
@@ -1619,13 +1619,15 @@
     if(best)return best;for(const d of [2.4,2,1.6,2.8,1.2]){const x=I.x-Math.cos(a0)*d,z=I.z-Math.sin(a0)*d,[r]=tdRho(x,z);if(tdWalkable(x,z)&&r>tdSandEdge(a0)-.02)return [x,z,a0]}return [I.x-Math.cos(a0)*1.6,I.z-Math.sin(a0)*1.6,a0]}
   /* 3.5 Xếp sò: chọn khuôn hình (hoa, xoắn ốc, trái tim, mặt trời, sóng). Mỗi vỏ có một chấm trũng nhỏ trên cát; vỏ xếp từ tâm ra ngoài và quay theo đường nét của hình; viền cát cào quanh hình */
   const GRID_N=6,GRID_S=.46;
-  const SH_FORMS=[['hoa','🌸','Hoa'],['xoan','🌀','Xoắn ốc'],['tim','❤️','Trái tim'],['mattroi','☀️','Mặt trời'],['song','🌊','Sóng']];
+  const SH_FORMS=[['hoa','🌸','Hoa'],['tron','⭕','Vòng tròn'],['xoan','🌀','Xoắn ốc'],['tim','❤️','Trái tim'],['mattroi','☀️','Mặt trời'],['song','🌊','Sóng']];
   const SH_DOT_G=new THREE.CircleGeometry(.14,20).rotateX(-Math.PI/2),SH_DOT_M=new THREE.MeshBasicMaterial({color:'#a88b5c',transparent:true,opacity:.38,depthWrite:false}),SH_DOT_MS=new THREE.MeshBasicMaterial({color:'#ffe08a',transparent:true,opacity:.8,depthWrite:false}),SH_RAKE_M=new THREE.MeshBasicMaterial({color:'#a88f62',transparent:true,opacity:.42,depthWrite:false});
   let shOpt={};try{shOpt=JSON.parse(localStorage.getItem('yen_sh_opt')||'{}')||{}}catch(e){}
   const shOptSave=()=>{try{localStorage.setItem('yen_sh_opt',JSON.stringify(shOpt))}catch(e){}};
   /* toạ độ trong mặt phẳng hình: u sang phải, w ra phía biển (phía trên màn hình); an = hướng đầu vỏ */
   function shSlots(kind,n){const P=[],even=(m,c)=>Array.from({length:m},(_,j)=>Math.floor(j*c/m));
     if(kind==='xoan'){for(let i=0;i<n;i++){const a=i*2.39996,r=.215*Math.sqrt(i+.5);P.push([Math.cos(a)*r,Math.sin(a)*r,a+.8])}}
+    else if(kind==='tron'){/* vòng tròn rỗng như chuỗi hạt: một vòng lớn, nhiều vỏ thì thêm vòng trong */const outer=n>22?Math.round(n*.58):n,lay=[[outer,Math.max(.45,Math.min(1.3,outer*.37/TAU))]];if(n>outer)lay.push([n-outer,Math.max(.4,lay[0][1]-.42)]);
+      lay.forEach(([m,r],li)=>{for(let j=0;j<m;j++){const a=(j+(li?.5:0))/m*TAU+Math.PI/2;P.push([Math.cos(a)*r,Math.sin(a)*r,a+Math.PI/2])}})}
     else if(kind==='tim'){const outer=n>24?Math.round(n*.6):n,layers=[[outer,1]];if(n>outer)layers.push([n-outer,.58]);
       const hp=t=>[16*Math.pow(Math.sin(t),3),13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)+2.5],L=[];let len=0,prev=hp(0);for(let k=1;k<=400;k++){const p=hp(k/400*TAU);len+=Math.hypot(p[0]-prev[0],p[1]-prev[1]);L.push([len,k/400*TAU]);prev=p}
       const K=Math.max(.035,Math.min(.082,outer*.37/len));
@@ -1641,7 +1643,7 @@
     const fr=new THREE.Group();for(const k of [.34,.47]){const r=rm+k,ring=new THREE.RingGeometry(r-.02,r+.02,84,1).rotateX(-Math.PI/2),p=ring.attributes.position;for(let j=0;j<p.count;j++)p.setY(j,tdTerrainY(R.cx+p.getX(j),R.cz+p.getZ(j))+.015);const o=new THREE.Mesh(ring,SH_RAKE_M);o.position.set(R.cx,0,R.cz);o.renderOrder=1;fr.add(o)}
     R.rm=rm;TU_DAO.group.add(g,fr);R.grid=g;R.frame=fr;R.cells.forEach((q,i)=>{if(q)shGridPut(q,i)})}
   /* camera nhìn từ phía trong đảo ra biển, hơi cao, hình vỏ sò chiếm khoảng nửa màn hình; bảng ở dưới nên hình nằm nửa trên */
-  function shArtCam(R,wide){const A=TD_ACT;if(!R)return;const [fx,fz]=R.f,ph=camera.aspect<1,D=2*((R.rm||1)+.6),half=Math.tan(camera.fov*Math.PI/360),el=(wide?(ph?58:50):(ph?68:58))*Math.PI/180;
+  function shArtCam(R,wide){const A=TD_ACT;if(!R)return;const [fx,fz]=R.f,ph=camera.aspect<1,D=2*((R.rm||1)+.6),half=Math.tan(camera.fov*Math.PI/360),el=(wide?(ph?54:46):(ph?64:54))*Math.PI/180;
     let dist=Math.max(D*Math.sin(el)/(.5*2*half),D/((ph?.9:.6)*2*half*camera.aspect));if(wide)dist*=1.15;
     const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.22)*dist*half/Math.sin(el),L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
     A.cairnCam={t:0,L,P:new THREE.Vector3(L.x+fx*dist*Math.cos(el),gy+dist*Math.sin(el),L.z+fz*dist*Math.cos(el))};A.shCam=true;A.artCam=null}
@@ -1649,7 +1651,7 @@
   function shGridStart(){const A=TD_ACT,I=bayIsland;if(!I)return;let R=A.art;const b=A.bins[A.carry];if(A.hand&&b&&b.items.length<SH_CAP){const q=A.hand;A.hand=null;q.clean=true;q.g.parent&&q.g.parent.remove(q.g);b.g.add(q.g);q.g.position.set(...binSock(A.carry,b.items.length));q.g.scale.setScalar(.4);b.items.push(q)}
     if(!R){if(!b||!b.items.length){bayCaption('Chưa có vỏ sò nào để xếp',3000);return}const [cx,cz,a,ff]=shArtSpot(),fx=cx-I.x,fz=cz-I.z,fl=Math.hypot(fx,fz)||1;R=A.art={cx,cz,a,f:ff||[-Math.cos(a),-Math.sin(a)],cells:Array(b.items.length).fill(null),sel:null,kind:SH_FORMS.some(f=>f[0]===shOpt.f)?shOpt.f:'hoa'}}
     if(!R.grid)shGridBuild(R);
-    {/* khách đứng lệch sang một bên hình, không che tầm nhìn */const [fx,fz]=R.f,rx=fz,rz=-fx,d=(R.rm||1)+2;let st=null;/* ưu tiên đứng phía biển, sau hình, nhìn về hình (xa camera nên không che); không được thì đứng lệch một bên */for(const [ox,oz] of [[0,-(R.rm||1)-.9],[d,-1.1],[-d,-1.1]]){const x=R.cx+rx*ox+fx*oz,z=R.cz+rz*ox+fz*oz;if(tdWalkable(x,z)){st=[x,z];break}}if(st)tdGoTo(st[0],st[1],null,null)}
+    {/* khách đứng lệch sang một bên hình, không che tầm nhìn */const [fx,fz]=R.f,rx=fz,rz=-fx,d=(R.rm||1)+2;let st=null;/* khách đứng phía trong đảo, ngay trước hình, quay mặt ra biển; camera đặt sau lưng khách */for(const [ox,oz] of [[-.85,(R.rm||1)+.5],[.85,(R.rm||1)+.5],[0,(R.rm||1)+.8]]){const x=R.cx+rx*ox+fx*oz,z=R.cz+rz*ox+fz*oz;if(tdWalkable(x,z)){st=[x,z];break}}if(st)tdGoTo(st[0],st[1],'faceart',null)}
     R.cells.forEach((q,i)=>{if(q)q.g.traverse(o=>{o.userData.tuDao='artshell';o.userData.cell=i})});
     I.yaw=Math.atan2(R.cx-I.x,R.cz-I.z);R.sel=null;shGridMark();shArtCam(R,false);shPanel('grid');
     if(!shOpt.h)bayCaption('🎨 Chạm vỏ sò trong giỏ để đặt vào hình, hoặc bấm «Tự xếp»',5000)}
