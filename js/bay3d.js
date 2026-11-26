@@ -1092,8 +1092,12 @@
   function cdSpots(R){const C=TD_ACT.cairn;let ox=C.x-TD_O[0],oz=C.z-TD_O[1];const L=Math.hypot(ox,oz)||1;ox/=L;oz/=L;const px=-oz,pz=ox,r=(R||.5)+1.3;
     const ok=(x,z)=>tdWalkable(x,z),f=1.1;/* người đứng lệch một bên và lùi về phía biển, để không che tầm camera */let stand=[C.x+px*r+ox*f,C.z+pz*r+oz*f];if(!ok(...stand))stand=[C.x-px*r+ox*f,C.z-pz*r+oz*f];if(!ok(...stand))stand=[C.x+px*r,C.z+pz*r];if(!ok(...stand))stand=tdNearStand(C.x,C.z,r,false)||[C.x-ox*r,C.z-oz*r];
     const side=Math.sign((stand[0]-C.x)*px+(stand[1]-C.z)*pz)||1;return {ox,oz,px:px*side,pz:pz*side,stand}}
-  function cdCam(F){const C=TD_ACT.cairn,S=cdSpots(F.R),[d,h,ly]=F.cam,a=0,rx=S.ox*Math.cos(a)-S.oz*Math.sin(a),rz=S.ox*Math.sin(a)+S.oz*Math.cos(a),y0=tdTerrainY(C.x,C.z);
-    /* điện thoại: bảng ở nửa dưới nên camera thấp, tháp nằm nửa trên, biển và trời phía sau */const ph=camera.aspect<1,[dd,hh,ll,lo]=ph?F.camM:[d,h,ly,0];TD_ACT.cairnCam={t:0,P:new THREE.Vector3(C.x-rx*dd,y0+hh,C.z-rz*dd),L:new THREE.Vector3(C.x-rx*lo,y0+ll,C.z-rz*lo)}}
+  function cdCam(F){/* camera hơi cao nhìn xuống, zoom sao cho tháp đá cao khoảng nửa màn hình; điện thoại: tháp nằm nửa trên (bảng ở dưới) */
+    const C=TD_ACT.cairn,D=TD_ACT.cd,S=cdSpots(F.R),y0=tdTerrainY(C.x,C.z),ph=camera.aspect<1,flat=F.k==='circle'||F.k==='path';
+    const H=Math.max(.5,(D&&D.F===F&&D.frameH)||1.2),half=Math.tan(camera.fov*Math.PI/360),el=(F.k==='circle'?(ph?52:42):F.k==='path'?(ph?40:32):(ph?23:25))*Math.PI/180;
+    let dist=H/(.5*2*half);/* H = 1/2 chiều cao khung nhìn */if(ph&&!flat)dist*=1;const cy=flat?.05:H/2,shift=ph?.36*H:(flat?0:.08*H);
+    const L=new THREE.Vector3(C.x,y0+cy-shift,C.z),P=new THREE.Vector3(C.x-S.ox*dist*Math.cos(el),y0+cy+dist*Math.sin(el),C.z-S.oz*dist*Math.cos(el));
+    TD_ACT.cairnCam={t:0,P,L}}
   function cdOpen(){const C=TD_ACT.cairn;if(!C||!bayIsland)return;cdEls();if(!TD_ACT.cd){let o={};try{o=JSON.parse(localStorage.getItem('yen_cd_opt')||'{}')}catch(e){}TD_ACT.cd={ph:'mode',mode:null,hideHint:!!o.h,hideLab:!!o.l,it:null,F:null,ms:[],ans:[],i:0,retry:0,t0:Date.now(),deco:[],an:cdAnsense()}};
     document.body.classList.add('cd-on');const I=bayIsland;I.yaw=Math.atan2(C.x-I.x,C.z-I.z);cdCam(TD_ACT.cd.F||CD_FORMS[0]);cdShow()}
   function cdClear(){const D=TD_ACT.cd,C=TD_ACT.cairn;if(!D)return;for(const m of D.ms)m.parent&&m.parent.remove(m);for(const o of D.deco)o.parent&&o.parent.remove(o);D.ms=[];D.deco=[];D.ans=[];D.i=0;D.anim=null;D.hold=null;D.shot=null;if(C)C.idle.visible=true;if(cdLab){cdLab.replaceChildren();cdLab._h=''}}
@@ -1110,6 +1114,7 @@
     /* đá chờ xếp nằm trên cát, phía bên kia so với người */
     const n=F.ids.length,r0=F.R+1.15;D.ms=F.ids.map((id,i)=>{const m=TD_ACT.stoneMake(id,F.asym);const a=Math.atan2(-S.pz,-S.px)+(i-(n-1)/2)*Math.min(.32,2.2/n),rr=r0+(i%2)*.35,x=Math.cos(a)*rr,z=Math.sin(a)*rr;
       m.rotation.set(0,i*1.9%6.28,i%2?.05:-.04);m.position.set(x,0,z);g.add(m);m.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(m,true),wp=m.getWorldPosition(new THREE.Vector3());m.position.y=gy([x,z])-(bb.min.y-wp.y)-.02;m.userData.sand=m.position.clone();m.userData.sandR=m.rotation.clone();m.traverse(o=>{o.userData.tuDao=null});return m});
+    {const bb=new THREE.Box3(),hs=D.ms.map(m=>{bb.setFromObject(m,true);return bb.max.y-bb.min.y});let H;if(F.k==='circle')H=2.4;else if(F.k==='path')H=Math.max(2.4,hs.slice(0,3).reduce((a,b)=>a+b,0));else{H=hs.reduce((a,b)=>a+b,0)*.97;if(D.boulder){bb.setFromObject(D.boulder,true);H+=bb.max.y-bb.min.y}}D.frameH=H}
     cdCam(F);D.i=0;if(D.mode==='thuong'){D.ans=F.ids.map(()=>({k:'tho',t:'',a:''}));D.ph='breath'}else D.ph='ask';cdShow()}
   /* chỗ đặt viên i: tựa đúng mặt viên bên dưới (hoặc tảng đá, hoặc cát) tại trục */
   const cdRay=new THREE.Raycaster(),cdV=new THREE.Vector3(),cdBB=new THREE.Box3();
