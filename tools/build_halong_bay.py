@@ -36,7 +36,7 @@ LANDMARKS = [
      "Gần Hòn Trống Mái, phía bắc", "Như một lư hương dâng lên trời"),
     ("hon_trong_mai", "Hòn Trống Mái", 20.9030, 107.0440, "pair", 24, 30, "approx",
      "Cách cảng Tuần Châu khoảng 5 km, phía nam Hòn Đỉnh Hương (Ban quản lý vịnh)", "Biểu tượng du lịch Hạ Long: đôi gà đá tựa vào nhau"),
-    ("hon_con_coc", "Hòn Con Cóc", 20.8776, 107.1308, "toad", 9, 18, "approx",
+    ("hon_con_coc", "Hòn Con Cóc", 20.8747, 107.131, "toad", 9, 18, "approx",
      "Cục Du lịch Quốc gia & Ban quản lý vịnh: cách cảng tàu du lịch Bãi Cháy 12 km về phía đông nam (cao khoảng 9 m)", "Khối đá nghiêng như chú cóc vươn mình ra biển"),
     ("lang_chai_ba_hang", "Làng chài Ba Hang", 20.8895, 107.0605, "village", 0, 0, "approx",
      "Khu Ba Hang, phía nam Trống Mái", "Những nhà bè nổi bình yên giữa vòng đá"),
