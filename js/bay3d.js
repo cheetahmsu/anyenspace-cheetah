@@ -924,7 +924,8 @@
   const SH_MAT=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.32,metalness:0,clearcoat:.9,clearcoatRoughness:.18,side:THREE.DoubleSide}),SH_PEARL=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.25,metalness:.05,clearcoat:1,clearcoatRoughness:.12,iridescence:.7,iridescenceIOR:1.6,side:THREE.DoubleSide})/* bóng mềm kiểu Soft Minimal Luxury; xà cừ và ngọc trai có ánh ngũ sắc */,SH_SANDY=new THREE.MeshStandardMaterial({vertexColors:true,color:'#cdbb96',roughness:.95,side:THREE.DoubleSide});
   const shMat=s=>s===1||s===9?SH_PEARL:SH_MAT;
   const SH_HIT_G=new THREE.SphereGeometry(.85,6,4),SH_HIT_M=new THREE.MeshBasicMaterial({visible:false});
-  function shMesh(s,t,sandy){const m=new THREE.Mesh(shGeo(s,t),sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);return m}
+  /* viền nâu sẫm quanh vỏ: bóng dẹt cùng dáng vỏ, to hơn một chút, nằm sát dưới chân vỏ, nhìn từ trên xuống thành đường viền rõ trên nền cát */const SH_EDGE_M=new THREE.MeshBasicMaterial({color:'#5a3d26',side:THREE.DoubleSide,transparent:true,opacity:.85,depthWrite:false});
+  function shMesh(s,t,sandy){const g=shGeo(s,t),m=new THREE.Mesh(g,sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);if(!g.boundingBox)g.computeBoundingBox();const B=g.boundingBox,c=B.getCenter(new THREE.Vector3()),e=new THREE.Mesh(g,SH_EDGE_M),k=1.14;e.scale.set(k,.04,k);e.position.set(c.x*(1-k),B.min.y*(1-.04)+.01,c.z*(1-k));e.renderOrder=1;e.raycast=()=>{};m.add(e);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
   const BIN_INFO=[{name:'Giỏ Mây Đan Mắt Cáo',short:'Giỏ Mây',ic:'🧺',style:'Giản Dị'},{name:'Khay Gốm Sóng Biển',short:'Khay Sóng Ngọc',ic:'🌊',style:'Sang Chảnh'},{name:'Đĩa Sứ Vỏ Sò Hồng Đào',short:'Đĩa Sò Hồng',ic:'🐚',style:'Hạnh Phúc'}];
   const SH_CAP=36;/* mỗi khay / giỏ đựng được cả 36 vỏ */
