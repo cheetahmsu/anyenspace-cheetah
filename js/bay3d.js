@@ -430,7 +430,11 @@
     else if(q.shape==='incense'){
       // Hòn Đỉnh Hương: một khối liền, chân bị sóng khoét thắt lại, thân nở dần lên đỉnh rộng và bằng, phủ cây bụi
       const rot=f+Math.PI/2;
-      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.42,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22});
+      if(p.id==='hon_dua'){/* Hòn Đũa: cột đá mảnh đứng thẳng như chiếc đũa, chân liền khối có ngấn sóng, không thắt nhọn */
+        addKarst(x,z,r*.95,.35,k+1,{round:true,sx:1.3,sz:.9,rot,notch:0});addKarst(x,z,r*.55,h,k,{taper:.18,dome:.22,sx:1.2,sz:.9,rot,ribs:6,ribAmp:.1,notch:.28,rough:.18})}else{
+      // đế vững (rạn đá thấp quanh chân), thân thắt vừa phải rồi nở ra như chiếc lư hương
+      addKarst(x,z,r*.85,.4,k+1,{round:true,sx:1.6,sz:.85,rot,notch:0});
+      addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22})}
     }
     else if(q.shape==='dog'&&p.id==='hon_cho_da'){
       // Hòn Chó Đá: nhìn ngang từ luồng tàu là dáng chú chó ngồi canh: mông và chân sau tròn thấp, ngực dựng thẳng,
@@ -519,8 +523,10 @@
       const sp=makeSampan(true);sp.position.set(x-fx*r*.15+fz*12,0,z-fz*r*.15-fx*12);sp.rotation.y=-f;bayGroup.add(sp);
     }
     else if(q.shape==='island_beach'){
-      // Đảo Bái Tử Long: hai đồi tròn thấp phủ rừng, bãi cát trắng dài lưỡi liềm, hàng phi lao, ô dù
-      const px=-fz,pz=fx;addKarst(x-fx*r*.25+px*r*.2,z-fz*r*.25+pz*r*.2,r*.55,h,k,{shape:2,sx:1.5,rot:f+Math.PI/2});addKarst(x-fx*r*.3-px*r*.35,z-fz*r*.3-pz*r*.35,r*.42,h*.75,k+1,{shape:2,rot:f});
+      // Bãi biển Bái Tử Long (Quan Lạn, Minh Châu, Ngọc Vừng, Thắng Lợi): đảo đất thấp, đồi thoai thoải dài phủ rừng (không phải tháp đá vôi),
+      // bãi cát trắng dài, rừng phi lao hai hàng sau bãi, ô dù
+      const px=-fz,pz=fx;addKarst(x-fx*r*.3+px*r*.15,z-fz*r*.3+pz*r*.15,r*.62,h*.55,k,{round:true,sx:1.9,sz:.85,rot:f+Math.PI/2,notch:0});addKarst(x-fx*r*.42-px*r*.45,z-fz*r*.42-pz*r*.45,r*.46,h*.42,k+1,{round:true,sx:1.5,sz:.9,rot:f+Math.PI/2,notch:0});
+      addBeachTrees(x,z,f,r*.82,18,k+7,.86);
       const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,40,1,-f-Math.PI*.46,Math.PI*.92),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
       sand(.6,1.02,.3,'#f4ead0');sand(1.0,1.16,.2,'#cdb995');
       addBeachTrees(x,z,f,r*.95,14,k,.82);addUmbrellas(x,z,f,r*.95,8,k);addKiosks(x,z,f+.5,r*.9,3,k);
