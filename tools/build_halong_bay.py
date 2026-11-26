@@ -42,7 +42,7 @@ LANDMARKS = [
      "Waymarking: N 20°51.528 E 107°04.858; khớp Wikipedia tiếng Pháp 20°51′32″N 107°04′49″E", "Bãi cát hình trăng lưỡi liềm, đỉnh ngắm toàn cảnh"),
     ("hang_sung_sot", "Hang Sửng Sốt · đảo Bồ Hòn", 20.8556, 107.0905, "big_island", 85, 70, "approx",
      "Trên đảo Bồ Hòn, đối diện Ti Tốp", "Hang lớn và đẹp bậc nhất vịnh Hạ Long"),
-    ("hang_luon", "Hang Luồn", 20.8478, 107.0985, "arch", 40, 34, "approx",
+    ("hang_luon", "Hang Luồn", 20.8478, 107.0985, "arch", 52, 40, "approx",
      "Phía đông nam đảo Bồ Hòn", "Vòm đá dẫn vào hồ nước lặng giữa núi"),
     ("lang_chai_cua_van", "Làng chài Cửa Vạn", 20.8000, 107.1280, "village", 0, 0, "approx",
      "Khoảng 20 km từ đảo Tuần Châu, vùng Vạn Giã · Cửa Vạn", "Làng chài nổi lớn nhất vịnh Hạ Long"),
