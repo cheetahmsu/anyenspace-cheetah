@@ -773,7 +773,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(BRANCHES.some(b=>{const c=b[b.length-8];return Math.hypot(x-c[0],z-c[1])<9+pad}))return true;/* flower gardens at the junctions */
     if(wishLakes.some(l=>!l.lotus&&Math.hypot(x-l.x,z-l.z)<POND_R+4.5+pad))return true;
     if(houseHit(x,z,3.5+pad)||inFrontStrip(x,z))return true;
-    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<5+pad))return true;
+    if(WILLOW_SPOTS.some(w=>Math.hypot(x-w.x,z-w.z)<5+pad))return true;
     if(SENSE_HOUSES.some(h=>h.id==='xuong_gom'&&rectHit(h.x,h.z,h.rot,h.W+14,h.D+2,x,z,3+pad)))return true;/* firing yard, straw and woodpile beside the workshop */
     if(Math.abs(x-BEN_SEN.x)<4+pad&&z>BEN_SEN.z0-2&&z<BEN_SEN.z1+4+pad)return true;
     return false;}
@@ -856,10 +856,10 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         out.lerp(wet,smoothstep(1.6,0,lk)*.7);}
       col.setXYZ(i,out.r,out.g,out.b)}
     col.needsUpdate=true;}
-  // 3.16: Viền cỏ thấp quanh hồ sen, điểm xuyết hoa nhỏ, và hai cây liễu rũ bên bờ nam.
-  const WILLOWS=[{x:12.5,z:10.6,lean:.18,rot:2.6},{x:-35,z:5,lean:.16,rot:.9}];/* liễu Tây dời ra mũi hồ để không che Nhà Văn Hóa */
+  // 3.16: Viền cỏ thấp quanh hồ sen, điểm xuyết hoa nhỏ. Hai cây liễu rũ bên bờ đã bỏ (26/11/2026); chỗ cũ vẫn để trống, không mọc thêm thông.
+  const WILLOW_SPOTS=[{x:12.5,z:10.6},{x:-35,z:5}];
   {const rnd=seededRandom(5150),tufts=[],blooms=[];
-    const shoreOk=(x,z)=>{const lk=lakeSDF(x,z);if(lk<.15||lk>2.3)return false;if(Math.abs(x)<2.3&&z>BRIDGE_ARCH[0]-3&&z<BRIDGE_ARCH[1]+4)return false;if(Math.abs(x)<2.2)return false;if(Math.abs(x-BEN_SEN.x)<1.6&&z>4&&z<BEN_SEN.z1+1)return false;if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.8))return false;return true};
+    const shoreOk=(x,z)=>{const lk=lakeSDF(x,z);if(lk<.15||lk>2.3)return false;if(Math.abs(x)<2.3&&z>BRIDGE_ARCH[0]-3&&z<BRIDGE_ARCH[1]+4)return false;if(Math.abs(x)<2.2)return false;if(Math.abs(x-BEN_SEN.x)<1.6&&z>4&&z<BEN_SEN.z1+1)return false;return true};
     for(let tries=0;tufts.length<2600&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z))continue;const lk=lakeSDF(x,z);if(rnd()>1.15-lk*.4)continue;tufts.push([x,z,lk])}
     for(let tries=0;blooms.length<380&&tries<40000;tries++){const x=(rnd()*2-1)*36,z=-21+rnd()*34;if(!shoreOk(x,z)||lakeSDF(x,z)<.35)continue;blooms.push([x,z])}
     const blade=(a,h,c)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-.035,0,0,.035,0,0,.05,h,.03],3));g.computeVertexNormals();return [part(g,0,0,0,1,1,1,a),c]};
@@ -872,17 +872,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const cols=['#f6f3ea','#f7dc5e','#f3a6c4','#b9a0e6','#9cc4f0','#fff2a8'].map(h=>new THREE.Color(h)),bm=new THREE.InstancedMesh(bloomGeo,grassMat,blooms.length);
     blooms.forEach(([x,z],i)=>{const s=.8+rnd()*.5;e.set(0,rnd()*Math.PI*2,0);q.setFromEuler(e);v.set(x,terrainHeight(x,z)-.01,z);sc.set(s,s,s);m4.compose(v,q,sc);bm.setMatrixAt(i,m4);bm.setColorAt(i,cols[Math.floor(rnd()*cols.length)])});
     bm.instanceMatrix.needsUpdate=true;bm.instanceColor.needsUpdate=true;bm.frustumCulled=false;scene.add(bm);
-    // Weeping willows: a leaning trunk, a soft crown and long drooping strands that sway a little in the wind.
-    for(const w of WILLOWS){const g=new THREE.Group();g.position.set(w.x,terrainHeight(w.x,w.z)-.05,w.z);g.rotation.y=w.rot;const parts=[],P=(...a)=>parts.push([part(...a),'#5a4632']),wr=seededRandom(Math.round(w.x*31+w.z*7)+99);
-      const bark='#5a4632',leafA='#6f8f4a',leafB='#7d9c52',leafC='#5f7f40';
-      P(new THREE.CylinderGeometry(.28,.42,3.2,8),0,1.6,0,1,1,1,0,-w.lean);P(new THREE.CylinderGeometry(.2,.28,2.2,7),.62,3.9,0,1,1,1,0,-w.lean*2.2);
-      for(const [a,l] of [[.4,1.8],[2.2,1.6],[4,1.7],[5.3,1.5]])P(new THREE.CylinderGeometry(.06,.12,l,6),.9+Math.cos(a)*.5,4.9,Math.sin(a)*.5,1,1,1,a,.9);
-      for(let k=0;k<7;k++){const a=k/7*Math.PI*2,r=1.3+wr()*.6;parts.push([part(new THREE.IcosahedronGeometry(1.1+wr()*.4,0),1.1+Math.cos(a)*r,5.5+wr()*.6,Math.sin(a)*r,1.2,.55,1.2),[leafA,leafB,leafC][k%3]])}
-      const strands=[];for(let k=0;k<120;k++){const a=wr()*Math.PI*2,r=1+wr()*2.6,L=2+wr()*3,x=1.1+Math.cos(a)*r,z=Math.sin(a)*r,top=5.7-r*.3;strands.push([part(new THREE.ConeGeometry(.07+wr()*.06,L,3,1),x,top-L/2,z,1,1,1,0,Math.PI),[leafA,leafB,leafC][k%3]])}
-      const crown=new THREE.Mesh(mergeColored(parts),forestMat);g.add(crown);
-      const hang=new THREE.Group();hang.add(new THREE.Mesh(mergeColored(strands),forestMat));hang.position.y=0;g.add(hang);w.hang=hang;
-      scene.add(g);w.group=g}}
-  function updateWillows(t){for(const w of WILLOWS)if(w.hang){w.hang.rotation.z=Math.sin(t*.7+w.x)*.025;w.hang.rotation.x=Math.sin(t*.53+w.z)*.02}}
+    }
   /* Rừng thông (cây + bản đồ data/world-pine_forest.json) chỉ dựng khi vào Rừng Yên; vào thẳng Vịnh Yên thì không tải */
   let forestBuilt=false,forestWant=FOREST_DEFAULT,forestMapLoader=null;
   function ensureForest(){if(forestBuilt)return;forestBuilt=true;buildForest(forestWant);if(forestMapLoader)forestMapLoader()}
@@ -1050,7 +1040,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(window.__homeHit&&window.__homeHit(x,z))return false;
     if(window.__vhHit&&window.__vhHit(x,z))return false;
     if(window.__gomHit&&window.__gomHit(x,z))return false;
-    if(WILLOWS.some(w=>Math.hypot(x-w.x,z-w.z)<.7))return false;
     if(Math.hypot(x-GATHER.x,z-GATHER.z)<NONBO_R+.35||Math.hypot(x-FOOT.x,z-FOOT.z)<NONBO_R+.35)return false;
     // Hilltop: the whole flat top is open except the statue's dais and the altar; the slope only along the stairs.
     const hr=Math.hypot(x-STATUE.x,z-STATUE.z);
@@ -2420,7 +2409,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.__forest={bridgeScr:z=>{const v=new THREE.Vector3(0,bridgeHeight(z)+.1,z).project(camera);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]},th:(x,z)=>[+terrainHeight(x,z).toFixed(2),+lakeSDF(x,z).toFixed(2)],goHouse:id=>{const h=[TU_GIA,NHA_SAC,...SENSE_HOUSES,TINH_THAT,VAN_HOA].find(v=>v.id===id);if(h)goToHouse(h);return h&&h.door},isRoom:()=>roomOpen,house:id=>goSchedHouse(id),loop:()=>{let m=1e9,at=null;for(const [x,z] of BOAT_LOOP){const dx=Math.max(0,Math.abs(x-BEN_SEN.x)-BEN_SEN.w/2),dz=Math.max(0,BEN_SEN.z0-z,z-BEN_SEN.z1),d=Math.hypot(dx,dz);if(d<m){m=d;at=[x,z]}}return [m,at]},viverse:o=>o?openOrchid():closeOrchid(),tp:(x,z,y)=>teleportTo(x,z,y),viv:()=>VIV,home:()=>TU_GIA,katCarry:()=>{kat.phase='carry';kat.pieces='0123';setCarry(true);refreshKatPill();return kat.phase},katPhase:()=>kat.phase,robeOn:()=>!!kat.robe,dbg:()=>({cam:[+camera.position.x.toFixed(2),+camera.position.y.toFixed(2),+camera.position.z.toFixed(2)],yaw:+viewYaw.toFixed(3),zoom:+camZoom.toFixed(3),zoomS:+(camZoomS||0).toFixed(3),act:meActivity,route:walkRoute.length,boat:!!boatRide,kat:kat.phase,n:onlineAvatars.size,gd:guestDist(mePosition.x,mePosition.z)}),katFill:n=>{const old=new Date(Date.now()-6e5).toISOString(),d=[5,7,9];katRows=Array.from({length:n},(_,i)=>{const dd=d[i%3];return {id:'t'+i,color:KAT_COLORS[i%4][1],dieu:dd,pieces:i%2?Array.from({length:dd*3},(_,k)=>(k+i)%4).join(''):'',name:'t'+i,created_at:old}});return katRows.length},route:()=>walkRoute.map(q=>[+q[0].toFixed(1),+q[1].toFixed(1)]),pos:()=>[mePosition.x,mePosition.z],paved:(x,z)=>onPaved(x,z),boat:i=>tapBoat(i),ride:()=>boatRide?{phase:boatRide.phase,i:boatRide.b.i,pct:Math.round(100*boatRide.travelled/boatRide.total)}:null,boatsVisible:()=>boats.map(b=>b.group.visible),garden:i=>goToGarden(FLOWER_GARDENS[i]),room:id=>openRoom([NHA_SAC,...SENSE_HOUSES,TINH_THAT,TU_GIA,TU_DAO_SPACE].find(h=>h.id===id)||{id:0}),katSkip:sec=>{kat.r0-=sec*1000},gom:()=>({phase:gom.phase,step:gom.step,rounds:gom.rounds,rows:gomRows.length,fire:gomFire.visible,rack:gomRack.children.length,yard:GOM_YARD,stand:GOM_STAND}),gomFill:n=>{const old=new Date(Date.now()-3e5).toISOString();gomRows=Array.from({length:n},(_,i)=>({id:'t'+i,shape:i%4,pattern:i%3,seed:i*37+5,name:'t',created_at:old}));gomFiring=null;drawRack();return gomRack.children.length},gomSkip:sec=>{gom.f0-=sec*1000;if(gom.row)gom.row.created_at=new Date(new Date(gom.row.created_at).getTime()-sec*1000).toISOString()},kat:()=>({phase:kat.phase,theta:kat.theta,left:kat.chantLeft,rows:katRows.length}),closeRoom:()=>closeRoom(),offered:()=>[...offeredShown.values()].map(o=>o.slot),basket:b=>{if(b){flowerBasket=b.slice()}return flowerBasket.slice()},carried:()=>carriedBouquet,ahead:d=>boatRide?[boatRide.b.group.position.x+Math.sin(boatRide.heading)*d,boatRide.b.group.position.z+Math.cos(boatRide.heading)*d]:null};
   window.__forest.hinfo=id=>{const h=[TU_GIA,NHA_SAC,...SENSE_HOUSES,TINH_THAT,VAN_HOA].find(v=>v.id===id);return h&&{x:h.x,z:h.z,rot:h.rot,door:h.door,D:h.D||0}};
   window.__bay={island:()=>bayIsland&&{x:+bayIsland.x.toFixed(1),z:+bayIsland.z.toFixed(1),n:bayIsland.path.length,y:+tdGroundY(bayIsland.x,bayIsland.z).toFixed(2)},tdTap:k=>tuDaoTap(k),tdWarp:(x,z,yaw,vy)=>{if(!bayIsland)tuDaoTap('pier');bayIsland.x=x;bayIsland.z=z;bayIsland.path=[];bayIsland.then=null;bayIsland.yaw=yaw||0;viewYaw=vy||0},free:(x,z)=>navFree(x,z),tuDao:i=>goTuDao(i),vp:id=>{const p=bayData.props.find(q=>q.id===id);return viewPoint(p)},tour:(id,a,b)=>{const t=bayData.props.find(q=>q.id===id);startTour(t,a,b)},camDist:()=>+camera.position.distanceTo(bayAvatar.pos).toFixed(2),zoom:f=>{if(f)bayZoomBy(f);return {view:bayView,z:bayZoom,far:bayFarZoom,lift:+bayLift.toFixed(2),want:bayLiftWant}},camYaw:()=>{const d=camera.getWorldDirection(new THREE.Vector3());return +Math.atan2(d.x,d.z).toFixed(3)},scr:()=>{const v=bayAvatar.pos.clone();v.y+=1;v.project(camera);return [+v.x.toFixed(2),+v.y.toFixed(2)]},camY:()=>+camera.position.y.toFixed(2),photoCam:o=>{if(bayPhoto)Object.assign(bayPhoto.cam,o)},pause:()=>pauseShip(),resume:()=>resumeShip(),paused:()=>bayPause,go:(x,z)=>setDestination(x,z,'thử'),land:id=>{const p=bayData?.props.find(q=>q.id===id);if(p)goLandmark(p)},get ship(){return bayShip},warp:(x,z,h)=>{bayShip.x=x;bayShip.z=z;if(h!=null)bayShip.heading=h;bayShip.trail.length=0},yaw:y=>{if(y!=null)viewYaw=y;return viewYaw},map:()=>openBayMap()};
-  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);vivU.t.value=performance.now()/1000;if(!bayMode){updateSenseHouses(performance.now()/1000);updateWillows(performance.now()/1000);}let t=clock.getElapsedTime();
+  let clock=new THREE.Clock(),lastWalkFrame=performance.now();function animate(){requestAnimationFrame(animate);if(document.hidden||orchidOpen||roomOpen)return;orchidRing.material.opacity=.3+.25*Math.sin(performance.now()/500);vivU.t.value=performance.now()/1000;if(!bayMode){updateSenseHouses(performance.now()/1000);}let t=clock.getElapsedTime();
     const nowWalk=performance.now(),dt=Math.min(.05,(nowWalk-lastWalkFrame)/1000);walkDt=Math.min(.15,(nowWalk-lastWalkFrame)/1000);lastWalkFrame=nowWalk;
     if(document.body.classList.contains('immersive')){
       if(!bayMode)updateWishLake();if(!walking){walking=true;walkYaw=Math.PI;viewYaw=Math.PI}
