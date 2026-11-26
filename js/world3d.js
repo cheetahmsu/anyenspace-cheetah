@@ -1343,7 +1343,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=79eb19b7').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=39d3259a').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP)loadBayModule().catch(()=>{});if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
@@ -1825,7 +1825,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),mat('#e7c9a8'));head.position.y=1.85;g.add(head);
     const parts=outfitParts(g,torso),BW=roomFromIsland&&window.__bayWear,sw=BW?BW.make(g,head):null;/* vào nhà từ Đảo Yên: giữ nguyên bộ đồ đang mặc ngoài đảo */
-    const dress=on=>{if(BW){const o=BW.outfit();dressAvatar(parts,torso,o.color,BW.base(),on);BW.wear(sw,parts,torso,o,on,true)}else dressAvatar(parts,torso,myColor,myStyle,on)};dress(false);g.scale.setScalar(.8);sc.add(g);
+    const dress=on=>{if(BW){const o={...BW.outfit(),acc:[]}/* 26/11: vào Nhà Thiền, nhà chính trên Đảo Yên thì bỏ nón, kính, khăn; ra cửa về đảo mặc lại (bộ đồ ngoài đảo không đổi) */;dressAvatar(parts,torso,o.color,BW.base(),on);BW.wear(sw,parts,torso,o,on,true)}else dressAvatar(parts,torso,myColor,myStyle,on)};dress(false);g.scale.setScalar(.8);sc.add(g);
     const W={x:cfg.start[0],z:cfg.start[1],a:Math.PI,cy:0,dest:null,keys:new Set(),zf:1,yo:0,yoT:0,yv:0,pl:0,stride:0,fov:50,lt:null};
     W.cy=W.cy0=W.a+Math.PI;
     const clampP=()=>{if(cfg.R){const d=Math.hypot(W.x-cfg.cx,W.z-cfg.cz);if(d>cfg.R){W.x=cfg.cx+(W.x-cfg.cx)/d*cfg.R;W.z=cfg.cz+(W.z-cfg.cz)/d*cfg.R}}
