@@ -381,7 +381,13 @@
   function caveMouth(x,z,f,dist,y,w,hgt){const cx=x+Math.cos(f)*dist,cz=z+Math.sin(f)*dist,m=new THREE.Mesh(new THREE.SphereGeometry(1,22,12,0,Math.PI*2,0,Math.PI/2),darkMat);m.scale.set(w,hgt*1.6,Math.max(3,w*.45));m.position.set(cx,y-hgt*.55,cz);m.rotation.y=Math.PI/2-f;bayGroup.add(m);
     const sill=new THREE.Mesh(new THREE.BoxGeometry(w*2.5,1.2,Math.max(4,w*.9)),decoMat('#9a9888'));sill.position.set(cx+Math.cos(f)*1.5,y-hgt*.55-.6,cz+Math.sin(f)*1.5);sill.rotation.y=Math.PI/2-f;bayGroup.add(sill);return [cx,y-hgt*.55,cz]}
   // Bến nổi + bậc đá dẫn từ mặt nước lên cửa hang
-  function caveStairs(x,z,f,top,foot){const ux=Math.cos(f),uz=Math.sin(f),[cx,cy,cz]=top,bx=x+ux*foot,bz=z+uz*foot;
+  // zig: đường bậc đá chữ chi có cây hai bên (lối dốc lên hang); mặc định là dãy bậc thẳng
+  function caveStairs(x,z,f,top,foot,zig){const ux=Math.cos(f),uz=Math.sin(f),[cx,cy,cz]=top,bx=x+ux*foot,bz=z+uz*foot;
+    if(zig){const vx=-uz,vz=ux,dock=new THREE.Mesh(new THREE.BoxGeometry(14,.6,7),decoMat('#8a6f52'));dock.position.set(bx+ux*4,.45,bz+uz*4);dock.rotation.y=Math.PI/2-f;bayGroup.add(dock);
+      const legs=4,W=foot*.35;let px=bx,py=1,pz=bz;for(let L=0;L<legs;L++){const side=L%2?-1:1,t1=(L+1)/legs,qx=bx+(cx-bx)*t1+vx*W*side*(L<legs-1?1:0),qz=bz+(cz-bz)*t1+vz*W*side*(L<legs-1?1:0),qy=1+(cy-1)*t1,n=Math.max(4,Math.round(Math.hypot(qx-px,qz-pz)/2.2));
+        for(let j=0;j<n;j++){const t=(j+.5)/n,s=new THREE.Mesh(new THREE.BoxGeometry(2.6,.6,2.4),decoMat(j%2?'#cfc8b6':'#c2bba8'));s.position.set(px+(qx-px)*t,py+(qy-py)*t,pz+(qz-pz)*t);s.rotation.y=Math.atan2(qx-px,qz-pz);bayGroup.add(s);
+          if(j%2===0){const tr=new THREE.Mesh(new THREE.ConeGeometry(1.2,3.6,6),decoMat(j%4?'#2f5e3a':'#3d6b40'));tr.position.set(s.position.x+vx*2.4,s.position.y+1.8,s.position.z+vz*2.4);bayGroup.add(tr)}}
+        px=qx;py=qy;pz=qz}return}
     const dock=new THREE.Mesh(new THREE.BoxGeometry(14,.6,7),decoMat('#8a6f52'));dock.position.set(bx+ux*4,.45,bz+uz*4);dock.rotation.y=Math.PI/2-f;bayGroup.add(dock);
     const n=Math.max(6,Math.round(cy/1.6)),sx=cx+ux*2,sz=cz+uz*2;for(let j=0;j<n;j++){const t=(j+.5)/n,s=new THREE.Mesh(new THREE.BoxGeometry(3.2,.7,2.4),decoMat(j%2?'#cfc8b6':'#c2bba8'));
       s.position.set(bx+(sx-bx)*t,1+(cy-1)*t,bz+(sz-bz)*t);s.rotation.y=Math.PI/2-f;bayGroup.add(s)}}
@@ -407,17 +413,45 @@
   function buildLandmark(p){
     const q=p.params||{},x=p.x,z=p.z,r=q.radius||0,h=q.height||0,k=Math.round(x*7+z*3),f=lmFacing(p),fx=Math.cos(f),fz=Math.sin(f);
     if(q.shape==='big_island'){
-      // đỉnh chính vách dựng, 8 hòn phụ đa hình thái quây phía sau, cửa hang tối mở về phía tàu
-      addKarst(x,z,r*.45,h*1.15,k,{taper:.1,dome:.26,ribs:11,ribAmp:.13});
-      const sh=[0,4,1,3,5,0,6,2];for(let j=0;j<8;j++){const a=f+.55+j*(2*Math.PI-1.1)/7+(bayHash(k,j,4)-.5)*.2,d=r*(.5+bayHash(k,j,3)*.28);
-        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(.17+bayHash(k,j,1)*.15),h*(.45+bayHash(k,j,2)*.55),k+j+1,{shape:sh[j]})}
-      caveStairs(x,z,f,caveMouth(x,z,f,r*.43,h*.24,r*.13,r*.11),r*.72);
+      // Đảo có hang: mỗi nơi một dáng theo mô tả thật (showcaves.com, Ban quản lý vịnh): cửa hang ~25 m trên mặt nước có bậc đá, riêng
+      // Hang Nhà Trò và hang Soi Nhụ nằm sát mép nước.
+      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u+px*v,z+fz*u+pz*v],sat=(n,sh,hm,rm,d0,d1)=>{for(let j=0;j<n;j++){const a=f+.55+j*(2*Math.PI-1.1)/(n-1)+(bayHash(k,j,4)-.5)*.2,d=r*(d0+bayHash(k,j,3)*(d1-d0));
+        addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(rm+bayHash(k,j,1)*.12),h*(hm+bayHash(k,j,2)*.45),k+j+1,{shape:sh[j%sh.length]})}};
+      if(p.id==='dong_thien_cung'){
+        // Đảo Đầu Gỗ: khối núi lớn kéo dài, vách bắc dựng đứng có hai cửa hang Thiên Cung và Đầu Gỗ cạnh nhau, chung một bến
+        addKarst(x,z,r*.5,h*1.05,k,{taper:.08,dome:.5,sx:1.7,sz:.85,rot:f+Math.PI/2,ribs:12,ribAmp:.13,saddle:.35});sat(5,[0,3,1,5],.4,.16,.55,.75);
+        const c1=caveMouth(...P(0,-r*.32),f,r*.38,h*.2,r*.11,r*.1),c2=caveMouth(...P(0,r*.3),f,r*.38,h*.26,r*.12,r*.11);caveStairs(...P(0,-r*.32),f,c1,r*.62);caveStairs(...P(0,r*.3),f,c2,r*.62)}
+      else if(p.id==='hang_sung_sot'){
+        // Đảo Bồ Hòn: núi cao đỉnh tròn, lối dốc lên hang có cây hai bên (đường bậc chữ chi)
+        addKarst(x,z,r*.52,h*1.15,k,{taper:.06,dome:.45,sx:1.25,rot:f+Math.PI/2,ribs:10,ribAmp:.12,bulge:.08});sat(6,[2,0,4,3],.45,.15,.55,.78);
+        caveStairs(x,z,f,caveMouth(x,z,f,r*.45,h*.3,r*.13,r*.12),r*.75,true)}
+      else if(p.id==='dong_me_cung'){
+        // Đảo Lom Bò: hai đỉnh nhọn nối yên ngựa, cầu tàu nhỏ, bậc đá thẳng lên cửa hang
+        addKarst(x,z,r*.5,h*1.1,k,{shape:4,rot:f+Math.PI/2,sx:1.6,ribs:9});sat(4,[0,6,5],.35,.14,.6,.75);
+        caveStairs(x,z,f,caveMouth(x,z,f,r*.42,h*.24,r*.12,r*.1),r*.7)}
+      else if(p.id==='hang_thien_canh_son'){
+        // Thiên Cảnh Sơn: tháp đá cao vút, cửa hang nhỏ trên sườn, bậc đá chữ chi
+        addKarst(x,z,r*.4,h*1.35,k,{taper:.25,dome:.25,ribs:8,ribAmp:.14,lean:.06});addKarst(...P(-r*.35,r*.3),r*.32,h*.75,k+1,{shape:1,rot:f});sat(4,[6,0,7],.35,.13,.6,.8);
+        caveStairs(x,z,f,caveMouth(x,z,f,r*.36,h*.34,r*.1,r*.1),r*.68,true)}
+      else if(p.id==='dao_ban_sen'){
+        // Đảo Trà Bản (Bản Sen): đảo lớn đồi thoai thoải phủ rừng, có làng; hang Nhà Trò mở sát mép nước, thuyền vào được
+        addKarst(x,z,r*.6,h*.85,k,{round:true,dome:.9,sx:1.9,sz:.9,rot:f+Math.PI/2,notch:0});addKarst(...P(-r*.3,-r*.45),r*.4,h*.65,k+1,{shape:2,rot:f});addKarst(...P(-r*.25,r*.5),r*.34,h*.95,k+2,{shape:0,rot:f});
+        caveMouth(...P(r*.12,r*.45),f,r*.3,r*.06,r*.12,r*.08);
+        for(let j=0;j<4;j++){const g=new THREE.Group(),[hx,hz]=P(r*.62,-r*.55+j*7);g.position.set(hx,.6,hz);g.rotation.y=-f;decoBox(g,5,3,4,['#e8dcc4','#d9c7a8','#e6e0d2','#cbb895'][j],0,1.5,0);decoBox(g,5.8,.4,4.8,'#a5513c',0,3.2,0).rotation.x=.12;bayGroup.add(g)}
+        const sp=makeSampan(true);const [sx,sz]=P(r*.9,r*.5);sp.position.set(sx,0,sz);sp.rotation.y=-f;bayGroup.add(sp)}
+      else if(p.id==='vqg_bai_tu_long'){
+        // Đảo Ba Mùn (vườn quốc gia): dãy đồi rừng nguyên sinh dài, nhiều đỉnh tròn nối nhau; hang Soi Nhụ sát mép nước; trạm kiểm lâm và cầu tàu
+        for(let j=-2;j<=2;j++)addKarst(...P(-r*.1+Math.abs(j)*r*.06,j*r*.32),r*.34,h*(.7+.3*bayHash(k,j+3,2))*(1-.12*Math.abs(j)),k+j+3,{round:true,dome:.9,sx:1.2,rot:f,notch:.2});
+        caveMouth(...P(0,r*.55),f,r*.3,r*.06,r*.1,r*.07);
+        const pier=new THREE.Mesh(new THREE.BoxGeometry(4,.6,22),decoMat('#8a6f52'));const [qx,qz]=P(r*.5,-r*.35);pier.position.set(qx,.6,qz);pier.rotation.y=Math.PI/2-f;bayGroup.add(pier);
+        const g=new THREE.Group(),[hx,hz]=P(r*.35,-r*.35);g.position.set(hx,.6,hz);g.rotation.y=-f;decoBox(g,7,3.2,5,'#e9e4d8',0,1.6,0);decoBox(g,8,.4,6,'#3f6f5a',0,3.4,0);bayGroup.add(g)}
+      else{addKarst(x,z,r*.45,h*1.15,k,{taper:.1,dome:.26,ribs:11,ribAmp:.13});sat(8,[0,4,1,3,5,0,6,2],.45,.17,.5,.78);caveStairs(x,z,f,caveMouth(x,z,f,r*.43,h*.24,r*.13,r*.11),r*.72)}
     }
     else if(q.shape==='pair'){
       // 3.42 Hòn Trống Mái (to gấp đôi): hai khối đá đứng sát nhau trên một rạn đá thấp, chân bị sóng khoét thắt nhỏ,
       // thân nở dần lên trên như ức gà, phần trên cong vào nhau, hai "đầu" chụm sát như đôi gà đang tựa mỏ; Trống cao và to hơn Mái
       const A=.78,ux=Math.cos(A),uz=Math.sin(A),sep=r*.6;
-      addKarst(x,z,r*.92,.25,k,{round:true,sx:1.55,sz:.72,rot:A,notch:0});
+      addKarst(x,z,r*.92,.25,k,{round:true,dome:.9,sx:1.55,sz:.72,rot:A,notch:0});
       // Trống
       const tx=x-ux*sep,tz=z-uz*sep;
       addKarst(tx,tz,r*.4,h,k+1,{taper:-.22,pinch:.3,dome:.3,lean:.15,rot:A,ribs:5,ribAmp:.1,bulge:.16,bulgeAt:.68,sz:.8,rough:.2,notch:.34});
@@ -431,16 +465,16 @@
       // Hòn Đỉnh Hương: một khối liền, chân bị sóng khoét thắt lại, thân nở dần lên đỉnh rộng và bằng, phủ cây bụi
       const rot=f+Math.PI/2;
       if(p.id==='hon_dua'){/* Hòn Đũa: cột đá mảnh đứng thẳng như chiếc đũa, chân liền khối có ngấn sóng, không thắt nhọn */
-        addKarst(x,z,r*.95,.35,k+1,{round:true,sx:1.3,sz:.9,rot,notch:0});addKarst(x,z,r*.55,h,k,{taper:.18,dome:.22,sx:1.2,sz:.9,rot,ribs:6,ribAmp:.1,notch:.28,rough:.18})}else{
+        addKarst(x,z,r*.95,.35,k+1,{round:true,dome:.9,sx:1.3,sz:.9,rot,notch:0});addKarst(x,z,r*.55,h,k,{taper:.18,dome:.22,sx:1.2,sz:.9,rot,ribs:6,ribAmp:.1,notch:.28,rough:.18})}else{
       // đế vững (rạn đá thấp quanh chân), thân thắt vừa phải rồi nở ra như chiếc lư hương
-      addKarst(x,z,r*.85,.4,k+1,{round:true,sx:1.6,sz:.85,rot,notch:0});
+      addKarst(x,z,r*.85,.4,k+1,{round:true,dome:.9,sx:1.6,sz:.85,rot,notch:0});
       addKarst(x,z,r*.58,h,k,{taper:-.15,pinch:.6,dome:.2,sx:1.45,sz:.72,rot,ribs:6,ribAmp:.1,notch:.3,grooves:[h*.22],bulge:.12,bulgeAt:.8,rough:.22})}
     }
     else if(q.shape==='dog'&&p.id==='hon_cho_da'){
       // Hòn Chó Đá: nhìn ngang từ luồng tàu là dáng chú chó ngồi canh: mông và chân sau tròn thấp, ngực dựng thẳng,
       // đầu nhô ra phía trước có mõm, hai tai nhọn; đứng trên một rạn đá thấp
       const px=-fz,pz=fx,A=Math.atan2(pz,px),P=(a,y)=>[x+px*a*r,z+pz*a*r];
-      addKarst(x,z,r*.95,.3,k,{round:true,sx:1.5,sz:.75,rot:A,notch:0});
+      addKarst(x,z,r*.95,.3,k,{round:true,dome:.9,sx:1.5,sz:.75,rot:A,notch:0});
       {const [a,b]=P(-.42);addKarst(a,b,r*.52,h*.5,k+1,{taper:.1,dome:.62,sx:1.15,rot:A,ribs:4,ribAmp:.06,rough:.16,notch:.3})}
       {const [a,b]=P(.05);addKarst(a,b,r*.36,h*.86,k+2,{taper:.18,dome:.3,sx:.9,rot:A,lean:.12,ribs:5,ribAmp:.08,rough:.16,notch:.3})}
       {const [a,b]=P(.3);addKarst(a,b,r*.3,h*.3,k+3,{y0:h*.72,taper:.15,dome:.6,sx:1.25,sz:.85,rot:A,rough:.12,ribs:0})}
@@ -507,12 +541,36 @@
       const m=new THREE.Mesh(new THREE.RingGeometry(r*.6,r*.95,24,1,-f-Math.PI*.3,Math.PI*.6),new THREE.MeshStandardMaterial({color:'#efe3c4',roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,.26,z);bayGroup.add(m);
     }
     else if(q.shape==='beach'){
-      // Đảo có bãi tắm (Đảo Khỉ): đồi đá phủ rừng, bãi cát khô + cát ẩm lưỡi liềm quay về phía tàu, hai mũi đá
+      // Đảo có bãi tắm: mỗi nơi một dáng
+      const sand=(a,b,y,c,span=.72,turn=0)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-turn-Math.PI*span/2,Math.PI*span),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u+px*v,z+fz*u+pz*v];
+      if(p.id==='dao_soi_sim'){
+        // Soi Sim: núi đá cao, bãi cát nhỏ, đường bậc chữ chi lên đỉnh có chòi ngắm cảnh
+        addKarst(x,z,r*.55,h*1.2,k,{taper:.15,dome:.35,ribs:7,rough:.2});addKarst(...P(-r*.4,r*.3),r*.42,h*.8,k+1,{shape:3,rot:f});
+        sand(.7,1.02,.28,'#f1e6c8',.5);sand(1.0,1.14,.2,'#c9b48e',.5);
+        caveStairs(x,z,f,[x+fx*r*.12,h*1.15,z+fz*r*.12],r*.85,true);
+        const pav=new THREE.Group();for(const a of [-1,1])for(const b of [-1,1]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,2.8,6),decoMat('#8a6446'));c.position.set(a*1.1,1.4,b*1.1);pav.add(c)}
+        const rf=new THREE.Mesh(new THREE.ConeGeometry(2.3,1.2,4),decoMat('#7d5a3d'));rf.position.y=3.2;rf.rotation.y=Math.PI/4;pav.add(rf);pav.position.set(x,h*1.18,z);bayGroup.add(pav);addUmbrellas(x,z,f,r*.95,3,k)}
+      else if(p.id==='bai_van_boi'){
+        // Vạn Bội: bãi cát nhỏ nép giữa hai vách đá dựng cao, nước trong, kayak
+        sand(.62,.98,.28,'#f4ead0',.36);sand(.96,1.1,.2,'#cdb995',.36);
+        for(const sd of [-1,1])addKarst(...P(r*.25,sd*r*.62),r*.36,h*(sd>0?1.05:.9),k+3+sd,{taper:.05,dome:.35,sx:.8,sz:1.3,rot:f,ribs:9,ribAmp:.14,notch:.34});
+        addKarst(...P(-r*.35,0),r*.55,h*.95,k,{shape:0,sx:1.4,rot:f+Math.PI/2});addBeachTrees(x,z,f,r*.92,6,k,.3);
+        for(let j=0;j<3;j++){const ky=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(['#e2412c','#f2c14e','#2f9a8a'][j]));ky.scale.set(.5,.25,2.1);const [kx,kz]=P(r*1.05,(j-1)*4);ky.position.set(kx,.2,kz);ky.rotation.y=-f;bayGroup.add(ky)}}
+      else if(p.id==='dao_nam_cat'){
+        // Nam Cát: đồi thấp phủ rừng, bãi cát trắng có dãy nhà gỗ (bungalow) mái lá ven biển
+        addKarst(x,z,r*.6,h*.85,k,{taper:.1,dome:.6,ribs:4,rough:.16});addKarst(...P(-r*.35,-r*.4),r*.4,h*.6,k+1,{shape:2});
+        sand(.68,1.08,.28,'#f4ead0',.8);sand(1.06,1.2,.2,'#cdb995',.8);
+        for(let j=0;j<6;j++){const a=f+(j-2.5)*.22,d=r*.74,g=new THREE.Group();g.position.set(x+Math.cos(a)*d,.5,z+Math.sin(a)*d);g.rotation.y=Math.PI/2-a;decoBox(g,3.2,2.2,3,'#a07c55',0,1.4,0);
+          const rf=new THREE.Mesh(new THREE.ConeGeometry(2.8,1.6,4),decoMat('#c9a86a'));rf.position.y=3.3;rf.rotation.y=Math.PI/4;g.add(rf);bayGroup.add(g)}
+        addBeachTrees(x,z,f,r*.95,7,k,.8)}
+      else{
       addKarst(x,z,r*.62,h,k,{taper:.12,dome:.5,ribs:5,rough:.2});addKarst(x-fx*r*.38,z-fz*r*.38,r*.5,h*.8,k+1,{shape:2});
       const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,32,1,-f-Math.PI*.36,Math.PI*.72),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
       sand(.74,1.1,.28,'#f1e6c8');sand(1.08,1.24,.2,'#c9b48e');
       for(const s of [-1,1]){const a=f+s*Math.PI*.4;addKarst(x+Math.cos(a)*r*1.05,z+Math.sin(a)*r*1.05,r*.17,h*.3,k+5+s,{shape:6,rot:a})}
       addBeachTrees(x,z,f,r,9,k,.62);addUmbrellas(x,z,f,r,4,k);
+      }
     }
     else if(q.shape==='cove'){
       // Áng nước kín kiểu Lan Hạ / Cống Đỏ: vòng vách đá dựng đứng, đỉnh tròn phủ rừng, mở về phía tàu; nhà bè nhỏ trong áng
@@ -525,16 +583,21 @@
     else if(q.shape==='island_beach'){
       // Bãi biển Bái Tử Long (Quan Lạn, Minh Châu, Ngọc Vừng, Thắng Lợi): đảo đất thấp, đồi thoai thoải dài phủ rừng (không phải tháp đá vôi),
       // bãi cát trắng dài, rừng phi lao hai hàng sau bãi, ô dù
-      const px=-fz,pz=fx;addKarst(x-fx*r*.3+px*r*.15,z-fz*r*.3+pz*r*.15,r*.62,h*.55,k,{round:true,sx:1.9,sz:.85,rot:f+Math.PI/2,notch:0});addKarst(x-fx*r*.42-px*r*.45,z-fz*r*.42-pz*r*.45,r*.46,h*.42,k+1,{round:true,sx:1.5,sz:.9,rot:f+Math.PI/2,notch:0});
-      addBeachTrees(x,z,f,r*.82,18,k+7,.86);
-      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,40,1,-f-Math.PI*.46,Math.PI*.92),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
+      const IB={bai_quan_lan:{h:[.38,.3],sx:2.6,span:.98,tr:24,trees2:30,um:10},bai_minh_chau:{h:[.5,.4],sx:2.2,span:.9,tr:18,tram:true,um:6},dao_ngoc_vung:{h:[.85,.7],sx:1.5,span:.7,tr:12,um:6},dao_thang_loi:{h:[.6,0],sx:1.3,span:.6,tr:9,um:3}}[p.id]||{h:[.55,.42],sx:1.9,span:.92,tr:14,um:8};
+      const px=-fz,pz=fx;addKarst(x-fx*r*.3+px*r*.15,z-fz*r*.3+pz*r*.15,r*.62,h*IB.h[0],k,{round:true,dome:.9,sx:IB.sx,sz:.85,rot:f+Math.PI/2,notch:0});if(IB.h[1])addKarst(x-fx*r*.42-px*r*.45,z-fz*r*.42-pz*r*.45,r*.46,h*IB.h[1],k+1,{round:true,dome:.9,sx:1.5,sz:.9,rot:f+Math.PI/2,notch:0});
+      if(IB.tram)for(let j=0;j<10;j++){/* rừng trâm cổ thụ tán tròn sẫm sau bãi Minh Châu */const a=f+(j/9-.5)*.8*Math.PI,d=r*.62,t=new THREE.Mesh(new THREE.SphereGeometry(3+bayHash(k,j,3)*1.5,8,6),decoMat('#24502f'));t.position.set(x+Math.cos(a)*d,7+bayHash(k,j,4)*2,z+Math.sin(a)*d);bayGroup.add(t)}
+      if(p.id==='dao_ngoc_vung'){/* mũi đá vôi ở hai đầu bãi */for(const sd of [-1,1]){const a=f+sd*Math.PI*.42;addKarst(x+Math.cos(a)*r*1.02,z+Math.sin(a)*r*1.02,r*.18,h*.35,k+5+sd,{shape:6,rot:a})}}
+      addBeachTrees(x,z,f,r*.82,IB.trees2||18,k+7,IB.span*.94);
+      const sand=(a,b,y,c)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,40,1,-f-Math.PI*IB.span/2,Math.PI*IB.span),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);bayGroup.add(m)};
       sand(.6,1.02,.3,'#f4ead0');sand(1.0,1.16,.2,'#cdb995');
-      addBeachTrees(x,z,f,r*.95,14,k,.82);addUmbrellas(x,z,f,r*.95,8,k);addKiosks(x,z,f+.5,r*.9,3,k);
+      addBeachTrees(x,z,f,r*.95,IB.tr,k,IB.span*.9);addUmbrellas(x,z,f,r*.95,IB.um,k);if(IB.um>4)addKiosks(x,z,f+.5,r*.9,3,k);
     }
     else if(q.shape==='village'){
       // Dãy nhà bè san sát dọc chân vách đá (như làng chài Cửa Vạn): sàn gỗ, vách xanh, mái tôn, thùng phao xanh, cờ đỏ, đò mui đen, xuồng gỗ
       const walls=['#4f9a8c','#5d8fb0','#7fae9a','#3f7f86','#a9c3b4','#6a9fc0'],roofs=['#5f8f6a','#4d7d8a','#6f8f78'],px=-fz,pz=fx;
-      const back=34;for(let j=-4;j<=4;j++){const g=new THREE.Group(),off=j*13+(bayHash(k,j+5,1)-.5)*3,dep=back+(bayHash(k,j+5,2)-.5)*8;g.position.set(x+px*off-fx*dep,0,z+pz*off-fz*dep);g.rotation.y=-f+Math.PI/2;
+      // quy mô theo thực tế: Cửa Vạn, Cái Bèo là làng lớn (hai dãy nhà bè); Ba Hang vừa; Vung Viêng nhỏ, nép trong áng
+      const VN={lang_chai_cua_van:[5,2],lang_chai_cai_beo:[5,2],lang_chai_ba_hang:[3,1],lang_chai_vung_vieng:[2,1]}[p.id]||[4,1];
+      const back=34;for(let row=0;row<VN[1];row++)for(let j=-VN[0];j<=VN[0];j++){if(row&&j%2)continue;const g=new THREE.Group(),off=j*13+(bayHash(k,j+5,1)-.5)*3+row*6,dep=back+row*15+(bayHash(k,j+5+row*11,2)-.5)*8;g.position.set(x+px*off-fx*dep,0,z+pz*off-fz*dep);g.rotation.y=-f+Math.PI/2;
         decoBox(g,12,.5,10,'#8a6f52',0,.25,0);decoBox(g,12.5,.35,1.4,'#a68a66',0,.4,5.8);// sàn bè + lối ván ra mép nước
         const ww=7+bayHash(k,j+5,3)*2.5;decoBox(g,ww,3.2,6,walls[(j+9)%6],-1,2.1,-1.2);decoBox(g,ww+1.4,.3,7.4,roofs[(j+9)%3],-1,3.85,-1.2).rotation.x=-.08;
         decoBox(g,3.2,1.6,3,'#e7e1d3',4,1.3,1.6);// gian phơi đồ
