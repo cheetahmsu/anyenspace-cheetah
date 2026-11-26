@@ -72,6 +72,8 @@ LANDMARKS = [
      "Tuyến 4, đi qua hang Cao vào áng nước kín", "Làng chài yên ả nhất vịnh, nhà bè nép chân vách đá"),
     ("dao_cong_do", "Đảo Cống Đỏ", 20.8600, 107.2350, "cove", 70, 58, "approx",
      "Tuyến 4, giáp vịnh Bái Tử Long", "Những áng nước kín giữa vách đá dựng, nước trong xanh"),
+    ("dao_mat_rong", "Đảo Mắt Rồng · Hòn Bái Đông", 20.7983, 107.2293, "dragon_eye", 70, 44, "approx",
+     "Báo Quảng Ninh (qua CafeF): rìa phía nam vịnh Hạ Long, giáp Bái Tử Long, khu Bái Đông – Ra Cát; cách Cảng tàu khách quốc tế Tuần Châu ~28 km và Cảng tàu khách quốc tế Hạ Long ~25 km (vị trí suy từ hai khoảng cách này)", "Hồ nước mặn tròn giữa lòng núi như con mắt rồng, vụng nông xanh ngọc"),
     ("ho_ba_ham", "Hồ Ba Hầm", 20.7880, 107.1050, "arch", 60, 45, "approx",
      "Giữa vịnh Hạ Long và Lan Hạ, vào hồ qua các vòm đá", "Ba hồ nước kín nối nhau bằng hang xuyên thủy"),
     ("cua_viet_hai", "Làng Việt Hải · cửa Việt Hải", 20.7930, 107.0450, "village", 0, 0, "approx",

@@ -655,6 +655,41 @@
         for(let j=0;j<3;j++){const ky=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(['#e2412c','#f2c14e','#2f9a8a'][j]));ky.scale.set(.5,.25,2.1);ky.position.set(-5.2-j*1.3,.1,1+j*.6);g.add(ky)}
         const sp=makeSampan(false);sp.position.set(5.4,0,2);g.add(sp);bayGroup.add(g)}
     }
+    else if(q.shape==='dragon_eye'){
+      // Đảo Mắt Rồng · Hòn Bái Đông (vẽ theo ảnh mẫu chị gửi): cụm đảo đá vôi nhiều nhánh, vách xám trắng dựng đứng, đỉnh phủ cây rậm;
+      // giữa lòng núi phía sau bên phải là hồ nước mặn tròn màu ngọc, viền cát vàng, vách kín bốn phía ("mắt rồng");
+      // phía trước là vụng nông xanh ngọc thấy đáy giữa hai nhánh đảo, bãi cát cuối vụng có dải cát chạy ra; một hòn đá nhỏ đứng riêng ở cửa vụng.
+      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u*r+px*v*r,z+fz*u*r+pz*v*r],A0=Math.atan2(pz,px),o5={pale:5,hi:true};
+      const K=(u,v,rr,hh,j,o={})=>addKarst(...P(u,v),r*rr,h*hh,k+j,{taper:.05,dome:.42,sx:1.15,sz:.9,rot:A0+j*.7,ribs:10,ribAmp:.16,rough:.24,notch:.42,...o5,...o});
+      // nhánh trái (lớn, cao) và mũi trái chìa ra trước
+      K(-.15,.7,.3,1.15,0);K(.15,.86,.26,.95,1);K(.45,1.0,.2,.72,2,{lean:.08});K(-.45,.5,.24,1.0,3);
+      // sống núi giữa phía sau
+      K(-.62,.12,.22,.95,4);K(-.3,.28,.17,.7,5,{hi:false});
+      // nhánh phải, chạy dài ra trước, chân có đá tảng
+      K(-.1,-.62,.24,.95,6);K(.2,-.72,.24,.88,7);K(.5,-.7,.2,.75,8);K(.78,-.6,.15,.55,9,{dome:.5});
+      // hồ tròn "mắt rồng" kín giữa vách, phía sau bên phải
+      const [lx,lz]=P(-.78,-.4),lr=r*.22,wr=r*.11;
+      for(let j=0;j<10;j++){const a=j*Math.PI/5+.2,d=lr+wr*1.0,cx=lx+Math.cos(a)*d,cz=lz+Math.sin(a)*d;
+        addKarst(cx,cz,wr*(1+bayHash(k,j,1)*.15),h*(.7+bayHash(k,j,2)*.3),k+20+j,{taper:.03,dome:.38,sx:1.45,sz:.72,rot:a+Math.PI/2,ribs:9,ribAmp:.14,rough:.22,notch:.36,pale:5,hi:j%2===0})}
+      // đá tảng lăn dưới chân nhánh phải
+      for(let j=0;j<7;j++){const [ax,az]=P(.1+j*.12,-.5+bayHash(k,j,3)*.12);addKarst(ax,az,r*(.03+bayHash(k,j,4)*.03),1.3,k+40+j,{round:true,dome:.9,notch:0,pale:2})}
+      // hòn đá nhỏ đứng riêng ở cửa vụng
+      K(.82,.32,.09,.62,50,{taper:.1,dome:.35,sx:.8,sz:1.3,hi:false});
+      // viền cát vàng quanh hồ và mặt hồ xanh ngọc sáng
+      const disc=(cx,cz,R0,c0s,c1s,op,y)=>{const cg=new THREE.CircleGeometry(R0,48),cp=cg.attributes.position,cc=new Float32Array(cp.count*3),c0=new THREE.Color(c0s),c1=new THREE.Color(c1s),tc=new THREE.Color();
+        for(let i=0;i<cp.count;i++){const d=Math.hypot(cp.getX(i),cp.getY(i))/R0;tc.copy(c0).lerp(c1,baySm(.3,1,d));cc[i*3]=tc.r;cc[i*3+1]=tc.g;cc[i*3+2]=tc.b}cg.setAttribute('color',new THREE.BufferAttribute(cc,3));
+        const m=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:op,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(cx,y,cz);m.renderOrder=2;bayGroup.add(m)};
+      {const m=new THREE.Mesh(new THREE.RingGeometry(lr*.78,lr*1.08,40),new THREE.MeshStandardMaterial({color:'#e9d6a4',roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(lx,.3,lz);bayGroup.add(m)}
+      disc(lx,lz,lr*.82,'#8af0dc','#27a596',.82,.15);
+      // bãi cát cuối vụng và dải cát chạy ra giữa vụng
+      const [cvx,cvz]=P(.3,.05);{const th=-(f+Math.PI);for(const [a,b,c,y] of [[.3,.42,'#eadfbf',.3],[.42,.47,'#cdbd96',.22]]){const m=new THREE.Mesh(new THREE.RingGeometry(r*a,r*b,40,1,th-1.1,2.2),new THREE.MeshStandardMaterial({color:c,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(cvx,y,cvz);bayGroup.add(m)}}
+      {const [sx0,sz0]=P(.08,.3),[sx1,sz1]=P(.55,.42),m=new THREE.Mesh(new THREE.CircleGeometry(1,24),new THREE.MeshStandardMaterial({color:'#e6d9b6',roughness:1}));m.rotation.x=-Math.PI/2;m.rotation.z=-Math.atan2(sz1-sz0,sx1-sx0);
+        m.scale.set(Math.hypot(sx1-sx0,sz1-sz0)/2,r*.035,1);m.position.set((sx0+sx1)/2,.24,(sz0+sz1)/2);bayGroup.add(m)}
+      disc(...P(.42,0),r*.62,'#a6f3e0','#2fb3a4',.42,.13);
+      // thuyền nhỏ chở khách vào vụng, kayak
+      {const sp=makeSampan(true);const [bx,bz]=P(.7,-.05);sp.position.set(bx,0,bz);sp.rotation.y=-f+Math.PI/2+.4;bayGroup.add(sp)}
+      for(const [u,v,ry,c] of [[.4,.1,.5,'#f2c14e'],[.55,-.2,-.4,'#e2512c']]){const [kx,kz]=P(u,v);decoKayak(kx,kz,-f+ry,c)}
+    }
     else if(q.shape==='trio'){
       // Bãi tắm Ba Trái Đào (vẽ theo ảnh mẫu chị gửi): ba hòn đá vôi tròn như trái đào liền chân nhau, phủ cây rậm, chân vách xám trắng lộ ra;
       // hòn bên phải cao và lớn nhất, có mỏm đá nhô ra biển; bãi cát trắng cong ôm chân ba hòn phía trước, kéo dài thành mũi cát bên trái;
@@ -2763,5 +2798,5 @@
     meTag.visible=view==="far";SEE.on.value=bayDbgCam||cv==='peak'?0:1;SEE.onShip.value=view==='far'?0:1;SEE.cam.value.copy(camera.position);
     if(view==='far'){const c=bayShip.group.position;SEE.tgt.value.set(c.x+BAY.x,6,c.z+BAY.z);SEE.rad.value=16}else{SEE.tgt.value.set(bayTmp.x,bayTmp.y+1.1,bayTmp.z);SEE.rad.value=view==='photo'?2.4:2.1}
   }
-  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=a5d0c89c').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
+  function loadBayData(){if(bayLoading)return bayLoading;bayLoading=window.anyenCachedText('data/world-halong_bay.json?v=b43855b5').then(t=>JSON.parse(t)).then(d=>{if(!d?.map)throw Error('no map');bayData=d;window.anyenBayWorld=d;return d}).catch(e=>{window.anyenBayError=String(e?.message||e);bayLoading=null;throw e});return bayLoading}
   __bayExport({bayCaption,bayDress,bayTap,bayZoomBy,buildBay,closeBayOutfit,closePhoto,dropPause,endTour,goLandmark,goTuDao,islandBoardNow,loadBayData,openBayMap,openBayOutfit,pauseShip,pines,refreshBayHud,resumeShip,sailToStop,setDestination,startTour,stopBaySound,tdGroundY,tuDaoTap,updateBay,viewPoint});
