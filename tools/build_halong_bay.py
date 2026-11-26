@@ -7,6 +7,8 @@ Các đảo đá phụ được rải ngẫu nhiên có hạt giống cố đị
 chừa trống các luồng tàu du lịch, nên mọi máy đều thấy cùng một vịnh.
 
 Chạy lại sau khi sửa:  python3 tools/build_halong_bay.py
+LƯU Ý (26/11): data/world-halong_bay.json đã được chỉnh tay sau lần sinh gần nhất (danh sách đảo đá, màu thuyền…);
+chạy lại script sẽ ghi đè các chỉnh sửa đó. Muốn đổi một danh thắng thì sửa thẳng trong JSON (và ghi lại ở đây cho khớp).
 """
 import json, math, random, os
 
@@ -32,7 +34,7 @@ LANDMARKS = [
      "Trên tuyến tham quan số 1, giữa Đầu Gỗ và Đỉnh Hương", "Hòn đá có dáng chú chó ngồi canh"),
     ("hon_dinh_huong", "Hòn Đỉnh Hương", 20.9088, 107.0418, "incense", 14, 26, "approx",
      "Gần Hòn Trống Mái, phía bắc", "Như một lư hương dâng lên trời"),
-    ("hon_trong_mai", "Hòn Trống Mái", 20.9030, 107.0440, "pair", 6, 15, "approx",
+    ("hon_trong_mai", "Hòn Trống Mái", 20.9030, 107.0440, "pair", 24, 30, "approx",
      "Cách cảng Tuần Châu khoảng 5 km, phía nam Hòn Đỉnh Hương (Ban quản lý vịnh)", "Biểu tượng du lịch Hạ Long: đôi gà đá tựa vào nhau"),
     ("lang_chai_ba_hang", "Làng chài Ba Hang", 20.8895, 107.0605, "village", 0, 0, "approx",
      "Khu Ba Hang, phía nam Trống Mái", "Những nhà bè nổi bình yên giữa vòng đá"),
