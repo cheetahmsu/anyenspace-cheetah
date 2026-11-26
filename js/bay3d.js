@@ -870,7 +870,7 @@
   // Mỗi dáng là một khối tham số (vài trăm tam giác), màu và vân bằng Vertex Color (không dùng ảnh), bề mặt bóng mềm (clearcoat).
   // Vỏ mới nhặt còn phủ cát ẩm, «Nhúng nước rửa cát» ở mép sóng mới lộ màu thật. Ốc Gai Biển có nút «Áp tai nghe sóng» (15 giây).
   const SH_N=12,SH_T=3;
-  const SH_SHAPE=['Sò Điệp','Ốc Xà Cừ','Ốc Sứ','Ốc Tháp','Sò Trái Tim','Ốc Bồ Câu','Ốc Đốm','Ốc Nón','Sò Tai Tượng','Ốc Ngọc Trai','Ốc Anh Vũ','Ốc Gai Biển'];
+  const SH_SHAPE=['Sò Điệp','Ốc Xà Cừ','Ốc Sứ','Ốc Tháp','Sò Trái Tim','Ốc Bồ Câu','Ốc Đốm','Ốc Nón','Sao Biển','Ốc Ngọc Trai','Ốc Anh Vũ','Ốc Gai Biển'];
   const SH_TONE=['Bình Minh','Nắng Vàng','Biển Ngọc'],SH_TONE_IC=['🌸','🌞','🌊'];
   const SH_NAME=[['Hồng San Hô','Vàng Nắng','Xanh Ngọc'],['Ánh Ngọc Hồng','Ánh Tím Lam','Ánh Vàng Lục'],['Đốm Nâu Kem','Vàng Đốm Trắng','Ngọc Đốm Trắng'],['Vàng Nắng','Hồng San Hô','Xanh Biển'],['Sọc Hồng','Sọc Vàng','Sọc Tím'],['Hồng Phấn','Vàng Mật','Ngọc Lam'],['Hồng Chấm Trắng','Vàng Chấm Trắng','Lam Chấm Trắng'],['Zigzag Hồng','Zigzag Vàng','Zigzag Lam'],['Sóng Tím','Sóng Vàng','Sóng Ngọc'],['Vân Nâu Kem','Vân Hồng','Vân Lam'],['Sọc Cam Đỏ','Sọc Vàng','Sọc Lam'],['Gai Hồng','Gai Vàng','Gai Lam']];
   /* [màu nền, màu vân / đốm / miệng, (màu thứ ba)] cho từng phiên bản */
@@ -914,7 +914,7 @@
     /* 06 Ốc Bồ Câu: xoắn tròn mập, miệng loe rộng màu nhạt */ [22,104,shHelix({T:3.2,c:.2,a:.5,d:.44,H:.95,sp:(th,f,s,fr)=>1+.32*Math.pow(shSm(.88,1,fr),1.4)*(.5+.5*Math.max(0,Math.cos(f))),col:(th,f,fr)=>.08+.92*shSm(.9,.99,fr)+.12*Math.max(0,Math.sin(th*2))})],
     /* 07 Ốc Đốm: hình giọt nước, chóp xoắn nhỏ, chấm tròn trắng */ [48,80,shRev(1.25,(t,f)=>{const tt=Math.pow(t,.9),r=.42*Math.pow(Math.sin(Math.PI*tt),.62)*(t>.8?1+.1*Math.sin((t-.8)*70):1);return [Math.max(.004,r),shDots(t,f,5,10,.1,.74,.36,1.5)]})],
     /* 08 Ốc Nón: nón ngược, vai tròn, chóp thấp, sọc zigzag */ [40,56,shRev(1.25,(t,f)=>{const r=t<.8?.03+.42*Math.pow(t/.8,1.05):.45*Math.pow(Math.max(0,1-(t-.8)/.2),.75)*(1+.05*Math.sin((t-.8)*90));const zz=Math.abs(((f/TAU*10)%1)*2-1);return [Math.max(.004,r),t>.82?.25+.5*shSm(-.3,.3,Math.sin((t-.8)*120)):shSm(-.25,.25,Math.sin((t*7.5+zz*.45)*TAU))]})],
-    /* 09 Sò Tai Tượng: năm cánh thon dài như sao biển, thân phồng giữa, đầu cánh màu kem */ [100,18,(u,v)=>{const f=u*TAU,a=Math.PI*v,sa=Math.sin(a),arm=Math.pow(Math.abs(Math.cos(f*2.5)),5),R=.26+.74*arm;
+    /* 09 Sao Biển: năm cánh thon dài, thân phồng giữa, đầu cánh màu kem */ [100,18,(u,v)=>{const f=u*TAU,a=Math.PI*v,sa=Math.sin(a),arm=Math.pow(Math.abs(Math.cos(f*2.5)),5),R=.26+.74*arm;
       const y=.2*(1-Math.cos(a))*(.3+.7*(1-arm*.8));return [.66*sa*Math.cos(f)*R,y,.66*sa*Math.sin(f)*R,.05+.95*shSm(.55,.95,sa*R)]}],
     /* 10 Ốc Ngọc Trai: tròn bóng, vòng xoắn lộ trên đỉnh, sọc theo đường xoắn */ [22,96,shHelix({T:3.2,c:.2,a:.47,d:.5,H:.75,col:(th)=>shSm(-.22,.22,Math.sin(th*2.2))})],
     /* 11 Ốc Anh Vũ (Nautilus): xoắn phẳng đối xứng, ống dẹt, sọc toả */ [22,90,shHelix({T:2.4,c:.15,a:.5,d:.62,H:0,ys:.6,col:(th,f,fr)=>shSm(-.28,.28,Math.sin(th*4.2))*(1-.35*shSm(.9,1,fr))})],
