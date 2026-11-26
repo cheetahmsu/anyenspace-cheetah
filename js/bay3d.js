@@ -1845,9 +1845,39 @@
     box(0,1.585,0,.15,.14,.15,w.m.skin,up);box(0,1.2,0,.56,.64,.3,w.m.top,up);
     box(0,1.17,0,.66,.6,.42,vest,up);const col=new THREE.Mesh(new THREE.TorusGeometry(.15,.07,8,18,Math.PI*1.3),vest);col.rotation.set(Math.PI/2,0,Math.PI*.85);col.position.set(0,1.5,-.02);up.add(col);
     box(0,1.3,.212,.03,.38,.012,strap,up);for(const y of [1.0,1.14])box(0,y,0,.675,.045,.435,strap,up);for(const y of [1.0,1.14])box(0,y,.222,.08,.06,.02,refl,up);for(const sx of [-1,1])box(sx*.2,1.33,.212,.05,.22,.012,refl,up);
-    for(const sx of [-1,1]){box(sx*.37,1.42,0,.15,.18,.2,w.m.top,up);box(sx*.37,1.08,0,.11,.52,.12,w.m.skin,up);
-      box(sx*.12,.74,0,.24,.3,.26,shorts,lg);box(sx*.12,.36,0,.15,.5,.16,w.m.skin,lg);box(sx*.12,.05,.04,.16,.08,.27,M('#3f3f44'),lg)}}
-  function playWearSwim(on){const P=bayPlay;if(on){playSwimWear();if(!P.outfit){P.outfit=bayOutfit;bayOutfit={style:'swim',color:bayOutfit.color,acc:(bayOutfit.acc||[]).filter(a=>a!=='scarf')}}}else if(P&&P.outfit){bayOutfit=P.outfit;P.outfit=null}}
+    // tay, chân có khớp (vai · khuỷu · hông) để bơi sải: đứng thì buông thõng như cũ, bơi thì quạt tay, đập chân
+    const arms=[],legs=[],sole=M('#3f3f44');
+    for(const sx of [-1,1]){const sh=new THREE.Group();sh.position.set(sx*.37,1.44,0);up.add(sh);box(0,-.02,0,.15,.18,.2,w.m.top,sh);box(0,-.23,0,.11,.26,.12,w.m.skin,sh);
+      const el=new THREE.Group();el.position.y=-.36;sh.add(el);box(0,-.12,0,.105,.25,.115,w.m.skin,el);box(0,-.28,.01,.09,.1,.13,w.m.skin,el);arms.push({sh,el,sx});
+      const hip=new THREE.Group();hip.position.set(sx*.12,.89,0);lg.add(hip);box(0,-.15,0,.24,.3,.26,shorts,hip);box(0,-.53,0,.15,.5,.16,w.m.skin,hip);const ft=box(0,-.84,.04,.16,.08,.27,sole,hip);legs.push({hip,ft,sx})}
+    // kính bơi (chỉ hiện khi đang bơi): hai mắt kính và dây quanh đầu, quay theo đầu lúc nghiêng lấy hơi
+    const gog=new THREE.Group();gog.position.y=1.85;gog.visible=false;up.add(gog);const lens=M('#1d4e6b',{roughness:.15,metalness:.4}),gstrap=M('#1d1f22');
+    for(const gx of [-.095,.095]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,.04,14),lens);l.rotation.x=Math.PI/2;l.position.set(gx,.04,.27);gog.add(l)}
+    {const r=new THREE.Mesh(new THREE.TorusGeometry(.29,.018,6,24),gstrap);r.rotation.x=Math.PI/2;r.position.y=.04;gog.add(r)}
+    Object.assign(w.bk.swim,{arms,legs,gog})}
+  // ---- Dáng bơi sải (freestyle): đang bơi thì thân nằm sấp nổi ngang mặt nước, hai tay luân phiên vươn ra trước rồi quạt xuống dưới thân,
+  // nhấc khuỷu tay cao vòng qua lưng trở lại; chân đập nhẹ liên tục; thân lăn nhẹ theo nhịp tay, cứ hai chu kỳ nghiêng đầu lấy hơi một lần.
+  // Dừng lại thì từ từ đứng thẳng trong nước, tay khua nhẹ giữ thăng bằng (đạp nước). Gọi mỗi khung hình sau khi đặt vị trí, hướng nhân vật.
+  const swQ=new THREE.Quaternion(),swQ2=new THREE.Quaternion(),swAx=new THREE.Vector3();
+  function swimPose(me){const B=bw.bk.swim;if(!B||!B.arms)return;const S=bayAvatar.swim;B.gog.visible=!!S&&B.up.visible;
+    if(!S){if(B.posed){B.posed=0;for(const a of B.arms){a.sh.rotation.set(0,0,0);a.el.rotation.set(0,0,0)}for(const l of B.legs){l.hip.rotation.set(0,0,0);l.ft.rotation.set(0,0,0);l.ft.position.set(0,-.84,.04)}meHeadRig(0);B.gog.rotation.set(0,0,0)}return}
+    B.posed=1;const s=S.s,u=((S.ph%1)+1)%1,t=S.t,ms=Math.min(1,S.mv*1.4);
+    // thân: xoay theo hướng bơi, ngả sấp (đầu hơi cao hơn chân), lăn quanh trục dọc thân theo nhịp tay
+    const roll=-.38*Math.cos(TAU*(u-.175))*s*ms,breath=Math.floor(S.ph)%2===0?Math.max(0,Math.cos(TAU*(u-.175)))**2*ms:0;
+    swQ.setFromAxisAngle(swAx.set(0,1,0),bayAvatar.yaw);swQ.multiply(swQ2.setFromAxisAngle(swAx.set(1,0,0),s*(Math.PI/2-.07)));swQ.multiply(swQ2.setFromAxisAngle(swAx.set(0,1,0),roll-.3*breath*s));me.quaternion.copy(swQ);
+    // tâm thân (không phải bàn chân) nằm đúng chỗ người bơi, để camera và đường bơi giữ như cũ
+    me.position.x-=Math.sin(bayAvatar.yaw)*s;me.position.z-=Math.cos(bayAvatar.yaw)*s;
+    // tay: pha 0 → tay sát hông, 0..π vòng trên lưng (nhanh, ~35% chu kỳ), π vươn thẳng trước đầu, π..2π quạt nước dưới thân
+    B.arms.forEach((a,i)=>{const v=(u+i*.5)%1,m=v<.35?Math.PI*v/.35:Math.PI+Math.PI*(v-.35)/.65,rec=m<Math.PI;
+      const sx=m*ms,el=(rec?1.7*Math.sin(m):.45*Math.sin(m-Math.PI))*ms,ab=a.sx*(rec?.3*Math.sin(m):.08)*ms;
+      const tx=.25*Math.sin(t*2.4+i*Math.PI),tz=a.sx*(.55+.18*Math.sin(t*2.4+i*Math.PI));/* đứng đạp nước: tay dang ngang khua nhẹ */
+      a.sh.rotation.set(s*sx+(1-s)*tx,0,s*ab+(1-s)*tz);a.el.rotation.set(s*el+(1-s)*.35,0,0)});
+    // chân: đập nhẹ 3 nhịp mỗi chu kỳ tay, mũi chân duỗi thẳng; đứng thì đạp chậm
+    B.legs.forEach((l,i)=>{const k=Math.sin(TAU*3*S.ph+i*Math.PI)*.2*(.35+.65*ms)-.1/* đập chân nhỏ, hơi chúi xuống để bàn chân chỉ quẫy sát mặt nước */,tr=Math.sin(t*1.8+i*Math.PI)*.3;l.hip.rotation.set(s*k+(1-s)*tr,0,0);l.ft.rotation.x=s*1.35;l.ft.position.set(0,-.84-.08*s,.04-.05*s)});
+    // đầu: úp mặt xuống nước, nghiêng sang bên tay đang vòng lên để lấy hơi
+    const hy=-1.05*breath*s;meHeadRig(hy);B.gog.rotation.set(0,hy,0)}
+  function meHeadRig(y){bw.head.rotation.set(0,y,0)}
+  function playWearSwim(on){const P=bayPlay;if(on){playSwimWear();if(!P.outfit){P.outfit=bayOutfit;bayOutfit={style:'swim',color:bayOutfit.color,acc:(bayOutfit.acc||[]).filter(a=>P.kind==='kayak'?a!=='scarf':a==='none')}/* bơi sải úp mặt xuống nước: tháo khăn, nón, kính râm (đeo kính bơi); chèo kayak vẫn đội nón, đeo kính */}}else if(P&&P.outfit){bayOutfit=P.outfit;P.outfit=null}}
   // ---- Vật cản cho người bơi / kayak: thân tàu, cầu trượt, kayak buộc mạn phải; đĩa đá / đảo / bờ quanh người (gom lại khi đi xa chỗ gom trước)
   function playScan(cx,cz,R){const out=[],lands=[],arches=[],near=(x,z,r)=>Math.hypot(x-cx,z-cz)<R+r;
     for(const n of bayData.nature)if(n.kind==='karst_field')for(const [x,z,r,,v] of n.params.items){const er=r*(v===3?1.9:v===4?1.35:1)*1.02;if(near(x,z,er))out.push([x,z,er])}
@@ -1911,7 +1941,7 @@
     playObs(P.x,P.z);const p=d<.6?[]:playPath(lx,lz);P.path=p||[[lx,lz]];P.then='board';bayCaption(P.kind==='kayak'?'🛶 Đang chèo về đuôi tàu…':'🏊 Đang bơi về thang đuôi tàu…',3000)}
   function playSplash(x,z){PLAY.splash.forEach((m,i)=>{m.visible=true;m.userData.t=-i*.18;m.position.set(x,.15,z)})}
   // Kết thúc (lên lại tàu, hoặc đi tiếp, đổi điểm đến, rời vịnh): người về mũi tàu, thay lại đồ cũ, cất kayak
-  function playEnd(quiet){const P=bayPlay;if(!P)return;playWearSwim(false);bayPlay=null;if(PLAY.built){PLAY.kayak.visible=false;PLAY.splash.forEach(m=>m.visible=false)}bayAvatar.sit=0;bayAvatar.lean=0;
+  function playEnd(quiet){const P=bayPlay;if(!P)return;playWearSwim(false);bayPlay=null;bayAvatar.swim=null;if(PLAY.built){PLAY.kayak.visible=false;PLAY.splash.forEach(m=>m.visible=false)}bayAvatar.sit=0;bayAvatar.lean=0;
     document.body.classList.remove('bay-play');walkingKeys.clear();refreshIslandHud();if(P.view&&P.view!==bayView&&P.view!=='far')setBayView(P.view);viewYaw=0;bayCamYaw=null;bayZoom=P.zoom||bayZoom;playShowProps(false);
     if(!quiet){bayFade();bayCaption(P.kind==='kayak'?'⛵ Đã buộc kayak, lên lại du thuyền và thay lại trang phục':'⛵ Đã lên lại du thuyền, cởi áo phao, thay lại trang phục',4000)}}
   function playUpdate(dt){const P=bayPlay;if(!P)return;const S=bayShip,t=performance.now()/1000,L=shipL(),B=shipB(),wy=(x,z)=>bayWaveY(x,z,t)*.9,ease=u=>u*u*(3-2*u);P.t+=dt;
@@ -1938,7 +1968,9 @@
         if(!P.path.length&&P.then==='board'){P.then=null;P.t=0;P.kyaw=P.yaw;P.cam=null;P.phase=P.kind==='kayak'?'unboard':'climb';bayCaption(P.kind==='kayak'?'🛶 Cập bục đuôi tàu, bước lên…':'🪜 Leo thang đuôi tàu lên lại du thuyền…',2500)}}
       P.moving+=((mv?1:0)-P.moving)*Math.min(1,dt*5);const w=wy(P.x,P.z);
       if(P.kind==='kayak'){P.y=w+PLAY.seat;bayAvatar.sit=1;playKay(P.x,P.z,P.yaw,w,Math.sin(t*1.3)*.03,Math.sin(t*1.7)*.04);const pd=PLAY.kayak.userData.paddle,a=t*4.2;pd.rotation.set(0,Math.sin(a)*.35*P.moving,Math.cos(a)*.55*P.moving)}
-      else{P.y=w-PLAY.depth+Math.sin(t*2.2)*.04;bayAvatar.sit=0;bayAvatar.lean=-.3*P.moving}}
+      else{/* bơi sải: đang bơi thì nằm sấp nổi ngang mặt nước, dừng thì đứng đạp nước như trước */P.sw=(P.sw||0)+(((P.moving>.15)?1:0)-(P.sw||0))*Math.min(1,dt*2.4);const sw=P.sw*P.sw*(3-2*P.sw);
+        P.ph=(P.ph||0)+dt/1.35*(.25+.75*P.moving);P.y=w-PLAY.depth*(1-sw)-.17*sw+Math.sin(t*2.2)*.04*(1-sw)+Math.sin(TAU*P.ph*2)*.02*sw;bayAvatar.sit=0;bayAvatar.lean=0;bayAvatar.swim={s:sw,ph:P.ph,t,mv:P.moving}}}
+    if(!(P.kind==='swim'&&/^(swim)$/.test(P.phase)))bayAvatar.swim=null
   }
   // Camera cố định khi trượt, xuống / lên kayak, leo thang: đặt ngoài mạn tàu nhìn vào người (sau lưng người lúc đó là thân tàu, camera sẽ bị che)
   const playCamV=new THREE.Vector3(),playCamL=new THREE.Vector3();
@@ -2775,7 +2807,7 @@
   function bayPullIn(from,cam,objs){if(!bayLiftPull)return;bayLiftD.subVectors(cam,from);const L=bayLiftD.length();if(L<.5)return;bayLiftD.divideScalar(L);bayLiftRay.set(from,bayLiftD);bayLiftRay.far=L;const hit=bayLiftRay.intersectObjects(objs,false)[0];if(hit)cam.copy(from).addScaledVector(bayLiftD,Math.max(1.2,hit.distance-.8))}
   function bayLiftStep(dt,from,camAt,steps,objs){bayLiftT-=dt;if(bayLiftT<=0){bayLiftT=.15;bayLiftWant=bayLiftFor(from,camAt,steps,objs)}
     bayLift+=(bayLiftWant-bayLift)*Math.min(1,dt*(bayLiftWant>bayLift?3.2:.8));return bayLift}
-  bayAvatar={pos:new THREE.Vector3(),yaw:0};bayTmp=new THREE.Vector3(),bayLook=new THREE.Vector3(),bayCam=new THREE.Vector3();let bayLastNear=null,bayMapTimer=0;
+  bayAvatar={pos:new THREE.Vector3(),yaw:0,pose:swimPose};bayTmp=new THREE.Vector3(),bayLook=new THREE.Vector3(),bayCam=new THREE.Vector3();let bayLastNear=null,bayMapTimer=0;
   // Tốc độ xoay mũi tàu tối đa (rad/s): chậm, tăng theo tốc độ tàu; không đổi hướng đột ngột.
   function shipTurnCap(S){return S.turn*.4*Math.sqrt(bayMult())*(.35+.65*Math.min(1,S.speed/(S.max*bayMult())))}
   // ---- Lái tàu: MŨI tàu đi trước, bám theo đường đi; tâm tàu luôn đi theo mũi (như rơ-moóc), nên thân tàu xoay dần theo mũi.
