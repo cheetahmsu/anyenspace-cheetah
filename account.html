@@ -325,6 +325,7 @@ $('#logout').onclick=async function(){try{await client.auth.signOut()}catch(_){}
  if(!cfg.supabaseUrl||!cfg.publishableKey||!create){show('nocfg');return}
  client=create(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  client.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY'){recovering=true;$('#rCodeRow').hidden=true;msg('#rMsg');show('reset')}});
+ if(/[?&]logout=1/.test(location.search)){try{await client.auth.signOut()}catch(_){}location.replace(NEXT||'index.html');return}
  if(/type=recovery/.test(location.hash+location.search)){recovering=true;$('#rCodeRow').hidden=true;show('reset');return}
  try{await loadProfile()}catch(e){show('auth')}
  var h=location.hash.replace('#','');if(h==='signup')tab('signup');
