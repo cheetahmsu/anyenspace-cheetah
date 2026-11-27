@@ -56,7 +56,7 @@ export function openSnow(THREE,opts){opts=opts||{};
   const coarse=!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),LOW=coarse||!!opts.low;
   // ---------- khung trang ----------
   const box=document.createElement('section');box.id='snowBox';box.setAttribute('role','dialog');box.setAttribute('aria-label','Xứ Yên');
-  box.innerHTML='<canvas id="snowCanvas"></canvas><div class="sn-top"><strong>✧ LÀNG YÊN - XỨ YÊN</strong><span class="sn-sp"></span><button type="button" data-sn="map">🗺 Bản đồ</button><button type="button" data-sn="home">🏠 Trang chính</button></div>'
+  box.innerHTML='<canvas id="snowCanvas"></canvas><div class="sn-top"><strong>✧ LÀNG YÊN - XỨ YÊN</strong><span class="sn-sp"></span><button type="button" data-sn="mode" title="Đổi phiên bản: Bình thường, Giáng sinh, Tuyết rơi">☀ Bình thường</button><button type="button" data-sn="map">🗺 Bản đồ</button><button type="button" data-sn="home">🏠 Trang chính</button></div>'
     +'<div class="sn-cap" aria-live="polite"></div><div class="sn-breath" hidden><div class="sn-orb"></div><span></span></div>'
     +'<div class="sn-bottom"><button type="button" class="sn-act" hidden></button><button type="button" class="sn-stop" hidden>↩ Đứng dậy</button></div>'
     +'<div class="sn-map" hidden><div class="sn-card"><div class="sn-mh"><b>Bản đồ Xứ Yên</b><button type="button" data-sn="mapx">✕ Đóng</button></div><canvas class="sn-mc" width="720" height="720"></canvas><div class="sn-list"></div></div></div>';
@@ -121,7 +121,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     geo(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(this.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(this.n,3));g.setAttribute('color',new THREE.Float32BufferAttribute(this.c,3));g.computeBoundingSphere();return g}
     mesh(mat){const m=new THREE.Mesh(this.geo(),mat);return m}}
   const LAM=new THREE.MeshLambertMaterial({vertexColors:true}),GLOW=new THREE.MeshBasicMaterial({vertexColors:true,fog:false,toneMapped:false});
-  const S=new Batch(),L=new Batch(),T=new Batch();/* S: vật thể thường · L: đèn, cửa sổ sáng · T: cây thông */
+  const S=new Batch(),L=new Batch(),T=new Batch(),XS=new Batch(),XL=new Batch();/* XS, XL: trang trí Giáng sinh, chỉ hiện ở phiên bản Giáng sinh */
+  const LIT=(x,z)=>Math.hypot(x-TREE.x,z-TREE.z)<28||(x<-12&&x>-72&&z>34&&z<100&&Math.hypot((x-RINK.x)/(RINK.rx*1.2),(z-RINK.z)/(RINK.rz*1.4))>1);/* đèn chỉ có ở Làng Lapland và Khu Vui Chơi */const _lv=new THREE.Vector3();/* S: vật thể thường · L: đèn, cửa sổ sáng · T: cây thông */
   const colliders=[];const block=(x,z,r)=>colliders.push([x,z,r]);
 
   // ---------- bầu trời đêm xanh thẫm và cực quang (theo ảnh chụp cực quang thật: dải lục toả tia, viền tím hồng) ----------
@@ -205,13 +206,13 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     if(o.porch!==false){S.b('#4a3a2e',0,.15,d/2+1.1,w*.6,.2,2);for(const sx of [-1,1])S.b('#3a2c22',sx*w*.28,1.3,d/2+2,.18,2.4,.18);S.b('#2e2622',0,2.6,d/2+1.3,w*.66,.16,2.4,0,-.18);S.b(SNOW,0,2.76,d/2+1.3,w*.68,.18,2.4,0,-.18)}
     for(let i=0;i<5;i++)S.add(G.cyl,i%2?'#8a6a4a':'#7a5a3e',MX(-w/2-.5,.25+Math.floor(i/3)*.4,-d*.15+(i%3)*.42-.4,.18,1.4,.18,Math.PI/2,0,0));
     stringLights(L,-w/2-.45,h+.05,d/2+.12,0,h+rh+.15,d/2+.12,12,0);stringLights(L,0,h+rh+.15,d/2+.12,w/2+.45,h+.05,d/2+.12,12,0);stringLights(L,-w/2-.45,h+.02,-d/2,-w/2-.45,h+.02,d/2,14,0);stringLights(L,w/2+.45,h+.02,-d/2,w/2+.45,h+.02,d/2,14,0);
-    S.add(WREATH,'#2f5b48',MX(0,h+rh*.42,d/2+.14,1));L.add(G.sphLo,'#ff6a5a',MX(0,h+rh*.42-.42,d/2+.2,.1));
+    XS.T=S.T;XL.T=L.T;XS.add(WREATH,'#2f5b48',MX(0,h+rh*.42,d/2+.14,1));XS.add(G.sphLo,'#a5302a',MX(0,h+rh*.42-.42,d/2+.2,.1));XS.reset();XL.reset();
     S.reset();L.reset();block(x,z,Math.max(w,d)/2+.8)}
   // lều kota gỗ sáu cạnh, mái nón, khói bếp
   function kota(x,z,r,col){const y=H(x,z);S.at(x,y,z,0);S.add(G.cyl6,col||'#5e4634',MX(0,.9,0,r,1.8,r));S.add(G.cone,'#3a2c22',MX(0,1.8+r*.6,0,r*1.15,r*1.3,r*1.15,0,Math.PI/6,0));S.add(G.cone,SNOW,MX(0,1.95+r*.6,0,r*1.08,r*1.12,r*1.08,0,Math.PI/6,0));S.b('#2a1e16',0,.85,r*.86,.9,1.7,.1);L.reset();L.b('#ffb35a',x,y+.8,z+r*.9,.7,1.4,.05);S.reset();block(x,z,r+.6)}
   // lều lavvu của người Sámi: cọc gỗ chụm đầu, bạt nhạt
   function lavvu(x,z,r){const y=H(x,z);S.add(G.cone12,'#d8cbb2',MX(x,y+r*1.1,z,r,r*2.2,r));for(let i=0;i<7;i++){const a=i/7*6.28;S.add(G.cyl,'#5a4532',MX(x+Math.cos(a)*.2,y+r*2.2+.5,z+Math.sin(a)*.2,.05,1.2,.05,Math.sin(a)*.3,0,-Math.cos(a)*.3))}S.b('#3a2c22',x,y+.7,z+r*.75,.8,1.3,.05);block(x,z,r+.4)}
-  function lantern(x,z,hgt){const y=H(x,z),h=hgt||1.6;S.b('#2b2622',x,y+h/2,z,.1,h,.1);S.b('#2b2622',x,y+h+.05,z,.36,.06,.36);L.b('#ffcc7a',x,y+h-.18,z,.26,.32,.26);S.b(SNOW,x,y+h+.12,z,.4,.07,.4)}
+  function lantern(x,z,hgt){if(!LIT(x,z))return;const y=H(x,z),h=hgt||1.6;S.b('#2b2622',x,y+h/2,z,.1,h,.1);S.b('#2b2622',x,y+h+.05,z,.36,.06,.36);L.b('#ffcc7a',x,y+h-.18,z,.26,.32,.26);S.b(SNOW,x,y+h+.12,z,.4,.07,.4)}
   function reindeer(B,x,z,ry,s,graze){const y=H(x,z);B.at(x,y,z,ry,s);const br='#9a8268',dk='#5a4838',lt='#efe6d6';
     B.add(G.sph,br,MX(0,1.05,0,.38,.36,.78));B.add(G.sph,lt,MX(0,.95,.55,.3,.3,.2));B.add(G.sph,lt,MX(0,.98,-.72,.16,.18,.08));
     const hy=graze?.55:1.55,hz=graze?.95:.85;B.add(G.cyl,br,MX(0,(1.15+hy)/2+.05,(.55+hz)/2,.13,.7,.13,graze?1.1:-.5,0,0));B.add(G.sph,br,MX(0,hy,hz+.12,.15,.15,.26));B.add(G.sph,dk,MX(0,hy-.03,hz+.36,.07,.06,.06));
@@ -222,17 +223,17 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     S.b('#5a4636',x0,H(x0,z0)+.55,z0,.12,1.1,.12);S.b(SNOW,x0,H(x0,z0)+1.12,z0,.16,.06,.16);for(const hy of [.4,.85])S.b('#6b5440',mx,y+hy,mz,.06,.08,len,ang)}}
 
   // dây đèn dưới mái hiên: chuỗi bóng vàng ấm như ảnh Xứ Yên
-  function stringLights(B,x0,y0,z0,x1,y1,z1,n,sag){for(let i=0;i<=n;i++){const t=i/n;B.add(G.sphLo,i%4?'#ffd27a':'#ffe8b8',MX(x0+(x1-x0)*t,y0+(y1-y0)*t-Math.sin(t*Math.PI)*(sag||0),z0+(z1-z0)*t,.07))}}
+  function stringLights(B,x0,y0,z0,x1,y1,z1,n,sag){for(let i=0;i<=n;i++){const t=i/n;_lv.set(x0+(x1-x0)*t,y0,z0+(z1-z0)*t).applyMatrix4(B.T);if(!LIT(_lv.x,_lv.z))continue;B.add(G.sphLo,i%4?'#ffd27a':'#ffe8b8',MX(x0+(x1-x0)*t,y0+(y1-y0)*t-Math.sin(t*Math.PI)*(sag||0),z0+(z1-z0)*t,.07))}}
   // ---------- Cổng Xứ Yên ----------
   {const GX=14,GZ=98,y=H(GX,GZ);S.at(GX,y,GZ,0);L.at(GX,y,GZ,0);for(const sx of [-1,1]){S.b('#5a3b2a',sx*3.4,2,0,.5,4,.5);S.b('#3a2c22',sx*3.4,.2,0,.8,.4,.8);L.b('#ffcc7a',sx*3.4,3.4,.3,.3,.4,.06)}
     S.b('#4a3426',0,4.3,0,8.4,.5,.7);S.add(G.prism,'#4a3426',MX(0,4.55,0,9.4,1.9,1.6));S.b(SNOW,-2.4,5.55,0,5.3,.3,1.9,0,0,.38);S.b(SNOW,2.4,5.55,0,5.3,.3,1.9,0,0,-.38);
-    stringLights(L,-4.6,4.5,.95,0,6.35,.95,10,0);stringLights(L,0,6.35,.95,4.6,4.5,.95,10,0);L.add(G.sph,'#fff0c4',MX(0,5.2,.85,.22));S.reset();L.reset();block(GX-3.4,GZ,.6);block(GX+3.4,GZ,.6);
+    stringLights(L,-4.6,4.5,.95,0,6.35,.95,10,0);stringLights(L,0,6.35,.95,4.6,4.5,.95,10,0);S.reset();L.reset();block(GX-3.4,GZ,.6);block(GX+3.4,GZ,.6);
     const sg=signTex('XỨ YÊN','Arctic Wonderland'),m=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.27),new THREE.MeshBasicMaterial({map:sg,transparent:true}));m.position.set(GX,y+3.45,GZ+.4);sc.add(m);const m2=m.clone();m2.rotation.y=Math.PI;m2.position.z=GZ-.4;sc.add(m2);
     for(const [lx,lz] of [[12,108],[17,108],[13.5,90],[19,90],[15,84],[20,84]])lantern(lx,lz)}
   // ---------- 2 Làng Lapland quanh cây thông lớn ----------
   {const y=H(TREE.x,TREE.z),h=15;T.add(G.cyl,'#4a3a2e',MX(TREE.x,y+1,TREE.z,.4,2,.4));for(let i=0;i<6;i++){const t=i/6,r=4.8*(1-t*.82),th=3.8-i*.3,ty=y+1.4+t*h*.78;T.add(G.cone12,'#1f4034',MX(TREE.x,ty+th/2,TREE.z,r,th,r,0,i,0));T.add(G.cone12,SNOW,MX(TREE.x,ty+th*.66,TREE.z,r*.7,th*.3,r*.7,0,i+.4,0))}
-    for(let i=0;i<220;i++){const t=i/220,a=t*Math.PI*2*10,hy=1.6+t*h*.86,r=4.7*(1-(hy-1.4)/(h*.78)*.82)+.05;if(r<.2)continue;L.add(G.sphLo,i%7===0?'#ff8a7a':i%5?'#ffd18a':'#ffe9c2',MX(TREE.x+Math.cos(a)*r,y+hy,TREE.z+Math.sin(a)*r,.1))}
-    L.add(G.sph,'#fff0c4',MX(TREE.x,y+h+1.2,TREE.z,.45));block(TREE.x,TREE.z,5.2);warm(TREE.x,y+5,TREE.z+7,30,34);
+    for(let i=0;i<220;i++){const t=i/220,a=t*Math.PI*2*10,hy=1.6+t*h*.86,r=4.7*(1-(hy-1.4)/(h*.78)*.82)+.05;if(r<.2)continue;XL.add(G.sphLo,i%7===0?'#ff8a7a':i%5?'#ffd18a':'#ffe9c2',MX(TREE.x+Math.cos(a)*r,y+hy,TREE.z+Math.sin(a)*r,.1))}
+    XL.add(G.sph,'#fff0c4',MX(TREE.x,y+h+1.2,TREE.z,.45));block(TREE.x,TREE.z,5.2);warm(TREE.x,y+5,TREE.z+7,30,34);
     for(let i=0;i<8;i++){const a=i/8*6.28;S.b(i%2?'#8c2f2a':'#c8a96a',TREE.x+Math.cos(a)*3.6,y+.3,TREE.z+Math.sin(a)*3.6,.6,.6,.6,a)}}
   // Làng Lapland theo tấm 02: quảng trường tròn, nhà chính tháp đồng hồ (trên phải), chợ mái sọc (trái), café (dưới phải), cửa hàng (trên trái), chalet quanh làng
   const TC=(dx,dz)=>[TREE.x+dx,TREE.z+dz],face=(x,z)=>Math.atan2(TREE.x-x,TREE.z-z);
@@ -283,7 +284,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     S.add(G.cyl12,'#b8322c',MX(-50,H(-50,42)+.35,42,.7,.25,.7));S.add(G.cyl12,'#3a6fb0',MX(-53,H(-53,42)+.9,42,.7,.25,.7))}
   for(let i=0;i<2;i++){const x=-48,z=54+i*5,y=H(x,z);S.at(x,y,z,Math.PI/2);L.at(x,y,z,Math.PI/2);S.b('#6b4f3c',0,1.2,-.9,3.2,2.4,.15);for(const sx of [-1,1])S.b('#6b4f3c',sx*1.55,1.2,0,.15,2.4,1.9);S.b('#c9b48f',0,.95,.7,3.2,.12,.7);
     for(let k=0;k<8;k++)S.b(k%2?'#f1eee5':'#b8322c',-1.4+k*.4,2.55,.2,.4,.08,2.6,0,-.32);stringLights(L,-1.7,2.12,1.35,1.7,2.12,1.35,8,.1);L.b('#ffcc7a',0,1.6,-.8,1.6,.7,.04);S.reset();L.reset();block(x,z,2)}/* phố quà tặng */
-  for(const [gx,gz,c] of [[-10,64,'#b8322c'],[-11,65.6,'#c5a36f'],[-17.5,64.4,'#2f5b48']]){const y=H(gx,gz);S.b(c,gx,y+.35,gz,.7,.7,.7,.4);S.b('#f1eee5',gx,y+.35,gz,.72,.72,.12,.4)}
+  for(const [gx,gz,c] of [[-10,64,'#b8322c'],[-11,65.6,'#c5a36f'],[-17.5,64.4,'#2f5b48']]){const y=H(gx,gz);XS.b(c,gx,y+.35,gz,.7,.7,.7,.4);XS.b('#f1eee5',gx,y+.35,gz,.72,.72,.12,.4)}
   // Hồ Trượt Băng theo tấm 04: nhà dịch vụ (trên trái), café kính ven sân (trên phải), góc sưởi (dưới phải), khung đèn trái tim (dưới trái)
   cabin(-34,66,0,{col:'#8a5f3e',w:8,d:6,h:3.6});
   {const x=-1,z=69,y=H(x,z);S.at(x,y,z,0);L.at(x,y,z,0);S.b('#3d3530',0,-.2,0,6.4,.6,4.4);L.b('#ffd79a',0,1.4,0,5.8,2.6,3.8);S.add(G.prism,'#7a5236',MX(0,2.8,0,6.6,1.4,4.6));S.b(SNOW,-1.6,3.5,0,3.6,.2,4.8,0,0,.4);S.b(SNOW,1.6,3.5,0,3.6,.2,4.8,0,0,-.4);
@@ -329,17 +330,14 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // ---------- tuyến đường phát sáng: husky vàng cam, xe trượt xanh lam, trượt tuyết hồng ----------
   const glow=(pts,col,w,yf,closed)=>{const P=closed?[...pts,pts[0]]:pts;for(let i=0;i+1<P.length;i++){const [x0,z0]=P[i],[x1,z1]=P[i+1],ln=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ceil(ln/2)),ry=Math.atan2(-(z1-z0),x1-x0);
     for(let k=0;k<n;k++){const t=(k+.5)/n,x=x0+(x1-x0)*t,z=z0+(z1-z0)*t;L.b(col,x,yf(x,z),z,ln/n+.05,.05,w,ry)}}};
-  for(const t of HTRAILS){glow(t,'#ffb24e',.28,(x,z)=>H(x,z)+.06);let acc=0;for(let i=0;i+1<t.length;i++){const ln=Math.hypot(t[i+1][0]-t[i][0],t[i+1][1]-t[i][1]),nx=-(t[i+1][1]-t[i][1])/ln,nz=(t[i+1][0]-t[i][0])/ln;
-    for(let d=0;d<ln;d+=2){acc+=2;if(acc%16===0){const x=t[i][0]+(t[i+1][0]-t[i][0])*d/ln,z=t[i][1]+(t[i+1][1]-t[i][1])*d/ln,sd=(acc/16)%2?3:-3;if(lakeE(x+nx*sd,z+nz*sd)>1.05)lantern(x+nx*sd,z+nz*sd,1.4)}}}}
-  glow(SLOOP,'#7fd8ff',.32,()=>ICE_Y+.04,true);
-  for(const r of SKIRUNS)for(const off of [-2.2,2.2])glow(r.map(([x,z],i,a)=>{const j=Math.min(i+1,a.length-1),k=Math.max(i-1,0),dx=a[j][0]-a[k][0],dz=a[j][1]-a[k][1],l=Math.hypot(dx,dz);return [x-dz/l*off,z+dx/l*off]}),'#ff7ad8',.26,(x,z)=>H(x,z)+.08);
+  /* không vẽ dải đèn dọc tuyến đường: tuyến husky, xe trượt, dốc trượt chỉ in trên nền tuyết */
   // ---------- 7 đảo nhỏ trồng thông giữa hồ, cầu gỗ cong nối bờ ----------
   for(let k=0;k<7;k++){const a=k*2.3,r=k?ISLE.r*(.25+.45*((k*37)%10)/10):0;pine(T,ISLE.x+Math.cos(a)*r,ISLE.z+Math.sin(a)*r,k?4+((k*13)%5):7.5)}
   for(let k=0;k<3;k++){const a=k*2.1+.5;lantern(ISLE.x+Math.cos(a)*ISLE.r*.95,ISLE.z+Math.sin(a)*ISLE.r*.95,1.3)}
   {let dx=-.95,dz=-.3;const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ax=ISLE.x+dx*ISLE.r*1.05,az=ISLE.z+dz*ISLE.r*1.05;let len=2;while(len<60&&lakeE(ax+dx*len,az+dz*len)<1.08)len+=.5;
     const ry=Math.atan2(-dz,dx),n=Math.ceil(len/1.05);for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+dx*len*t,z=az+dz*len*t,y=ICE_Y+.45+Math.sin(Math.PI*t)*1.1;S.b('#6b5440',x,y,z,1.0,.14,2.4,ry);S.b(SNOW,x,y+.09,z,.75,.03,2.2,ry);
       for(const sd of [-1.15,1.15]){S.b('#4a3a2e',x+Math.sin(ry)*sd,y+.5,z+Math.cos(ry)*sd,1.05,.08,.08,ry);if(i%3===0)S.b('#4a3a2e',x+Math.sin(ry)*sd,y+.25,z+Math.cos(ry)*sd,.1,.6,.1)}
-      if(i%6===3)L.add(G.sph,'#ffcf86',MX(x+Math.sin(ry)*1.15,y+.75,z+Math.cos(ry)*1.15,.14))}}
+      }}
   // ---------- 9 Đỉnh Tuyết Yên: nhà nghỉ trên đỉnh, cáp treo, cờ, dốc trượt ----------
   cabin(SKI.x,SKI.z-8,0,{col:'#8a5f3e',w:11,d:7,h:3.8});{const y=H(SKI.x,SKI.z-8);L.at(SKI.x,y,SKI.z-8,0);stringLights(L,-5.5,3.6,3.7,5.5,3.6,3.7,18,.15);L.reset()}
   for(const [fx,fz,c] of [[SKI.x-8,SKI.z-2,'#c5a36f'],[SKI.x+8,SKI.z-2,'#ff7ad8'],[SKI.x,SKI.z+1,'#7fd8ff']]){const y=H(fx,fz);S.b('#e9e2d6',fx,y+2.2,fz,.12,4.4,.12);S.b(c,fx+.6,y+4,fz,1.1,.7,.05)}
@@ -352,7 +350,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(const q of IGLOOS){const f=toLake(q,DR+2.4);let best=shore[0],bd=1e9;for(const w of shore){const dd=Math.hypot(w[0]-f[0],w[1]-f[1]);if(dd<bd){bd=dd;best=w}}if(bd>1.5)walk([f,best])}}
   // ---------- 6 Hồ Băng & Xe Trượt: cầu gỗ bờ tây, xe trượt tuyết đỏ chạy chậm, đèn băng ----------
   {const [[ax,az],[bx,bz]]=PIER,ln=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax),n=Math.ceil(ln/1.15);for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;S.b('#5b4636',x,.05,z,1.05,.14,2.2,ry);S.b(SNOW,x,.13,z,.8,.04,2.1,ry);if(i%3===0)for(const sd of [-1.2,1.2])S.b('#3a2c22',x-Math.sin(ry)*sd*0+Math.sin(ry)*sd,.3,z+Math.cos(ry)*sd,.16,1,.16)}}
-  for(const [x,z] of [.3,1.2,2.2,3.4,4.4,5.5].map(a=>lakeShore(a,0,.45))){S.b('#cfe6f2',x,ICE_Y+.35,z,.7,.7,.7);L.b('#bfe8ff',x,ICE_Y+.35,z,.4,.5,.4)}
+  
   function kickSled(B){B.b('#8c2f2a',0,.5,.2,.55,.08,.5);B.b('#8c2f2a',0,.75,-.05,.55,.5,.06);for(const sx of [-.22,.22]){B.b('#2b2622',sx,.05,-.2,.04,.04,2.2);B.b('#2b2622',sx,.55,-.35,.04,1.1,.04,0,.2);B.b('#2b2622',sx,1.05,-.4,.04,.04,.3)}B.b('#2b2622',0,1.08,-.48,.5,.04,.04)}
   for(const [x,z] of [[PIER[0][0]+2,PIER[0][1]-5],[PIER[0][0]+2,PIER[0][1]+5]]){S.at(x,0,z,1.3);kickSled(S);S.reset()}
   function snowmobile(B){B.b('#2b2622',0,.25,-.5,.9,.4,1.8);B.b('#b8322c',0,.55,.2,1,.45,1.6);B.add(G.sph,'#b8322c',MX(0,.6,1,.5,.35,.6));B.b('#1d1a18',0,.82,-.35,.6,.18,1.1);B.b('#9fc4dd',0,1.0,.55,.7,.4,.05,0,-.5);for(const sx of [-.45,.45])B.b('#2b2622',sx,.05,1.2,.12,.06,1.2);B.b('#c8a96a',0,.95,.25,.8,.05,.05);L.reset()}
@@ -368,7 +366,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(let i=0;i<=Math.round(w/2.4);i++){const px=-w/2+.2+i*(w-.4)/Math.round(w/2.4);S.b('#6b4f3a',px,h/2,d/2-.2,.26,h,.26);if(o.stalls&&i>0&&i<Math.round(w/2.4))S.b(col,px,.6,0,.12,1.2,d-.6)}
     const a=.6,rh=Math.tan(a)*(d/2+.5),Lr=(d/2+.6)/Math.cos(a);for(const sd of [-1,1]){S.b('#5c4433',0,h+rh/2,sd*(d/4+.15),w+.8,.2,Lr,sd*a,0,0);S.b(SNOW,0,h+rh/2+.22,sd*(d/4+.15),w+.9,.3,Lr+.05,sd*a,0,0)}
     if(o.chimney){S.b('#9a958e',w/2-1,h+rh*.6,-d*.2,.8,2.4,.8);S.b(SNOW,w/2-1,h+rh*.6+1.25,-d*.2,.95,.2,.95)}
-    stringLights(L,-w/2-.4,h,d/2+.2,w/2+.4,h,d/2+.2,Math.round(w*1.6),.15);if(o.wreath){S.add(WREATH,'#2f5b48',MX(0,h+rh*.45,d/2+.35,1));L.add(G.sphLo,'#ff6a5a',MX(0,h+rh*.45-.42,d/2+.4,.1))}
+    stringLights(L,-w/2-.4,h,d/2+.2,w/2+.4,h,d/2+.2,Math.round(w*1.6),.15);if(o.wreath){XS.T=S.T;XS.add(WREATH,'#2f5b48',MX(0,h+rh*.45,d/2+.35,1));XS.add(G.sphLo,'#a5302a',MX(0,h+rh*.45-.42,d/2+.4,.1));XS.reset()}
     S.reset();L.reset();block(x,z,Math.max(w,d)/2+.6)}
   // nhà kính mái gỗ (café ấm): khung gỗ, kính sáng vàng, mái tuyết
   function glassHouse(x,z,ry,w,d,h){const y=H(x,z);S.at(x,y,z,ry);L.at(x,y,z,ry);S.b('#8a8580',0,.12,0,w+.6,.24,d+.6);
@@ -384,7 +382,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // ---------- 05 Rừng Thông & Husky: trạm, chuồng, chòi nghỉ, đài ngắm cảnh, khu trải nghiệm ----------
   {// 1 Trạm Husky: chalet gỗ lớn mặt kính, biển gỗ dấu chân
     cabin(0,-17,Math.PI/2,{w:8,d:11,h:3.6});const y=H(6.5,-11);S.at(6.5,y,-11,.4);S.b('#5c4433',-.9,.8,0,.16,1.6,.16);S.b('#5c4433',.9,.8,0,.16,1.6,.16);S.b('#98745a',0,1.75,0,2.4,1,.16);S.reset();
-    L.at(6.5,y,-11,.4);L.add(G.sphLo,'#f1eee5',MX(0,1.7,.1,.22,.2,.04));for(const [px,py] of [[-.3,2.05],[-.1,2.15],[.12,2.15],[.32,2.05]])L.add(G.sphLo,'#f1eee5',MX(px,py,.1,.08,.08,.03));L.reset();
+    S.at(6.5,y,-11,.4);S.add(G.sphLo,'#f1eee5',MX(0,1.7,.1,.22,.2,.04));for(const [px,py] of [[-.3,2.05],[-.1,2.15],[.12,2.15],[.32,2.05]])S.add(G.sphLo,'#f1eee5',MX(px,py,.1,.08,.08,.03));S.reset();
     // 2 Khu chuồng & chăm sóc: dãy chuồng gỗ mở, husky nằm nghỉ
     openShed(-8,-44,Math.PI/2,12,4,2.2,{stalls:true});fence(-8,-44,9,30,Math.PI/2*0);
     // 3 Điểm nghỉ chân: chòi gỗ mở, lò sưởi đá, ghế quanh lửa
@@ -426,12 +424,12 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     {const gx=0,gy=y0+h+3.2,gz=z0+(d-1.4)/2+.06;for(const a of [-.95,-.48,0,.48,.95])L.add(G.sph,'#ffd98a',MX(gx+Math.sin(a)*.22,gy+Math.cos(a)*.22,gz,.09,.32,.03,0,0,-a));L.b('#ffd98a',gx,gy-.12,gz,.7,.05,.03)}
     stringLights(L,-w/2-1,y0+h-.2,z0+d/2+.9,w/2+1,y0+h-.2,z0+d/2+.9,20,0);
     // đèn đá hai bên bậc thềm
-    for(const sx of [-4.2,4.2]){const lz=z0+d/2+2.6;S.add(G.cyl,st,MX(sx,.9,lz,.18,1.2,.18));S.b(st,sx,1.6,lz,.7,.15,.7);L.b('#ffcc7a',sx,1.95,lz,.45,.5,.45);S.add(G.pyr4,st,MX(sx,2.4,lz,.9,.5,.9));S.add(G.pyr4,SNOW,MX(sx,2.5,lz,.8,.4,.8))}
+    for(const sx of [-4.2,4.2]){const lz=z0+d/2+2.6;S.add(G.cyl,st,MX(sx,.9,lz,.18,1.2,.18));S.b(st,sx,1.6,lz,.7,.15,.7);S.b('#8a8580',sx,1.95,lz,.45,.5,.45);S.add(G.pyr4,st,MX(sx,2.4,lz,.9,.5,.9));S.add(G.pyr4,SNOW,MX(sx,2.5,lz,.8,.4,.8))}
     S.add(G.cyl12,'#7a3a28',MX(0,.86,4.4,.45,.12,.45));/* toạ cụ trên thềm đá, nhìn vào chánh điện */
     // Tượng Phật ngoài trời: tượng trắng ngồi thiền trên bệ đá tự nhiên, bên phải chánh điện
     {const bx=10.5,bz=1.5;for(const [rx,rz,rr,ry] of [[0,0,1.9,.7],[-1.2,.8,1.1,.5],[1.3,.6,1.2,.55],[.4,-1,1.3,.6],[-.9,-.7,1,.45]])S.add(G.sphLo,rx%2?'#8f8a84':'#a29d96',MX(bx+rx,ry,bz+rz,rr,ry+.35,rr));S.add(G.sphLo,SNOW,MX(bx,1.1,bz,1.6,.3,1.5));
       const wt='#ffffff',k=1.7,yb=1.15;S.add(G.cyl12,wt,MX(bx,yb+.15*k,bz,.95*k,.3*k,.7*k));S.add(G.sph,wt,MX(bx,yb+.42*k,bz,.85*k,.32*k,.6*k));S.add(G.sph,wt,MX(bx,yb+1.0*k,bz-.05,.48*k,.66*k,.36*k));S.add(G.sph,wt,MX(bx,yb+1.78*k,bz-.05,.27*k,.31*k,.27*k));S.add(G.sph,wt,MX(bx,yb+2.08*k,bz-.07,.13*k));S.add(G.sph,wt,MX(bx,yb+.62*k,bz+.28*k,.3*k,.12*k,.18*k));
-      L.add(G.sph,'#fff0c8',MX(bx,yb+1.8*k,bz-.6,.9,.9,.05));for(const sx of [-2,2]){S.add(G.cyl,st,MX(bx+sx,.6,bz+2.4,.14,1,.14));L.b('#ffcc7a',bx+sx,1.25,bz+2.4,.3,.35,.3);S.add(G.pyr4,st,MX(bx+sx,1.6,bz+2.4,.6,.35,.6))}}
+      L.add(G.sph,'#fff0c8',MX(bx,yb+1.8*k,bz-.6,.9,.9,.05));for(const sx of [-2,2]){S.add(G.cyl,st,MX(bx+sx,.6,bz+2.4,.14,1,.14));S.b('#8a8580',bx+sx,1.25,bz+2.4,.3,.35,.3);S.add(G.pyr4,st,MX(bx+sx,1.6,bz+2.4,.6,.35,.6))}}
     S.reset();L.reset();warm(...tw(0,2).slice(0,1),y+3.2,tw(0,2)[1],16,18);
     {const c=tw(0,-1.5);block(c[0],c[1],7.8)}{const c=tw(10.5,1.5);block(c[0],c[1],5.5)}
     for(const [lx,lz,h] of [[-10,-3,8],[-9,-9,9],[8,-8,7],[-12,4,6],[16,-4,8],[6,-6,6]]){const c=tw(lx,lz);pine(T,c[0],c[1],h)}}
@@ -453,7 +451,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   {const N=LOW?1300:4000;let n=0,tries=0;while(n<N&&tries<N*12){tries++;const x=(rnd()-.5)*560,z=(rnd()-.5)*560,r=Math.hypot(x,z);if(r>300)continue;
     let p=.12;if(x<-40&&z<20&&z>-150)p=.92;else if(z<-20)p=.93;else if(x>30)p=.9;else if(z<20)p=.6;else if(z<-60)p=.5;else if(r>130)p=.55;if(rnd()>p||!keep(x,z))continue;pine(T,x,z,5+rnd()*7*(r>160?1.4:1));n++}}
 
-  sc.add(S.mesh(LAM));sc.add(L.mesh(GLOW));sc.add(T.mesh(LAM));
+  sc.add(S.mesh(LAM));sc.add(L.mesh(GLOW));sc.add(T.mesh(LAM));const xmasG=new THREE.Group();xmasG.add(XS.mesh(LAM),XL.mesh(GLOW));sc.add(xmasG);
 
   // ---------- nhãn tên các khu ----------
   const labels=[];
@@ -467,6 +465,12 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const snowG=new THREE.BufferGeometry();snowG.setAttribute('position',new THREE.BufferAttribute(sp,3));
   const flake=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
   const snow=new THREE.Points(snowG,new THREE.PointsMaterial({size:.16,map:flake,transparent:true,depthWrite:false,opacity:.85}));snow.frustumCulled=false;sc.add(snow);
+  // ba phiên bản Xứ Yên: Bình thường (cảnh tuyết tĩnh) · Giáng sinh (trang trí Noel, tuyết nhẹ) · Tuyết rơi (tuyết rơi dày)
+  const MODES={binhthuong:'☀ Bình thường',giangsinh:'🎄 Giáng sinh',tuyetroi:'❄ Tuyết rơi'},MK=Object.keys(MODES),fog0=sc.fog.density;let mode='binhthuong';
+  const setMode=m=>{if(!MODES[m])m='binhthuong';mode=m;xmasG.visible=m==='giangsinh';snow.visible=m!=='binhthuong';snowG.setDrawRange(0,m==='tuyetroi'?SNN:Math.round(SNN*.35));snow.material.size=m==='tuyetroi'?.22:.15;sc.fog.density=fog0*(m==='tuyetroi'?1.5:1);
+    const b=box.querySelector('[data-sn="mode"]');if(b)b.textContent=MODES[m];try{localStorage.setItem('xuyen-mode',m)}catch(e){}};
+  {let m0=opts.mode;try{m0=m0||new URLSearchParams(location.search).get('xuyen')||localStorage.getItem('xuyen-mode')}catch(e){}setMode(m0||'binhthuong')}
+  window.__snowMode=setMode;
 
   // ---------- nhân vật ----------
   let prof={};try{prof=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}')||{}}catch(e){}
@@ -535,7 +539,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   box.querySelector('.sn-list').innerHTML=ZONES.map((z,i)=>'<button type="button" data-z="'+i+'">'+z.icon+' '+(z.n?z.n+' · ':'')+z.name+'</button>').join('');
   box.querySelector('.sn-list').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(b)goZone(ZONES[+b.dataset.z])});
   mc.addEventListener('click',e=>{const r=mc.getBoundingClientRect(),u=(e.clientX-r.left)/r.width*MS,v=(e.clientY-r.top)/r.height*MS;let best=null,bd=40;for(const z of ZONES){const [a,b]=toM(z.x,z.z),d=Math.hypot(a-u,b-v);if(d<bd){bd=d;best=z}}if(best)goZone(best)});
-  box.addEventListener('click',e=>{const a=e.target.closest('[data-sn]')?.dataset.sn;if(a==='map'){drawMap();mapEl.hidden=false}else if(a==='mapx')mapEl.hidden=true;else if(a==='home')close()});
+  box.addEventListener('click',e=>{const a=e.target.closest('[data-sn]')?.dataset.sn;if(a==='mode')setMode(MK[(MK.indexOf(mode)+1)%3]);else if(a==='map'){drawMap();mapEl.hidden=false}else if(a==='mapx')mapEl.hidden=true;else if(a==='home')close()});
   mapEl.addEventListener('click',e=>{if(e.target===mapEl)mapEl.hidden=true});
 
   // ---------- vòng lặp ----------
