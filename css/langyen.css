@@ -603,3 +603,12 @@ html.lite #zenToolbar [data-zen="boat"]{display:none!important}
 #roomBox.rm-ui-off.cham-lite .rm-hint{display:block!important}
 /* 27/11 trang lite trên laptop: trăng và chòi của ảnh nền lộ sau ô Âm nhạc, Xếp đá làm chữ khó đọc → nền ô đậm hơn, mờ nền phía sau */
 html.lite .lite-grid button,html.lite .lite-therapy,html.lite #home .dock-house>button{background:rgba(8,34,30,.74)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+
+.portal-entry.sq.snow{background-image:url(../img/o-xu-yen.webp)!important}
+html.lite #enterSnow{display:none!important}
+/* ---- Xứ Yên (27/11): ô thứ ba cạnh Rừng Yên, Vịnh Yên ---- */
+@media(max-width:760px){#home>#enterSnow{order:6}#home>.portal-entry.sq{flex:0 0 calc(33.333% - 12px);box-sizing:border-box}}
+@media(min-width:1200px){#home.hero{grid-template-columns:minmax(0,1fr) 160px 160px 160px}#home>#enterSnow{grid-column:4;grid-row:1/5;align-self:center;justify-self:stretch;min-width:0;width:100%;margin:0}#home>.dock{grid-column:1/-1}}
+@media(min-width:1300px){#home.hero{grid-template-columns:minmax(0,1fr) 190px 190px 190px}}
+@media(min-width:761px) and (max-width:1199px){#home.hero{display:flex;flex-direction:row;flex-wrap:wrap;column-gap:12px;align-items:flex-start}#home>*{flex:0 0 100%;order:1}#home>.cta{order:2;flex:0 0 100%;margin:4px 0 16px}#home>br{display:none}#home>.cta+*{order:2}
+  #home>.portal-entry.sq{order:3;flex:0 0 calc(33.333% - 12px);box-sizing:border-box;max-width:210px;margin:0 0 14px}#home>.dock{order:4}}
