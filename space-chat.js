@@ -61,7 +61,7 @@
     const r=await c.rpc('anyen_space_enter',{p_venue:id,p_tab:tab});if(g!==gen)return;
     if(r.error){if(!/anyen_space_enter|schema cache|does not exist/i.test(r.error.message))console.warn('space',r.error.message);emit('anyen-space-result',{id,ok:false,reason:'error'});return}
     const d=r.data||{};if(!d.ok){if(NOTE[d.reason])say(NOTE[d.reason]);emit('anyen-space-result',{id,ok:false,reason:d.reason||'unknown'});return}
-    info={id,session:d.session??null,instance:d.instance??null,therapist:d.therapist??null,me:uid,healer:!!(d.therapist&&d.therapist===uid)};
+    info={id,session:d.session??null,instance:d.instance??null,therapist:d.therapist??null,home:d.home??null,host:d.host??null,me:uid,healer:!!(d.therapist&&d.therapist===uid)};/* home, host: buổi hẹn Tư Gia / Đảo Yên và Chủ nhà */
     venue={id,name:spaceName(id),cap:d.capacity};name=profileName();
     const ch=c.channel(d.topic,{config:{private:true,presence:{key:uid},broadcast:{self:false}}});channel=ch;
     ch.on('presence',{event:'sync'},()=>{if(ch!==channel)return;const st=ch.presenceState()||{},next={};for(const [k,arr] of Object.entries(st)){if(arr&&arr[0])next[k]=arr[0]}
@@ -79,7 +79,7 @@
   }
   // Danh sách người có mặt (id, tên, giờ vào, cờ tự báo như host/cụm bàn) cho các phòng cộng đồng như Nhà Văn Hóa xếp chỗ và chọn người dẫn.
   function emitPeople(){if(!channel||!venue)return;emit('anyen-space-people',{id:venue.id,n:count(),me:uid,healer:!!(info&&info.therapist&&people[info.therapist]),
-    list:Object.entries(people).map(([id,p])=>({id,name:String(p.name||'').replace(/[<>]/g,'').slice(0,24),t:+p.t||0,host:p.host===true,c:Number.isInteger(p.c)&&p.c>=0&&p.c<6?p.c:null,s:Number.isInteger(p.s)&&p.s>=0&&p.s<36?p.s:null,col:typeof p.col==='string'&&/^#[0-9a-f]{6}$/i.test(p.col)?p.col:null,sty:['robe','linen','casual'].includes(p.sty)?p.sty:null}))})}
+    list:Object.entries(people).map(([id,p])=>({id,name:String(p.name||'').replace(/[<>]/g,'').slice(0,24),t:+p.t||0,host:p.host===true,c:Number.isInteger(p.c)&&p.c>=0&&p.c<16?p.c:null,s:Number.isInteger(p.s)&&p.s>=0&&p.s<36?p.s:null,col:typeof p.col==='string'&&/^#[0-9a-f]{6}$/i.test(p.col)?p.col:null,sty:['robe','linen','casual'].includes(p.sty)?p.sty:null}))})}
   window.addEventListener('anyen-space-ask',()=>{if(!channel)return;if(lastResult)emit('anyen-space-result',lastResult);emitPeople()});
   function spaceName(id){const m={xong_huong:'Nhà Hương · Haromy',nha_hoa_lan:'Nhà Sắc',xuong_gom:'Nhà Chạm',quan_tra:'Nhà Vị',chuong_gio:'Nhà Thanh',nha_niem:'Nhà Niệm',nha_van_hoa:'Nhà Văn Hóa',tu_gia:'Tư Gia',du_thuyen_yen:'Du thuyền Yên',tu_dao:'Đảo Yên',dao_ngoc_lan:'Đảo Ngọc Lan',dao_hang_vong:'Đảo Hang Vọng',dao_gio_thom:'Đảo Gió Thơm',dao_tinh_tra:'Đảo Tĩnh Trà',dao_da_lang:'Đảo Đá Lặng'};return m[id]||'Không gian chung'}
 
@@ -90,7 +90,7 @@
   window.addEventListener('anyen-lock-resumed',()=>{if(want)enter(want)});
   window.addEventListener('pagehide',()=>{if(venue&&client){try{client.rpc('anyen_space_leave')}catch(e){}}});
   window.anyenSpaceChat={state:()=>({venue:venue?.id||null,want,people:count(),quiet,unread,joined:!!channel}),session:()=>info&&channel?Object.assign({},info):null,
-    meta:o=>{const m={};if(o&&o.host===true)m.host=true;if(o&&Number.isInteger(o.c)&&o.c>=0&&o.c<6)m.c=o.c;if(o&&Number.isInteger(o.s)&&o.s>=0&&o.s<36)m.s=o.s;if(o&&typeof o.col==='string'&&/^#[0-9a-f]{6}$/i.test(o.col))m.col=o.col;if(o&&['robe','linen','casual'].includes(o.sty))m.sty=o.sty;meta=Object.assign({},meta,m);if(o&&o.s===-1)delete meta.s;if(o&&o.c===-1)delete meta.c;if(channel){try{channel.track(Object.assign({},meta,{name,t:joinT}))}catch(e){}}return true},
+    meta:o=>{const m={};if(o&&o.host===true)m.host=true;if(o&&Number.isInteger(o.c)&&o.c>=0&&o.c<16)m.c=o.c;if(o&&Number.isInteger(o.s)&&o.s>=0&&o.s<36)m.s=o.s;if(o&&typeof o.col==='string'&&/^#[0-9a-f]{6}$/i.test(o.col))m.col=o.col;if(o&&['robe','linen','casual'].includes(o.sty))m.sty=o.sty;meta=Object.assign({},meta,m);if(o&&o.s===-1)delete meta.s;if(o&&o.c===-1)delete meta.c;if(channel){try{channel.track(Object.assign({},meta,{name,t:joinT}))}catch(e){}}return true},
     say:text=>{text=String(text||'').trim().slice(0,MAX_LEN);if(!text||!channel)return false;const now=Date.now();if(now-lastSend<1200)return false;lastSend=now;
       channel.send({type:'broadcast',event:'chat',payload:{id:(crypto.randomUUID?crypto.randomUUID():String(now)+Math.random()),from:uid,name,text,t:now}});line(name,text,'me');render();return true},
     send:p=>{if(!channel||!p||typeof p.k!=='string')return false;channel.send({type:'broadcast',event:'room',payload:Object.assign({},p,{from:uid,t:Date.now()})});return true}};

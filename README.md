@@ -106,6 +106,12 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Nhà Thanh**: mỗi người tự chạm chuông, chiêng, chuông gió; người cùng ở trong nhà nghe cùng tiếng đó (`{k:'cg',a}`), nhiều người chạm cùng lúc thì các tiếng ngân chồng lên nhau. Thiền âm thanh 3 phút vẫn là của riêng mỗi người.
 - Nhà Sắc giữ ngắm hoa riêng từng người. Bản full và bản lite chạy cùng code. Không cần chạy thêm SQL.
 
+### Đợt 2: Tư Gia, nhà chính Đảo Yên (27/11)
+
+- Trong buổi hẹn (Chủ nhà + tối đa 5 bạn đã khớp), mọi người **thấy nhau đi lại, đứng ngồi tự do** (`roomSeats` với `walkers`: gửi `{k:'pos',x,z,a}` khi di chuyển, tối đa 5 lần/giây) và trò chuyện qua khung chat. **Chủ nhà pha trà, mời trà** như Healer ở Nhà Vị (`roomTea`, người dẫn là Chủ nhà: `space-chat.js` chuyển thêm `host`, `home`); khách không tự pha mà chờ Chủ nhà. Ngoài giờ hẹn hai nhà vẫn là không gian riêng, không hiện bảng trà.
+- Tư Gia: 6 chén trên bàn trà tròn, chén thứ k ở trước bồ đoàn thứ k. Nhà chính Đảo Yên: bộ ấm chén trên bàn ăn, mỗi ghế ăn một chén (14 chỗ ngồi: 8 sofa, 6 ghế; presence `c` nay nhận 0–15).
+- **Nối buổi hẹn Đảo Yên**: vào nhà chính là vào kênh `tu_dao_me__h<buổi>` (trước đây nhà chính không vào kênh nào). Nút **Vào phiên** của buổi hẹn Đảo Yên đưa tàu cập cầu tàu rồi tự đi lên trước cửa nhà chính; chạm cửa là vào gặp mọi người. Bản lite chỉ mời tới Tư Gia.
+
 ## Nhà Văn Hóa · 36 người · Ca Múa Nhạc và 5 hoạt động tập thể
 
 - Đi tới cửa Nhà Văn Hóa (hoặc mở `index.html?vao=nha_van_hoa`) là vào gian 16 × 11 × 6,8 m gỗ trầm `#42362A`, 6 cột `#2A1F15`, mái hai dốc có khe sáng cổ diêm dọc nóc. Sân khấu gỗ 6,4 × 2,8 m phía Nam, màn chiếu 16:9, 6 cụm bàn × 6 ghế = 36 chỗ, Tường Tây triển lãm 9 ô, Tường Đông 18 lời chúc và Quầy trà.
