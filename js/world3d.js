@@ -1573,12 +1573,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const HEAD_Y={hong:.53,cam_tu_cau:.5,nhai:.52,cuc:.47,lan:.48,sen:.55};
   // Scale each model into the old flower's frame: heads sit at HEAD_Y on a thin stem; huệ and oải hương are whole plants.
   const FLOWER_FIT={sen:{d:.22,y:.55},hong:{d:.16,y:.53},cam_tu_cau:{d:.21,y:.5},cuc:{d:.21,y:.47},nhai:{d:.23,y:.52},lan:{h:.5}};/* 3.40: đầu hoa to hơn, cân với thân như ảnh mẫu */
-  function flowerGeo(kind,lod='lo'){const key=kind+':'+lod;if(flowerGeos[key])return flowerGeos[key];const hi=lod==='hi';let g;{const B=flBuilder();(FLOWER_BUILD[kind]||FLOWER_BUILD.sen)(B,hi);g=B.geo()}if(kind==='nhai')g.rotateZ(.24);/* đầu huệ nghiêng 14° */g.computeBoundingBox();const bb=g.boundingBox,f=FLOWER_FIT[kind]||FLOWER_FIT.sen,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
+  function flowerGeo(kind,lod='lo'){const key=kind+':'+lod;if(flowerGeos[key])return flowerGeos[key];const hi=lod==='hi',ground=lod==='ground';/* ground: cuống ngắn, hoa sát đất (luống sen hồng bên Hồ Niệm, 27/11/2026) */let g;{const B=flBuilder();(FLOWER_BUILD[kind]||FLOWER_BUILD.sen)(B,hi);g=B.geo()}if(kind==='nhai')g.rotateZ(.24);/* đầu huệ nghiêng 14° */g.computeBoundingBox();const bb=g.boundingBox,f0=FLOWER_FIT[kind]||FLOWER_FIT.sen,f=ground&&!f0.h?{...f0,y:.18}:f0,sz=bb.getSize(new THREE.Vector3()),c=bb.getCenter(new THREE.Vector3());
     if(f.h){const s=f.h/sz.y;g.translate(-c.x,-bb.min.y,-c.z);g.scale(s,s,s);return flowerGeos[key]=g}
     const s=f.d/Math.max(sz.x,sz.z);g.translate(-c.x,-c.y,-c.z);g.scale(s,s,s);g.translate(0,f.y,0);
     const stemTop=f.y-sz.y*s*.35,P=[],S='#4f8a2c';P.push([part(new THREE.CylinderGeometry(.008,.011,stemTop,6),0,stemTop/2,0),S]);
     const B2=flBuilder();B2.solid(g,null);B2.solid(mergeColored(P),null);
-    /* lá bầu dục to, mặt phẳng, xanh tươi như bản mẫu */for(const [y,a,c] of [[.17,.3,'#3f8f2c'],[.27,2.9,'#5fae3a']]){const lf=flPetal({L:.075,W:.04,T:.008,seg:[12,6],base:'#3f8f2c',tip:c,bend:.25});flFlat(B2,lf,null,new THREE.Matrix4().makeTranslation(0,y,0).multiply(flM(a,-.35,.004)))}
+    /* lá bầu dục to, mặt phẳng, xanh tươi như bản mẫu */for(const [y0,a,c] of [[.17,.3,'#3f8f2c'],[.27,2.9,'#5fae3a']]){const y=ground?y0*.3:y0;const lf=flPetal({L:.075,W:.04,T:.008,seg:[12,6],base:'#3f8f2c',tip:c,bend:.25});flFlat(B2,lf,null,new THREE.Matrix4().makeTranslation(0,y,0).multiply(flM(a,-.35,.004)))}
     return flowerGeos[key]=B2.geo()}
 
   /* xem trước 6 loại hoa (kiểm thử / ảnh giới thiệu): hàng trên nhìn trước, hàng dưới nhìn từ trên */
@@ -1671,7 +1671,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
         const sh=new THREE.Shape(),S=24,a0=gd.th-BED_ARC/2;for(let k=0;k<=S;k++){const a=a0+k/S*BED_ARC;sh[k?'lineTo':'moveTo'](Math.cos(a)*BED_OUT,-Math.sin(a)*BED_OUT)}for(let k=S;k>=0;k--){const a=a0+k/S*BED_ARC;sh.lineTo(Math.cos(a)*BED_IN,-Math.sin(a)*BED_IN)}
         const mg=new THREE.ExtrudeGeometry(sh,{depth:.12,bevelEnabled:true,bevelThickness:.06,bevelSize:.14,bevelSegments:1,curveSegments:4});mg.rotateX(-Math.PI/2);
         const mound=new THREE.Mesh(mg,moundM);mound.position.set(gd.lx,terrainHeight(gd.bx,gd.bz)-.03,gd.lz);mound.userData.garden=gd;scene.add(mound);
-        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind),flowerMatLo,Math.max(1,pts.length));pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.6;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.12,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
+        const mesh=new THREE.InstancedMesh(flowerGeo(gd.kind,gd.kind==='sen'?'ground':'lo'),flowerMatLo,Math.max(1,pts.length));pts.forEach(([x,z],i)=>{const s=1.7+rnd()*.6;e.set((rnd()-.5)*.25,rnd()*Math.PI*2,(rnd()-.5)*.25);q.setFromEuler(e);v.set(x,terrainHeight(x,z)+.12,z);sc.set(s,s,s);m4.compose(v,q,sc);mesh.setMatrixAt(i,m4)});
         mesh.count=pts.length;mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;mesh.userData.garden=gd;scene.add(mesh);gd.mesh=mesh;
         // lá xanh thấp dưới chân hoa
         const nb=Math.ceil(pts.length/2),bush=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),new THREE.MeshStandardMaterial({color:'#3d7a3a',roughness:.9,flatShading:true}),Math.max(1,nb));for(let i=0;i<nb;i++){const [x,z]=pts[i*2];e.set(0,rnd()*6,0);q.setFromEuler(e);v.set(x+(rnd()-.5)*.2,terrainHeight(x,z)+.2,z+(rnd()-.5)*.2);sc.set(1.4,.55,1.4);m4.compose(v,q,sc);bush.setMatrixAt(i,m4)}bush.count=nb;bush.instanceMatrix.needsUpdate=true;bush.userData.garden=gd;scene.add(bush);
