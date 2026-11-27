@@ -19,6 +19,14 @@
 - 3 kiểu trang phục có silhouette khác nhau: áo thiền dài, linen có áo khoác ngắn, thường ngày có quần riêng; màu cá nhân vẫn được đồng bộ qua Supabase.
 - Giữ ngồi thiền/thiền hành khi gõ chuông.
 
+## Xứ Yên · Arctic Wonderland (vùng tuyết Lapland, Giáng sinh) · bản xem trước 27/11
+
+- Ô **Khám phá Xứ Yên** ở trang chính (cạnh Rừng Yên, Vịnh Yên) mở `js/snow3d.js`: mô-đun ES riêng, tải khi bấm, tự dựng một lớp 3D toàn màn hình (canvas, cảnh, camera, nhân vật riêng), không đụng tới Rừng Yên hay Vịnh Yên. 🏠 Trang chính để ra.
+- Bố cục theo bản đồ minh hoạ Xứ Yên: cổng gỗ Xứ Yên phía trước, **2 Làng Lapland** ở giữa quanh cây thông lớn và chợ Giáng sinh; **1 Rừng Kính** (lều kính vòm trắc địa trên sàn gỗ, bờ bắc hồ, vào lều để nằm ngắm cực quang, có vòng thở); **3 Rừng Thông & Husky** (phía tây, xe husky chạy một vòng rừng); **4 Khu Vui Chơi Giáng Sinh** (vòng quay, ngựa gỗ quay chậm, bếp lửa kota, người tuyết); **5 Trang Trại Tuần Lộc** (bãi rào, lều lavvu, nhà gỗ); **6 Hồ Băng & Xe Trượt** (hồ phẳng phản chiếu cực quang, xe trượt tuyết chạy chậm một vòng); **Chùa Tuyết Yên** trên núi góc trên bên trái (bậc đá, đèn đá, gác chuông, ngồi thiền trước Phật, thỉnh chuông).
+- Bầu trời đêm có cực quang dựng bằng shader (dải lục toả tia, viền tím hồng), mặt hồ băng phản chiếu bầu trời; tuyết rơi nhẹ. Mọi vật thể gộp thành vài lưới nên chạy nhẹ trên điện thoại (máy cảm ứng dùng ít cây, ít tuyết, vân đất nhỏ hơn).
+- Chạm mặt tuyết để đi, vuốt để nhìn quanh, chụm hai ngón để lại gần; nút vàng hiện khi tới gần một hoạt động. 🗺 Bản đồ để tới ngay từng khu.
+- Chụp thử: `__snowGo('rungkinh')`, `__snowAct('aurora')`, `__snowCam([x,y,z],[tx,ty,tz])` / `__snowCam(null)`, `__snowMap()`.
+
 ## Vịnh Hạ Long – Lan Hạ – Bái Tử Long · Du thuyền Yên (beta)
 
 - Bản đồ chia vùng: Toàn cảnh · Vịnh Hạ Long · Vịnh Lan Hạ · Vịnh Bái Tử Long; danh sách điểm theo vùng, mỗi điểm có nút 📸 check-in (đưa tàu tới góc chụp đẹp và mở máy ảnh, danh thắng phía sau lưng).
