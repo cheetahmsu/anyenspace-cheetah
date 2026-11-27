@@ -1048,21 +1048,77 @@
     function focus(i){cur=i;const o=pots[i],p=new THREE.Vector3();o.getWorldPosition(p);const k=KINDS[i];want.tx=p.x;want.ty=p.y+(k.hang?.35:.75);want.tz=p.z;want.dist=1.6;st.yawC=st.yaw=Math.atan2(-p.x,1);
       rmHint(k.name+' · '+k.sci+' · '+k.note);render()}
     function overview(){cur=-1;want.tx=0;want.ty=.9;want.tz=-.6;want.dist=4.4;st.yawC=0;render()}
+    // 27/11: hai bài nhìn chậm, nhẹ cho cả bản lite (không thêm đèn, chỉ một vòng sáng nhỏ):
+    // · Tìm năm sắc: chạm năm màu khác nhau mình thấy trong nhà kính, mỗi lần một tiếng chuông nhỏ và tên màu hiện lên.
+    // · Một màu hôm nay: chọn một màu hợp với lòng mình, nhà kính nhuộm dịu màu đó, ngồi ngắm một phút, rồi mang màu ấy ra đời thực;
+    //   tự nguyện ghi vào phần Kết quả AnSense của Nhật ký (localStorage yenSacLog, không cần cơ sở dữ liệu).
+    const SAC_BELLS=[262,294,330,392,440],hsl={},tmpC=new THREE.Color(),darkC=new THREE.Color('#0d1612');
+    function sacName(c){c.getHSL(hsl,THREE.SRGBColorSpace);const H=hsl.h*360,S=hsl.s,L=hsl.l;
+      if(L>.8&&S<.6)return 'Trắng ngà';if(L<.13)return 'Nâu than';if(S<.13)return L>.5?'Xám bạc':'Xám đá';
+      if(H<14||H>=345)return L<.34?'Đỏ trầm':'Đỏ son';if(H<42)return L<.4?'Nâu gỗ':'Cam đất';if(H<68)return L<.36?'Nâu vàng':'Vàng nắng';
+      if(H<165)return L<.3?'Xanh rêu':'Xanh lá';if(H<200)return 'Xanh ngọc';if(H<255)return 'Xanh lam';if(H<292)return 'Tím lan';return L<.38?'Tím hồng':'Hồng phấn'}
+    const MAU=[['Xanh lá non','#9cc79a','tươi mới, như lá vừa mở','một chiếc lá, một khoảng cỏ'],['Xanh lam','#8fb3cf','lắng dịu, như mặt nước yên','một góc trời, một ly nước'],
+      ['Vàng nắng','#e6cf8f','ấm áp, như nắng sớm','một vệt nắng, một quả chín'],['Hồng phấn','#e3b1bf','dịu dàng với chính mình','một cánh hoa, một chiếc áo'],
+      ['Tím lan','#b9a3cf','lặng yên, muốn chậm lại','một bông hoa nhỏ ven đường, ánh chiều'],['Trắng sữa','#ece4d6','nhẹ tênh, muốn buông bớt','một đám mây, một tách trà']];
+    const dot=(hex,dash)=>'<span style="display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:5px;'+(dash?'border:1px dashed #f5e6c988':'border:1px solid #f5e6c966;background:'+hex)+'"></span>';
+    // vòng sáng nhỏ nở ra chỗ vừa chạm
+    const ping=new THREE.Mesh(new THREE.RingGeometry(.05,.075,24),new THREE.MeshBasicMaterial({color:'#fff6dc',transparent:true,opacity:0,depthTest:false}));ping.renderOrder=9;ping.raycast=()=>{};ping.visible=false;st.sc.add(ping);
+    let lamp=null;st.sc.traverse(o=>{if(o.isPointLight&&!lamp)lamp=o});
+    const T0={bg:st.sc.background.clone(),hemi:st.hemi.color.clone(),key:st.key.color.clone(),sky:sky.color.clone(),lamp:lamp&&lamp.color.clone()},tint={c:new THREE.Color(),k:0,want:0,t:0};
+    st.tick.push(()=>{if(ping.visible){const u=(performance.now()-ping.userData.t0)/1000;if(u>1.2)ping.visible=false;else{ping.scale.setScalar(1+u*3);ping.material.opacity=.85*(1-u/1.2);ping.lookAt(st.cam.position)}}
+      const nw=performance.now(),dt=Math.min(.1,(nw-(tint.t||nw))/1000);tint.t=nw;
+      if(tint.k!==tint.want){tint.k+=Math.sign(tint.want-tint.k)*Math.min(Math.abs(tint.want-tint.k),dt/3);const k=tint.k;/* chuyển màu trong khoảng 3 giây, chỉ đổi sắc ánh sáng, không tăng độ sáng */
+        st.sc.background.copy(T0.bg).lerp(tmpC.copy(tint.c).lerp(darkC,.55),.6*k);st.hemi.color.copy(T0.hemi).lerp(tint.c,.7*k);st.key.color.copy(T0.key).lerp(tint.c,.55*k);sky.color.copy(T0.sky).lerp(tint.c,.6*k);if(lamp)lamp.color.copy(T0.lamp).lerp(tint.c,.6*k)}});
+    let act=null;
+    function stopAct(){if(act&&act.id)clearInterval(act.id);act=null;st.tapAny=null;tint.want=0}
+    function hitColor(ray){for(const h of ray.intersectObjects(st.sc.children,true)){let o=h.object,vis=o.isMesh;for(let p=o;p&&vis;p=p.parent)if(!p.visible)vis=false;if(!vis)continue;
+        let m=o.material;if(Array.isArray(m))m=m[h.face?h.face.materialIndex:0];if(!m||!m.color||(m.transparent&&m.opacity<.3))continue;return {h,c:m.color}}return null}
+    function tapSac(ray){if(!act||act.k!=='nam'||act.done)return false;const r=hitColor(ray);if(!r){rmHint('Chạm vào một chậu lan, chiếc lá hay sàn gỗ nhé');return true}
+      ping.position.copy(r.h.point);ping.userData.t0=performance.now();ping.visible=true;const n=sacName(r.c);
+      if(act.found.some(f=>f.n===n)){rmHint('Màu '+n+' bạn đã thấy rồi · thử nhìn sang chỗ khác');return true}
+      act.found.push({n,hex:'#'+r.c.getHexString(THREE.SRGBColorSpace)});strike(SAC_BELLS[act.found.length-1],4,.07,[[1,1],[2.76,.2]]);
+      if(act.found.length<5)rmHint('✨ '+n+' · còn '+(5-act.found.length)+' màu nữa');
+      else{act.done=true;st.tapAny=null;rmHint('🙏 Bạn vừa nhìn thấy năm sắc · thở ra một hơi thật chậm');setTimeout(()=>{if(st.run&&act&&act.k==='nam')strike(196,7,.08,[[1,1],[2.76,.3]])},1400)}
+      render();return true}
+    function sacLog(m){try{const L=JSON.parse(localStorage.getItem('yenSacLog')||'[]'),E=Array.isArray(L)?L:[],t=Date.now(),d=new Date(t);
+      E.unshift({kind:'sac',title:'🌸 Nhà Sắc · Một màu hôm nay',start:t,end:t,when:d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),dur:'',
+        line:'Màu '+m[0]+' · '+m[2]+' · Mang về đời thực: tìm màu ấy ở '+m[3],hex:m[1],qa:[]});
+      localStorage.setItem('yenSacLog',JSON.stringify(E.slice(0,60)));window.dispatchEvent(new Event('anyen-ansense-refresh'));return true}catch(e){return false}}
     function render(){const k=KINDS[cur];
+      if(act&&act.k==='nam'){rmPanel.innerHTML='<p>🎨 <b>Tìm năm sắc</b> · '+(act.done?'Năm sắc của bạn lúc này. Lát nữa ra ngoài, thử tìm lại vài màu trong số này quanh mình.':'Nhìn chậm quanh nhà kính, chạm vào năm màu khác nhau mà bạn thấy: cánh hoa, chậu đất, chiếc lá, sàn gỗ…')+'</p>'+
+        '<div class="rm-row">'+[0,1,2,3,4].map(i=>{const f=act.found[i];return '<span style="font-size:13px;padding:3px 8px;border-radius:999px;border:1px solid #c8a96a44">'+(f?dot(f.hex)+f.n:dot('',1)+'<span style="opacity:.5">…</span>')+'</span>'}).join('')+'</div>'+
+        '<div class="rm-row">'+(act.done?'<button data-ns="nam">🔁 Tìm lại</button>':'')+'<button data-ns="stop">↩ '+(act.done?'Xong':'Dừng')+'</button></div>';return}
+      if(act&&act.k==='mau'){const m=MAU[act.m];
+        if(act.phase==='pick'){rmPanel.innerHTML='<p>🌈 <b>Một màu hôm nay</b> · Lòng mình lúc này gần với màu nào? Không có màu đúng hay sai.</p><div class="rm-row">'+
+          MAU.map((x,i)=>'<button data-ns="m'+i+'" title="'+x[2]+'">'+dot(x[1])+x[0]+'</button>').join('')+'</div><div class="rm-row"><button data-ns="stop">↩ Thôi</button></div>';return}
+        if(act.phase==='sit'){rmPanel.innerHTML='<p>'+dot(m[1])+'<b>'+m[0]+'</b> · '+m[2]+'. Ngồi yên, để màu ấy lan nhẹ khắp nhà kính · còn <span data-ns-left>'+act.left+'</span>s</p><div class="rm-row"><button data-ns="stop">⏹ Dừng</button></div>';return}
+        rmPanel.innerHTML='<p>'+dot(m[1])+'Hôm nay, thử tìm màu <b>'+m[0]+'</b> ngoài đời: '+m[3]+'. Gặp được thì dừng lại một hơi thở.</p><div class="rm-row">'+
+          (act.saved?'<span style="font-size:13px;opacity:.85">✓ Đã ghi vào Nhật ký · Kết quả AnSense</span>':'<button data-ns="log">📓 Ghi màu này vào nhật ký</button>')+'<button data-ns="stop">↩ Xong</button></div>'+(act.saved?'':'<p class="rm-quote" style="font-size:12px">Ghi hay không tuỳ bạn.</p>');return}
       rmPanel.innerHTML='<p>'+(sess?'🧘 '+(KINDS[sess.i].look)+' · còn '+sess.left+'s':k?'<b>'+k.name+'</b> <i>'+k.sci+'</i> · '+k.note:'Sắc là cửa của mắt. Chọn một chậu lan, nhìn thật chậm, không cần gọi tên điều mình thấy.')+'</p>'+
-        '<div class="rm-row">'+KINDS.map((x,i)=>'<button data-ns="f'+i+'"'+(i===cur?' class="rm-gold"':'')+'>🌸 '+x.name.replace('Lan ','')+'</button>').join('')+'</div>'+
-        '<div class="rm-row"><button class="rm-gold" data-ns="sess">'+(sess?'⏹ Dừng thiền ngắm hoa':'🧘 Thiền ngắm hoa 2 phút')+'</button>'+(cur>=0&&!sess?'<button data-ns="all">↩ Nhìn toàn nhà</button>':'')+'</div>'+
+        (sess?'':'<div class="rm-row">'+KINDS.map((x,i)=>'<button data-ns="f'+i+'"'+(i===cur?' class="rm-gold"':'')+'>🌸 '+x.name.replace('Lan ','')+'</button>').join('')+'</div>')+
+        '<div class="rm-row"><button class="rm-gold" data-ns="sess">'+(sess?'⏹ Dừng thiền ngắm hoa':'🧘 Thiền ngắm hoa 2 phút')+'</button>'+(sess?'':'<button data-ns="nam">🎨 Tìm năm sắc</button><button data-ns="mau">🌈 Một màu hôm nay</button>')+(cur>=0&&!sess?'<button data-ns="all">↩ Nhìn toàn nhà</button>':'')+'</div>'+
         '<p class="rm-quote">🌀 Muốn sang cảnh Viverse “ORCHID hoa lan”, hãy ra Cổng Viverse bên hông nhà.</p>'}
     const LOOKS=['Thở vào, mắt mở nhẹ. Thở ra, để ánh nhìn mềm lại.','Nhìn màu sắc như lần đầu được thấy.','Nếu ý nghĩ trôi đi, nhẹ nhàng đưa mắt về bông hoa.','Nhìn cả khoảng trống quanh bông hoa.','Một bông hoa nở không vội. Hơi thở cũng không cần vội.','Mỉm cười với bông hoa, rồi khép mắt một hơi thở.'];
+    const MAU_LOOKS={40:'Màu này đang ở đâu trong lòng bạn? Không cần trả lời, chỉ cần cảm.',20:'Thở ra thật dài · vai mềm xuống'};
+    function stopSess(){if(sess){clearInterval(sess.id);sess=null;sky.intensity=1.1}}
     render();rmPanel.onclick=e=>{const a=e.target.closest('[data-ns]')?.dataset.ns;if(!a)return;
+      if(a==='stop'){const was=act&&act.k;stopAct();rmHint(was==='nam'?'Mắt đã nghỉ một chút · chạm một chậu lan để ngắm gần':'Nhà Sắc · chạm một chậu lan để ngắm gần');render();return}
+      if(a==='nam'){stopSess();stopAct();overview();act={k:'nam',found:[]};st.tapAny=tapSac;rmHint('Nhìn quanh nhà kính · chạm vào một màu bạn thấy');render();return}
+      if(a==='mau'){stopSess();stopAct();overview();act={k:'mau',phase:'pick',m:0};rmHint('Chọn một màu hợp với lòng mình lúc này');render();return}
+      if(a[0]==='m'&&act&&act.k==='mau'&&act.phase==='pick'){const m=MAU[act.m=+a.slice(1)];tint.c.set(m[1]);tint.want=1;act.phase='sit';act.left=60;strike(262,6,.07,[[1,1],[2.76,.3]]);rmHint('Để màu '+m[0]+' lan nhẹ khắp nhà kính · thở chậm, chỉ cần ngắm');render();
+        act.id=setInterval(()=>{if(!roomOpen||!st.run||!act||act.k!=='mau'){if(act&&act.id)clearInterval(act.id);return}act.left--;if(MAU_LOOKS[act.left])rmHint(MAU_LOOKS[act.left]);
+          if(act.left<=0){clearInterval(act.id);act.id=0;act.phase='done';strike(196,8,.08,[[1,1],[2.76,.3]]);rmHint('🙏 Một phút cùng màu '+MAU[act.m][0]+' đã xong');render();return}
+          const s=rmPanel.querySelector('[data-ns-left]');if(s)s.textContent=act.left},1000);return}
+      if(a==='log'&&act&&act.k==='mau'){act.saved=sacLog(MAU[act.m]);if(!act.saved)rmHint('Chưa ghi được, trình duyệt đang chặn lưu trữ');render();return}
+      if(act)return;
       if(a[0]==='f'){if(sess)return;focus(+a.slice(1));return}
       if(a==='all'){overview();return}
-      if(a==='sess'){if(sess){clearInterval(sess.id);sess=null;sky.intensity=1.1;rmHint('Đã dừng thiền ngắm hoa');render();return}
+      if(a==='sess'){if(sess){stopSess();rmHint('Đã dừng thiền ngắm hoa');render();return}
         const i=cur>=0?cur:Math.floor(Math.random()*KINDS.length);focus(i);sess={i,left:120,id:0};strike(262,6,.08,[[1,1],[2.76,.3]]);rmHint(LOOKS[0]);render();
         sess.id=setInterval(()=>{if(!roomOpen||!st.run){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)rmHint(LOOKS[(120-sess.left)/20%LOOKS.length]);
           if(sess.left<=0){clearInterval(sess.id);sess=null;sky.intensity=1.1;strike(196,8,.1,[[1,1],[2.76,.3]]);rmHint('🙏 Buổi thiền ngắm hoa đã xong · Mang ánh nhìn dịu dàng này ra ngoài kia')}
           const p=rmPanel.querySelector('p');if(p&&sess)p.textContent='🧘 '+KINDS[sess.i].look+' · còn '+sess.left+'s';else render()},1000)}};
-    st.cleanup=()=>{if(sess)clearInterval(sess.id)}}
+    st.cleanup=()=>{if(sess)clearInterval(sess.id);if(act&&act.id)clearInterval(act.id);st.tapAny=null}}
   // ---------------------------------------------------------------- Nhà chính Đảo Yên (theo phối cảnh: nhà gỗ mái dốc, trần đan mây, sofa chữ L, bàn ăn 6 ghế, kệ san hô)
   function roomDaoYen(st){
     const sc=st.sc,texs=[],HW=6,HD=4,EAVE=3.3,RIDGE=5.4;
