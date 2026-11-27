@@ -937,7 +937,7 @@
   const SH_HIT_G=new THREE.SphereGeometry(.85,6,4),SH_HIT_M=new THREE.MeshBasicMaterial({visible:false});
   /* viền liền nét sát mép vỏ, cùng màu với màu đậm nhất của chính vỏ đó; không vẽ bóng: một lớp mặt sau đẩy ra theo pháp tuyến rất mỏng */const SH_EDGE_C=new Map();
   function shEdgeMat(s,t){s=((s|0)%SH_N+SH_N)%SH_N;t=((t|0)%SH_T+SH_T)%SH_T;const k=s+'_'+t;let M=SH_EDGE_C.get(k);if(!M){const L=c=>{const x=new THREE.Color(c);return .2126*x.r+.7152*x.g+.0722*x.b},cs=SH_COL[s][t].slice().sort((p,q)=>L(p)-L(q)),c=new THREE.Color(cs[0]).multiplyScalar(.82);
-      M=new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});M.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(objectNormal) * 0.06;')};SH_EDGE_C.set(k,M)}return M}
+      M=new THREE.MeshBasicMaterial({color:c,side:THREE.BackSide});M.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed += normalize(normal) * 0.06;')};SH_EDGE_C.set(k,M)}return M}
   function shMesh(s,t,sandy){const g=shGeo(s,t),m=new THREE.Mesh(g,sandy?SH_SANDY:shMat(s));m.scale.setScalar(.34);const e=new THREE.Mesh(g,shEdgeMat(s,t));e.raycast=()=>{};m.add(e);return m}
   // ---- 3 mẫu Khay / Giỏ (mỗi mẫu < 450 tam giác, 5 chỗ neo cố định cho vỏ)
   const BIN_INFO=[{name:'Giỏ Mây Đan Mắt Cáo',short:'Giỏ Mây',ic:'🧺',style:'Giản Dị'},{name:'Khay Gốm Sóng Biển',short:'Khay Sóng Ngọc',ic:'🌊',style:'Sang Chảnh'},{name:'Đĩa Sứ Vỏ Sò Hồng Đào',short:'Đĩa Sò Hồng',ic:'🐚',style:'Hạnh Phúc'}];

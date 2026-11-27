@@ -601,3 +601,5 @@ html.lite #zenToolbar [data-zen="boat"]{display:none!important}
 @media(min-width:761px){html.lite .lite-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}html.lite .lite-grid button small{font-size:11px}}
 /* Nhà Chạm (lite và full): lời nhắc "chạm đất…" luôn hiện, vì người chơi nặn bằng cách chạm vào đất */
 #roomBox.rm-ui-off.cham-lite .rm-hint{display:block!important}
+/* 27/11 trang lite trên laptop: trăng và chòi của ảnh nền lộ sau ô Âm nhạc, Xếp đá làm chữ khó đọc → nền ô đậm hơn, mờ nền phía sau */
+html.lite .lite-grid button,html.lite .lite-therapy,html.lite #home .dock-house>button{background:rgba(8,34,30,.74)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
