@@ -2016,7 +2016,7 @@
   window.__goTuDao=goTuDao;
   // ---- Bước xuống Đảo Yên = sang một không gian 3D riêng: vùng đảo của vịnh ẩn đi, chỉ còn Đảo Yên, du thuyền đang neo ở cầu tàu,
   // thuyền gỗ, thuyền nan đậu rải quanh đảo, vòng núi đá xa làm phông và hai hòn gần nhất (Trống Mái, Đỉnh Hương). Chuyển cảnh bằng một lớp mờ.
-  function ensureIslandScene(){if(bayIslandScene)return;const prev=bayGroup,g=new THREE.Group();prev.add(g);bayGroup=g;const cx=TU_DAO.x+TD_O[0],cz=TU_DAO.z;
+  function ensureIslandScene(){if(bayIslandScene)return;if(window.anyenLite){bayIslandScene=new THREE.Group();return}/* lite: nền tĩnh, không thuyền, phao, đảo đá quanh đảo */const prev=bayGroup,g=new THREE.Group();prev.add(g);bayGroup=g;const cx=TU_DAO.x+TD_O[0],cz=TU_DAO.z;
     try{bayChunks.clear();
       const hulls=['#7d5a3d','#8a6446','#6f4f36','#94704d'];
       [[.45,112,0],[1.05,98,1],[1.6,124,0],[2.2,104,1],[-.35,118,1],[-.95,102,0],[-1.55,128,1],[-2.25,108,0],[2.62,150,1],[-2.62,146,0]].forEach(([a,d,sp],i)=>{
@@ -2071,16 +2071,16 @@
     const root=bayGroup;bayGroup=bayLandGroup;
     /* Trang lite: chỉ dựng quanh Đảo Yên (đất liền, đảo đá, danh thắng ở xa thì bỏ), không dựng cả vịnh */const LITE=!!window.anyenLite,nearTD=(x,z,r=0)=>!LITE||Math.hypot(x-TU_DAO.x,z-TU_DAO.z)<150+r;
     for(const n of d.nature){
-      if(n.kind==='land')for(const L of n.params.polygons){if(LITE&&!L.pts.some(([x,z])=>nearTD(x,z)))continue;const s=new THREE.Shape(L.pts.map(([x,z])=>new THREE.Vector2(x,-z)));const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(1,L.height-6),bevelEnabled:L.height>4,bevelThickness:6,bevelSize:14,bevelSegments:3,curveSegments:4});geo.rotateX(-Math.PI/2);
+      if(n.kind==='land'&&!LITE)for(const L of n.params.polygons){if(LITE&&!L.pts.some(([x,z])=>nearTD(x,z)))continue;const s=new THREE.Shape(L.pts.map(([x,z])=>new THREE.Vector2(x,-z)));const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(1,L.height-6),bevelEnabled:L.height>4,bevelThickness:6,bevelSize:14,bevelSegments:3,curveSegments:4});geo.rotateX(-Math.PI/2);
         const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:L.color,roughness:1}));m.position.y=-4;bayGroup.add(m);bayLand.push(L);
         if(L.hills){const xs=L.pts.map(p=>p[0]),zs=L.pts.map(p=>p[1]),inP=(x,z)=>{let c=false;for(let a=0,b2=L.pts.length-1;a<L.pts.length;b2=a++){const [x1,z1]=L.pts[a],[x2,z2]=L.pts[b2];if((z1>z)!==(z2>z)&&x<(x2-x1)*(z-z1)/(z2-z1)+x1)c=!c}return c};
           let made=0;for(let k=0;k<L.hills*20&&made<L.hills;k++){const x=Math.min(...xs)+bayHash(k,L.height,1)*(Math.max(...xs)-Math.min(...xs)),z=Math.min(...zs)+bayHash(k,L.height,2)*(Math.max(...zs)-Math.min(...zs));const small=L.hills<=10,r=small?40+bayHash(k,3,3)*30:60+bayHash(k,3,3)*90;
             const rx=r*(small?1.25:.8);if(!inP(x,z)||!inP(x+rx,z)||!inP(x-rx,z)||!inP(x,z+r*.8)||!inP(x,z-r*.8))continue;/* đảo nhỏ (Tuần Châu): đồi thấp thoải, dài theo thân đảo, thay cho nửa vòm tròn */const hh=small?r*(.22+bayHash(k,4,4)*.15)+L.height:r*(.45+bayHash(k,4,4)*.5)+L.height;streamAdd(x,z,()=>addKarst(x,z,r,hh,9000+k,small?{round:true,dome:1,sx:1.5,sz:.85,rot:0}:{round:true,dome:.75}));made++}}}
-      if(n.kind==='backdrop'){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
-      if(n.kind==='karst_field')n.params.items.forEach(([x,z,r,h,v],i)=>{if(!nearTD(x,z,r))return;const ex=fieldExtras(i,x,z,r,h,v);for(const e of ex)bayExtraRocks.push([e[0],e[1],e[2]*1.3]);
+      if(n.kind==='backdrop'&&!LITE){bayBackdrop=paintBackdrop(n.params,ts.sun_azimuth||0);bayGroup.add(bayBackdrop)}
+      if(n.kind==='karst_field'&&!LITE)n.params.items.forEach(([x,z,r,h,v],i)=>{if(!nearTD(x,z,r))return;const ex=fieldExtras(i,x,z,r,h,v);for(const e of ex)bayExtraRocks.push([e[0],e[1],e[2]*1.3]);
         streamAdd(x,z,()=>{addKarst(x,z,r,h,i*7+v,{shape:v});for(const e of ex)addKarst(e[0],e[1],e[2],e[3],e[4],{shape:e[5],rot:e[6]})})})
     }
-    for(const p of d.props){if(!nearTD(p.x,p.z))continue;
+    for(const p of d.props){if(LITE||!nearTD(p.x,p.z))continue;/* lite: nền tĩnh, không đảo đá, thuyền, phao */
       if(p.kind==='landmark'){const q=p.params||{};STREAM.lms.push({p,x:p.x,z:p.z,r:q.shape==='village'?200:(q.radius||40)*1.6+30,g:null,ms:null});if(q.shape==='village')for(const v of villageRocks(p))bayExtraRocks.push([v[0],v[1],v[6]])}
       if(p.kind==='moored_boat'){const g=makeJunk(p.params?.hull);g.position.set(p.x,0,p.z);g.rotation.y=p.params?.heading||0;g.scale.setScalar(.9);bayGroup.add(g);bayBuoys.push({g,x:p.x,z:p.z})}
       if(p.kind==='junk_boat'){const g=makeJunk(p.params?.hull);bayGroup.add(g);bayJunks.push({g,x:p.x,z:p.z,r:p.params?.loop_radius||50,sp:p.params?.speed||3,ph:p.params?.phase||0})}
@@ -2090,7 +2090,11 @@
     }
     bayGroup=root;
     window.__bayRockCount={field:(d.nature.find(n=>n.kind==='karst_field')?.params.items.length)||0,extra:bayExtraRocks.length,cells:STREAM.cells.size,landmarks:STREAM.lms.length};
-    bayChunks.clear();addTuDaoMountain();
+    /* Trang lite: nền tĩnh cát trắng biển xanh. Bỏ trời mây và mặt biển gợn sóng (shader nặng), thay bằng mặt biển phẳng một màu và nền trời vẽ sẵn một lần */
+    if(LITE){baySky.visible=false;baySea.visible=false;bayShip.group.visible=false;const sea=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshBasicMaterial({color:'#4fb0c0',fog:false,toneMapped:false}));sea.rotation.x=-Math.PI/2;sea.position.set(TU_DAO.x,-.03,TU_DAO.z);root.add(sea);
+      const cv=document.createElement('canvas');cv.width=4;cv.height=256;const x=cv.getContext('2d'),gr=x.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#bfe0ea');gr.addColorStop(.7,'#e4f1f2');gr.addColorStop(1,'#f3f6f1');x.fillStyle=gr;x.fillRect(0,0,4,256);
+      const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;window.__liteBayBg=tx}
+    bayChunks.clear();if(!LITE)addTuDaoMountain();
     bayKarstMeshes=finishKarsts();
     buildTuDao();
     buildNav(d,ship.exterior);
