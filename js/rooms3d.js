@@ -126,8 +126,8 @@
     const dish=new THREE.Mesh(new THREE.CylinderGeometry(.12,.1,.02,16),mat('#d8cba8'));dish.position.set(.35,.01,.12);cen.add(dish);const tongs=new THREE.Mesh(new THREE.BoxGeometry(.24,.01,.02),new THREE.MeshStandardMaterial({color:'#b07a3a',metalness:.6,roughness:.3}));tongs.position.set(.3,.02,-.12);tongs.rotation.y=.4;cen.add(tongs);
     const pinch=[];for(let k=0;k<3;k++){const p=new THREE.Group();p.visible=false;cen.add(p);pinch.push(p)}
     /* 27/11: 6 tọa cụ xếp quanh bàn (2 trước, 2 sau, 2 đầu bàn), chạm tọa cụ để ngồi quay vào bàn */
-    {const TZ=-1.6;for(const [x,z] of [[-.5,TZ+.85],[.5,TZ+.85],[-.5,TZ-.85],[.5,TZ-.85],[-1.4,TZ],[1.4,TZ]]){const cu=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.12,16),mat('#6a7a5a'));cu.position.set(x,.06,z);W.add(cu);
-      const end=Math.abs(z-TZ)<.3,face=end?(x>0?-Math.PI/2:Math.PI/2):z>TZ?Math.PI:0,ax=end?x+Math.sign(x)*.55:x,az=end?z:z+Math.sign(z-TZ)*.55;/* ngồi thẳng mặt vào bàn */rTap(st,cu,()=>{const Wk=st.walk;if(!Wk||!Wk.goSeat)return;st.camOv=false;Wk.goSeat({x,z,a:face,y:.1,ax,az});rmHint('🧘 Ngồi trên tọa cụ bên bàn hương · bấm Đứng lên để rời chỗ')})}
+    const HSEATS=[];{const TZ=-1.6;for(const [x,z] of [[-.5,TZ+.85],[.5,TZ+.85],[-.5,TZ-.85],[.5,TZ-.85],[-1.4,TZ],[1.4,TZ]]){const cu=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.12,16),mat('#6a7a5a'));cu.position.set(x,.06,z);W.add(cu);
+      const end=Math.abs(z-TZ)<.3,face=end?(x>0?-Math.PI/2:Math.PI/2):z>TZ?Math.PI:0,ax=end?x+Math.sign(x)*.55:x,az=end?z:z+Math.sign(z-TZ)*.55;/* ngồi thẳng mặt vào bàn */const k=HSEATS.length;HSEATS.push({x,z,a:face,y:.1,ax,az});rTap(st,cu,()=>{st.camOv=false;if(seatsH.tap(k))rmHint('🧘 Ngồi trên tọa cụ bên bàn hương · bấm Đứng lên để rời chỗ')})}
       st.blocks=(st.blocks||[]).concat([[-1.0,TZ-.45,1.0,TZ+.45]])}
     // mist / smoke above the two stations
     const fogMat=()=>new THREE.MeshBasicMaterial({color:'#f2efe6',transparent:true,opacity:0,depthWrite:false});const mist=[],smoke=[];
@@ -151,9 +151,9 @@
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
     rmCanvas.onwheel=e=>{e.preventDefault();st.dist=Math.max(.9,Math.min(6,st.dist*Math.exp(e.deltaY*.001)))};
     // ---- state and flow
-    const S={step:'mood',sel:[],mood:null,info:null,method:null,drops:[],done:0,form:'lo',title:'',wish:'',breath:[4,4,6]};
+    let S={step:'mood',sel:[],mood:null,info:null,method:null,drops:[],done:0,form:'lo',title:'',wish:'',breath:[4,4,6]};const OWN=S;/* S: bài hương đang hiện (của mình, hoặc của người đang làm khi xem lượt của họ) */
     const tier=id=>AR(id).tier,ordered=()=>S.sel.slice().sort((a,b)=>tier(a)-tier(b));
-    function arTap(id){if(S.step!=='pick'&&S.step!=='mood')return;if(S.step==='mood')S.step='pick';const i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=3){rmHint('Tối đa 3 mùi để bài hương thanh tao · bỏ bớt một mùi trước');S.info=id;render();return}S.sel.push(id)}S.mood=null;S.info=id;strike(660+AR(id).tier*-110,1.4,.03,[[1,1],[2,.25]]);render()}
+    function arTap(id){if(turns.watching()){rmHint('👀 Đang xem '+turns.who(turns.turn())+' làm · chờ tới lượt mình nhé');return}if(S.step!=='pick'&&S.step!=='mood')return;if(S.step==='mood')S.step='pick';const i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=3){rmHint('Tối đa 3 mùi để bài hương thanh tao · bỏ bớt một mùi trước');S.info=id;render();return}S.sel.push(id)}S.mood=null;S.info=id;strike(660+AR(id).tier*-110,1.4,.03,[[1,1],[2,.25]]);render()}
     let glowT=0;st.tick.push(t=>{
       if(tw){const u=Math.min(1,(performance.now()-tw.t0)/900),q=u*u*(3-2*u);st.target.lerpVectors(tw.from.t,new THREE.Vector3(...tw.to.t),q);st.yaw=tw.from.yaw+(tw.to.yaw-tw.from.yaw)*q;st.pitch=tw.from.pitch+(tw.to.pitch-tw.from.pitch)*q;st.dist=tw.from.dist+(tw.to.dist-tw.from.dist)*q;if(u>=1)tw=null}
       const pulse=.55+Math.sin(t*3)*.25;for(const a of AROMAS){const on=S.sel.includes(a.id),inf=S.info===a.id;const e=on?pulse:inf?.25:0;herbMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');herbMeshes[a.id].emissiveIntensity=e;bottleMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');bottleMeshes[a.id].emissiveIntensity=e;for(const r of rings[a.id])r.material.opacity=on?.85:inf?.35:0}
@@ -168,7 +168,8 @@
     let drip=null;
     const card=id=>{const a=AR(id);return '<div class="ar-card"><span class="ar-dot" style="background:'+a.c+'"></span><b>'+a.name+'</b> · '+AR_TIERS[a.tier]+'<br><i>'+a.feel+'</i><br>✦ '+a.mean+'<br>🌿 '+a.heal+'</div>'};
     const chips=ids=>ids.map(id=>'<span class="ar-chip" style="--c:'+AR(id).c+'">'+AR(id).name+'</span>').join(' ');
-    function render(){let h='';const s=S.step;
+    function render(){if(turns.watching()){const ids=ordered();rmPanel.innerHTML=turns.bar()+'<p>👀 <b>'+esc(turns.who(turns.turn()))+'</b> đang pha hương · '+AR_SEE(S)+'</p>'+(ids.length?'<p>'+chips(ids)+'</p>':'')+(S.step==='pick'&&S.info&&AR(S.info)?card(S.info):'')+'<p class="rm-note">'+arTalk(S.step)+'</p>';return}
+      let h='';const s=S.step;
       if(s==='mood'){h='<p><b>Hôm nay lòng và cơ thể bạn đang thế nào?</b></p><div class="rm-row">'+AR_MOODS.map(m=>'<button data-mood="'+m.id+'">'+m.label+'</button>').join('')+'</div><div class="rm-row"><button data-ar="self">🌿 Tự dạo hai tủ 18 mùi</button></div>'}
       else if(s==='pick'){const ids=ordered(),hint=arBalanceHint(ids);h='<p>'+(S.mood?'Gợi ý cho <b>'+AR_MOODS.find(m=>m.id===S.mood).label+'</b>: ':'Chọn 1–3 mùi (chạm trên hai tủ hoặc bên dưới): ')+(ids.length?chips(ids):'<i>chưa chọn</i>')+'</p>'
           +[0,1,2].map(ti=>'<div class="rm-row"><span class="rm-note" style="min-width:76px">'+AR_TIERS[ti]+'</span>'+AROMAS.filter(a=>a.tier===ti).map(a=>'<button data-sc="'+a.id+'"'+(S.sel.includes(a.id)?' class="sel"':'')+'><span class="rm-dot" style="background:'+a.c+'"></span>'+a.name+'</button>').join('')+'</div>').join('')
@@ -184,7 +185,7 @@
       else if(s==='done'){const mix=S.mix;h='<p>🙏 <b>'+escA(S.title)+'</b> đã vào Túi An Yên, lên Kệ Lưu Hương và được ghi vào Nhật ký An Yên.</p>'
           +'<p class="rm-note">Dùng tại nhà: '+(S.form==='lo'?'máy khuếch tán 100 ml nước, nhỏ '+mix.map(([id,d])=>d+' giọt '+AR(id).name.toLowerCase()).join(' + ')+'; xông 20–30 phút rồi nghỉ.':'cho '+mix.map(([id])=>AR(id).name.toLowerCase()).join(', ')+' khô vào túi vải, bóp nhẹ cho dậy mùi; hoặc đun một nồi nước lá với các vị này, xông hơi 5–10 phút.')+' Tinh dầu dùng ngoài, không uống; phụ nữ mang thai, trẻ nhỏ, người có bệnh hô hấp nên hỏi ý kiến bác sĩ.</p>'
           +'<div class="rm-row"><button data-ar="again">🌿 Pha bài hương khác</button><button data-ar="shelf">🗄 Xem Kệ Lưu Hương</button><button data-ar="kho">📜 Kho Lọ Ước & Túi thơm</button></div>'}
-      rmPanel.innerHTML=h}
+      rmPanel.innerHTML=turns.bar()+h;turns.share(snapA())}
     const escA=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const brEl=roomBox.querySelector('#roomBreath');
     function startBreath(cycles,totalSec){const b=S.breath,ph=[['Hít vào',b[0],1.35],['Giữ hơi',b[1],1.35],['Thở ra',b[2],.75]].filter(p=>p[1]>0);let n=0;const t0=performance.now();brEl.hidden=false;S.br={t:0};render();goView('seat');
@@ -200,7 +201,7 @@
       S.step='done';render();
       if(typeof flowerDb!=='undefined'&&flowerDb){try{const {error}=await flowerDb.from('anyen_aroma_gifts').insert({form:row.form,aromas:row.aromas,drops:row.drops,title:row.title,wish:row.wish,name:row.name,method:S.method});if(!error)loadAromas()}catch(e){}}}
     rmPanel.oninput=e=>{if(e.target.matches('[data-ti]'))S.title=e.target.value;if(e.target.matches('[data-wi]'))S.wish=e.target.value};
-    rmPanel.onclick=e=>{const md=e.target.closest('[data-mood]');if(md){const m=AR_MOODS.find(x=>x.id===md.dataset.mood);S.mood=m.id;S.sel=m.mix.map(x=>x[0]);S.breath=m.breath;S.info=S.sel[0];S.step='pick';goView('home');strike(523,2,.04);render();return}
+    rmPanel.onclick=e=>{if(turns.click(e)||turns.watching())return;const md=e.target.closest('[data-mood]');if(md){const m=AR_MOODS.find(x=>x.id===md.dataset.mood);S.mood=m.id;S.sel=m.mix.map(x=>x[0]);S.breath=m.breath;S.info=S.sel[0];S.step='pick';goView('home');strike(523,2,.04);render();return}
       const sc=e.target.closest('[data-sc]');if(sc){arTap(sc.dataset.sc);return}
       const fm=e.target.closest('[data-form]');if(fm){S.form=fm.dataset.form;render();return}
       const a=e.target.closest('[data-ar]')?.dataset.ar;if(!a)return;
@@ -217,7 +218,23 @@
       else if(a==='keep')keepGift();
       else if(a==='again'){S.step='mood';S.sel=[];S.mood=null;S.info=null;S.method=null;S.done=0;S.drops=[];for(const p of pinch)p.visible=false;goView('home');render()}
       else if(a==='shelf')goView('shelf');else if(a==='kho')openArchive('aromas')};
-    st.cleanup=()=>{if(S.br)clearTimeout(S.br.t);brEl.hidden=true;st.onAromas=null};
+    st.cleanup=()=>{if(OWN.br)clearTimeout(OWN.br.t);brEl.hidden=true;st.onAromas=null;share.off();seatsH.dispose()};
+    // 27/11: phiên Healer ở Nhà Hương: Healer pha mẫu trước, rồi mời lần lượt từng người (roomTurns); cả phòng thấy mùi đang chọn sáng trên hai tủ, giọt tinh dầu,
+    // thảo mộc trên than, sương khói đổi màu theo bài hương của người đang làm. Lời dẫn từng bước Healer gửi vào khung chat bằng một chạm.
+    const AR_TALKS={mood:'Hít một hơi thật chậm và hỏi lòng mình: hôm nay mình đang cần điều gì?',pick:'Mỗi mùi có một tầng: hương đầu nhẹ bay, hương giữa là trái tim, hương nền giữ lâu. Chọn ít thôi để bài hương thanh tao.',drip:'Nhỏ từng giọt thật chậm, nghe mùi lan ra trong hơi ấm.',burn:'Đặt từng nhúm thảo mộc lên than hồng, nhìn khói lên rồi tan.',sit:'Ngồi thẳng, thả lỏng vai, thở theo nhịp của bài hương.',gift:'Đặt cho bài hương một cái tên, gửi vào đó một điều ước nhỏ.',done:'Mang một chút hương này về nhà, để nhớ cảm giác bình yên hôm nay.'};
+    const arTalk=step=>AR_TALKS[step]||'';
+    function AR_SEE(v){return v.step==='mood'?'đang lắng nghe lòng mình':v.step==='pick'?'đang chọn mùi trên hai tủ':v.step==='drip'?'nhỏ tinh dầu · '+v.done+'/'+(v.plan||[]).length+' giọt':v.step==='burn'?'đặt thảo mộc lên than · '+v.done+'/'+(v.plan||[]).length+' nhúm':v.step==='sit'?'đang ngồi thở cùng hương · bạn thở theo nhé':'đang làm quà mang về'}
+    const snapA=()=>({step:S.step,sel:S.sel.slice(),mood:S.mood,info:S.info,method:S.method,done:S.done,drops:S.drops.slice(),plan:(S.plan||[]).slice(),breath:S.breath,form:S.form});
+    function drawPinch(drops){pinch.forEach((p,i)=>{p.clear();const id=drops[i];if(!id||!AR(id)){p.visible=false;return}for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.02,5,3),mat(new THREE.Color(AR(id).c).lerp(new THREE.Color('#6a5a3a'),.4)));l.scale.set(1.6,.4,1);l.position.set(Math.cos(k)*.04+(i-1)*.05,.175,Math.sin(k)*.04);p.add(l)}p.visible=true})}
+    function watchView(v){const prev=S;const ok=id=>typeof id==='string'&&!!AR(id),arr=a=>Array.isArray(a)?a.filter(ok).slice(0,12):[];
+      const n=v&&typeof v.step==='string'&&AR_TALKS[v.step]?{step:v.step,sel:arr(v.sel).slice(0,3),mood:typeof v.mood==='string'?v.mood:null,info:ok(v.info)?v.info:null,method:v.method==='drip'||v.method==='burn'?v.method:null,done:Math.max(0,Math.min(12,+v.done||0)),drops:arr(v.drops),plan:arr(v.plan),breath:Array.isArray(v.breath)?v.breath.slice(0,3).map(x=>Math.max(0,Math.min(10,+x||0))):[4,4,6],form:v.form==='tui'?'tui':'lo',title:'',wish:''}:{step:'mood',sel:[],mood:null,info:null,method:null,drops:[],done:0,plan:[],breath:[4,4,6],form:'lo',title:'',wish:''};
+      if(n.mood&&!AR_MOODS.some(m=>m.id===n.mood))n.mood=null;S=n;pip.visible=n.step==='drip';drawPinch(n.method==='burn'?n.drops:[]);
+      if(prev!==OWN&&n.method==='drip'&&n.done===prev.done+1&&n.drops.length){drip={t0:performance.now()};drop.material.color.set(AR(n.drops[n.drops.length-1]).c);setTimeout(()=>{strike(1568,.35,.05,[[1,1],[2.4,.4]]);strike(1046,.6,.025)},700)}
+      else if(prev!==OWN&&n.method==='burn'&&n.done===prev.done+1)setTimeout(()=>strike(1318,3,.04,[[1,1],[2.76,.3]]),300);
+      if(!prev||prev.step!==n.step){if(n.step==='drip'||n.step==='burn')goView(n.step);else if(n.step==='sit')goView('seat');else if(n.step==='mood'||n.step==='pick')goView('home')}}
+    const share=roomShare('xong_huong',{change:()=>{seatsH.refresh();turns.onChange()},people:(X,grew)=>{seatsH.onPeople(grew);turns.onPeople(grew);render()},msg:m=>{if(!seatsH.onMsg(m))turns.onMsg(m)}});
+    const seatsH=roomSeats(st,share,HSEATS,{walkers:true,hint:rmHint});
+    const turns=roomTurns(share,{watch:watchView,own:()=>{S=OWN;pip.visible=S.step==='drip';drawPinch(S.method==='burn'?S.drops:[]);goView('home')},render:()=>render(),resend:()=>turns.share(snapA()),talk:()=>arTalk(S.step)});
     rmHint('Nhà Hương · Haromy, ngôi nhà của mùi thơm Hạnh phúc · chạm tủ để chọn mùi · kéo để nhìn quanh');render()}
   // ---- Pha trà 6 bước dùng chung (Nhà Vị; sau này Tư Gia, nhà chính Đảo Yên). Ngoài phiên: mỗi người tự pha như cũ.
   // Trong phiên: người dẫn (Healer) bấm từng bước, cả phòng cùng thấy ấm, khói, chén; người dẫn gửi lời dẫn vào khung chat bằng một chạm;
@@ -256,6 +273,29 @@
     function onChange(was){if(was&&!sh.session){seen=false;if(step||inv)rmHint(H.soloHidden?'Buổi hẹn đã kết thúc':'Phiên trà đã kết thúc · bạn tiếp tục pha trà riêng');if(H.soloHidden)reset()}
       if(!was&&sh.session){seen=false;reset();rmHint(sh.healer?(H.leadHint||'🍵 Bạn dẫn phiên trà · mỗi bước bạn pha, cả phòng cùng thấy'):(H.guestHint?H.guestHint(who()):'🍵 Đã vào phiên trà cùng '+who()+' · ngồi xuống, nhìn và thở theo từng bước pha'))}render()}
     return {render,click,onMsg,onPeople,onChange}}
+  // ---- Lượt làm (Nhà Hương, Nhà Chạm): trong phiên, Healer làm mẫu trước rồi mời lần lượt từng người; cả phòng xem người đang làm.
+  // Healer chọn lượt ở hàng "Lượt làm" ({k:'turn',id}; id rỗng = mọi người tự làm). Người đang làm gửi trạng thái sau mỗi bước ({k:'snap',s});
+  // người khác thấy cảnh và bảng theo trạng thái đó, không bấm được. Ngoài phiên hoặc khi "mọi người tự làm" thì ai cũng làm của mình như cũ.
+  function roomTurns(sh,o){let turn=null,view=null;
+    const watching=()=>!!(sh.session&&turn&&turn!==sh.me),mine=()=>!watching(),who=id=>id===sh.me?'bạn':(sh.names[id]||'Một người bạn');
+    function set(id,remote){const was=watching();turn=id||null;if(!remote&&sh.healer)sh.send({k:'turn',id:turn||''});
+      if(watching()){view=null;o.watch(null)}else if(was)o.own();
+      if(turn===sh.me){setTimeout(()=>{if(turn===sh.me)o.resend()},300);if(remote)rmHint('🙋 Đến lượt bạn · '+sh.healerName()+' sẽ hướng dẫn từng bước')}
+      else if(remote&&!turn)rmHint('🌿 Mọi người tự làm theo nhịp của mình');else if(watching())rmHint('👀 '+who(turn)+' đang làm · cả phòng cùng xem');o.render()}
+    function bar(){if(!sh.session)return '';let h='';
+      if(sh.healer){const L=sh.list.filter(p=>p.id!==sh.me).sort((a,b)=>(a.t||0)-(b.t||0));
+        h='<div class="rm-row"><span class="rm-note">Lượt làm:</span><button data-turn="'+esc(sh.me)+'"'+(turn===sh.me?' class="sel"':'')+'>🙋 Healer làm mẫu</button>'+L.map(p=>'<button data-turn="'+esc(p.id)+'"'+(turn===p.id?' class="sel"':'')+'>'+esc(p.name||'Khách')+'</button>').join('')+'<button data-turn=""'+(!turn?' class="sel"':'')+'>🌿 Mọi người tự làm</button></div>';
+        if(o.talk())h+='<div class="rm-row"><button data-turn-talk>💬 Gửi lời dẫn bước này vào khung chat</button></div>'}
+      else if(turn)h='<p class="rm-note">'+(turn===sh.me?'🙋 Đang là lượt của bạn · làm theo lời '+esc(sh.healerName()):'👀 Đang xem '+esc(who(turn))+' làm · chờ tới lượt mình nhé')+'</p>';
+      return h}
+    function click(e){const b=e.target.closest('[data-turn]');if(b){if(sh.healer)set(b.dataset.turn||null);return true}
+      if(e.target.closest('[data-turn-talk]')){const t=o.talk();if(t&&!sh.say(t))rmHint('Chờ một chút rồi gửi lời dẫn nhé');return true}return false}
+    function share(s){if(sh.session&&turn&&turn===sh.me)sh.send({k:'snap',s})}
+    function onMsg(m){if(m.k==='turn'){if(!sh.healer&&sh.session&&m.from===sh.therapist)set(typeof m.id==='string'&&m.id?m.id:null,true);return true}
+      if(m.k==='snap'){if(watching()&&m.from===turn&&m.s&&typeof m.s==='object'){view=m.s;o.watch(view);o.render()}return true}return false}
+    function onPeople(grew){if(!grew)return;if(sh.healer&&sh.session)sh.send({k:'turn',id:turn||''});if(turn===sh.me)o.resend()}
+    function onChange(){if(!sh.session&&turn)set(null,true)}
+    return {watching,mine,bar,click,share,onMsg,onPeople,onChange,turn:()=>turn,view:()=>view,who}}
   const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
   function roomQuanTra(st){rmHint('Ngũ Thiên Trà · pha trà 6 bước: Đun nước, Tráng ấm, Cho trà, Hãm trà, Rót trà, Mời trà · Kéo để nhìn quanh');st.target.set(0,.6,0);st.dist=3.6;
     rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(1.8,.36,1.1),mat('#3e2c20')),0,.18,0);
@@ -413,7 +453,7 @@
     if(gom.phase==='fire'||gom.phase==='spray'){rmHint('🔥 Gốm của bạn đang nung ngoài bãi bên hông nhà');rmPanel.innerHTML='<p>Gốm của bạn đang nằm trong lửa ở bãi nung bên hông nhà. Ra bãi nung để chờ lửa tàn và phun nước tạo màu.</p>';return}
     if(gom.phase==='carry'){setGomCarry(false);refreshGomPill();gom.phase='room';gom.step='xong'}
     if(gom.phase!=='room'){Object.assign(gom,{phase:'room',step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:Math.floor(Math.random()*9999)})}
-    rmHint('Nhà Chạm · gốm Chăm Bàu Trúc nặn tay, không bàn xoay · Kéo khung hình để nhìn quanh');
+    rmHint('Nhà Chạm · gốm Chăm Bàu Trúc nặn tay, không bàn xoay · Kéo khung hình để nhìn quanh');const CSEATS=[];let V=gom;/* V: gốm đang hiện trên đôn (của mình, hoặc của người đang làm khi xem lượt của họ) */
     rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.32,.38,.55,12),mat('#6b4a32')),0,.275,0);const sand=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.36,.36,.02,18),mat('#d8cba8')),0,.56,0);sand.visible=false;
     const lump=rAdd(st,new THREE.Mesh(new THREE.DodecahedronGeometry(.2,1),mat('#7f604c')),0,.72,0);lump.scale.set(1,.75,1);
     const potMat=gomMaterial(gom.shape,-1,gom.seed,'wet',false);const pot=rAdd(st,new THREE.Mesh(gomGeo(gom.shape,.01),potMat),0,.57,0);pot.visible=false;
@@ -431,8 +471,8 @@
       const rug=A(new THREE.PlaneGeometry(5.2,3.4),mat('#d9c39a'),-.9,.006,.35);rug.rotation.x=-Math.PI/2;const rim=A(new THREE.PlaneGeometry(5.4,3.6),mat('#b89a6a'),-.9,.004,.35);rim.rotation.x=-Math.PI/2;
       const W2=[-2.05,.35];A(new THREE.CylinderGeometry(.34,.4,.55,12),mat('#6b4a32'),W2[0],.275,W2[1]);A(new THREE.CylinderGeometry(.36,.36,.05,16),woodD,W2[0],.57,W2[1]);A(Lt([[0,0],[.12,.01],[.2,.16],[.12,.34],[.13,.4]]),cream,W2[0],.6,W2[1]);
       const seatHit=new THREE.BoxGeometry(.6,.6,.6),seatM=new THREE.MeshBasicMaterial({visible:false});st.gomSeats=[];
-      const seat=(cx,cz,a,r)=>{const x=cx+Math.sin(a)*r,z=cz+Math.cos(a)*r;A(new THREE.CylinderGeometry(.27,.29,.13,16),cush,x,.065,z);const h=A(seatHit,seatM,x,.3,z);const face=Math.atan2(cx-x,cz-z),ax=x+Math.sin(a)*.65,az=z+Math.cos(a)*.65;st.gomSeats.push([x,z]);
-        rTap(st,h,()=>{const W=st.walk;if(!W||!W.goSeat)return;W.goSeat({x,z,a:face,y:.14,ax,az});rmHint('🏺 Ngồi bồ đoàn bên bàn xoay · bấm Đứng lên hoặc đi để rời chỗ')})};
+      const seat=(cx,cz,a,r)=>{const x=cx+Math.sin(a)*r,z=cz+Math.cos(a)*r;A(new THREE.CylinderGeometry(.27,.29,.13,16),cush,x,.065,z);const h=A(seatHit,seatM,x,.3,z);const face=Math.atan2(cx-x,cz-z),ax=x+Math.sin(a)*.65,az=z+Math.cos(a)*.65;st.gomSeats.push([x,z]);const k=CSEATS.length;CSEATS.push({x,z,a:face,y:.14,ax,az});
+        rTap(st,h,()=>{if(seatsH.tap(k))rmHint('🏺 Ngồi bồ đoàn bên bàn xoay · bấm Đứng lên hoặc đi để rời chỗ')})};
       for(const a of [0,-Math.PI/2,Math.PI])seat(W2[0],W2[1],a,1.05);for(const a of [Math.PI*.35,Math.PI*.0,-Math.PI*.35])seat(0,0,a+Math.PI*.0,1.45);
       const TX=2.75,TZ=-1.1;A(new THREE.BoxGeometry(1.4,.07,.8),wood,TX,.74,TZ);for(const a of [-1,1])for(const b of [-1,1])A(new THREE.BoxGeometry(.07,.72,.07),woodD,TX+a*.6,.36,TZ+b*.32);
       A(Lt([[0,0],[.1,.01],[.14,.13],[.08,.22]]),clay,TX+.35,.78,TZ-.12);for(let k=0;k<7;k++)A(new THREE.IcosahedronGeometry(.05,0),mat('#fbf7ee'),TX+.35+Math.cos(k)*.09,1.02+(k%3)*.05,TZ-.12+Math.sin(k)*.09);
@@ -445,16 +485,18 @@
       {const cols=[cream,clay,jade,mat('#b9c49a'),mat('#a8673e')];for(let r=2;r<6;r++)for(let k=0;k<9;k++){const sc2=.8+((k+r)%3)*.25,x=-1.85+k*.46,y=.15+r*.44,m=cols[(k*3+r)%5];A(Lt((k+r)%2?[[0,0],[.07*sc2,.01],[.15*sc2,.09*sc2],[.16*sc2,.13*sc2]]:[[0,0],[.1*sc2,.01],[.14*sc2,.12*sc2],[.08*sc2,.24*sc2],[.09*sc2,.28*sc2]],10),m,x,y,-3.05)}}
       st.blocks=[[-.45,-.45,.45,.45],[W2[0]-.45,W2[1]-.45,W2[0]+.45,W2[1]+.45],[TX-.75,TZ-.45,TX+.75,TZ+.45],[LX-.3,LZ-.85,LX+.3,LZ+.85],[-3.9,2.0,-3.0,2.8],[-4,-3.4,4,-2.75]]}
     let anim=null,dryT=null;
-    const setPot=frac=>{pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,frac);pot.visible=frac>0;lump.visible=frac<1;const k=Math.max(.15,1-frac);lump.scale.set(k,.75*k,k);lump.position.y=.57+.15*k};
-    const retex=stage=>{potMat.map.dispose();const t=new THREE.CanvasTexture(gomCanvas(gom.shape,['nhao','cat','dang','nan','chuot','hoavan'].includes(gom.step)?-1:gom.pattern,gom.seed,stage));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;potMat.map=t;potMat.roughness=gom.polish>=2?.55:gom.polish?.75:.95;potMat.needsUpdate=true};
+    const setPot=(frac,shp)=>{pot.geometry.dispose();pot.geometry=gomGeo(shp==null?V.shape:shp,frac);pot.visible=frac>0;lump.visible=frac<1;const k=Math.max(.15,1-frac);lump.scale.set(k,.75*k,k);lump.position.y=.57+.15*k};
+    const retex=(stage,g)=>{g=g||V;potMat.map.dispose();const t=new THREE.CanvasTexture(gomCanvas(g.shape,['nhao','cat','dang','nan','chuot','hoavan'].includes(g.step)?-1:g.pattern,g.seed,stage));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;potMat.map=t;potMat.roughness=g.polish>=2?.55:g.polish?.75:.95;potMat.needsUpdate=true};
     // resume a half-made pot if the guest stepped out
     if(['nan','chuot','hoavan','phoi','xong'].includes(gom.step)){sand.visible=true;setPot(gom.rounds/GOM_ROUNDS);retex(gom.step==='xong'?'dry':'wet')}else if(gom.step==='dang'||gom.step==='cat'){sand.visible=gom.step==='dang'}
     st.tick.push(t=>{if(anim){const u=Math.min(1,(performance.now()-anim.t0)/anim.dur);if(anim.kind==='round'){if(st.walk){const W=st.walk,b=anim.a0+u*Math.PI*2;W.dest=null;W.x=Math.sin(b)*.95;W.z=Math.cos(b)*.95;W.a=b+Math.PI}/* full: chính hình khách đi lùi quanh đôn */else st.yaw=anim.y0-u*Math.PI*2;ang=anim.a0+u*Math.PI*2;placePotter();potter.position.y=Math.abs(Math.sin(u*Math.PI*8))*.03;setPot((gom.rounds-1+u)/GOM_ROUNDS);const h=u<.5?'Hít vào…':'Thở ra…';if(anim.h!==h){anim.h=h;rmHint('🚶 Đi lùi quanh đôn · vòng '+gom.rounds+'/'+GOM_ROUNDS+' · '+h)}}
         else if(anim.kind==='knead'){const s=1-Math.sin(u*Math.PI)*.25;lump.scale.set(1+(1-s)*.6,.75*s,1+(1-s)*.6)}
+        else if(anim.kind==='vround')setPot((anim.from+(anim.to-anim.from)*u)/GOM_ROUNDS);/* xem người khác đi lùi một vòng: thân gốm cao dần */
         if(u>=1){const k=anim.kind;anim=null;if(k==='round'&&gom.rounds>=GOM_ROUNDS){gom.step='chuot';setPot(1)}render()}}});
-    st.cleanup=()=>{clearInterval(dryT);st.onPots=null;roomBox.classList.remove('cham-lite')};
+    st.cleanup=()=>{clearInterval(dryT);st.onPots=null;roomBox.classList.remove('cham-lite');share.off();seatsH.dispose()};
     const btn=(k,label,gold)=>'<button data-gm="'+k+'"'+(gold?' class="rm-gold"':'')+(anim?' disabled':'')+'>'+label+'</button>';
-    function render(){const s=gom.step;let h='';
+    function render(){if(turns.watching()){const v=V;rmPanel.innerHTML=turns.bar()+'<p>👀 <b>'+esc(turns.who(turns.turn()))+'</b> đang nặn gốm'+(v.step==='nan'?' · vòng '+v.rounds+'/'+GOM_ROUNDS:'')+'</p><p>'+talkOf(v.step)+'</p>';return}
+      const s=gom.step;let h='';
       if(s==='nhao')h='<p>Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.</p><div class="rm-row">'+btn('knead','👐 Nhào đất · '+gom.kneads+'/5',1)+'</div>';
       else if(s==='cat')h='<p>Rắc một lớp cát trắng mỏng lên mặt đôn để đất không dính, rồi đặt khối đất lên.</p><div class="rm-row">'+btn('sand','🤲 Rắc cát, đặt đất lên đôn',1)+'</div>';
       else if(s==='dang')h='<p>Chọn dáng gốm. Ở Bàu Trúc không dùng khuôn: mỗi món là một độc bản.</p><div class="rm-row">'+GOM_SHAPES.map((g,i)=>'<button data-gs="'+i+'"'+(gom.shape===i?' class="sel"':'')+'>'+g.name+'</button>').join('')+'</div><div class="rm-row">'+btn('start','🚶 Bắt đầu nặn',1)+'</div>';
@@ -465,13 +507,25 @@
       else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
       if(s==='xong'&&window.anyenLite)h='<p>Gốm mộc đã khô. Ở bản nhẹ, gốm được nung ngay, có áo gốm hỏa biến và vào kho gốm luôn.</p><div class="rm-row">'+btn('carry','🔥 Nung gốm',1)+'</div>';
       if(!anim){const LH={nhao:'👐 Chạm khối đất để nhào · '+gom.kneads+'/5',cat:'🤲 Chạm đôn để rắc cát, đặt đất lên',dang:'Chọn dáng gốm bên dưới, rồi chạm đất để bắt đầu nặn',nan:'🚶 Chạm đất, đi lùi một vòng quanh đôn · '+gom.rounds+'/'+GOM_ROUNDS,chuot:gom.polish?'🎋 Chạm gốm để làm bóng bằng cật tre':'💧 Chạm gốm để vuốt vải ướt',hoavan:'✍️ Chọn dụng cụ bên dưới, rồi chạm gốm để khắc',phoi:dryT?'☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây':'☀️ Chạm gốm để đem phơi nắng',xong:LT?'🔥 Chạm gốm để nung':'🏺 Chạm gốm để đội ra bãi nung'};if(LH[s])rmHint(LH[s])}
-      rmPanel.innerHTML=h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>'}
+      rmPanel.innerHTML=turns.bar()+h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>';turns.share(snap())}
+    // 27/11: phiên Healer ở Nhà Chạm: Healer nặn mẫu trước, rồi mời lần lượt từng người (roomTurns); cả phòng thấy khối gốm của người đang làm lớn dần trên đôn
+    // và thấy họ đi lùi quanh đôn (roomSeats walkers). Lời dẫn từng bước Healer gửi vào khung chat bằng một chạm.
+    const GOM_TALK={nhao:'Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.',cat:'Rắc một lớp cát trắng mỏng lên mặt đôn để đất không dính, rồi đặt khối đất lên.',dang:'Ở Bàu Trúc không dùng khuôn: mỗi món là một độc bản. Chọn dáng gốm hợp với lòng mình.',nan:'Không có bàn xoay: người thợ cúi xuống, đôi tay vuốt đất, chân đi lùi quanh đôn. Mỗi vòng thân gốm cao thêm một chút. Bước theo hơi thở.',chuot:'Chuốt láng thân gốm: vuốt bằng miếng vải ướt, rồi làm bóng bằng cật tre.',hoavan:'Khắc hoa văn bằng những dụng cụ mộc mạc: que tre, răng lược, vỏ sò.',phoi:'Phơi gốm dưới nắng cho khô. Chờ đợi cũng là một phần của việc làm gốm.',xong:'Gốm mộc đã khô, sẵn sàng vào lửa. Hỏa biến sẽ để lại những sắc màu không lặp lại.'};
+    const talkOf=step=>GOM_TALK[step]||'';
+    const snap=()=>({step:gom.step,kneads:gom.kneads,shape:gom.shape,pattern:gom.pattern,rounds:gom.rounds,polish:gom.polish,seed:gom.seed});
+    function paint(s){sand.visible=!['nhao','cat'].includes(s.step);if(['nan','chuot','hoavan','phoi','xong'].includes(s.step)){setPot(s.rounds/GOM_ROUNDS,s.shape);retex(s.step==='xong'?'dry':'wet',s)}else{setPot(0,s.shape);lump.scale.set(1,.75,1);lump.position.y=.72}}
+    function watchView(v){const prev=V;anim=null;const s=v&&typeof v.step==='string'&&GOM_TALK[v.step]?{step:v.step,kneads:+v.kneads||0,shape:Math.max(0,Math.min(GOM_SHAPES.length-1,+v.shape||0)),pattern:Math.max(0,Math.min(GOM_TOOLS.length-1,+v.pattern||0)),rounds:Math.max(0,Math.min(GOM_ROUNDS,+v.rounds||0)),polish:+v.polish||0,seed:+v.seed||1}:{step:'nhao',kneads:0,shape:0,pattern:0,rounds:0,polish:0,seed:1};
+      V=s;paint(s);const same=prev!==gom&&prev.shape===s.shape;if(same&&s.step==='nan'&&s.rounds===prev.rounds+1){setPot(prev.rounds/GOM_ROUNDS);anim={kind:'vround',t0:performance.now(),dur:4800,from:prev.rounds,to:s.rounds}}
+      else if(same&&s.step==='nhao'&&s.kneads>prev.kneads){anim={kind:'knead',t0:performance.now(),dur:600};strike(82,.6,.1,[[1,1],[1.6,.3]])}}
+    const share=roomShare('xuong_gom',{change:()=>{seatsH.refresh();turns.onChange()},people:(S,grew)=>{seatsH.onPeople(grew);turns.onPeople(grew);render()},msg:m=>{if(!seatsH.onMsg(m))turns.onMsg(m)}});
+    const seatsH=roomSeats(st,share,CSEATS,{walkers:true,hint:rmHint});
+    const turns=roomTurns(share,{watch:watchView,own:()=>{anim=null;V=gom;paint(gom)},render:()=>render(),resend:()=>turns.share(snap()),talk:()=>talkOf((turns.watching()?V:gom).step)});
     render();
-    rmPanel.onclick=e=>{const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
+    rmPanel.onclick=e=>{if(turns.click(e)||turns.watching())return;const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
       const a=e.target.closest('[data-gm]')?.dataset.gm;if(a==='kho'){openArchive('pots');return}act(a)};
     {const hit=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1.3,12),new THREE.MeshBasicMaterial({visible:false})),0,.65,0);
       rTap(st,hit,()=>{const s=gom.step;act({nhao:'knead',cat:'sand',dang:'start',nan:'round',chuot:gom.polish?'polish1':'polish0',hoavan:'carve',phoi:dryT?null:'dry',xong:'carry'}[s])})}
-    function act(a){if(!a||anim)return;
+    function act(a){if(!a)return;if(turns.watching()){rmHint('👀 Đang xem '+turns.who(turns.turn())+' làm · chờ tới lượt mình nhé');return}if(anim)return;
       if(a==='knead'){gom.kneads++;strike(82,.6,.1,[[1,1],[1.6,.3]]);anim={kind:'knead',t0:performance.now(),dur:600};if(gom.kneads>=5)gom.step='cat';render()}
       else if(a==='sand'){sand.visible=true;strike(2400,.4,.012,[[1,1]]);gom.step='dang';render()}
       else if(a==='start'){gom.step='nan';gom.rounds=0;pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,.01);render()}
