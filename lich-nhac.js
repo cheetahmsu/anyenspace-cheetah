@@ -17,7 +17,7 @@
   const mount=()=>document.body.appendChild(bar);if(document.body)mount();else addEventListener('DOMContentLoaded',mount);
   let hiddenFor=null;
   bar.querySelector('.x').onclick=()=>{hiddenFor=shown&&shown.slot+'-'+shown.start;bar.hidden=true};
-  bar.querySelector('.go').onclick=()=>{if(shown)goHouse(shown.venue)};
+  bar.querySelector('.go').onclick=()=>{if(shown&&shown.notice){location.href='lich.html#mine';return}if(shown)goHouse(shown.venue)};
 
   async function check(){
     if(off||!hasSession()||typeof window.anyenAuthClient!=='function')return;
@@ -25,7 +25,12 @@
     const r=await c.rpc('anyen_my_next_session');
     if(r.error){if(/anyen_my_next_session|schema cache|does not exist|PGRST202/i.test((r.error.code||'')+' '+r.error.message))off=true;return}
     const s=r.data;shown=s||null;
-    if(!s||hiddenFor===s.slot+'-'+s.start){bar.hidden=true;return}
+    if(!s){await notices(c);return}
+    if(hiddenFor===s.slot+'-'+s.start){bar.hidden=true;return}
+    bar.querySelector('.go').textContent='Vào phiên';
+    // v3.9: đến giờ ca, Healer vừa đăng nhập được đưa thẳng vào đúng Nhà (mỗi ca một lần, bấm ✕ hay rời đi thì không kéo lại)
+    if(s.host&&s.kind!=='home'&&s.now>=s.start){const k='yen_auto_ca_'+s.slot+'_'+new Date().toDateString();let done=false;try{done=!!sessionStorage.getItem(k);sessionStorage.setItem(k,'1')}catch(e){done=true}
+      if(!done&&!document.body.classList.contains('room-open'))setTimeout(()=>goHouse(s.venue),800)}
     const started=s.now>=s.start,home=s.kind==='home',who=s.host?(s.guests?s.guests+(home?' bạn đã nhận lời':' khách đã nhận lời'):(home?'chưa có bạn nhận lời':'chưa có khách')):(home?'Chủ nhà đang chờ bạn':'Healer đang chờ bạn');
     bar.querySelector('span').textContent='🌿 '+(started?(home?'Buổi hẹn đang diễn ra':'Phiên đang diễn ra'):(home?'Hẹn lúc ':'Phiên lúc ')+hhmm(s.start))+' · '+s.venue_name+' · '+hhmm(s.start)+'–'+hhmm(s.end)+' · '+who;
     bar.hidden=false;
@@ -45,6 +50,17 @@
     return false;
   }
   window.anyenGoHouse=goHouse;
+
+  // Thông báo hủy lịch (anyen_my_notices): khi không có phiên sắp tới, hiện một dòng nhắc nhỏ dẫn tới Lịch hẹn
+  let noticeOff=false;
+  async function notices(c){
+    if(noticeOff||hiddenFor==='notice-'){bar.hidden=true;return}
+    const r=await c.rpc('anyen_my_notices');
+    if(r.error){if(/anyen_my_notices|schema cache|does not exist|PGRST202/i.test((r.error.code||'')+' '+r.error.message))noticeOff=true;bar.hidden=true;return}
+    const n=(r.data&&r.data.unread)||0;if(!n){bar.hidden=true;return}
+    shown={notice:true,slot:'notice',start:''};
+    bar.querySelector('span').textContent='🔔 '+n+' thông báo lịch hẹn mới';bar.querySelector('.go').textContent='Xem';bar.hidden=false;
+  }
 
   const start=()=>{
     const want=(new URLSearchParams(location.search)).get('vao');
