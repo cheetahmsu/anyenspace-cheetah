@@ -18,7 +18,7 @@ const ZONES=[
   {id:'tuanloc',n:'6',name:'Trang Trại Tuần Lộc',icon:'🦌',x:112,z:90,cam:[1,0],note:'Gặp tuần lộc, cho ăn, tìm hiểu văn hoá Sámi.'},
   {id:'hobang',n:'7',name:'Hồ Băng Lớn',icon:'❄️',x:30,z:14,ml:[60,24],cam:[1,-.1],note:'Xe trượt lướt chậm trên mặt hồ soi bóng cực quang.'},
   {id:'dinh',n:'9',name:'Đỉnh Tuyết Yên',icon:'⛷️',x:100,z:-36,cam:[0,-1],note:'Khu trượt tuyết trên núi, ngắm toàn cảnh Xứ Yên.'},
-  {id:'chua',n:'8',name:'Chùa Tuyết Yên',icon:'🪷',x:-46,z:-76,cam:[-.6,-1],note:'Ngôi chùa nhỏ trên núi tuyết, thờ Đức Phật.'}];
+  {id:'chua',n:'8',name:'Chùa Tuyết Yên',icon:'🪷',x:-46,z:-76,cam:[-.6,-1],note:'Chánh điện gỗ sồi và tượng Phật ngoài trời giữa núi tuyết.'}];
 const LAKE={x:108,z:46,rx:54,rz:24,rot:-.42},RINK={x:-12,z:82,rx:21,rz:10},ICE_Y=-.12,HILL={x:-72,z:-112,r:40,h:16},STAIR={x:-48,z:-80};
 const RSH=a=>1+.07*Math.sin(2*a+1.1)+.06*Math.sin(3*a+.4)+.04*Math.sin(5*a);/* sân băng bờ lượn mềm */
 const LSH=a=>1+.2*Math.sin(2*a+.7)+.15*Math.sin(3*a+2.1)+.09*Math.sin(5*a+1.3)+.07*Math.sin(4*a+.4);/* bờ hồ uốn lượn tự nhiên */
@@ -43,7 +43,7 @@ const STATIONS=[
   {id:'husky',x:12.5,z:-19,label:'🐕 Lên xe husky dạo rừng'},
   {id:'sled',x:0,z:0,label:'🛷 Lái xe trượt trên hồ băng'},
   {id:'sit',x:0,z:-94.2,label:'🪷 Ngồi thiền trước Phật'},
-  {id:'bell',x:9,z:-94,label:'🔔 Thỉnh một tiếng chuông'},
+  {id:'bell',x:9,z:-94,label:'🪷 Chiêm bái tượng Phật'},
   {id:'fire',x:-44,z:85.4,label:'🔥 Ngồi sưởi bên bếp lửa'},
   {id:'deer',x:125.4,z:88,label:'🦌 Cho tuần lộc ăn rêu'},
   {id:'carousel',x:-22,z:67.4,label:'🎠 Ngồi vòng ngựa gỗ'},
@@ -412,32 +412,34 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(const [x,z] of [[124,82],[124,94],[150,68],[150,108],[136,104],[136,72]])lantern(x,z);block(FARM.x,FARM.z,FARM.r+1)}
   // ---------- Chùa Tuyết Yên trên núi, góc trên bên trái bản đồ (tây bắc) ----------
   const TP={x:HILL.x,z:HILL.z},TRY=Math.atan2(STAIR.x-HILL.x,STAIR.z-HILL.z),tw=(lx,lz)=>[TP.x+Math.cos(TRY)*lx+Math.sin(TRY)*lz,TP.z-Math.sin(TRY)*lx+Math.cos(TRY)*lz];
-  {const y=H(TP.x,TP.z);S.at(TP.x,y,TP.z,TRY);L.at(TP.x,y,TP.z,TRY);const wd='#5a2e22',col='#6a3424';
-    S.b('#8a8580',0,.1,0,13,1.2,10.5);S.b('#9a958e',0,.7,1,11,.2,8.5);for(let i=0;i<3;i++)S.b('#8a8580',0,.1+i*.2,5.3+i*.5,4,.2,.6);
-    for(const sx of [-4.4,-1.6,1.6,4.4])for(const sz of [-2.6,2.6]){S.add(G.cyl,col,MX(sx,2.3,sz,.2,3.2,.2));S.add(G.cyl,'#9a958e',MX(sx,.85,sz,.3,.15,.3))}
-    S.b('#e9e0cf',0,2.2,-2.9,9.4,3,.2);for(const sx of [-1,1])S.b('#e9e0cf',sx*4.6,2.2,-.6,.2,3,4.4);
-    S.b(wd,0,3.85,0,10.2,.3,6.4);
-    S.add(G.frus,'#3a3230',MX(0,4.6,0,7.6,1.2,5.4));S.add(G.frus,SNOW,MX(0,4.75,0,7.3,1.15,5.2));
-    S.b(wd,0,5.35,0,6,.25,3.6);S.add(G.pyr4,'#3a3230',MX(0,6.3,0,4.6,1.9,3.2));S.add(G.pyr4,SNOW,MX(0,6.45,0,4.3,1.8,3));S.b('#c8a96a',0,7.3,0,1.3,.18,.18);S.add(G.sph,'#c8a96a',MX(0,7.45,0,.18));
-    for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){S.add(G.cone,'#3a3230',MX(sx*5.25,4.2,sz*3.8,.18,1.1,.18,sz*.9,0,-sx*.9));S.add(G.cone,'#3a3230',MX(sx*3.15,5.6,sz*2.2,.12,.8,.12,sz*.9,0,-sx*.9))}
-    stringLights(L,-5,3.68,3.3,5,3.68,3.3,22,.05);
-    // bàn thờ, tượng Phật ngồi kiết già, hào quang, nến
-    S.b('#5a2e22',0,1.3,-2,3,1.1,1.2);S.b('#7a3a28',0,1.9,-2,3.2,.1,1.3);
-    const gold='#d9b25e';S.add(G.cyl12,gold,MX(0,2.05,-2.1,.75,.2,.55));S.add(G.sph,gold,MX(0,2.4,-2.1,.7,.32,.5));S.add(G.sph,gold,MX(0,3.0,-2.15,.4,.6,.32));S.add(G.sph,gold,MX(0,3.75,-2.15,.24,.28,.24));S.add(G.sph,gold,MX(0,4.02,-2.17,.12));S.add(G.sph,gold,MX(0,2.6,-1.85,.28,.12,.18));
-    L.add(G.sph,'#ffe7a8',MX(0,3.75,-2.45,.75,.75,.05));
-    for(const sx of [-1.2,1.2]){S.add(G.cyl,'#efe6d6',MX(sx,2.15,-1.6,.06,.4,.06));L.add(G.sph,'#ffcf6a',MX(sx,2.42,-1.6,.06,.1,.06))}
-    S.add(G.cyl12,'#8c6a2a',MX(0,1.45,1.2,.7,.06,.7));S.add(G.cyl12,'#c79a3a',MX(0,1.5,1.2,.35,.1,.35));/* lư hương */
-    S.add(G.cyl12,'#7a3a28',MX(0,.86,4.4,.45,.12,.45));/* toạ cụ trên nền chùa, nhìn vào Phật */
-    // gác chuông nhỏ bên phải
-    S.T=MX(TP.x,y,TP.z,1,1,1,0,TRY,0).multiply(MX(9,0,3,1));for(const sx of [-1,1])for(const sz of [-1,1])S.add(G.cyl,'#6a3424',MX(sx*1.1,1.6,sz*1.1,.13,3.2,.13));S.add(G.pyr4,'#3a3230',MX(0,3.7,0,2.2,1.2,2.2));S.add(G.pyr4,SNOW,MX(0,3.85,0,2,1.1,2));S.add(G.cyl12,'#7a5a2a',MX(0,2.3,0,.5,.9,.5));S.add(G.sph,'#7a5a2a',MX(0,2.75,0,.5,.25,.5));S.b('#3a2c22',0,3.05,0,2.4,.12,.12);
+  {const y=H(TP.x,TP.z);S.at(TP.x,y,TP.z,TRY);L.at(TP.x,y,TP.z,TRY);
+    // Chánh điện kiểu Bắc Âu (tấm 08): nhà gỗ sồi một tầng, hai lớp mái dốc nhẹ phủ tuyết, lam gỗ dọc, cửa kính lớn sáng ấm, hoa sen phát sáng trên đầu hồi
+    const oak='#d2a676',dk='#a07a56',st='#9a958e',z0=-1.5,w=11,d=8,h=3.4,y0=.7;
+    S.b(st,0,.3,z0+.8,14,.8,12.5);for(let i=0;i<4;i++)S.b(i%2?'#a8a39b':st,0,.1+i*.17,z0+d/2+3.2-i*.45,7,.2,1);/* nền đá, bậc thềm rộng */
+    S.b(oak,0,y0+h/2,z0,w,h,d);for(let x=-w/2+.3;x<=w/2-.2;x+=.45)if(Math.abs(x)>2.5){S.b(dk,x,y0+h/2,z0+d/2+.03,.12,h,.06);S.b(dk,x,y0+h/2,z0-d/2-.03,.12,h,.06)}
+    for(let zz=-d/2+.3;zz<=d/2-.2;zz+=.45)for(const sx of [-1,1])S.b(dk,sx*(w/2+.03),y0+h/2,z0+zz,.06,h,.12);
+    L.b('#ffcf86',0,y0+1.4,z0+d/2+.04,4.6,2.7,.05);for(const x of [-2.35,-1.15,0,1.15,2.35])S.b('#4a3828',x,y0+1.4,z0+d/2+.08,.12,2.8,.08);S.b('#4a3828',0,y0+2.8,z0+d/2+.08,4.8,.14,.1);
+    for(const sx of [-1,1])L.b('#ffc977',sx*(w/2+.04),y0+1.8,z0,.05,1.4,3);
+    const roof=(yb,half,rise,len,col)=>{const a=Math.atan2(rise,half),Lr=Math.hypot(half,rise);for(const sd of [-1,1]){S.b(col,sd*half/2,yb+rise/2,z0,Lr,.26,len,0,0,-sd*a);S.b(SNOW,sd*(half/2-.06),yb+rise/2+.26,z0,Lr+.05,.32,len+.15,0,0,-sd*a)}S.b(SNOW,0,yb+rise+.2,z0,.6,.3,len+.15)};
+    S.add(G.prism,oak,MX(0,y0+h,z0,w,1.9,d));roof(y0+h-.15,w/2+1.1,2.3,d+1.8,'#6b4f3a');
+    S.b(oak,0,y0+h+2.1,z0,5.6,1.3,d-1.4);S.add(G.prism,oak,MX(0,y0+h+2.75,z0,5.6,1.2,d-1.4));roof(y0+h+2.6,3.4,1.45,d,'#6b4f3a');
+    {const gx=0,gy=y0+h+3.2,gz=z0+(d-1.4)/2+.06;for(const a of [-.95,-.48,0,.48,.95])L.add(G.sph,'#ffd98a',MX(gx+Math.sin(a)*.22,gy+Math.cos(a)*.22,gz,.09,.32,.03,0,0,-a));L.b('#ffd98a',gx,gy-.12,gz,.7,.05,.03)}
+    stringLights(L,-w/2-1,y0+h-.2,z0+d/2+.9,w/2+1,y0+h-.2,z0+d/2+.9,20,0);
+    // đèn đá hai bên bậc thềm
+    for(const sx of [-4.2,4.2]){const lz=z0+d/2+2.6;S.add(G.cyl,st,MX(sx,.9,lz,.18,1.2,.18));S.b(st,sx,1.6,lz,.7,.15,.7);L.b('#ffcc7a',sx,1.95,lz,.45,.5,.45);S.add(G.pyr4,st,MX(sx,2.4,lz,.9,.5,.9));S.add(G.pyr4,SNOW,MX(sx,2.5,lz,.8,.4,.8))}
+    S.add(G.cyl12,'#7a3a28',MX(0,.86,4.4,.45,.12,.45));/* toạ cụ trên thềm đá, nhìn vào chánh điện */
+    // Tượng Phật ngoài trời: tượng trắng ngồi thiền trên bệ đá tự nhiên, bên phải chánh điện
+    {const bx=10.5,bz=1.5;for(const [rx,rz,rr,ry] of [[0,0,1.9,.7],[-1.2,.8,1.1,.5],[1.3,.6,1.2,.55],[.4,-1,1.3,.6],[-.9,-.7,1,.45]])S.add(G.sphLo,rx%2?'#8f8a84':'#a29d96',MX(bx+rx,ry,bz+rz,rr,ry+.35,rr));S.add(G.sphLo,SNOW,MX(bx,1.1,bz,1.6,.3,1.5));
+      const wt='#ffffff',k=1.7,yb=1.15;S.add(G.cyl12,wt,MX(bx,yb+.15*k,bz,.95*k,.3*k,.7*k));S.add(G.sph,wt,MX(bx,yb+.42*k,bz,.85*k,.32*k,.6*k));S.add(G.sph,wt,MX(bx,yb+1.0*k,bz-.05,.48*k,.66*k,.36*k));S.add(G.sph,wt,MX(bx,yb+1.78*k,bz-.05,.27*k,.31*k,.27*k));S.add(G.sph,wt,MX(bx,yb+2.08*k,bz-.07,.13*k));S.add(G.sph,wt,MX(bx,yb+.62*k,bz+.28*k,.3*k,.12*k,.18*k));
+      L.add(G.sph,'#fff0c8',MX(bx,yb+1.8*k,bz-.6,.9,.9,.05));for(const sx of [-2,2]){S.add(G.cyl,st,MX(bx+sx,.6,bz+2.4,.14,1,.14));L.b('#ffcc7a',bx+sx,1.25,bz+2.4,.3,.35,.3);S.add(G.pyr4,st,MX(bx+sx,1.6,bz+2.4,.6,.35,.6))}}
     S.reset();L.reset();warm(...tw(0,2).slice(0,1),y+3.2,tw(0,2)[1],16,18);
-    {const c=tw(0,-1);block(c[0],c[1],5)}for(const sx of [-4.5,4.5]){const c=tw(sx,1);block(c[0],c[1],2.2)}{const c=tw(9,3);block(c[0],c[1],1.8)}
-    for(const [lx,lz,h] of [[-9,-2,8],[-8,-7,9],[8,-6,7],[-12,4,6],[12,-2,8]]){const c=tw(lx,lz);pine(T,c[0],c[1],h)}}
+    {const c=tw(0,-1.5);block(c[0],c[1],7.8)}{const c=tw(10.5,1.5);block(c[0],c[1],5.5)}
+    for(const [lx,lz,h] of [[-10,-3,8],[-9,-9,9],[8,-8,7],[-12,4,6],[16,-4,8],[6,-6,6]]){const c=tw(lx,lz);pine(T,c[0],c[1],h)}}
   // bậc đá lên núi, đèn đá hai bên
   {const a=tw(0,7.2),b=STAIR,n=Math.ceil(Math.hypot(a[0]-b.x,a[1]-b.z)/1.6),ang=Math.atan2(a[0]-b.x,a[1]-b.z);
     for(let i=0;i<=n;i++){const t=i/n,x=b.x+(a[0]-b.x)*t,z=b.z+(a[1]-b.z)*t,yy=H(x,z);S.b('#8a8580',x,yy+.05,z,3.2,.35,1.3,ang);S.b(SNOW,x,yy+.25,z,3,.04,.6,ang);
       if(i%4===1)for(const sd of [-2.6,2.6]){const lx=x+Math.cos(ang)*sd,lz=z-Math.sin(ang)*sd,y2=H(lx,lz);S.b('#8a8580',lx,y2+.5,lz,.35,1,.35);S.b('#8a8580',lx,y2+1.15,lz,.55,.3,.55);L.b('#ffcf7a',lx,y2+1.15,lz,.3,.2,.3);S.add(G.pyr4,'#8a8580',MX(lx,y2+1.5,lz,.55,.4,.55));S.add(G.pyr4,SNOW,MX(lx,y2+1.58,lz,.45,.3,.45))}}}
-  {const s=STATIONS.find(s=>s.id==='sit'),c=tw(0,5.8);s.x=c[0];s.z=c[1];const b=STATIONS.find(s=>s.id==='bell'),d=tw(9,5.2);b.x=d[0];b.z=d[1]}
+  {const s=STATIONS.find(s=>s.id==='sit'),c=tw(0,5.8);s.x=c[0];s.z=c[1];const b=STATIONS.find(s=>s.id==='bell'),d=tw(10.5,5.6);b.x=d[0];b.z=d[1]}
 
   // ---------- trồng thông: dày ở rừng tây và dải sau lều kính, thưa quanh làng ----------
   const segD=(x,z,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));return Math.hypot(x-ax-dx*t,z-az-dz*t)};
@@ -507,7 +509,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='sled'){P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe trượt lướt chậm một vòng hồ. Nhìn cực quang soi xuống mặt băng.',6000)}
     else if(s.id==='sit'){setSit(true);P.mode='sit';{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
     else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:-44,z:84.6,y:H(-44,82)+.5,a:Math.PI};caption('🔥 Hơ tay bên lửa. Ấm áp là điều nhỏ mà thật.',7000)}
-    else if(s.id==='bell'){bell();caption('🔔 Tiếng chuông lan qua đồi tuyết. Nghe cho tới khi âm thanh tan hẳn.',7000);return}
+    else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
     else if(s.id==='deer'){caption('🦌 Tuần lộc ăn rêu địa y. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='wheel'){P.mode='wheel';P.ride=0;setSit(true);caption('🎡 Vòng quay lên rất chậm. Từ trên cao nhìn cả làng tuyết và bầu trời.',7000)}
