@@ -605,6 +605,8 @@ html.lite #zenToolbar [data-zen="boat"]{display:none!important}
 html.lite .lite-grid button,html.lite .lite-therapy,html.lite #home .dock-house>button{background:rgba(8,34,30,.74)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 
 .portal-entry.sq.snow{background-image:url(../img/o-xu-yen.webp)!important}
+/* ba ô Rừng Yên, Vịnh Yên, Xứ Yên: mỗi ô một khung vuông viền mảnh, màu dịu, không phát sáng */
+#home>.portal-entry.sq{border:1px solid rgba(214,184,120,.45)!important;box-shadow:none!important;filter:none!important}
 html.lite #enterSnow{display:none!important}
 /* ---- Xứ Yên (27/11): ô thứ ba cạnh Rừng Yên, Vịnh Yên ---- */
 @media(max-width:760px){#home>#enterSnow{order:6}#home>.portal-entry.sq{flex:0 0 calc(33.333% - 12px);box-sizing:border-box}}
