@@ -1,4 +1,8 @@
-# LÀNG YÊN · bản 0.6 (27/11/2026, anyen.space trước đó là 0.3)
+# LÀNG YÊN · bản 0.6
+
+## Các bản phát hành trên anyen.space
+- **0.6** (27/11/2026): bản hiện tại. Thẻ `v0.6` trên repo cheetah. Góc trái dưới trang hiện `bản 0.6 · <mã bản>`.
+- **0.3** (21/11/2026): bản đưa lên anyen.space qua PR #17 của koikoi369/anyenspace. Thẻ `v0.3` trên repo cheetah, commit `9b22009`.
 
 ## Cập nhật GitHub → Netlify
 
