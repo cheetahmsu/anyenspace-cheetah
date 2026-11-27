@@ -112,6 +112,13 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - Tư Gia: 6 chén trên bàn trà tròn, chén thứ k ở trước bồ đoàn thứ k. Nhà chính Đảo Yên: bộ ấm chén trên bàn ăn, mỗi ghế ăn một chén (14 chỗ ngồi: 8 sofa, 6 ghế; presence `c` nay nhận 0–15).
 - **Nối buổi hẹn Đảo Yên**: vào nhà chính là vào kênh `tu_dao_me__h<buổi>` (trước đây nhà chính không vào kênh nào). Nút **Vào phiên** của buổi hẹn Đảo Yên đưa tàu cập cầu tàu rồi tự đi lên trước cửa nhà chính; chạm cửa là vào gặp mọi người. Bản lite chỉ mời tới Tư Gia.
 
+### Đợt 3: Nhà Hương, Nhà Chạm · lượt làm (27/11)
+
+- Trong phiên Healer, Healer có hàng **Lượt làm**: 🙋 Healer làm mẫu · tên từng khách · 🌿 Mọi người tự làm (`roomTurns`, `{k:'turn',id}`). Người đang tới lượt làm như bình thường và gửi trạng thái sau mỗi bước (`{k:'snap',s}`); người khác thấy cảnh và bảng theo người đó, không bấm được, chờ tới lượt mình. Người vào trễ được gửi lại lượt và trạng thái.
+- **Nhà Chạm**: thấy khối đất được nhào, dáng gốm, thân gốm cao dần theo từng vòng đi lùi, hoa văn; thấy người đang làm đi lùi quanh đôn (vị trí qua `roomSeats` walkers). Tới bước đội gốm ra bãi nung thì người làm tự đi ra như cũ.
+- **Nhà Hương**: thấy mùi đang chọn sáng trên hai tủ, giọt tinh dầu rơi vào đèn xông, thảo mộc trên than, sương khói đổi màu theo bài hương; tới bước ngồi thở thì người xem được nhắc thở theo.
+- Mỗi bước có một câu lời dẫn, Healer chạm **💬 Gửi lời dẫn bước này** để gửi vào khung chat. Ngoài phiên, hoặc khi chọn "Mọi người tự làm", ai cũng làm của mình như cũ.
+
 ## Nhà Văn Hóa · 36 người · Ca Múa Nhạc và 5 hoạt động tập thể
 
 - Đi tới cửa Nhà Văn Hóa (hoặc mở `index.html?vao=nha_van_hoa`) là vào gian 16 × 11 × 6,8 m gỗ trầm `#42362A`, 6 cột `#2A1F15`, mái hai dốc có khe sáng cổ diêm dọc nóc. Sân khấu gỗ 6,4 × 2,8 m phía Nam, màn chiếu 16:9, 6 cụm bàn × 6 ghế = 36 chỗ, Tường Tây triển lãm 9 ô, Tường Đông 18 lời chúc và Quầy trà.
