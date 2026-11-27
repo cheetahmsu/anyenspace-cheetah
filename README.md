@@ -1,4 +1,4 @@
-# LÀNG YÊN 3.5 · Zen Mode
+# LÀNG YÊN · bản 0.6 (27/11/2026, anyen.space trước đó là 0.3)
 
 ## Cập nhật GitHub → Netlify
 
