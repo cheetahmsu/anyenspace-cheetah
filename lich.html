@@ -66,6 +66,7 @@ details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);
 <p class="sub">Đặt phiên với Healer ở sáu Nhà của Rừng Yên, hoặc mời bạn bè tới Tư Gia, Đảo Yên của mình. Hai bên cùng đồng ý là khớp lịch. Mỗi buổi tối đa 6 người.</p>
 
 <div id="liveBox" class="live" hidden></div>
+<div id="noticeBox" class="card" hidden></div>
 
 <div id="v-login" class="card" hidden>
 <h2>Đăng nhập để đặt lịch</h2>
@@ -174,7 +175,7 @@ async function load(){
  var res=await Promise.all([rpc('anyen_my_schedule'),rpc('anyen_sched_open',{p_days:14,p_venue:null})]);
  sched=res[0]||{};openList=res[1]||[];
  $('#tabOpen').hidden=!sched.therapist;
- renderVenueChips();renderBook();renderMine();renderHomeInvites();renderHomes();renderOpenSlots();renderLive();
+ renderVenueChips();renderBook();renderMine();renderHomeInvites();renderHomes();renderOpenSlots();renderLive();renderNotices();
 }
 async function act(fn,msgId,okText){if(busy)return;busy=true;msg(msgId);
  try{await fn();await load();if(okText)msg(msgId,'ok',okText)}catch(e){msg(msgId,'err',vi(e))}finally{busy=false}}
@@ -205,11 +206,17 @@ function renderBook(){var box=$('#bookList');box.textContent='';
   if(s.mine){acts.appendChild(el('span','badge','Phiên của bạn'))}
   else if(s.my_status==='accepted'){acts.appendChild(el('span','badge ok','Đã khớp lịch'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
   else if(s.my_status==='pending'&&s.my_direction==='invite'){acts.appendChild(el('span','badge','Healer mời bạn'));acts.appendChild(respondBtn(s.my_booking,true,'#bookMsg'));acts.appendChild(respondBtn(s.my_booking,false,'#bookMsg'))}
+  else if(s.my_status==='registered'){acts.appendChild(el('span','badge wait','Đã đăng ký · mở duyệt đầu tuần đó'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
   else if(s.my_status==='pending'){acts.appendChild(el('span','badge wait','Chờ Healer nhận lời'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
   else if(s.accepted>=5){acts.appendChild(el('span','badge wait','Đã đủ 5 khách'))}
   else if(!me.member){acts.appendChild(el('span','note','Đăng nhập thành viên để xin tham gia'))}
   else{var d=el('details','inv'),sm=el('summary',null,'Xin tham gia phiên này');d.appendChild(sm);var ta=el('textarea');ta.maxLength=300;ta.placeholder='Lời nhắn cho Healer (không bắt buộc)';ta.setAttribute('aria-label','Lời nhắn cho Healer');d.appendChild(ta);
-   var go=el('button','btn sm','Gửi lời xin');go.type='button';go.style.marginTop='8px';go.onclick=function(){act(function(){return rpc('anyen_booking_request',{p_slot:s.slot,p_date:s.date,p_message:ta.value.trim()||null})},'#bookMsg','Đã gửi lời xin. Healer nhận lời thì phiên sẽ hiện trong Lịch của tôi.')};d.appendChild(go);acts.appendChild(d)}
+   var wl=el('label','f','Lặp lại');var wk=el('select');[[1,'Chỉ buổi này'],[4,'4 tuần liền'],[8,'8 tuần liền'],[12,'12 tuần liền'],[26,'26 tuần liền'],[52,'52 tuần (1 năm)']].forEach(function(x){var o=el('option',null,x[1]);o.value=x[0];wk.appendChild(o)});wl.appendChild(wk);d.appendChild(wl);
+   var go=el('button','btn sm','Gửi lời xin');go.type='button';go.style.marginTop='8px';go.onclick=function(){var n=+wk.value,note=ta.value.trim()||null;
+    if(n===1){act(function(){return rpc('anyen_booking_request',{p_slot:s.slot,p_date:s.date,p_message:note})},'#bookMsg','Đã gửi lời xin. Healer nhận lời thì phiên sẽ hiện trong Lịch của tôi.');return}
+    var okText='';act(function(){return rpc('anyen_booking_request_weeks',{p_slot:s.slot,p_date:s.date,p_weeks:n,p_message:note}).then(function(r){var sk=(r&&r.skipped)||[];
+      okText='Đã đăng ký '+((r&&r.ok)||0)+' buổi. Tuần này chờ Healer nhận lời; các tuần sau giữ Lịch đăng ký, đầu mỗi tuần sẽ mở để Healer duyệt.'+(sk.length?' Bỏ qua '+sk.length+' buổi đã có lịch.':'');if(!(r&&r.ok))throw new Error(sk.length?sk[0].why:'Chưa đăng ký được buổi nào.')})},'#bookMsg','').then(function(){if(okText&&$('#bookMsg').className.indexOf('err')<0)msg('#bookMsg','ok',okText)})};
+   d.appendChild(go);acts.appendChild(d)}
   c.appendChild(acts);box.appendChild(c)})}
 function respondBtn(id,yes,msgId){var b=el('button','btn sm'+(yes?'':' ghost'),yes?'Đồng ý':'Từ chối');b.type='button';b.onclick=function(){act(function(){return rpc('anyen_booking_respond',{p_booking:id,p_accept:yes})},msgId,yes?'Đã nhận lời.':'Đã từ chối.')};return b}
 function cancelBtn(id,msgId){var b=el('button','btn sm ghost','Hủy');b.type='button';b.onclick=function(){if(!confirmSoft(b))return;act(function(){return rpc('anyen_booking_cancel',{p_booking:id})},msgId,'Đã hủy lịch.')};return b}
@@ -223,10 +230,11 @@ function renderMine(){var books=sched.bookings||[],reqs=sched.requests||[];
  var box=$('#myBookList');box.textContent='';
  if(!books.length)box.appendChild(el('p','empty','Bạn chưa đặt phiên nào. Xem tab Đặt lịch để chọn phiên.'));
  // lịch còn hiệu lực lên trước, lịch đã hủy / từ chối / hết hạn xuống cuối
- books=books.filter(function(b){return b.status==='pending'||b.status==='accepted'}).concat(books.filter(function(b){return b.status!=='pending'&&b.status!=='accepted'}));
+ var LIVE={pending:1,accepted:1,registered:1};books=books.filter(function(b){return LIVE[b.status]}).concat(books.filter(function(b){return !LIVE[b.status]}));
  books.forEach(function(b){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,(ICON[b.venue]||'')+' '+b.venue_name));l.appendChild(el('small',null,dateLabel(b.date)+' · Healer '+b.therapist_name));if(b.message)l.appendChild(el('small',null,'“'+b.message+'”'));
   row.append(l,el('div','time',hhmm(b.start)+'–'+hhmm(b.end)));c.appendChild(row);var a=el('div','acts');
   if(b.status==='accepted'){a.appendChild(el('span','badge ok','Đã khớp lịch'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
+  else if(b.status==='registered'){a.appendChild(el('span','badge wait','Lịch đăng ký · mở duyệt đầu tuần đó'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
   else if(b.status!=='pending'){a.appendChild(el('span','badge wait',DONE[b.status]||b.status));c.classList.add('past')}
   else if(b.direction==='invite'){a.appendChild(el('span','badge','Healer mời bạn'));a.appendChild(respondBtn(b.id,true,'#mineMsg'));a.appendChild(respondBtn(b.id,false,'#mineMsg'))}
   else{a.appendChild(el('span','badge wait','Chờ Healer nhận lời'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
@@ -249,6 +257,11 @@ function renderMine(){var books=sched.bookings||[],reqs=sched.requests||[];
  pendReq.forEach(function(q){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,q.guest_name));l.appendChild(el('small',null,q.venue_name+' · '+dateLabel(q.date)));if(q.message)l.appendChild(el('small',null,'“'+q.message+'”'));
   row.append(l,el('div','time',hhmm(q.start)+'–'+hhmm(q.end)));c.appendChild(row);var a=el('div','acts');a.appendChild(respondBtn(q.id,true,'#mineMsg'));a.appendChild(respondBtn(q.id,false,'#mineMsg'));c.appendChild(a);rl.appendChild(c)})}
 
+/* ---- Thông báo hủy ---- */
+async function renderNotices(){var box=$('#noticeBox');var n=null;try{n=await rpc('anyen_my_notices')}catch(e){}
+ var list=(n&&n.list||[]).filter(function(x){return !x.read});if(!list.length){box.hidden=true;return}box.hidden=false;box.textContent='';
+ box.appendChild(el('b',null,'🔔 Thông báo lịch hẹn'));list.forEach(function(x){box.appendChild(el('div','note',x.text))});
+ var ok=el('button','btn sm ghost','Đã xem');ok.type='button';ok.style.marginTop='10px';ok.onclick=function(){rpc('anyen_notices_read').then(function(){box.hidden=true}).catch(function(){})};box.appendChild(ok)}
 /* ---- Lời mời tới Tư Gia / Đảo Yên ---- */
 function placeLabel(p){return (ICON[p]||'')+' '+(p==='tu_dao'?'Đảo Yên':'Tư Gia')}
 function homeBtn(text,cls,fn,msgId,okText,soft){var b=el('button','btn sm'+(cls?' '+cls:''),text);b.type='button';b.onclick=function(){if(soft&&!confirmSoft(b))return;act(fn,msgId,okText)};return b}
