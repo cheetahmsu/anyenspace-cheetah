@@ -1051,14 +1051,20 @@
         f.position.copy(p);f.position.z+=.03;if(i===k.n-1&&k.n>3)f.scale.multiplyScalar(.6);f.rotation.y=Math.sin(i)*.4;g.add(f);fl.push(f)}
       g.userData.flowers=fl;g.userData.kind=k;return g}
     // 6 chậu chính trên bục vòng cung, Vanda treo từ xà mái
-    const spots=[[-1.9,-1.2],[-1.15,-1.85],[-.38,-2.1],[.38,-2.1],[1.15,-1.85]],pots=[];
-    /* 27/11: bục là một dải vòng cung khối kín (trước là miếng trụ cắt hở hai mặt bên, đáy trùng sàn nên nhấp nháy, lộ lối sỏi bên dưới) */
-    {const r0=1.85,r1=2.75,a0=Math.PI*.62,a1=Math.PI*1.38,P=(r,a)=>[r*Math.sin(a),r*Math.cos(a)],sh=new THREE.Shape(),N=32;
-      for(let i=0;i<=N;i++){const [x,z]=P(r1,a0+(a1-a0)*i/N);i?sh.lineTo(x,-z):sh.moveTo(x,-z)}for(let i=N;i>=0;i--){const [x,z]=P(r0,a0+(a1-a0)*i/N);sh.lineTo(x,-z)}
-      const dg=new THREE.ExtrudeGeometry(sh,{depth:.3,bevelEnabled:false,curveSegments:1});dg.rotateX(-Math.PI/2);
-      rAdd(st,new THREE.Mesh(dg,new THREE.MeshStandardMaterial({color:'#6b4e36',roughness:1})),0,.02,.2);
-      /* không cho nhân vật đi xuyên qua bục: chia cung thành từng đoạn chữ nhật nhỏ */
-      st.blocks=st.blocks||[];for(let i=0;i<9;i++){const xs=[],zs=[];for(const a of [a0+(a1-a0)*i/9,a0+(a1-a0)*(i+1)/9])for(const r of [r0,r1]){const [x,z]=P(r,a);xs.push(x);zs.push(z+.2)}st.blocks.push([Math.min(...xs),Math.min(...zs),Math.max(...xs),Math.max(...zs)])}}
+    /* 27/11: bục ngoài uốn hình dấu ngã (~) một nhịp sóng, đặt cách kệ sát tường một lối đi; hai đầu bục chừa lối rộng để vào tới kệ */
+    const TL=2.3,TZ=-1.3,TA=.35,TW=.5,tz=x=>TZ+TA*Math.sin(Math.PI*x/TL);
+    const spots=[-1.85,-.92,0,.92,1.85].map(x=>[x,tz(x)]),pots=[];
+    {const N=64,L=[],R=[],sh=new THREE.Shape();
+      for(let i=0;i<=N;i++){const x=-TL+2*TL*i/N,z=tz(x),d=TA*Math.PI/TL*Math.cos(Math.PI*x/TL),n=Math.hypot(1,d),nx=-d/n,nz=1/n;L.push([x+nx*TW/2,z+nz*TW/2]);R.push([x-nx*TW/2,z-nz*TW/2])}
+      /* đầu bục bo tròn: nửa vòng quanh tâm đầu mút, từ mép này sang mép kia (sg=1 đầu phải, -1 đầu trái) */
+      const cap=(x,sg)=>{const z=tz(x),d=TA*Math.PI/TL*Math.cos(Math.PI*x/TL),n=Math.hypot(1,d),nx=-d/n*sg,nz=1/n*sg,tx=1/n*sg,tw=d/n*sg,out=[];
+        for(let k=1;k<12;k++){const f=Math.PI*k/12;out.push([x+TW/2*(Math.cos(f)*nx+Math.sin(f)*tx),z+TW/2*(Math.cos(f)*nz+Math.sin(f)*tw)])}return out};
+      const pts=[...L,...cap(TL,1),...R.slice().reverse(),...cap(-TL,-1)];
+      pts.forEach(([x,z],k)=>k?sh.lineTo(x,-z):sh.moveTo(x,-z));
+      const dg=new THREE.ExtrudeGeometry(sh,{depth:.3,bevelEnabled:false,curveSegments:1});dg.rotateX(-Math.PI/2);dg.computeVertexNormals();
+      rAdd(st,new THREE.Mesh(dg,new THREE.MeshStandardMaterial({color:'#6b4e36',roughness:1,side:THREE.DoubleSide})),0,.02,0);
+      /* không cho nhân vật đi xuyên qua bục: chia đường cong thành từng đoạn chữ nhật nhỏ */
+      st.blocks=st.blocks||[];for(let i=0;i<16;i++){const xa=-TL-TW/2+(2*TL+TW)*i/16,xb=-TL-TW/2+(2*TL+TW)*(i+1)/16,zs=[];for(let t=0;t<=4;t++){const x=Math.max(-TL,Math.min(TL,xa+(xb-xa)*t/4));zs.push(tz(x))}st.blocks.push([xa,Math.min(...zs)-TW/2,xb,Math.max(...zs)+TW/2])}}
     KINDS.forEach((k,i)=>{const o=orchid(k);if(k.hang){o.position.set(1.95,1.95,-1.25);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.7,4),iron);ch.position.y=.95;o.add(ch)}else{const [x,z]=spots[i];o.position.set(x,.32,z);o.rotation.y=Math.atan2(-x,2-z)*.6}
       st.sc.add(o);pots.push(o);rTap(st,o,()=>focus(i))});
     // chậu nhỏ trang trí trên kệ (bản sao thu nhỏ)
