@@ -1686,7 +1686,12 @@
     const fr=new THREE.Group();for(const k of [.34,.47]){const r=rm+k,ring=new THREE.RingGeometry(r-.02,r+.02,84,1).rotateX(-Math.PI/2),p=ring.attributes.position;for(let j=0;j<p.count;j++)p.setY(j,tdTerrainY(R.cx+p.getX(j),R.cz+p.getZ(j))+.015);const o=new THREE.Mesh(ring,SH_RAKE_M);o.position.set(R.cx,0,R.cz);o.renderOrder=1;fr.add(o)}
     R.rm=rm;TU_DAO.group.add(g,fr);R.grid=g;R.frame=fr;R.cells.forEach((q,i)=>{if(q)shGridPut(q,i)})}
   /* camera nhìn từ phía trong đảo ra biển, hơi cao, hình vỏ sò chiếm khoảng nửa màn hình; bảng ở dưới nên hình nằm nửa trên */
-  function shArtCam(R,wide){const A=TD_ACT;if(!R)return;/* camera sau lưng người ngồi: xoay hướng nhìn về phía bên người ngồi ~25°, người nằm ở góc dưới, không che hình */const b=0,[f0,f1]=R.f,fx=f0*Math.cos(b)+f1*Math.sin(b),fz=f1*Math.cos(b)-f0*Math.sin(b),ph=camera.aspect<1,D=2*((R.rm||1)+.6),half=Math.tan(camera.fov*Math.PI/360),el=(wide?(ph?38:30):(ph?46:38))*Math.PI/180/* thấp vừa đủ để thấy biển và chân trời phía sau hình */;
+  function shArtCam(R,wide){const A=TD_ACT;if(!R)return;
+    /* Trang lite: nhìn thẳng từ trên xuống, ô xếp phẳng không nghiêng, rộng hết chiều ngang màn hình (laptop: vừa phần trên bảng xếp) */
+    if(window.anyenLite){const [fx,fz]=R.f,ph=camera.aspect<1,half=Math.tan(camera.fov*Math.PI/360),D=2*((R.rm||1)+.6),vis=ph?.5:.62,el=89.5*Math.PI/180;
+      let dist=Math.max((D/2)/(half*camera.aspect),(D/2)/(half*vis))*(ph?1.0:1.04);if(wide)dist*=1.1;
+      const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.36)*dist*half,L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
+      A.cairnCam={t:0,L,P:new THREE.Vector3(L.x+fx*dist*Math.cos(el),gy+dist*Math.sin(el),L.z+fz*dist*Math.cos(el))};A.shCam=true;A.artCam=null;return}/* camera sau lưng người ngồi: xoay hướng nhìn về phía bên người ngồi ~25°, người nằm ở góc dưới, không che hình */const b=0,[f0,f1]=R.f,fx=f0*Math.cos(b)+f1*Math.sin(b),fz=f1*Math.cos(b)-f0*Math.sin(b),ph=camera.aspect<1,D=2*((R.rm||1)+.6),half=Math.tan(camera.fov*Math.PI/360),el=(wide?(ph?38:30):(ph?46:38))*Math.PI/180/* thấp vừa đủ để thấy biển và chân trời phía sau hình */;
     let dist=Math.max(D*Math.sin(el)/(.5*2*half),D/((ph?.9:.6)*2*half*camera.aspect));if(wide)dist*=1.15;
     const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.22)*dist*half/Math.sin(el),L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
     A.cairnCam={t:0,L,P:new THREE.Vector3(L.x+fx*dist*Math.cos(el),gy+dist*Math.sin(el),L.z+fz*dist*Math.cos(el))};A.shCam=true;A.artCam=null}
