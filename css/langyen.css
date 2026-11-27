@@ -599,5 +599,5 @@ html.lite #zenToolbar [data-zen="boat"]{display:none!important}
 .lite-resume:hover{background:#c8a96a40}
 .lite-grid button[hidden]{display:none!important}
 @media(min-width:761px){html.lite .lite-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}html.lite .lite-grid button small{font-size:11px}}
-/* lite Nhà Chạm: lời nhắc "chạm đất…" luôn hiện, vì người chơi nặn bằng cách chạm vào đất */
+/* Nhà Chạm (lite và full): lời nhắc "chạm đất…" luôn hiện, vì người chơi nặn bằng cách chạm vào đất */
 #roomBox.rm-ui-off.cham-lite .rm-hint{display:block!important}
