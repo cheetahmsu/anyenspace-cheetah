@@ -292,6 +292,7 @@
     const potter=new THREE.Group();/* the guest, bent over the clay */{const body=new THREE.Mesh(new THREE.ConeGeometry(.24,.95,10),mat(guestColor));body.position.y=.48;potter.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),mat('#d9b48f'));head.position.set(0,1.02,0);potter.add(head);
       for(const s of [-1,1]){const arm=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.42,6),mat(guestColor));arm.position.set(s*.13,.72,-.16);arm.rotation.x=.9;potter.add(arm)}}
     st.sc.add(potter);let ang=1.9;const placePotter=()=>{potter.position.set(Math.sin(ang)*.95,0,Math.cos(ang)*.95);potter.rotation.set(0,ang,0);potter.rotateX(-.32)};placePotter();
+    const LT=!!window.anyenLite;if(LT){potter.visible=false;roomBox.classList.add('cham-lite')}/* lite: không vẽ người thợ sẵn, chính người chơi chạm vào đất để nặn như ở các nhà khác */
     const shelf=new THREE.Group();shelf.position.set(0,0,-3.05);st.sc.add(shelf);for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(4,.06,.45),mat('#4e3a2a'));b.position.y=.12+k*.44;shelf.add(b)}
     const drawShelf=()=>{while(shelf.children.length>6)gomDispose(shelf.children[6],shelf);gomRows.filter(r=>gomAge(r)>=GOM_FIRE_SEC).slice(0,9).forEach((r,i)=>{const m=gomMesh(r,.72);m.position.set(-1.65+(i%6)*.66,.15+Math.floor(i/6)*.44,0);shelf.add(m)})};drawShelf();st.onPots=drawShelf;rTap(st,shelf,()=>openArchive('pots'));
     /* 3.41: bày biện theo ảnh Nhà Chạm: thảm cói, bàn xoay thứ hai có bình đang nặn, 6 bồ đoàn (3 quanh mỗi bàn, ngồi được), bàn gỗ bên phải có ống bút
@@ -319,10 +320,10 @@
     const retex=stage=>{potMat.map.dispose();const t=new THREE.CanvasTexture(gomCanvas(gom.shape,['nhao','cat','dang','nan','chuot','hoavan'].includes(gom.step)?-1:gom.pattern,gom.seed,stage));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;potMat.map=t;potMat.roughness=gom.polish>=2?.55:gom.polish?.75:.95;potMat.needsUpdate=true};
     // resume a half-made pot if the guest stepped out
     if(['nan','chuot','hoavan','phoi','xong'].includes(gom.step)){sand.visible=true;setPot(gom.rounds/GOM_ROUNDS);retex(gom.step==='xong'?'dry':'wet')}else if(gom.step==='dang'||gom.step==='cat'){sand.visible=gom.step==='dang'}
-    st.tick.push(t=>{if(anim){const u=Math.min(1,(performance.now()-anim.t0)/anim.dur);if(anim.kind==='round'){ang=anim.a0+u*Math.PI*2;placePotter();potter.position.y=Math.abs(Math.sin(u*Math.PI*8))*.03;setPot((gom.rounds-1+u)/GOM_ROUNDS);const h=u<.5?'Hít vào…':'Thở ra…';if(anim.h!==h){anim.h=h;rmHint('🚶 Đi lùi quanh đôn · vòng '+gom.rounds+'/'+GOM_ROUNDS+' · '+h)}}
+    st.tick.push(t=>{if(anim){const u=Math.min(1,(performance.now()-anim.t0)/anim.dur);if(anim.kind==='round'){if(LT)st.yaw=anim.y0-u*Math.PI*2;ang=anim.a0+u*Math.PI*2;placePotter();potter.position.y=Math.abs(Math.sin(u*Math.PI*8))*.03;setPot((gom.rounds-1+u)/GOM_ROUNDS);const h=u<.5?'Hít vào…':'Thở ra…';if(anim.h!==h){anim.h=h;rmHint('🚶 Đi lùi quanh đôn · vòng '+gom.rounds+'/'+GOM_ROUNDS+' · '+h)}}
         else if(anim.kind==='knead'){const s=1-Math.sin(u*Math.PI)*.25;lump.scale.set(1+(1-s)*.6,.75*s,1+(1-s)*.6)}
         if(u>=1){const k=anim.kind;anim=null;if(k==='round'&&gom.rounds>=GOM_ROUNDS){gom.step='chuot';setPot(1)}render()}}});
-    st.cleanup=()=>{clearInterval(dryT);st.onPots=null};
+    st.cleanup=()=>{clearInterval(dryT);st.onPots=null;roomBox.classList.remove('cham-lite')};
     const btn=(k,label,gold)=>'<button data-gm="'+k+'"'+(gold?' class="rm-gold"':'')+(anim?' disabled':'')+'>'+label+'</button>';
     function render(){const s=gom.step;let h='';
       if(s==='nhao')h='<p>Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.</p><div class="rm-row">'+btn('knead','👐 Nhào đất · '+gom.kneads+'/5',1)+'</div>';
@@ -334,14 +335,18 @@
       else if(s==='phoi')h='<p>Phơi gốm dưới nắng cho khô. <span class="rm-note">Thực tế ở Bàu Trúc gốm phơi nắng khoảng 4–6 giờ; trong Rừng Yên rút lại '+GOM_DRY_SEC+' giây.</span></p><div class="rm-row">'+(dryT?'<span class="rm-note">☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây</span>':btn('dry','☀️ Phơi nắng',1))+'</div>';
       else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
       if(s==='xong'&&window.anyenLite)h='<p>Gốm mộc đã khô. Ở bản nhẹ, gốm được nung ngay, có áo gốm hỏa biến và vào kho gốm luôn.</p><div class="rm-row">'+btn('carry','🔥 Nung gốm',1)+'</div>';
+      if(LT&&!anim){const LH={nhao:'👐 Chạm khối đất để nhào · '+gom.kneads+'/5',cat:'🤲 Chạm đôn để rắc cát, đặt đất lên',dang:'Chọn dáng gốm bên dưới, rồi chạm đất để bắt đầu nặn',nan:'🚶 Chạm đất, đi lùi một vòng quanh đôn · '+gom.rounds+'/'+GOM_ROUNDS,chuot:gom.polish?'🎋 Chạm gốm để làm bóng bằng cật tre':'💧 Chạm gốm để vuốt vải ướt',hoavan:'✍️ Chọn dụng cụ bên dưới, rồi chạm gốm để khắc',phoi:dryT?'☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây':'☀️ Chạm gốm để đem phơi nắng',xong:'🔥 Chạm gốm để nung'};if(LH[s])rmHint(LH[s])}
       rmPanel.innerHTML=h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>'}
     render();
     rmPanel.onclick=e=>{const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
-      const a=e.target.closest('[data-gm]')?.dataset.gm;if(a==='kho'){openArchive('pots');return}if(!a||anim)return;
+      const a=e.target.closest('[data-gm]')?.dataset.gm;if(a==='kho'){openArchive('pots');return}act(a)};
+    if(LT){const hit=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1.3,12),new THREE.MeshBasicMaterial({visible:false})),0,.65,0);
+      rTap(st,hit,()=>{const s=gom.step;act({nhao:'knead',cat:'sand',dang:'start',nan:'round',chuot:gom.polish?'polish1':'polish0',hoavan:'carve',phoi:dryT?null:'dry',xong:'carry'}[s])})}
+    function act(a){if(!a||anim)return;
       if(a==='knead'){gom.kneads++;strike(82,.6,.1,[[1,1],[1.6,.3]]);anim={kind:'knead',t0:performance.now(),dur:600};if(gom.kneads>=5)gom.step='cat';render()}
       else if(a==='sand'){sand.visible=true;strike(2400,.4,.012,[[1,1]]);gom.step='dang';render()}
       else if(a==='start'){gom.step='nan';gom.rounds=0;pot.geometry.dispose();pot.geometry=gomGeo(gom.shape,.01);render()}
-      else if(a==='round'){gom.rounds++;anim={kind:'round',t0:performance.now(),dur:4800,a0:ang};render()}
+      else if(a==='round'){gom.rounds++;anim={kind:'round',t0:performance.now(),dur:4800,a0:ang,y0:st.yaw};render()}
       else if(a==='polish0'){gom.polish=Math.max(1,gom.polish);retex('wet');strike(520,.8,.02,[[1,1]]);render()}
       else if(a==='polish1'){if(!gom.polish)return;gom.polish=2;retex('wet');strike(700,.8,.02,[[1,1]]);gom.step='hoavan';render()}
       else if(a==='carve'){gom.step='phoi';retex('wet');strike(900,.5,.02,[[1,1],[2.2,.3]]);render()}
