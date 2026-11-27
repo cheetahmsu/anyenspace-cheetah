@@ -333,6 +333,7 @@
       else if(s==='hoavan')h='<p>Khắc hoa văn bằng những dụng cụ mộc mạc.</p><div class="rm-row">'+GOM_TOOLS.map((t,i)=>'<button data-gt="'+i+'"'+(gom.pattern===i?' class="sel"':'')+'>'+t[0]+' · '+t[1]+'</button>').join('')+'</div><div class="rm-row">'+btn('carve','✍️ Khắc hoa văn',1)+'</div>';
       else if(s==='phoi')h='<p>Phơi gốm dưới nắng cho khô. <span class="rm-note">Thực tế ở Bàu Trúc gốm phơi nắng khoảng 4–6 giờ; trong Rừng Yên rút lại '+GOM_DRY_SEC+' giây.</span></p><div class="rm-row">'+(dryT?'<span class="rm-note">☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây</span>':btn('dry','☀️ Phơi nắng',1))+'</div>';
       else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
+      if(s==='xong'&&window.anyenLite)h='<p>Gốm mộc đã khô. Ở bản nhẹ, gốm được nung ngay, có áo gốm hỏa biến và vào kho gốm luôn.</p><div class="rm-row">'+btn('carry','🔥 Nung gốm',1)+'</div>';
       rmPanel.innerHTML=h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>'}
     render();
     rmPanel.onclick=e=>{const sh=e.target.closest('[data-gs]');if(sh){gom.shape=+sh.dataset.gs;render();return}const tl=e.target.closest('[data-gt]');if(tl){gom.pattern=+tl.dataset.gt;render();return}
@@ -345,6 +346,10 @@
       else if(a==='polish1'){if(!gom.polish)return;gom.polish=2;retex('wet');strike(700,.8,.02,[[1,1]]);gom.step='hoavan';render()}
       else if(a==='carve'){gom.step='phoi';retex('wet');strike(900,.5,.02,[[1,1],[2.2,.3]]);render()}
       else if(a==='dry'){gom.dryLeft=GOM_DRY_SEC;dryT=setInterval(()=>{gom.dryLeft--;if(gom.dryLeft<=0){clearInterval(dryT);dryT=null;gom.step='xong';retex('dry');rmHint('☀️ Gốm mộc đã khô')}render()},1000);render()}
+      else if(a==='carry'&&window.anyenLite&&window.__gomLiteFire){const R=window.__gomLiteFire();pot.visible=false;sand.visible=false;lump.visible=true;lump.scale.set(1,.75,1);rmHint('🏺 Gốm nung xong · đã vào kho gốm');
+        rmPanel.innerHTML='<p><b>🏺 '+R.name+' · áo gốm '+R.fired+'</b></p><div class="rm-gom-done"></div><p>Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Gốm đã vào kho gốm và Túi An Yên.</p><div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button><button class="rm-gold" data-gm="again">👐 Nặn gốm mới</button></div>';
+        if(R.img){R.img.style.cssText='display:block;max-width:180px;margin:4px auto';rmPanel.querySelector('.rm-gom-done').appendChild(R.img)}drawShelf()}
+      else if(a==='again'){render()}
       else if(a==='carry'){closeRoom();gom.phase='carry';setGomCarry(true);refreshGomPill();say('🏺 Đội gốm ra bãi nung · Chạm nút bên dưới để đi');}}}
   // ---------------------------------------------------------------- Nhà Niệm · House of Mindfulness (Đ1)
   // Bản vẽ nội thất 11 × 11 × 6,2 m: gỗ trầm #4A3C2E, cột #261C14, đá bazan #4C4A43, chiếu cói #9E8969.
