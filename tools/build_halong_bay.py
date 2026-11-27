@@ -378,7 +378,7 @@ def main():
                 ],
                 "accessories": [{"id": "hat", "label": "Nón"}, {"id": "glasses", "label": "Kính"}, {"id": "scarf", "label": "Khăn"}],
                 "colors": [["Vàng", "#d9b67d"], ["Xanh", "#90b7a5"], ["Kem", "#f0e5d4"], ["Tím", "#b5a1c7"], ["Rêu", "#687b48"], ["Hồng", "#e8a1b4"]],
-                "default": {"style": "tee_jeans", "color": "#90b7a5", "acc": ["hat"]}
+                "default": {"style": "tee_jeans", "color": "#90b7a5", "acc": []}
             }
         },
         "nature": [
