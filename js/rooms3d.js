@@ -1012,8 +1012,7 @@
     rAdd(st,new THREE.Mesh(new THREE.PlaneGeometry(8,7),glass),0,3.95,0).rotation.x=Math.PI/2;
     for(let i=-3;i<=3;i++)rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.06,.06,7),iron),i*1.15,3.9,0);
     const sky=new THREE.DirectionalLight('#f4fff4',1.1);sky.position.set(-1,6,1);st.sc.add(sky);st.sc.background=new THREE.Color('#203328');
-    // lối sỏi trắng và bục gỗ trưng lan hình vòng cung
-    rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(1.2,.02,4),mat('#d8d2c2')),0,.01,1.4);
+    // 27/11: bỏ lối sỏi trắng và tọa cụ; nhà này chỉ đứng ngắm lan, nền là sàn gỗ trơn. Bục gỗ trưng lan hình vòng cung
     const deck=mat('#6b4e36'),soil=mat('#3b2c20');
     // kệ ba tầng sát tường sau với các chậu lan nhỏ
     for(const [k,y,z] of [[0,.45,-3.05],[1,.9,-3.2],[2,1.35,-3.3]]){rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(6.6,.06,.34),deck),0,y,z);for(const x of [-3.2,3.2])rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.06,y,.06),iron),x,y/2,z)}
@@ -1055,8 +1054,6 @@
       st.sc.add(o);pots.push(o);rTap(st,o,()=>focus(i))});
     // chậu nhỏ trang trí trên kệ (bản sao thu nhỏ)
     for(let t=0;t<3;t++)for(let j=0;j<6;j++){const k=KINDS[(j+t*2)%5],o=orchid(k);o.scale.setScalar(.55);o.position.set(-2.75+j*1.1+(t%2)*.3,[.48,.93,1.38][t],[-3.05,-3.2,-3.3][t]);o.rotation.y=j;st.sc.add(o)}
-    // tọa cụ trước bục để ngồi ngắm
-    rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.3,.32,.12,16),mat('#6e4a33')),0,.06,.9);
     const want={tx:0,ty:.9,tz:-.6,dist:4.4,pitch:.14};let cur=-1,sess=null;
     st.tick.push(t=>{const a=.08;st.target.x+=(want.tx-st.target.x)*a;st.target.y+=(want.ty-st.target.y)*a;st.target.z+=(want.tz-st.target.z)*a;if(want.dist!=null){st.dist+=(want.dist-st.dist)*a;if(Math.abs(want.dist-st.dist)<.01)want.dist=null}
       for(const [i,o] of pots.entries()){const sway=Math.sin(t*.8+i)*.012;for(const [j,f] of o.userData.flowers.entries())f.rotation.z=sway*(1+j*.2)}
