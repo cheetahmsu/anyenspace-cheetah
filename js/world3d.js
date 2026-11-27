@@ -2527,7 +2527,12 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     hb.addEventListener('click',e=>{e.stopPropagation();if(bayMode){window.__goTuDao&&window.__goTuDao(true);label();return}askFinish(()=>goHome(false,true))})}
   // Lịch trị liệu: vào thẳng Nhà đã đăng ký (Healer đến giờ phiên, khách đã được nhận). Nhà có phòng bên trong thì mở phòng;
   // Nhà chưa có phòng thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.
-  function goSchedHouse(id){if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id)||(id==='nha_van_hoa'?VAN_HOA:id==='nha_hoa_lan'?NHA_SAC:null);let door,yaw;
+  // Lịch hẹn Tư Gia / Đảo Yên (v3.9): đến giờ hẹn, Chủ nhà và bạn đã khớp vào Tư Gia / Đảo Yên của mình là cùng một kênh.
+  function goSchedHouse(id){
+    if(id==='tu_dao'){if(roomOpen||boatRide)return false;if(bayMode){window.__goTuDao&&window.__goTuDao(true);return true}
+      enterBay();(function wait(n){if(bayMode&&window.__goTuDao){setTimeout(()=>window.__goTuDao(true),400);return}if(n>0)setTimeout(()=>wait(n-1),500)})(40);return true}
+    if(id==='tu_gia'){if(bayMode||boatRide||roomOpen)return false;goHome(true);return true}
+    if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id)||(id==='nha_van_hoa'?VAN_HOA:id==='nha_hoa_lan'?NHA_SAC:null);let door,yaw;
     if(h){door=h.door;yaw=h.rot+Math.PI}else if(id==='nha_hoa_lan'){door=ORCHID_DOOR;yaw=ORCHID.rot+Math.PI}else return false;
     if(!teleportTo(door[0],door[1],yaw))return false;
     if(h&&ROOM_BUILDERS[h.id]){window.__anyenSchedHouse=h.id;setTimeout(()=>arriveHouse(h),300)}
