@@ -87,7 +87,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // ---------- renderer, cảnh ----------
   const R=new THREE.WebGLRenderer({canvas:cv,antialias:!LOW,powerPreference:'high-performance'});R.setPixelRatio(Math.min(LOW?1.5:2,devicePixelRatio||1));R.outputColorSpace=THREE.SRGBColorSpace;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;
   const sc=new THREE.Scene();sc.fog=new THREE.FogExp2('#3e5880',.0052);
-  const cam=new THREE.PerspectiveCamera(58,1,.1,1400);
+  const cam=new THREE.PerspectiveCamera(62,1,.1,1400);/* cùng góc nhìn 62° với Rừng Yên, Vịnh Yên */
   sc.add(new THREE.HemisphereLight('#c4d6f2','#56688e',1.45));
   const moon=new THREE.DirectionalLight('#dfe8ff',1.0);moon.position.set(-60,80,40);sc.add(moon);
   const warm=(x,y,z,i,d)=>{const l=new THREE.PointLight('#ffb366',i,d,1.6);l.position.set(x,y,z);sc.add(l);return l};
@@ -496,8 +496,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const flake=(()=>{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
   const snow=new THREE.Points(snowG,new THREE.PointsMaterial({size:.16,map:flake,transparent:true,depthWrite:false,opacity:.85}));snow.frustumCulled=false;sc.add(snow);
   // hai nút bật tắt trong Xứ Yên: Giáng sinh (đèn và trang trí Noel ở làng, khu vui chơi) · Tuyết rơi. Cả hai tắt là cảnh bình thường
-  const fog0=sc.fog.density,FX={xmas:false,snow:false};
-  const applyFx=()=>{xmasG.visible=FX.xmas;snow.visible=FX.snow;sc.fog.density=fog0*(FX.snow?1.35:1);
+  const fog0=sc.fog.density,FX={xmas:false,snow:false};let fogK=fog0;
+  const applyFx=()=>{xmasG.visible=FX.xmas;snow.visible=FX.snow;fogK=fog0*(FX.snow?1.35:1);sc.fog.density=fogK;
     for(const k of ['xmas','snow']){const b=box.querySelector('[data-sn="'+k+'"]');if(b){b.setAttribute('aria-pressed',FX[k]?'true':'false');b.classList.toggle('on',FX[k])}}
     try{localStorage.setItem('xuyen-fx',JSON.stringify(FX))}catch(e){}};
   {try{const q=new URLSearchParams(location.search).get('xuyen');const sv=JSON.parse(localStorage.getItem('xuyen-fx')||'{}');FX.xmas=!!sv.xmas;FX.snow=!!sv.snow;if(q){FX.xmas=/giangsinh/.test(q);FX.snow=/tuyetroi/.test(q)}}catch(e){}if(opts.fx)Object.assign(FX,opts.fx);applyFx()}
@@ -521,13 +521,29 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   let ac=null;const bell=()=>{try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const t0=ac.currentTime;for(const [m,a] of [[1,1],[2.76,.35],[5.4,.12]]){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=196*m;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.14*a,t0+.02);g.gain.exponentialRampToValueAtTime(.0003,t0+7/Math.sqrt(m));o.connect(g).connect(ac.destination);o.start(t0);o.stop(t0+7)}}catch(e){}};
 
   // ---------- chạm, kéo, chụm ----------
-  const ray=new THREE.Raycaster(),pts=new Map();let drag=null,pinch=0;const pd=()=>{const [a,b]=[...pts.values()];return Math.max(10,Math.hypot(a.x-b.x,a.y-b.y))};
-  cv.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{cv.setPointerCapture(e.pointerId)}catch(_){}if(pts.size===1)drag={mv:0};else{if(drag)drag.mv=99;pinch=pd()}});
-  cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
-    if(pts.size===2&&pinch){const d=pd();P.dist=Math.max(3.5,Math.min(40,P.dist*pinch/d));pinch=d;return}if(!drag)return;drag.mv+=Math.abs(dx)+Math.abs(dy);P.yaw-=dx*.006;P.pitch=Math.max(-.1,Math.min(1.2,P.pitch+dy*.004))});
-  cv.addEventListener('pointerup',e=>{if(!pts.delete(e.pointerId))return;pinch=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;if(!d||d.mv>8)return;tap(e.clientX,e.clientY)});
-  cv.addEventListener('pointercancel',e=>{pts.delete(e.pointerId);if(!pts.size)drag=null});
-  cv.addEventListener('wheel',e=>{e.preventDefault();P.dist=Math.max(3.5,Math.min(40,P.dist*Math.exp(Math.sign(e.deltaY)*.1)))},{passive:false});
+  // Nguyên tắc camera giống Rừng Yên, Vịnh Yên (world3d.js): camera sau lưng 14 m × zoom, cao 5,6 m × zoom × độ nâng; zoom 0,45–3 và độ nâng 0,35–2,6 lưu chung
+  // 'yen_cam_zoom', 'yen_cam_lift'; vuốt một ngón khoá trục (ngang xoay ~200° mỗi bề ngang màn hình, có quán tính; dọc nâng hạ camera); hai ngón chụm để zoom
+  // hoặc xoay để quay quanh nhân vật; con lăn chuột zoom tối đa ±18% mỗi nấc; chạm đúp: zoom 0,6 ↔ 1 và trả độ nâng về 1. Xoay chỉ đổi camera, không đổi hướng nhân vật.
+  let camZoom=1,camLift=1;try{const z=Number(localStorage.getItem('yen_cam_zoom'));if(z>=.45&&z<=3)camZoom=z;const v=Number(localStorage.getItem('yen_cam_lift'));if(v>=.35&&v<=2.6)camLift=v}catch(e){}let camZoomS=camZoom;
+  const setZoom=z=>{camZoom=Math.max(.45,Math.min(3,z));try{localStorage.setItem('yen_cam_zoom',String(camZoom))}catch(e){}};
+  const setCamLift=v=>{camLift=Math.max(.35,Math.min(2.6,v));try{localStorage.setItem('yen_cam_lift',String(camLift))}catch(e){}};
+  const ray=new THREE.Raycaster(),pts=new Map();let drag=null,g2=null,pinch0=0,ang0=0,swipeAxis=null,swipeAcc=[0,0],swipeV=0,swipeT=0,inV=0,lastTap=null,dtIn=false;
+  const two=()=>{const [a,b]=[...pts.values()];return [Math.max(10,Math.hypot(a.x-b.x,a.y-b.y)),Math.atan2(b.y-a.y,b.x-a.x)]};
+  cv.addEventListener('pointerdown',e=>{inV=0;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});try{cv.setPointerCapture(e.pointerId)}catch(_){}swipeAxis=null;swipeAcc=[0,0];
+    if(pts.size===1)drag={mv:0,x:e.clientX,y:e.clientY};else{if(drag)drag.mv=99;if(pts.size===2){[pinch0,ang0]=two();g2={mode:null,s:0,a:0}}}});
+  cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;let dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    if(pts.size===2&&g2){const [d,a]=two(),f=Math.max(.8,Math.min(1.25,pinch0/d));let da=a-ang0;da=Math.atan2(Math.sin(da),Math.cos(da));pinch0=d;ang0=a;
+      if(!g2.mode){g2.s+=Math.log(f);g2.a+=da;if(Math.abs(g2.a)>.14)g2.mode='rot';else if(Math.abs(g2.s)>.08)g2.mode='zoom';else return}
+      if(g2.mode==='rot')P.yaw-=da;else setZoom(camZoom*f);return}
+    if(!drag||pts.size!==1)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>12)drag.mv=99;
+    if(!swipeAxis){swipeAcc[0]+=dx;swipeAcc[1]+=dy;const ax=Math.abs(swipeAcc[0]),ay=Math.abs(swipeAcc[1]);if(Math.max(ax,ay)<8)return;swipeAxis=ax>=ay*.8?'x':'y';dx=swipeAcc[0];dy=swipeAcc[1]}
+    if(swipeAxis==='x'){const k=dx/Math.max(320,innerWidth)*3.5,n0=performance.now();swipeV=-k/Math.max(8,n0-swipeT)*1000;swipeT=n0;P.yaw-=k}else setCamLift(camLift+dy/Math.max(320,innerHeight)*2.4)});
+  const inertia=()=>{let tl=performance.now();const f=()=>{const n=performance.now(),dt=Math.min(.05,(n-tl)/1000);tl=n;P.yaw+=inV*dt;inV*=Math.exp(-dt*3.2);if(Math.abs(inV)>.03&&!pts.size&&run)requestAnimationFrame(f)};requestAnimationFrame(f)};
+  cv.addEventListener('pointerup',e=>{const one=pts.size===1;if(!pts.delete(e.pointerId))return;if(one&&swipeAxis==='x'&&performance.now()-swipeT<90&&Math.abs(swipeV)>.3){inV=swipeV;inertia()}
+    if(pts.size===2){[pinch0,ang0]=two();g2={mode:null,s:0,a:0}}else g2=null;swipeAxis=null;swipeAcc=[0,0];if(pts.size)return;const d=drag;drag=null;if(!d||d.mv>8)return;
+    const nt=performance.now();if(lastTap&&nt-lastTap.t<330&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<28){lastTap=null;setZoom(camZoom>.85?.6:1);setCamLift(1);return}lastTap={t:nt,x:e.clientX,y:e.clientY};tap(e.clientX,e.clientY)});
+  cv.addEventListener('pointercancel',e=>{pts.delete(e.pointerId);if(!pts.size){drag=null;g2=null}});
+  cv.addEventListener('wheel',e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);setZoom(camZoom*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012)))))},{passive:false});
   const keys=new Set();const onKey=e=>{const k={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'}[e.key.toLowerCase()];if(e.key==='Escape'&&e.type==='keydown'){if(!mapEl.hidden)mapEl.hidden=true;else if(P.mode!=='walk')stand();return}if(!k)return;e.preventDefault();if(e.type==='keydown'){keys.add(k);P.dest=null}else keys.delete(k)};
   document.addEventListener('keydown',onKey);document.addEventListener('keyup',onKey);
   function tap(cx,cy){if(P.mode!=='walk')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
@@ -587,9 +603,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       else if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.15)P.dest=null;else{mvx=dx/d;mvz=dz/d}}
       if(mvx||mvz){const l=Math.hypot(mvx,mvz),spd=(P.dest&&Math.hypot(P.dest.x-P.x,P.dest.z-P.z)>30?6:2.6)*dt;mvx/=l;mvz/=l;let nx=P.x+mvx*spd,nz=P.z+mvz*spd;
         if(blocked(nx,nz)){const c=colliders.find(c=>Math.hypot(nx-c[0],nz-c[1])<c[2]);const ox=P.x-c[0],oz=P.z-c[1],ol=Math.hypot(ox,oz)||1,tx=-oz/ol,tz=ox/ol,sg=Math.sign(tx*mvx+tz*mvz)||1;nx=P.x+tx*sg*spd;nz=P.z+tz*sg*spd;if(blocked(nx,nz)){nx=P.x;nz=P.z;P.dest=null}}
-        if(Math.hypot(nx,nz)<230){P.x=nx;P.z=nz}P.a=Math.atan2(mvx,mvz);me.position.y=groundY(P.x,P.z)+Math.abs(Math.sin(t*8))*.04}else me.position.y=groundY(P.x,P.z);
+        if(Math.hypot(nx,nz)<230){P.x=nx;P.z=nz}P.a=Math.atan2(mvx,mvz);if(P.dest||keys.has('f'))follow(P.a,dt,1.8);/* camera sau lưng nhân vật khi đi, như kayak và bơi ở Vịnh Yên */me.position.y=groundY(P.x,P.z)+Math.abs(Math.sin(t*8))*.04}else me.position.y=groundY(P.x,P.z);
       me.position.x=P.x;me.position.z=P.z;let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);
-      if(P.dest||keys.size){let dy=P.a+Math.PI-P.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));P.yaw+=dy*Math.min(1,dt*1.6)}
       near=null;for(const s of STATIONS)if(Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near;if(near)actBtn.textContent=near.label;
       tgt.set(P.x,me.position.y+1.5,P.z)}
     else if(P.mode==='husky'){me.position.copy(huskyG.position).add(_v.set(0,.35,-.1).applyAxisAngle(_v2.set(0,1,0),huskyG.rotation.y));me.rotation.set(0,huskyG.rotation.y,0);follow(huskyG.rotation.y,dt);if(P.ride>=1)stand();tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
@@ -600,13 +615,15 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     // camera
     if(camFix){cam.position.set(...camFix[0]);cam.lookAt(...camFix[1])}
     else if(P.mode==='aurora'){P.ride+=dt;const x=70,z=6.2,y=H(70,6)+.45+1.1;cam.position.set(x,y,z);cam.lookAt(x+Math.sin(P.ride*.05)*8,y+9+Math.sin(P.ride*.07)*.8,z+11)}
-    else{const lift=P.mode==='walk'?1:.8,D=P.mode==='walk'?P.dist:Math.min(P.dist,P.mode==='sit'?4.2:5.5),cx=tgt.x+Math.sin(P.yaw)*Math.cos(P.pitch)*D,cz=tgt.z+Math.cos(P.yaw)*Math.cos(P.pitch)*D;let cy=tgt.y+Math.sin(P.pitch)*D*lift+.5;cy=Math.max(cy,groundY(cx,cz)+.6);
-      cpos.set(cx,cy,cz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,Math.min(1,dt*5));cam.lookAt(tgt.x,tgt.y+(P.mode==='walk'?.6+P.pitch*1.5:.6),tgt.z)}
+    else{camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const cz=camZoomS,ride=P.mode!=='walk',gy=ride?tgt.y-1.05:groundY(P.x,P.z),behind=(ride?(P.mode==='sit'?.55:.7):1)*14*cz,cx=tgt.x+Math.sin(P.yaw)*behind,ccz=tgt.z+Math.cos(P.yaw)*behind;
+      const cy=Math.max(5.6*cz*camLift*(ride?.7:1)+Math.max(0,cz-1.5)*7+gy,groundY(cx,ccz)+2.2);/* như Rừng Yên: thu nhỏ quá 1,5 thì camera lên cao dần để thấy toàn cảnh */
+      cpos.set(cx,cy,ccz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*9));cam.lookAt(tgt.x,gy+1.05,tgt.z);cam.rotateX(Math.atan(Math.tan(cam.fov*Math.PI/360)/3));/* nhân vật ở giữa, trên đường một phần ba dưới */
+      sc.fog.density=fogK/(1+Math.max(0,cz-1.2)*.7)}
     // tuyết bay quanh camera
     const A=snowG.attributes.position.array;for(let i=0;i<SNN;i++){let y=A[i*3+1]-dt*(.8+(i%7)*.12);A[i*3]+=Math.sin(t*.6+i)*dt*.25;if(y<0)y+=30;A[i*3+1]=y}snowG.attributes.position.needsUpdate=true;snow.position.set(cam.position.x,cam.position.y-12,cam.position.z);
     R.render(sc,cam)};
   const _v2=new THREE.Vector3();let lastDrag=0;cv.addEventListener('pointermove',()=>{if(pts.size)lastDrag=performance.now()});
-  function follow(h,dt){if(performance.now()-lastDrag<2500)return;let d=h+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));P.yaw+=d*Math.min(1,dt*1.2)}
+  function follow(h,dt,k=3){if(pts.size||performance.now()-lastDrag<1200)return;let d=h+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));P.yaw+=d*Math.min(1,dt*k)}/* camera về sau lưng, bám theo cả khi xe đổi hướng; vuốt xoay thì tạm dừng 1,2 giây */
   requestAnimationFrame(loop);
   caption('❄ Xứ Yên · Hít một hơi lạnh trong lành, thở ra thật chậm. Chạm mặt tuyết để đi, vuốt để nhìn quanh.',7000);
 
@@ -614,6 +631,6 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     sc.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=o.material;if(m.map)m.map.dispose();m.dispose()}});R.dispose();try{R.forceContextLoss()}catch(e){}
     box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
   // Chụp thử: __snowCam([x,y,z],[tx,ty,tz]) đặt camera cố định, __snowCam(null) để trả lại; __snowGo('leukinh') tới một khu; __snowAct('aurora') mở hoạt động
-  window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
+  window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
   window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
   const api={close};window.__snowOpen=api;return api}
