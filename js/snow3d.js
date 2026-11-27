@@ -108,7 +108,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
 
   // ---------- gộp hình: mỗi nhóm vật liệu là một lưới, ít lệnh vẽ, chạy nhẹ trên điện thoại ----------
   const G={box:new THREE.BoxGeometry(1,1,1),cone:new THREE.ConeGeometry(1,1,7,1,true),cone12:new THREE.ConeGeometry(1,1,12),cyl:new THREE.CylinderGeometry(1,1,1,8),cyl12:new THREE.CylinderGeometry(1,1,1,14),sph:new THREE.SphereGeometry(1,10,8),sphLo:new THREE.SphereGeometry(1,6,5),
-    prism:new THREE.CylinderGeometry(1,1,1,3).rotateX(-Math.PI/2).translate(0,.5,0).scale(1/1.732,1/1.5,1),pyr4:new THREE.CylinderGeometry(.0001,1,1,4,1).rotateY(Math.PI/4),frus:new THREE.CylinderGeometry(.62,1,1,4,1).rotateY(Math.PI/4),cyl6:new THREE.CylinderGeometry(1,1,1,6)};
+    prism:new THREE.CylinderGeometry(1,1,1,3).rotateX(-Math.PI/2).translate(0,.5,0).scale(1/1.732,1/1.5,1),pyr4:new THREE.CylinderGeometry(.0001,1,1,4,1).rotateY(Math.PI/4),frus:new THREE.CylinderGeometry(.62,1,1,4,1).rotateY(Math.PI/4),cyl6:new THREE.CylinderGeometry(1,1,1,6),ico:new THREE.IcosahedronGeometry(1,0)};
   for(const k in G)if(G[k].index)G[k]=G[k].toNonIndexed();
   const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_c=new THREE.Color();
   const MX=(x,y,z,sx,sy,sz,rx,ry,rz)=>{_e.set(rx||0,ry||0,rz||0,'YXZ');_q.setFromEuler(_e);return new THREE.Matrix4().compose(_v.set(x,y,z),_q,_s.set(sx,sy==null?sx:sy,sz==null?sx:sz))};
@@ -187,10 +187,18 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
 
   // ---------- các mẫu dựng ----------
   const SNOW='#f4f7fc',IVORY='#f1eee5',WREATH=new THREE.TorusGeometry(.42,.13,5,14).toNonIndexed();
-  function pine(B,x,z,h,y0){const y=y0==null?H(x,z):y0,w=h*.36;B.add(G.cyl,'#4a3a2e',MX(x,y+h*.08,z,w*.09,h*.18,w*.09));
-    const tiers=h>6?4:3;for(let i=0;i<tiers;i++){const t=i/tiers,ty=y+h*(.18+t*.68),r=w*(1-t*.62),th=h*(.4-.05*i);
-      B.add(G.cone,i%2?'#1f3d34':'#24463b',MX(x,ty+th/2,z,r,th,r,0,i*.6,0));B.add(G.cone,SNOW,MX(x,ty+th*.62,z,r*.78,th*.42,r*.78,0,i*.6+.3,0))}
-    B.add(G.cone,SNOW,MX(x,y+h*.97,z,w*.16,h*.1,w*.16))}
+  // cây thông theo dáng Rừng Yên (thông cao thân trần tán bẹt, thông vừa tầng nón, thông non), phủ tuyết, cao thấp tự nhiên
+  const NEEDLE=['#2b4c3f','#335a48','#264438','#3d6450'],BARK='#6e4632',hsh=(x,z,k)=>{const v=Math.sin(x*12.9898+z*78.233+k*37.719)*43758.5453;return v-Math.floor(v)};
+  function pine(B,x,z,h,y0){const y=y0==null?H(x,z):y0,r=hsh(x,z,1),r2=hsh(x,z,2),r3=hsh(x,z,3),ry=r2*6.28;h*=.8+.45*r3;
+    const kind=h<4.6?'young':r<.3?'tall':r<.8?'mid':'young';
+    if(kind==='tall'){const Ht=h*1.5,k=Ht/16;B.add(G.cyl,BARK,MX(x,y+Ht*.4,z,.16*k+.05,Ht*.8,.16*k+.05));
+      const tiers=[[0,1,0,1.4,.8,1.4],[.9,.93,.4,2.1,.7,1.8],[-1.1,.87,-.3,2.2,.62,1.9],[.5,.81,-1,1.9,.58,1.7],[-.5,.75,1,1.8,.55,1.6],[1.3,.7,.2,1.3,.5,1.2]];
+      tiers.forEach(([ox,fy,oz,sx,sy,sz],i)=>{if(i===5&&r2<.5)return;const c=Math.cos(ry),s=Math.sin(ry),px=x+(ox*c-oz*s)*k,pz=z+(ox*s+oz*c)*k,py=y+Ht*fy;
+        B.add(G.ico,NEEDLE[i%4],MX(px,py,pz,sx*k,sy*k,sz*k,0,i*.9+ry,0));B.add(G.ico,SNOW,MX(px,py+sy*k*.42,pz,sx*k*.86,sy*k*.42,sz*k*.86,0,i*.9+ry,0))});return}
+    if(kind==='mid'){const k=h/10;B.add(G.cyl,BARK,MX(x,y+h*.3,z,.17*k,h*.6,.17*k));
+      for(const [cr,ch,cy,c] of [[2.2,3,6.1,1],[1.8,2.7,7.6,0],[1.25,2.3,8.9,3],[.6,1.6,10.1,1]]){B.add(G.cone,NEEDLE[c],MX(x,y+cy*k-1.6*k,z,cr*k*(1.1+.25*r2),ch*k,cr*k*(1.1+.25*r2),0,ry+cy,0));B.add(G.cone,SNOW,MX(x,y+cy*k-1.6*k+ch*k*.2,z,cr*k*.9,ch*k*.45,cr*k*.9,0,ry+cy+.3,0))}return}
+    const k=h/4.6;B.add(G.cyl,BARK,MX(x,y+1*k,z,.08*k,2*k,.08*k));
+    for(const [cr,ch,cy,c] of [[1.25,2.1,2,3],[.9,1.8,3.1,1],[.5,1.2,4.05,0]]){B.add(G.cone,NEEDLE[c],MX(x,y+cy*k,z,cr*k*1.15,ch*k,cr*k*1.15,0,ry+cy,0));B.add(G.cone,SNOW,MX(x,y+cy*k+ch*k*.2,z,cr*k*.74,ch*k*.42,cr*k*.74,0,ry+cy+.3,0))}}
   // nhà gỗ Lapland: thân gỗ sẫm (đỏ Falu, nâu), mái dốc phủ tuyết dày, cửa sổ vàng ấm, ống khói, củi xếp hiên
   function cabin(x,z,ry,o){o=o||{};const w=o.w||7,d=o.d||9,h=o.h||3.2,col=o.col||'#8a5f3e',y=H(x,z);S.at(x,y,z,ry);L.at(x,y,z,ry);
     S.b('#3d3530',0,-.3,0,w+.5,.8,d+.5);S.b(col,0,h/2,0,w,h,d);
@@ -458,7 +466,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(const p of PATHS)for(let i=0;i+1<p.length;i++)if(segD(x,z,...p[i],...p[i+1])<4)return false;
     for(const c of colliders)if(Math.hypot(x-c[0],z-c[1])<c[2]+1.5)return false;for(const t of HTRAILS)for(let i=0;i+1<t.length;i++)if(segD(x,z,...t[i],...t[i+1])<4)return false;for(const r of SKIRUNS)for(let i=0;i+1<r.length;i++)if(segD(x,z,...r[i],...r[i+1])<7)return false;if(segD(x,z,...LIFT[0],...LIFT[1])<4||Math.hypot(x-SKI.x,z-SKI.z+2)<12)return false;if(Math.abs(x-SKI.x)<30&&z>SKI.z-4&&z<SKI.z+62&&rnd()<.85)return false;if(segD(x,z,PIER[0][0],PIER[0][1],PIER[0][0]-8,PIER[0][1])<4)return false;if(Math.hypot((x-RINK.x)/(RINK.rx+6),(z-RINK.z)/(RINK.rz+6))<1)return false;for(let i=0;i+1<HUSKY_TRAIL.length;i++)if(segD(x,z,...HUSKY_TRAIL[i],...HUSKY_TRAIL[i+1])<4)return false;
     for(const zn of ZONES){const l=Math.hypot(zn.cam[0],zn.cam[1]);if(Math.hypot(x-zn.x,z-zn.z)<8||segD(x,z,zn.x,zn.z,zn.x-zn.cam[0]/l*18,zn.z-zn.cam[1]/l*18)<8)return false}return true};
-  {const N=LOW?1300:4000;let n=0,tries=0;while(n<N&&tries<N*12){tries++;const x=(rnd()-.5)*560,z=(rnd()-.5)*560,r=Math.hypot(x,z);if(r>300)continue;
+  {const N=LOW?1500:4800;let n=0,tries=0;while(n<N&&tries<N*12){tries++;const x=(rnd()-.5)*560,z=(rnd()-.5)*560,r=Math.hypot(x,z);if(r>300)continue;
     let p=.12;if(x<-40&&z<20&&z>-150)p=.92;else if(z<-20)p=.93;else if(x>30)p=.9;else if(z<20)p=.6;else if(z<-60)p=.5;else if(r>130)p=.55;if(rnd()>p||!keep(x,z))continue;pine(T,x,z,5+rnd()*7*(r>160?1.4:1));n++}}
 
   sc.add(S.mesh(LAM));sc.add(L.mesh(GLOW));sc.add(T.mesh(LAM));const xmasG=new THREE.Group();xmasG.add(XS.mesh(LAM),XL.mesh(GLOW));sc.add(xmasG);
