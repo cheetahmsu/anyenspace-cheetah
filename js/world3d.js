@@ -435,14 +435,17 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     }else if(h.id==='quan_tra'){// raised open tea pavilion: two tea tables (one-to-one sessions), a back counter with tea jars, low railings, tea bushes
       const deck=.5,PH=3.3,top=deck+PH;
       P(GB(W,deck,D),warm,0,deck/2,0);for(let i=-5;i<=5;i++)P(GB(.04,.02,D),dark,i*.9,deck+.01,0);P(GB(2.6,.25,.7),stoneC,0,.125,D/2+.35);
-      for(const x of [-W/2+.25,0,W/2-.25])for(const z of [-D/2+.25,D/2-.25])P(GC(.16,.18,PH,8),dark,x,deck+PH/2,z);for(const x of [-W/2+.25,W/2-.25])P(GC(.16,.18,PH,8),dark,x,deck+PH/2,0);
+      for(const x of [-W/2+.25,0,W/2-.25])for(const z of [-D/2+.25,D/2-.25]){if(x===0&&z>0)continue;/* 27/11: bỏ cột giữa mặt tiền, chừa lối lên bậc thềm */P(GC(.16,.18,PH,8),dark,x,deck+PH/2,z)}for(const x of [-W/2+.25,W/2-.25])P(GC(.16,.18,PH,8),dark,x,deck+PH/2,0);
       for(const s of [-1,1]){P(GB(.1,.1,D-.5),dark,s*(W/2-.25),deck+.7,0);for(let k=0;k<9;k++)P(GB(.06,.7,.06),dark,s*(W/2-.25),deck+.35,-D/2+.8+k*(D-1.6)/8)}
       P(GB(W-.5,.1,.1),dark,0,deck+.7,-D/2+.25);for(const s of [-1,1])P(GB(W/2-1.6,.1,.1),dark,s*(W/4+.65),deck+.7,D/2-.25);
       P(GB(W+.4,.2,D+.4),dark,0,top+.1,0);P(GK(W*.86,.3,4),HOUSE_ROOF_D,0,top+.3,0,{ry:Math.PI/4});P(GK(W*.82,2.9,4),HOUSE_ROOF,0,top+1.85,0,{ry:Math.PI/4});P(GC(.06,.14,.6,6),'#5e4630',0,top+3.5,0);
       P(GB(4.4,1,.7),dark,0,deck+.5,-D/2+.8);for(let k=0;k<6;k++)P(GL([[0,0],[.14,.02],[.17,.18],[.1,.32],[.11,.36]],10),['#5d4636','#8a6a48','#3f5f52'][k%3],-1.8+k*.72,deck+1,-D/2+.8);
-      const teaSets=[[-W*.26,.4],[W*.26,.4],[0,2.9]];
-      for(const [tx,tz] of teaSets){P(GB(1.5,.34,.85),'#3e2c20',tx,deck+.17,tz);P(GC(.14,.16,.24,10),'#5d4636',tx,deck+.46,tz);P(GC(.02,.035,.2,6),'#5d4636',tx+.16,deck+.48,tz,{rz:-1});for(const dz of [-.22,.22])P(GC(.055,.045,.07,10),'#e8e0cc',tx+.42,deck+.375,tz+dz);
-        for(const dz of [-1.05,1.05])P(GC(.34,.36,.15,12),'#6e4a33',tx,deck+.08,tz+dz);smokeColumn(g,tx+.05,deck+.65,tz,4,true)}
+      {/* 27/11: một bàn trà lớn 6 người khớp nội thất (2 trước, 2 sau, 2 đầu bàn), ấm giữa bàn, 6 chén */const tz=.5,TW=2.8,TD=1.4;
+        P(GB(TW,.38,TD),'#3e2c20',0,deck+.19,tz);P(GB(TW+.08,.05,TD+.08),'#4b3526',0,deck+.4,tz);
+        P(GC(.17,.19,.28,12),'#5d4636',0,deck+.56,tz);P(GC(.025,.04,.24,6),'#5d4636',.2,deck+.6,tz,{rz:-1});
+        for(const [cx,cz] of [[-.75,-.35],[.75,-.35],[-.75,.35],[.75,.35],[-1.15,0],[1.15,0]])P(GC(.06,.05,.08,10),'#e8e0cc',cx,deck+.465,tz+cz);
+        for(const [cx,cz] of [[-.65,-1.25],[.65,-1.25],[-.65,1.25],[.65,1.25],[-2.05,0],[2.05,0]])P(GC(.38,.4,.16,14),'#6e4a33',cx,deck+.08,tz+cz);
+        smokeColumn(g,.05,deck+.8,tz,4,true)}
       for(let k=0;k<6;k++)P(new THREE.IcosahedronGeometry(.5,0),'#2f5a3a',-W/2-1.1,.35,-D/2+1+k*1.6,{s:[1,.7,1]});for(let k=0;k<6;k++)P(new THREE.IcosahedronGeometry(.5,0),'#34603e',W/2+1.1,.35,-D/2+1+k*1.6,{s:[1,.7,1]});
     }else if(h.id==='nha_niem'){// Nhà Niệm (bản vẽ ngoại thất v3.6): bệ đá 0,45 m, tường vôi, hai mảng lam gỗ dọc, cửa vòm Trăng ở giữa
       // nhìn thẳng vào Đèn Thở, 4 cột gỗ mặt tiền, bồn đá Gột bụi bên trái, chuông gió tre bên phải, mái bốn dốc xanh rêu mở giếng trời tròn.
