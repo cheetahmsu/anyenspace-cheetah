@@ -946,7 +946,7 @@
   const BIN_SOCK=[[[0,.07,0],[.12,.08,.06],[-.12,.08,.05],[.05,.09,-.12],[-.06,.1,-.1]],[[-.2,.07,.02],[-.07,.07,-.06],[.06,.07,.05],[.19,.07,-.03],[0,.07,.12]],[[0,.11,.02],[.13,.1,.1],[-.13,.1,.1],[.1,.1,-.08],[-.1,.1,-.08]]];
   function buildBin(k){const g2=new THREE.Group(),M=(c,r=.85,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:r,...o});
     if(k===0){/* Giỏ Mây Đan Mắt Cáo: thân đan mắt cáo thưa, 2 quai mây cong bọc đai xanh ngọc, thẻ vỏ sò bên hông */
-      const body=new THREE.Mesh(shSurf(16,6,(u,v)=>{const f=u*TAU,r=.24+.08*v,cell=(Math.floor(u*16+v*3)+Math.floor(u*16-v*3))%2;return [Math.cos(f)*r,.02+v*.3,Math.sin(f)*r,Math.abs(cell)]},'#c9a06a','#8f6a3e'),M('#ffffff',.9,{vertexColors:true,side:THREE.DoubleSide}));g2.add(body);
+      const body=new THREE.Mesh(shSurf(16,6,(u,v)=>{const f=u*TAU,r=.24+.08*v,cell=(Math.floor(u*16+v*3)+Math.floor(u*16-v*3))%2;return [Math.cos(f)*r,.02+v*.3,Math.sin(f)*r,Math.abs(cell)]},'#c9a06a','#8f6a3e'),M('#ffffff',.9,{vertexColors:true,side:THREE.DoubleSide}));body.geometry.computeVertexNormals();g2.add(body);
       const bt=new THREE.Mesh(new THREE.CircleGeometry(.24,12),M('#9b7444'));bt.rotation.x=-Math.PI/2;bt.position.y=.03;g2.add(bt);
       const rim=new THREE.Mesh(new THREE.TorusGeometry(.32,.022,5,18),M('#8f6a3e'));rim.rotation.x=Math.PI/2;rim.position.y=.32;g2.add(rim);
       for(const s of [-1,1]){const h=new THREE.Mesh(new THREE.TorusGeometry(.16,.018,5,10,Math.PI),M('#a77d4a'));h.position.set(s*.2,.32,0);h.rotation.y=Math.PI/2;g2.add(h);const band=new THREE.Mesh(new THREE.CylinderGeometry(.026,.026,.06,6),M('#3fa79a'));band.position.set(s*.2,.48,0);band.rotation.x=Math.PI/2;g2.add(band)}
@@ -958,9 +958,12 @@
       const foam=new THREE.Mesh(new THREE.BoxGeometry(.035,.016,.38),M('#ffffff',.6));foam.position.set(.08,.066,0);g2.add(foam);
       const bead=new THREE.SphereGeometry(.03,6,4),bm=M('#cdb48e',.7);for(let i=0;i<22;i++){const f=i/22*TAU,x=Math.cos(f),z=Math.sin(f),sx=.35*Math.sign(x)*Math.pow(Math.abs(x),.35),sz=.22*Math.sign(z)*Math.pow(Math.abs(z),.35),b=new THREE.Mesh(bead,bm);b.position.set(sx,.07,sz);b.scale.set(1.2,1,1);g2.add(b)}
       const cg=new THREE.OctahedronGeometry(.025,0),cm=M('#bff0ff',.1,{transparent:true,opacity:.8,metalness:.2});for(const [x,z] of [[-.25,.1],[-.15,-.12],[.18,.12],[.26,-.1]]){const c=new THREE.Mesh(cg,cm);c.position.set(x,.08,z);g2.add(c)}return {g:g2,fy:0}}
-    /* Đĩa Sứ Vỏ Sò Hồng Đào: dáng sò điệp gân nổi, men sứ kem ánh ngọc phớt hồng đào ở lòng, chân đế bầu dục */
-    const dish=new THREE.Mesh(shSurf(16,5,(u,v)=>{const th=(u-.5)*2.6,r=v,rib=Math.cos(th*9);return [Math.sin(th)*r*.36,.08+.14*r*r+.012*r*rib,Math.cos(th)*r*.36-.14,1-r*.9]},'#f7ead9','#f2b6a2'),M('#ffffff',.3,{vertexColors:true,side:THREE.DoubleSide}));g2.add(dish);
-    const foot=new THREE.Mesh(new THREE.CylinderGeometry(.11,.13,.08,14),M('#f3e2cf',.35));foot.scale.set(1.3,1,1);foot.position.set(0,.04,.02);g2.add(foot);return {g:g2,fy:0}}
+    /* Đĩa Sứ Vỏ Sò Hồng Đào: đĩa tròn nông, mép lượn sóng như vỏ sò điệp, gân toả từ tâm; men sứ hồng đào nhạt ở lòng, đậm dần ra mép, viền men trắng; chân đế tròn hồng */
+    const dg=shSurf(120,10,(u,v)=>{const th=u*TAU,lob=2*Math.abs(Math.cos(th*7))-1,R=.3*v*(1+.045*lob*v*v*v),rib=.005*v*(2*Math.abs(Math.cos(th*7))-1);return [Math.cos(th)*R,.065+.08*v*v+.008*lob*v*v*v*v+rib,Math.sin(th)*R*.92,v>.93?1.7:.15+v*.9]},'#fde9e4','#ee93a8','#fff8f2');dg.computeVertexNormals();
+    const dish=new THREE.Mesh(dg,M('#ffffff',.32,{vertexColors:true,side:THREE.DoubleSide}));g2.add(dish);
+    const foot=new THREE.Mesh(new THREE.CylinderGeometry(.13,.15,.065,24),M('#f4b7c2',.4));foot.position.y=.033;g2.add(foot);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.15,.008,5,28),M('#ffffff',.3));ring.rotation.x=Math.PI/2;ring.position.y=.066;g2.add(ring);
+    return {g:g2,fy:0}}
   function buildTuDao(){const g=new THREE.Group();g.position.set(TU_DAO.x,0,TU_DAO.z);TD_COLL.length=0;
     const M=(c,r=.82,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:r,...o});
     const wood=M('#8a6446'),woodL=M('#b48b62'),darkW=M('#4a3a2e'),stone=M('#a49c8c',.92),stoneD=M('#857e71',.95),stoneL=M('#c9bfaa',.9),
@@ -2607,7 +2610,9 @@
   function bayDress(sitting){wearSea(bw,meOutfit,meTorso,bayOutfit,sitting,bayMode)}
   window.__anyenPhoto=()=>openPhoto();/* nút 📸 trên thanh công cụ: Đảo Yên và Rừng Yên */
   window.__forestPhotoCam=dt=>{const PC=bayPhoto&&bayPhoto.cam;if(!PC)return;if(bayPhoto.hold&&!bayPhoto.shooting)camStep(PC,bayPhoto.hold[0],bayPhoto.hold[1]*dt);camera.rotateOnWorldAxis(bayUpY,PC.yaw);camera.rotateX(PC.pitch);const fv=(bayPhoto.base?.fov||camera.fov)/PC.zoom;if(Math.abs(camera.fov-fv)>.01){camera.fov=fv;camera.updateProjectionMatrix()}};
-  window.__shellMesh=(s,t)=>shMesh(s,t,false);window.__binMesh=k=>buildBin(k).g;
+  window.__shellMesh=(s,t)=>shMesh(s,t,false);window.__binMesh=k=>buildBin(k).g;window.__binSheet=(W=1200,H=480,full=0)=>{const cv=document.createElement('canvas');cv.width=W;cv.height=H;const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(1);r.setSize(W,H,false);r.setClearColor('#e6dcc6');r.toneMapping=THREE.ACESFilmicToneMapping;const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#c9b89a',1.5));const dl=new THREE.DirectionalLight('#fff4e0',2.2);dl.position.set(3,6,5);sc.add(dl);
+    for(let k=0;k<3;k++){const b=buildBin(k).g;b.position.x=(1-k)*.9;if(full)for(let i=0;i<full;i++){const sk=binSock(k,i),m=shMesh(i%SH_N,i%SH_T,false);m.scale.setScalar(.09);m.position.set(...sk);b.add(m)}sc.add(b)}
+    const cam=new THREE.PerspectiveCamera(30,W/H,.05,30);cam.position.set(0,1.6,-3.1);cam.lookAt(0,.1,0);r.render(sc,cam);const url=cv.toDataURL('image/jpeg',.9);r.dispose();return url};
   window.__bayWear={make:makeSeaWear,wear:wearSea,outfit:()=>bayOutfit,base:()=>bayBaseStyle()};/* phòng trong nhà trên Đảo Yên mặc cùng bộ đồ đi biển */
   // Xem trước trong bảng trang phục: một người đứng, một người ngồi thiền trên tọa cụ, xoay nhẹ.
   let bayPrev=null;
