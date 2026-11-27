@@ -171,7 +171,7 @@
       if(a==='again'){step=0;for(const t of teas)t.visible=false;render();return}
       if(step===0){boiling=true;strike(523,2,.03,[[1,1]]);setTimeout(()=>{boiling=false},2600)}else if(step===1||step===3){pour=1}else if(step===2){jar.rotation.z=.6;setTimeout(()=>jar.rotation.z=0,700)}else if(step===4){pour=1;teas.forEach((t,i)=>setTimeout(()=>{if(!st.run)return;t.visible=true;strike(880,1.2,.02,[[1,1]])},300+i*350))}
       step++;render();if(step>=STEPS.length){const q=TEA_WORDS[Math.floor(Math.random()*TEA_WORDS.length)];document.getElementById('teaQuote').textContent='🍵 '+q;rmHint('Mời bạn một chén trà · '+q)}}}
-  // 3.41: Tư Gia bên trong theo ảnh phối cảnh: sàn gỗ, thảm, bàn trà tròn thấp có ấm chén, 5 bồ đoàn ngồi được, kệ ô gỗ có đèn,
+  // 3.41: Tư Gia bên trong theo ảnh phối cảnh: sàn gỗ, thảm, bàn trà tròn thấp có ấm 6 chén, 6 bồ đoàn ngồi được (khớp 6 người: chủ nhà + 5 bạn), kệ ô gỗ có đèn,
   // tranh hoa sen, bonsai chậu trắng, đèn lồng giấy treo và đèn đứng, vách shoji, bàn góc có bình hoa trắng và chén trà bốc hơi.
   function roomTuGia(st){let sty='gian_di';try{const v=localStorage.getItem('yen_home_style');if(HOME_STYLES[v])sty=v}catch(e){}
     const sc=st.sc,texs=[],HW=4,HD=3.6,H=3.2;
@@ -188,13 +188,13 @@
     const shoji=(len,place)=>{const g=new THREE.Group();const p=new THREE.Mesh(new THREE.BoxGeometry(len,H,.05),paper);p.position.y=H/2;g.add(p);for(let x=-len/2;x<=len/2+.01;x+=.6){const b=new THREE.Mesh(new THREE.BoxGeometry(.05,H,.08),woodD);b.position.set(x,H/2,.02);g.add(b)}for(let y=.4;y<H;y+=.5){const b=new THREE.Mesh(new THREE.BoxGeometry(len,.04,.07),woodD);b.position.set(0,y,.02);g.add(b)}place(g);sc.add(g)};
     shoji(HD*2,g=>{g.position.set(-HW,0,0);g.rotation.y=Math.PI/2});shoji(HD*2,g=>{g.position.set(HW,0,0);g.rotation.y=-Math.PI/2});
     /* mặt trước để mở (nhìn từ cửa vào), chỉ còn ngưỡng cửa gỗ */B(HW*2,.06,.14,woodD,0,.03,HD-.05);for(const s of [-1,1])B(.14,H,.14,wood,s*(HW-.05),H/2,HD-.08);
-    // thảm, bàn trà tròn thấp, ấm chén, 5 bồ đoàn quanh bàn
+    // thảm, bàn trà tròn thấp, ấm và 6 chén, 6 bồ đoàn xếp đều quanh bàn (hai bồ đoàn phía trước để lối nhìn từ cửa vào)
     const TX=0,TZ=.35;add(new THREE.CircleGeometry(2.2,40),M('#d8c3a0',{roughness:1}),TX,.006,TZ).rotation.x=-Math.PI/2;add(new THREE.RingGeometry(1.95,2.05,40),M('#a98a5e',{roughness:1}),TX,.008,TZ).rotation.x=-Math.PI/2;
     C(.78,.78,.07,accM,TX,.36,TZ,28);C(.62,.66,.04,woodD,TX,.31,TZ,24);for(let k=0;k<4;k++){const a=k*Math.PI/2+.4;B(.08,.3,.08,woodD,TX+Math.cos(a)*.5,.15,TZ+Math.sin(a)*.5)}
     const pot=add(new THREE.SphereGeometry(.12,14,10),M('#6a4a34'),TX,.48,TZ);pot.scale.y=.8;C(.04,.05,.04,M('#6a4a34'),TX,.57,TZ,8);const sp=C(.015,.025,.14,M('#6a4a34'),TX+.13,.5,TZ,6);sp.rotation.z=-1;
-    for(let k=0;k<5;k++){const a=k/5*Math.PI*2+Math.PI/5;C(.045,.035,.06,M('#efe8d8'),TX+Math.sin(a)*.45,.42,TZ+Math.cos(a)*.45,10)}
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+Math.PI/6;C(.045,.035,.06,M('#efe8d8'),TX+Math.sin(a)*.45,.42,TZ+Math.cos(a)*.45,10)}
     const seatHit=new THREE.BoxGeometry(.6,.6,.6),seatM=new THREE.MeshBasicMaterial({visible:false}),cush=[];
-    for(let k=0;k<5;k++){const a=k/5*Math.PI*2+Math.PI/5,x=TX+Math.sin(a)*1.3,z=TZ+Math.cos(a)*1.3;const c=C(.32,.34,.16,cushM,x,.08,z,18);C(.25,.25,.01,M('#b59c72'),x,.165,z,18);
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+Math.PI/6,x=TX+Math.sin(a)*1.3,z=TZ+Math.cos(a)*1.3;const c=C(.32,.34,.16,cushM,x,.08,z,18);C(.25,.25,.01,M('#b59c72'),x,.165,z,18);
       const h=add(seatHit,seatM,x,.3,z);cush.push([x,z]);const face=Math.atan2(TX-x,TZ-z),ax=x+Math.sin(a)*.7,az=z+Math.cos(a)*.7;
       rTap(st,h,()=>{const W=st.walk;if(!W||!W.goSeat)return;W.goSeat({x,z,a:face,y:.2,ax,az});rmHint('🍵 Ngồi bên bàn trà · bấm Đứng lên hoặc đi để rời chỗ')})}
     // kệ ô gỗ có đèn (Kệ Lưu Hương 3 × 3) bên trái vách sau
@@ -218,8 +218,8 @@
     st.blocks=[[TX-.85,TZ-.85,TX+.85,TZ+.85],[-3.45,-HD,-1.65,-HD+.55],[.4,-HD,1.6,-HD+.65],[CX-.5,-HD,HW,CZ+.5],[-HW,HD-1.35,-HW+.75,HD-.85]];
     function apply(k){sty=k;try{localStorage.setItem('yen_home_style',k)}catch(e){}const S=HOME_STYLES[k];wallM.color.set(k==='gian_di'?'#efe2c6':S.wall);floorM.color.set(new THREE.Color(S.floor).lerp(new THREE.Color('#ffffff'),.55));accM.color.set(S.acc);cushM.color.set(k==='sang_chanh'?'#c8a96a':k==='hanh_phuc'?'#f3c3cf':'#c9b38a');render()}
     function render(){rmPanel.innerHTML='<p>🏡 <b>Tư Gia Rừng Yên</b> · chạm bồ đoàn để ngồi bên bàn trà · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'<button type="button" data-hs="sit">🍵 Ngồi bàn trà</button></div>'+
-      '<p class="rm-note">Bàn trà 5 bồ đoàn · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà.</p>'}
-    rmPanel.onclick=e=>{const b=e.target.closest('[data-hs]');if(!b)return;if(b.dataset.hs==='sit'){const W=st.walk;if(W&&W.goSeat){const [x,z]=cush[2],a=Math.atan2(x-TX,z-TZ);W.goSeat({x,z,a:Math.atan2(TX-x,TZ-z),y:.2,ax:x+Math.sin(a)*.7,az:z+Math.cos(a)*.7})}return}apply(b.dataset.hs)};apply(sty);
+      '<p class="rm-note">Bàn trà 6 bồ đoàn · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà.</p>'}
+    rmPanel.onclick=e=>{const b=e.target.closest('[data-hs]');if(!b)return;if(b.dataset.hs==='sit'){const W=st.walk;if(W&&W.goSeat){const [x,z]=cush[3],a=Math.atan2(x-TX,z-TZ);W.goSeat({x,z,a:Math.atan2(TX-x,TZ-z),y:.2,ax:x+Math.sin(a)*.7,az:z+Math.cos(a)*.7})}return}apply(b.dataset.hs)};apply(sty);
     rmHint('🏡 Tư Gia · chạm sàn để đi, chạm bồ đoàn để ngồi bên bàn trà · 🚪 Ra cửa để ra hiên');
     st.cleanup=()=>{for(const t of texs)t.dispose()}}
   function roomTinhThat(st){rmHint('Nhuộm vải, chọn số điều, rồi khâu từng mảnh · Chạm mảnh đã khâu để đổi màu');st.target.set(0,1.2,0);st.dist=3.6;st.pitch=.08;
