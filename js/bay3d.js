@@ -1073,7 +1073,7 @@
         for(const [z,s2] of [[.12,.32],[-.2,.24]]){const m=P(new THREE.ConeGeometry(s2,s2*1.1,3),M('#6d6a62',.95),-.025,-.6+s2*.55+.18,z,mc);m.scale.z=.05;m.rotation.y=Math.PI/2}}
       // bàn thờ thấp sát vách sau, tượng Phật nhỏ trước tranh trăng, hai đèn nến
       box(med,w-.45,Y+.22,0,.55,.4,2.4,dkW);const bd=new THREE.Group();bd.position.set(w-.45,Y+.42,0);bd.scale.setScalar(.62);med.add(bd);
-      cyl(bd,0,.12,0,.42,.46,.24,gold,16);P(new THREE.SphereGeometry(.36,16,12),gold,0,.45,0,bd).scale.set(1,.8,1.1);P(new THREE.SphereGeometry(.2,14,10),gold,0,.85,0,bd);P(new THREE.SphereGeometry(.17,14,10),gold,0,1.12,0,bd);P(new THREE.SphereGeometry(.07,8,6),gold,0,1.3,0,bd);
+      {/* 27/11: tượng trắng ngà trên đài sen gỗ sáng như trong nhà */const iv=M('#f1e5cc',.55,{emissive:'#ffe9c4',emissiveIntensity:.2}),lm=M('#e2b878',.55);cyl(bd,0,.08,0,.44,.48,.16,lm,16);for(let i=0;i<10;i++){const a=i/10*Math.PI*2,pt=P(new THREE.SphereGeometry(.16,8,6),lm,Math.cos(a)*.4,.2,Math.sin(a)*.4,bd);pt.scale.set(.7,.7,.45);pt.rotation.y=-a+Math.PI/2}P(new THREE.SphereGeometry(.4,16,10),iv,0,.38,0,bd).scale.set(1,.32,1.2);P(new THREE.SphereGeometry(.3,16,12),iv,0,.66,0,bd).scale.set(.75,1.05,1);P(new THREE.SphereGeometry(.17,14,10),iv,0,1.08,0,bd);P(new THREE.SphereGeometry(.06,8,6),iv,0,1.28,0,bd)}
       for(const s of [-1,1]){cyl(med,w-.45,Y+.5,s*.9,.06,.06,.14,whiteM,8);P(new THREE.SphereGeometry(.06,8,6),warm,w-.45,Y+.62,s*.9,med)}
       // chiếu, bàn trà thấp, bonsai, bộ ấm, hai bồ đoàn
       box(med,-.2,Y+.045,0,3.2,.02,2.4,M('#cdbb8e',.95));

@@ -1193,19 +1193,43 @@
     B(1.8,.14,.12,woodD,0,H-.25,HD-.05);
     B(HW*2,H,.1,M('#5e3c26'),0,H/2,-HD);/* vách gỗ sau bàn thờ */
     for(const x of [-HW,HW])for(const z of [-HD,HD])C(.1,.12,H,wood,x*.98,H/2,z*.98,8);
-    // bàn thờ + tượng Phật ngồi thiền
-    const AZ=-HD+.75;B(2.6,.5,1.1,woodD,0,.25,AZ);B(1.6,.5,.8,wood,0,.75,AZ-.1);B(2.8,.06,1.2,gold,0,.51,AZ);
-    const bd=new THREE.Group();bd.position.set(0,1,AZ-.1);sc.add(bd);
+    // 27/11 vẽ lại theo ảnh mẫu: bàn thờ gỗ thấp mặt gỗ sáng, bệ gỗ, đài sen gỗ sáng, tượng Phật trắng ngà dáng tối giản bo tròn
+    // (không vẽ nét mặt, búi tóc nhỏ trên đỉnh, y vắt chéo vai trái, ngồi kiết già, hai tay xếp trong lòng); ô tròn sáng dịu phía sau có dáng núi mờ.
+    const AZ=-HD+.75,woodS=M('#c8955c',{roughness:.6});B(2.6,.46,1.0,woodD,0,.23,AZ);B(2.8,.06,1.15,woodS,0,.49,AZ);B(1.3,.3,.7,woodS,0,.67,AZ-.12);
     const P=(geo,m,x,y,z,par)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);(par||sc).add(o);return o};
-    P(new THREE.CylinderGeometry(.5,.56,.2,20),gold,0,.1,0,bd);P(new THREE.SphereGeometry(.44,18,12),gold,0,.5,0,bd).scale.set(1.15,.75,.9);P(new THREE.SphereGeometry(.26,16,12),gold,0,.98,0,bd).scale.set(1,1.15,.9);P(new THREE.SphereGeometry(.2,14,10),gold,0,1.38,0,bd);P(new THREE.SphereGeometry(.08,8,6),gold,0,1.6,0,bd);
-    const halo=P(new THREE.TorusGeometry(.55,.035,8,32),gold,0,1.32,-.18,bd);
-    const glow=new THREE.PointLight('#ffcf8a',1.4,5,1.6);glow.position.set(0,2.2,AZ+.8);sc.add(glow);
-    // hai cây nến (dâng đèn thì thắp sáng), bát hương, hai bình hoa
-    const flames=[];for(const s of [-1,1]){C(.06,.07,.34,M('#f7f3ea'),s*.95,.68,AZ+.3,10);const f=P(new THREE.SphereGeometry(.05,8,6),M('#ffd27a',{emissive:'#ffb040',emissiveIntensity:2}),s*.95,.89,AZ+.3);f.scale.y=1.6;f.visible=false;const l=new THREE.PointLight('#ffb050',0,3.5,1.8);l.position.set(s*.95,1,AZ+.35);sc.add(l);flames.push([f,l])}
+    const bd=new THREE.Group();bd.position.set(0,.82,AZ-.12);sc.add(bd);
+    {const ivory=M('#fbf3e4',{roughness:.5,emissive:'#fff0d8',emissiveIntensity:.28}),robe=M('#f5ead6',{roughness:.55,emissive:'#fff0d8',emissiveIntensity:.22}),fold=M('#e9dbbf',{roughness:.6,emissive:'#ffe8c0',emissiveIntensity:.18}),lotusM=M('#e9c68e',{roughness:.5,emissive:'#6a4818',emissiveIntensity:.15});
+      // đài sen: đế tròn + hai vòng cánh sen
+      P(new THREE.CylinderGeometry(.42,.46,.1,24),lotusM,0,.05,0,bd);
+      for(const [n,r,y,s,o] of [[12,.42,.17,.18,0],[12,.32,.24,.16,.5]])for(let i=0;i<n;i++){const a=(i+o)/n*Math.PI*2,pt=P(new THREE.SphereGeometry(s,10,8),lotusM,Math.cos(a)*r,y,Math.sin(a)*r,bd);pt.rotation.order='YXZ';pt.rotation.y=Math.PI/2-a;pt.rotation.x=-.45;pt.scale.set(.62,1,.3)}/* cánh sen nhọn, ngả ra ngoài */
+      const sg=new THREE.Group();sg.position.y=.3;sg.scale.setScalar(1.25);bd.add(sg);
+      // chân xếp kiết già: khối bầu dục rộng, hai bàn chân ngửa
+      P(new THREE.SphereGeometry(.5,24,14),robe,0,.12,.04,sg).scale.set(.95,.3,.62);
+      for(const s of [-1,1])P(new THREE.SphereGeometry(.07,10,8),ivory,s*.2,.22,.24,sg).scale.set(1.2,.5,.8);
+      // thân áo: tiện tròn thon dần lên vai
+      const body=P(new THREE.LatheGeometry([[0,0],[.3,0],[.33,.12],[.3,.32],[.27,.46],[.22,.56],[.1,.62],[0,.63]].map(([x,y])=>new THREE.Vector2(x,y)),24),robe,0,.16,-.02,sg);body.scale.z=.72;
+      // y vắt chéo: dải áo từ vai trái xuống hông phải, mép áo quanh cổ
+      const limb=(a,b2,r,m)=>{const A=new THREE.Vector3(...a),Bv=new THREE.Vector3(...b2),d=Bv.clone().sub(A),o=P(new THREE.CapsuleGeometry(r,d.length(),4,10),m,0,0,0,sg);o.position.copy(A).add(Bv).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o};
+      limb([.17,.66,.15],[-.2,.32,.22],.016,fold);/* nếp y vắt chéo từ vai trái xuống hông phải */
+      P(new THREE.TorusGeometry(.12,.025,8,20),robe,0,.76,0,sg).rotation.x=Math.PI/2;
+      // hai tay xếp trong lòng
+      P(new THREE.SphereGeometry(.16,14,10),ivory,0,.26,.2,sg).scale.set(1.15,.42,.7);
+      for(const s of [-1,1]){limb([s*.25,.62,0],[s*.31,.36,.08],.075,robe);limb([s*.31,.36,.08],[s*.1,.27,.2],.065,robe)}/* tay buông theo thân, xếp trong lòng */
+      // đầu tròn không nét mặt, búi tóc nhỏ
+      P(new THREE.CylinderGeometry(.07,.08,.08,12),ivory,0,.82,0,sg);P(new THREE.SphereGeometry(.17,20,14),ivory,0,1.0,0,sg).scale.set(.95,1.1,.95);
+      P(new THREE.SphereGeometry(.07,12,10),ivory,0,1.2,-.01,sg);P(new THREE.SphereGeometry(.035,8,6),ivory,0,1.27,-.01,sg)}
+    {/* ô tròn sáng dịu sau tượng: viền gỗ, nền sáng ấm, hai lớp núi mờ */const mw=new THREE.Group();mw.position.set(0,1.95,-HD+.07);sc.add(mw);
+      P(new THREE.TorusGeometry(1.18,.08,10,48),M('#8a5a34',{roughness:.6}),0,0,0,mw);
+      P(new THREE.CircleGeometry(1.32,48),new THREE.MeshBasicMaterial({color:'#a8693a',transparent:true,opacity:.35,depthWrite:false}),0,0,-.005,mw);
+      P(new THREE.CircleGeometry(1.15,48),M('#f3d6a2',{emissive:'#ffcf8a',emissiveIntensity:.5,roughness:.9}),0,0,.01,mw);
+      for(const [x,s2,c,y0] of [[-.5,.7,'#d9bd94',-.25],[.55,.55,'#cfb289',-.3],[0,.42,'#c4a67c',-.45]]){const m=P(new THREE.ConeGeometry(s2,s2*.75,3),M(c,{emissive:'#ffcf8a',emissiveIntensity:.25,roughness:.95}),x,y0,.02+(.45-s2)*.02,mw);m.scale.z=.03;m.scale.y=.65}}
+    const glow=new THREE.PointLight('#ffcf8a',1.1,5,1.6);glow.position.set(0,2.0,AZ+.9);sc.add(glow);
+    // bốn cây nến trắng (hai cây mỗi bên, dâng đèn thì thắp; chỉ hai cây ngoài có ánh sáng để nhẹ máy), bát hương, hai bình hoa
+    const flames=[];for(const s of [-1,1])for(const [x,hh,lit] of [[.82,.26,false],[1.08,.36,true]]){C(.06,.06,hh,M('#f7f3ea'),s*x,.52+hh/2,AZ+.28,12);const f=P(new THREE.SphereGeometry(.04,8,6),M('#ffd27a',{emissive:'#ffb040',emissiveIntensity:2}),s*x,.56+hh,AZ+.28);f.scale.y=1.6;f.visible=false;let l={intensity:0};if(lit){l=new THREE.PointLight('#ffb050',0,3.5,1.8);l.position.set(s*x,.62+hh,AZ+.35);sc.add(l)}flames.push([f,l])}
     C(.17,.13,.16,M('#6b5a48',{metalness:.3}),0,.6,AZ+.42,14);
     const sticks=new THREE.Group();sticks.position.set(0,.66,AZ+.42);sticks.visible=false;sc.add(sticks);for(const k of [-1,0,1]){const s=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.42,4),M('#8a3a2a'));s.position.set(k*.04,.21,0);s.rotation.z=k*.08;sticks.add(s);const tip=new THREE.Mesh(new THREE.SphereGeometry(.014,6,4),M('#ff7030',{emissive:'#ff5010',emissiveIntensity:2}));tip.position.set(k*.04+k*.017,.42,0);sticks.add(tip)}
     const smoke=[];for(let i=0;i<14;i++){const p=P(new THREE.SphereGeometry(.05,6,4),new THREE.MeshBasicMaterial({color:'#e8e2d8',transparent:true,opacity:0,depthWrite:false}),0,1,AZ+.42);p.userData.o=i/14;smoke.push(p)}
-    const vases=[];for(const s of [-1,1]){C(.09,.12,.3,M('#e8e0cc'),s*1.25,.67,AZ+.05,12);const fl=new THREE.Group();fl.position.set(s*1.25,.82,AZ+.05);fl.visible=false;sc.add(fl);for(let k=0;k<7;k++){const a=k/7*6.28,st2=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.3,4),M('#4f7a3a'));st2.position.set(Math.cos(a)*.05,.12,Math.sin(a)*.05);st2.rotation.set(Math.sin(a)*.25,0,Math.cos(a)*.25);fl.add(st2);const b=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),M(k%2?'#f3d7e0':'#fff6ea'));b.position.set(Math.cos(a)*.1,.28,Math.sin(a)*.1);fl.add(b)}vases.push(fl)}
+    const vases=[];for(const s of [-1,1]){C(.08,.1,.28,M('#e8e0cc'),s*1.2,.66,AZ-.32,12);const fl=new THREE.Group();fl.position.set(s*1.2,.8,AZ-.32);fl.visible=false;sc.add(fl);for(let k=0;k<7;k++){const a=k/7*6.28,st2=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.3,4),M('#4f7a3a'));st2.position.set(Math.cos(a)*.05,.12,Math.sin(a)*.05);st2.rotation.set(Math.sin(a)*.25,0,Math.cos(a)*.25);fl.add(st2);const b=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),M(k%2?'#f3d7e0':'#fff6ea'));b.position.set(Math.cos(a)*.1,.28,Math.sin(a)*.1);fl.add(b)}vases.push(fl)}
     // sen dâng trước bàn thờ
     const lotus=new THREE.Group();lotus.position.set(0,.02,AZ+.95);lotus.visible=false;sc.add(lotus);P(new THREE.CylinderGeometry(.3,.26,.06,20),M('#6b4a32'),0,.03,0,lotus);for(let k=0;k<3;k++){const lg=new THREE.Group();lg.position.set((k-1)*.18,.08,0);lotus.add(lg);for(let i=0;i<8;i++){const pt=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),M(i%2?'#f2b8c8':'#f7d0dc'));const a=i/8*6.28;pt.position.set(Math.cos(a)*.05,.05,Math.sin(a)*.05);pt.scale.set(.6,1.3,.6);pt.rotation.set(Math.sin(a)*.5,0,-Math.cos(a)*.5);lg.add(pt)}}
     // chuông lớn trên đôn đỏ bên trái bàn thờ
@@ -1219,11 +1243,11 @@
     for(const z of [-.4,1.0])for(const x of [-1.4,0,1.4]){B(.8,.03,.8,mat2,x,.015,z);C(.3,.33,.2,red,x,.13,z,18);const h=add(seatHit,seatM,x,.3,z);cush.push([x,z]);rTap(st,h,()=>{const W=st.walk;if(!W||!W.goSeat)return;W.goSeat({x,z,a:Math.PI,y:.24,ax:x,az:z+.8});rmHint('🧘 Ngồi thiền trên bồ đoàn · bấm Đứng lên hoặc đi để rời chỗ')})}
     // đèn lồng giấy treo, cây xanh góc
     for(const x of [-1.8,1.8]){const l=P(new THREE.SphereGeometry(.26,14,10),M('#f6e6c4',{emissive:'#ffcc80',emissiveIntensity:.9}),x,H-.75,.6);l.scale.y=1.25;B(.02,.5,.02,woodD,x,H-.25,.6);const pl=new THREE.PointLight('#ffd49a',.9,6,1.6);pl.position.set(x,H-.9,.6);sc.add(pl)}
-    for(const [x,z] of [[-HW+.45,-HD+.45],[HW-.45,-HD+.45]]){C(.22,.18,.36,M('#3d5a48'),x,.18,z,12);for(let k=0;k<5;k++){const lf=P(new THREE.ConeGeometry(.12,.9,5),M(k%2?'#4f7a3a':'#3f6a2a'),x+Math.cos(k*1.3)*.08,.75,z+Math.sin(k*1.3)*.08);lf.rotation.set(Math.sin(k*1.3)*.3,0,Math.cos(k*1.3)*.3)}}
-    // 25/11 theo ảnh mẫu Nhà Thiền: tranh trăng tròn sau tượng Phật, góc trà (bàn trà thấp, bonsai, bộ ấm, hai bồ đoàn), kệ gốm vách trái, hai đèn giấy đứng ở góc cửa
-    {const moon=new THREE.Group();moon.position.set(0,2.15,-HD+.07);sc.add(moon);P(new THREE.TorusGeometry(.92,.06,8,40),woodD,0,0,0,moon);
-      P(new THREE.CircleGeometry(.9,40),M('#efe3c6',{emissive:'#ffe3b0',emissiveIntensity:.25}),0,0,.01,moon);P(new THREE.CircleGeometry(.28,28),M('#f6d58c',{emissive:'#ffcc70',emissiveIntensity:.5}),.38,.36,.02,moon);
-      for(const [x,s2] of [[-.35,.5],[.3,.36]]){const m=P(new THREE.ConeGeometry(s2,s2*1.1,3),M('#7a766c'),x,-.9+s2*.55+.25,.02,moon);m.scale.z=.05}}
+    {/* 27/11: chậu bonsai trên đôn gỗ bên phải bàn thờ, đối xứng với chuông */const bx=2.1,bz=AZ+.4,tr=M('#5b3b26');B(.7,.4,.7,woodD,bx,.2,bz);C(.24,.18,.14,M('#5d7a52',{roughness:.5}),bx,.47,bz,16);
+      const t1=C(.035,.05,.34,tr,bx-.03,.68,bz,7);t1.rotation.z=.35;const t2=C(.03,.035,.26,tr,bx+.04,.92,bz,7);t2.rotation.z=-.5;
+      for(const [dx,dy,dz,r] of [[-.16,.88,0,.15],[.14,1.08,.02,.17],[-.02,1.2,-.04,.13],[.24,.92,.05,.11]]){const f=P(new THREE.SphereGeometry(r,10,7),M('#4f7a3a'),bx+dx,dy,bz+dz);f.scale.y=.55}}
+    for(const [x,z] of [[-HW+.45,-HD+.45]]){C(.22,.18,.36,M('#3d5a48'),x,.18,z,12);for(let k=0;k<5;k++){const lf=P(new THREE.ConeGeometry(.12,.9,5),M(k%2?'#4f7a3a':'#3f6a2a'),x+Math.cos(k*1.3)*.08,.75,z+Math.sin(k*1.3)*.08);lf.rotation.set(Math.sin(k*1.3)*.3,0,Math.cos(k*1.3)*.3)}}
+    // 25/11 theo ảnh mẫu Nhà Thiền: góc trà (bàn trà thấp, bonsai, bộ ấm, hai bồ đoàn), kệ gốm vách trái, hai đèn giấy đứng ở góc cửa
     const TX=3.0,TZ=.8,inkM=M('#3e2a1e',{roughness:.6});
     B(.75,.07,1.15,inkM,TX,.34,TZ);for(const a of [-1,1])for(const b of [-1,1])B(.07,.31,.07,inkM,TX+a*.3,.155,TZ+b*.5);
     B(.3,.12,.22,M('#3d4a52',{roughness:.6}),TX,.43,TZ-.3);C(.025,.035,.3,M('#5b3b26'),TX,.6,TZ-.3,6);
@@ -1233,7 +1257,7 @@
     {const KX=-HW+.25;for(const y of [.03,.6,1.17,1.74])B(.4,.05,1.3,woodD,KX,y,.1);for(const z of [-.55,.75])B(.4,1.8,.05,woodD,KX,.9,z);
       const cer=['#7d8f86','#c9b28c','#4f5d63','#a9744e','#e7dfcf','#6e7c5d'];let k=0;for(const y of [.06,.63,1.2])for(const z of [-.3,.1,.5]){const r=.08+.03*(k%3);const v=P(new THREE.SphereGeometry(r,12,8),M(cer[k%6],{roughness:.45}),KX,y+r*.9,z);v.scale.y=1.1+.3*(k%2);k++}}
     for(const x of [-HW+.45,HW-.45]){B(.06,.7,.06,woodD,x,.35,HD-.45);B(.38,.62,.38,M('#f6e6c4',{emissive:'#ffcc80',emissiveIntensity:.9}),x,.95,HD-.45);for(const y of [.64,1.26])B(.42,.04,.42,woodD,x,y,HD-.45)}
-    st.blocks=[[-1.45,-HD,1.45,AZ+.65],[-2.5,AZ,-1.7,AZ+.8],[-HW,-HD,-HW+.7,-HD+.7],[HW-.7,-HD,HW,-HD+.7],[TX-.45,TZ-1.3,TX+.45,TZ+1.3],[-HW,-.65,-HW+.5,.85],[-HW,HD-.7,-HW+.7,HD],[HW-.7,HD-.7,HW,HD]];
+    st.blocks=[[-1.45,-HD,1.45,AZ+.65],[-2.5,AZ,-1.7,AZ+.8],[1.7,AZ,2.5,AZ+.8],[-HW,-HD,-HW+.7,-HD+.7],[HW-.7,-HD,HW,-HD+.7],[TX-.45,TZ-1.3,TX+.45,TZ+1.3],[-HW,-.65,-HW+.5,.85],[-HW,HD-.7,-HW+.7,HD],[HW-.7,HD-.7,HW,HD]];
     // nghi thức
     let incT=0;st.tick.push(t=>{if(!sticks.visible)return;for(const p of smoke){const u=((t*.18+p.userData.o)%1);p.position.set(Math.sin(u*9+p.userData.o*6)*.06*u*3,1.08+u*1.6,AZ+.42+Math.cos(u*7)*.04);p.material.opacity=.32*(1-u)*Math.min(1,u*6);p.scale.setScalar(1+u*3)}for(const [f,l] of flames)if(f.visible){l.intensity=1.1+Math.sin(t*13+f.position.x)*.15}});
     const RIT={incense:['🪔 Dâng hương','Nén hương đã thắp · khói hương nhẹ bay, tâm lắng xuống',()=>{sticks.visible=true}],flower:['🪷 Dâng hoa sen','Hoa sen đã dâng trước bàn thờ',()=>{lotus.visible=true}],candle:['🕯 Dâng đèn','Hai ngọn đèn đã thắp sáng',()=>{for(const [f,l] of flames){f.visible=true;l.intensity=1.1}}],vase:['💐 Dâng hoa','Hai bình hoa đã cắm hoa tươi',()=>{for(const v of vases)v.visible=true}]};
