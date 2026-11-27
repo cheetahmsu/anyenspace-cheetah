@@ -1,5 +1,5 @@
 // LÀNG YÊN · Vịnh Yên (nạp lười). Tách tự động từ js/world3d.js bằng tools/split_lazy.py; chạy bằng eval bên trong initialize3D.
-  const BAY={x:0,z:20000},BAY_PORTS=[];let bayPlay=null,playFly=null,playAnch=null;/* trượt phao / kayak khi tàu neo */
+  const BAY={x:0,z:20000},BAY_PORTS=[];let bayKarstRec=null;/* ghi lại từng khối đá của danh thắng có vụng, áng nước bên trong: làm vật cản đúng hình khi bơi / chèo */let bayPlay=null,playFly=null,playAnch=null;/* trượt phao / kayak khi tàu neo */
   bayGroup=new THREE.Group();bayGroup.position.set(BAY.x,0,BAY.z);bayGroup.visible=false;scene.add(bayGroup);const bayRoot=bayGroup;/* gốc cố định của cả vịnh (bayGroup bị gán tạm khi dựng từng vùng) */
   // bayWorld: mọi thứ của vịnh (bờ đất, đảo, danh thắng, thuyền neo). Khi bước xuống Đảo Yên thì ẩn cả nhóm này: đảo là một không gian riêng.
   const bayWorld=new THREE.Group();bayGroup.add(bayWorld);const bayLandGroup=new THREE.Group();bayWorld.add(bayLandGroup);let bayIslandScene=null;
@@ -111,7 +111,7 @@
   let lmPost=null;const LM_PEAK={},lmRay=new THREE.Raycaster(),lmDown=new THREE.Vector3(0,-1,0),lmO=new THREE.Vector3();
   function lmGroundY(ms,x,z){lmO.set(x+BAY.x,600,z+BAY.z);lmRay.set(lmO,lmDown);const hs=lmRay.intersectObjects(ms,false);return hs.length?hs[0].point.y:null}
   function addKarst(x,z,r,h,k,opt={}){
-    if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};const KT=opt.hi?KTH:KT0;
+    if(opt.shape!=null)opt={...KSHAPES[opt.shape],...opt};const KT=opt.hi?KTH:KT0;if(bayKarstRec)bayKarstRec.push([x,z,r*Math.max(opt.sx||1,opt.sz||1)*1.04]);
     const key=Math.floor(x/900)+','+Math.floor(z/900);let ch=bayChunks.get(key);if(!ch){ch={P:[],I:[],T:[],D:[],H:[],S:[],UV:[],R:[],O:[]};bayChunks.set(key,ch)}
     const base=ch.P.length/3,ph=bayHash(k,1.7,3.1)*6.28,lean=opt.lean||0,pinch=opt.pinch??1,dome0=opt.dome??(.16+bayHash(k,2,5)*.14),rot=opt.rot??bayHash(k,9,1)*6.28,cr=Math.cos(rot),sr=Math.sin(rot);
     const floating=opt.y0!=null,yb=floating?opt.y0:-4,total=floating?h:h+4;
@@ -234,13 +234,13 @@
       tunnels:[{a:[.48*r,0],b:[1.22*r,0],za:0,zb:-1,hw:4,th:6.5,W:.62*r,H:h},{a:[ca*.48*r,sa*.48*r],b:[ca*1.2*r,sa*1.2*r],za:0,zb:-1,hw:2.4,th:3.9,W:.4*r,H:h*.9,dark:true}],
       boats:[[-.1*r,-.28*r,.5,false]],docks:[[1.38*r,-.32*r]]}}
     else if(p.id==='hang_luon')/* vẽ theo 4 ảnh mẫu chị gửi: hồ xanh ngọc gần tròn rộng, vòng vách dựng cao phủ cây; vòm hang thấp, rộng, ngắn, nhìn xuyên thấy hồ */
-      L={wallR:.26*r,lakes:[[0,0,.6*r]],hull:[[0,0,1.22*r]],tunnels:[{a:[.6*r,0],b:[1.02*r,0],za:0,zb:-1,hw:10,th:7.2,/* nâng vòm (27/11) cho bơi, chèo kayak chui qua thoải mái */W:.6*r,H:h*.72,moss:true,flat:true}],boats:[[-.1*r,.36*r,.5,false]],docks:[[1.3*r,-.42*r]]};
+      L={wallR:.26*r,lakes:[[0,0,.6*r]],hull:[[0,0,1.22*r]],tunnels:[{a:[.6*r,0],b:[1.02*r,0],za:0,zb:-1,hw:10,th:7.2,/* nâng vòm (27/11) cho bơi, chèo kayak chui qua thoải mái */W:.6*r,H:h*.72,moss:true,flat:true}],boats:[[-.1*r,.36*r,.5,false]],docks:[]/* 27/11: bỏ bè gỗ có chòi trước cửa hang */};
     else L={wallR:.3*r,lakes:[[0,0,.5*r]],hull:[[0,0,1.28*r]],tunnels:[{a:[.48*r,0],b:[1.22*r,0],za:0,zb:-1,hw:3,th:5,W:.6*r,H:h}],boats:[[-.08*r,.3*r,.5,false]],docks:[[1.38*r,-.32*r]]};
     const W=a=>o(a[0],a[1]);
     const A={x:p.x,z:p.z,f,r,h,wallR:L.wallR,lakes:L.lakes.map(l=>[...W(l),l[2]]),hull:L.hull.map(l=>[...W(l),l[2]]),
       tunnels:L.tunnels.map(t=>{const a=W(t.a),b=W(t.b),len=Math.hypot(b[0]-a[0],b[1]-a[1]),dx=(b[0]-a[0])/len,dz=(b[1]-a[1])/len,ea=t.za<0?6:4,eb=t.zb<0?6:4;
         return {...t,a,b,len,dx,dz,pa:[a[0]-dx*ea,a[1]-dz*ea],pb:[b[0]+dx*eb,b[1]+dz*eb]}}),
-      boats:L.boats.map(([u,v,ry,cn])=>[...o(u,v),-f+ry,cn]),docks:L.docks.map(([u,v])=>o(u,v))};
+      boats:[]/* 27/11: bỏ đò nâu trang trí khắp vịnh */,docks:L.docks.map(([u,v])=>o(u,v))};
     A.R=Math.max(...A.hull.map(c=>Math.hypot(c[0]-p.x,c[1]-p.z)+c[2]))+12;return p._arch=A}
   // vật cản: vùng núi (hợp các đĩa hull) trừ các hồ và lòng các đường hang; đò và bến phao cũng là vật cản
   function archInTunnel(t,x,z,pad){const ax=t.a[0]-t.dx*6,az=t.a[1]-t.dz*6,along=(x-ax)*t.dx+(z-az)*t.dz,perp=Math.abs(-(x-ax)*t.dz+(z-az)*t.dx);return along>0&&along<t.len+30&&perp<t.hw-pad-.4}/* lòng hang kéo dài quá hai cửa hang để không vướng mép vách; rà soát 26/11: phía cửa ngoài kéo dài tới 24 m vì vùng chặn của núi (hull) có thể nhô quá miệng hang (Hang Luồn cửa vòm rộng: hull nhô 10 m, trước đây bịt kín miệng hang nên không bơi, chèo vào được) */
@@ -454,17 +454,7 @@
   // Ki-ốt / nhà gỗ ven bãi
   function addKiosks(x,z,f,r,n,k){for(let j=0;j<n;j++){const a=f+(j-(n-1)/2)*.16,d=r*.74,g=new THREE.Group();g.position.set(x+Math.cos(a)*d,.3,z+Math.sin(a)*d);g.rotation.y=-a+Math.PI/2;
     decoBox(g,4.2,2.4,3,'#f3efe6',0,1.2,0);decoBox(g,4.8,.25,3.8,j%2?'#2f7fb5':'#c4553c',0,2.55,.2);bayGroup.add(g)}}
-  // Thuyền thúng / xuồng gỗ nhỏ và đò mui đen (ảnh làng chài Cửa Vạn)
-  // Đò gỗ chèo tay (như đò chở khách qua hang): thân thon hai đầu cong lên, lòng thuyền sáng màu, mui cói (nếu có), người chèo đội nón lá
-  const SAMPAN_GEO=(()=>{const mk=(sx,h,y0)=>{const g=new THREE.BoxGeometry(2.6*sx,h,9,1,2,12),P=g.attributes.position;for(let i=0;i<P.count;i++){const t=P.getZ(i)/4.5,y=P.getY(i);let x=P.getX(i)*(1-.82*t*t)*(y<0?.55:1);P.setXYZ(i,x,y+y0+.6*Math.pow(Math.abs(t),3.2),P.getZ(i))}g.computeVertexNormals();return g};return {hull:mk(1,1.1,.45),deck:mk(.84,.12,.95)}})();
-  function makeSampan(canopy){const g=new THREE.Group(),hull=new THREE.Mesh(SAMPAN_GEO.hull,decoMat('#6a4a31'));g.add(hull);const dk=new THREE.Mesh(SAMPAN_GEO.deck,decoMat('#a8825a'));dk.scale.z=.92;g.add(dk);
-    if(canopy){const c=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.05,3.2,12,1,true,-Math.PI/2,Math.PI),new THREE.MeshStandardMaterial({color:'#6b5434',roughness:1,side:THREE.DoubleSide}));c.rotation.x=Math.PI/2;c.position.set(0,1.05,.4);g.add(c)}
-    const rw=new THREE.Group();rw.position.set(0,1,-3.1);const bd=new THREE.Mesh(new THREE.CylinderGeometry(.3,.38,1.3,8),decoMat('#3f5f7a'));bd.position.y=.65;const hd=new THREE.Mesh(new THREE.SphereGeometry(.25,10,8),decoMat('#d9b48f'));hd.position.y=1.5;
-    const hat=new THREE.Mesh(new THREE.ConeGeometry(.62,.42,14),decoMat('#e6d6a6'));hat.position.y=1.78;const oar=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,4.2,5),decoMat('#8a6a48'));oar.position.set(.55,.6,-.6);oar.rotation.x=.9;rw.add(bd,hd,hat,oar);g.add(rw);return g}
   // Cụm cây bụi xanh tươi bám đỉnh và lưng đá (tán tròn nhiều lớp)
-  function decoKayak(x,z,ry,col){const g=new THREE.Group(),hull=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(col));hull.scale.set(.55,.26,2.3);g.add(hull);
-    for(const zz of [-.7,.7]){const vest=new THREE.Mesh(new THREE.BoxGeometry(.5,.55,.32),decoMat('#ee6a2a'));vest.position.set(0,.5,zz);g.add(vest);const hd=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),decoMat('#d9a37e'));hd.position.set(0,.92,zz);g.add(hd)}
-    const pad=new THREE.Mesh(new THREE.BoxGeometry(2.4,.06,.12),decoMat('#f2c14e'));pad.position.set(0,.6,.7);pad.rotation.z=.35;g.add(pad);g.position.set(x,0,z);g.rotation.y=ry;bayGroup.add(g)}
   function treeClump(x,y,z,s,k){return;/* 26/11 chị dặn: không vẽ cây trên đảo đá, đỉnh đá đã phủ mảng xanh */const cols=['#6e9a3a','#5d8a30','#82ab48','#4f7a2c'];for(let j=0;j<5;j++){const a=j*1.3+k,d=j?s*.7:0,m=new THREE.Mesh(new THREE.SphereGeometry(s*(j?.62:.8),8,6),decoMat(cols[(j+Math.round(k))%4]));m.scale.y=.7;m.position.set(x+Math.cos(a)*d,y+(j?-.2*s:.25*s),z+Math.sin(a)*d);bayGroup.add(m)}}
   function buildLandmark(p){
     const q=p.params||{},x=p.x,z=p.z,r=q.radius||0,h=q.height||0,k=Math.round(x*7+z*3),f=lmFacing(p),fx=Math.cos(f),fz=Math.sin(f);
@@ -494,7 +484,7 @@
         addKarst(x,z,r*.6,h*.85,k,{round:true,dome:.9,sx:1.9,sz:.9,rot:f+Math.PI/2,notch:0});addKarst(...P(-r*.3,-r*.45),r*.4,h*.65,k+1,{shape:2,rot:f});addKarst(...P(-r*.25,r*.5),r*.34,h*.95,k+2,{shape:0,rot:f});
         caveMouth(...P(r*.12,r*.45),f,r*.3,r*.06,r*.12,r*.08);
         for(let j=0;j<4;j++){const g=new THREE.Group(),[hx,hz]=P(r*.62,-r*.55+j*7);g.position.set(hx,.6,hz);g.rotation.y=-f;decoBox(g,5,3,4,['#e8dcc4','#d9c7a8','#e6e0d2','#cbb895'][j],0,1.5,0);decoBox(g,5.8,.4,4.8,'#a5513c',0,3.2,0).rotation.x=.12;bayGroup.add(g)}
-        const sp=makeSampan(true);const [sx,sz]=P(r*.9,r*.5);sp.position.set(sx,0,sz);sp.rotation.y=-f;bayGroup.add(sp)}
+        }
       else if(p.id==='vqg_bai_tu_long'){
         // Đảo Ba Mùn (vườn quốc gia): dãy đồi rừng nguyên sinh dài, nhiều đỉnh tròn nối nhau; hang Soi Nhụ sát mép nước; trạm kiểm lâm và cầu tàu
         for(let j=-2;j<=2;j++)addKarst(...P(-r*.1+Math.abs(j)*r*.06,j*r*.32),r*.34,h*(.7+.3*bayHash(k,j+3,2))*(1-.12*Math.abs(j)),k+j+3,{round:true,dome:.9,sx:1.2,rot:f,notch:.2});
@@ -638,23 +628,18 @@
           for(let i=0;i<cp.count;i++){const d=Math.hypot(cp.getX(i),cp.getY(i))/(lr*1.05);tc.copy(c0).lerp(c1,baySm(.45,1,d));cc[i*3]=tc.r;cc[i*3+1]=tc.g;cc[i*3+2]=tc.b}cg.setAttribute('color',new THREE.BufferAttribute(cc,3));
           /* giữa hồ nông sáng màu ngọc, sẫm dần sát chân vách */const m=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.42,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(lx,.14,lz);m.renderOrder=2;bayGroup.add(m)}
         const T=A.tunnels[0];
-        for(const [u,v,ry] of [[-.25,.15,.6],[.1,-.3,-1.2],[-.4,-.2,2.2],[.05,.35,3],[.35,.05,0]])/* bỏ 2 kayak đậu trước cửa hang (27/11) */{const g=new THREE.Group(),hull=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(u>1?'#e2512c':'#f2c14e'));hull.scale.set(.55,.26,2.3);g.add(hull);
-          for(const zz of [-.7,.7]){const vest=new THREE.Mesh(new THREE.BoxGeometry(.5,.55,.32),decoMat('#ee6a2a'));vest.position.set(0,.5,zz);g.add(vest);const hd=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),decoMat('#d9a37e'));hd.position.set(0,.92,zz);g.add(hd)}
-          const pad=new THREE.Mesh(new THREE.BoxGeometry(2.4,.06,.12),decoMat('#f2c14e'));pad.position.set(0,.6,.7);pad.rotation.z=.35;g.add(pad);
-          g.position.set(x+fx*u*r-fz*v*r,0,z+fz*u*r+fx*v*r);g.rotation.y=-f+ry+Math.PI/2;bayGroup.add(g)}}
-      for(const [bx,bz,ry,cn] of A.boats){const sp=makeSampan(cn);sp.position.set(bx,0,bz);sp.rotation.y=ry;bayGroup.add(sp)}
+        /* 27/11: bỏ các kayak trang trí trong hồ */}
       // bến phao ngoài cửa hang: sàn gỗ trên phao xanh, mái che bán vé, đò nan và kayak chờ khách
       for(const [dx,dz] of A.docks){const g=new THREE.Group();g.position.set(dx,0,dz);g.rotation.y=-f;decoBox(g,8,.45,13,'#8a6f52',0,.5,0);
         for(let j=0;j<8;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,1.1,10),decoMat('#2f6fb0'));b.rotation.x=Math.PI/2;b.position.set(j%2?2.6:-2.6,.15,-5+Math.floor(j/2)*3.3);g.add(b)}
         decoBox(g,3.4,2.2,3,'#d8cfbd',1.8,1.8,-3.8);decoBox(g,4.4,.25,4,'#4d7d8a',1.8,3,-3.8);
-        if(p.id!=='hang_luon')for(let j=0;j<3;j++){const ky=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(['#e2412c','#f2c14e','#2f9a8a'][j]));ky.scale.set(.5,.25,2.1);ky.position.set(-5.2-j*1.3,.1,1+j*.6);g.add(ky)}
-        if(p.id!=='hang_luon'){const sp=makeSampan(false);sp.position.set(5.4,0,2);g.add(sp)}/* Hang Luồn: bỏ đò nâu đậu trước bến (chị dặn 27/11) */bayGroup.add(g)}
+        bayGroup.add(g)}
     }
     else if(q.shape==='dragon_eye'){
       // Đảo Mắt Rồng · Hòn Bái Đông (vẽ theo ảnh mẫu chị gửi): cụm đảo đá vôi nhiều nhánh, vách xám trắng dựng đứng, đỉnh phủ cây rậm;
       // giữa lòng núi phía sau bên phải là hồ nước mặn tròn màu ngọc, viền cát vàng, vách kín bốn phía ("mắt rồng");
       // phía trước là vụng nông xanh ngọc thấy đáy giữa hai nhánh đảo, bãi cát cuối vụng có dải cát chạy ra; một hòn đá nhỏ đứng riêng ở cửa vụng.
-      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u*r+px*v*r,z+fz*u*r+pz*v*r],A0=Math.atan2(pz,px),o5={pale:5,hi:true};
+      const px=-fz,pz=fx,P=(u,v)=>[x+fx*u*r+px*v*r,z+fz*u*r+pz*v*r],A0=Math.atan2(pz,px),o5={pale:5,hi:true};const DR=bayKarstRec=p._discs=[];
       const K=(u,v,rr,hh,j,o={})=>addKarst(...P(u,v),r*rr,h*hh,k+j,{taper:.05,dome:.42,sx:1.15,sz:.9,rot:A0+j*.7,ribs:10,ribAmp:.16,rough:.24,notch:.42,...o5,...o});
       // nhánh trái (lớn, cao) và mũi trái chìa ra trước
       K(-.15,.7,.3,1.15,0);K(.15,.86,.26,.95,1);K(.45,1.0,.2,.72,2,{lean:.08});K(-.45,.5,.24,1.0,3);
@@ -681,9 +666,9 @@
       {const [sx0,sz0]=P(.08,.3),[sx1,sz1]=P(.55,.42),m=new THREE.Mesh(new THREE.CircleGeometry(1,24),new THREE.MeshStandardMaterial({color:'#e6d9b6',roughness:1}));m.rotation.x=-Math.PI/2;m.rotation.z=-Math.atan2(sz1-sz0,sx1-sx0);
         m.scale.set(Math.hypot(sx1-sx0,sz1-sz0)/2,r*.035,1);m.position.set((sx0+sx1)/2,.24,(sz0+sz1)/2);bayGroup.add(m)}
       disc(...P(.42,0),r*.62,'#a6f3e0','#2fb3a4',.42,.13);
-      // thuyền nhỏ chở khách vào vụng, kayak
-      {const sp=makeSampan(true);const [bx,bz]=P(.7,-.05);sp.position.set(bx,0,bz);sp.rotation.y=-f+Math.PI/2+.4;bayGroup.add(sp)}
-      for(const [u,v,ry,c] of [[.4,.1,.5,'#f2c14e'],[.55,-.2,-.4,'#e2512c']]){const [kx,kz]=P(u,v);decoKayak(kx,kz,-f+ry,c)}
+      // 27/11: bỏ đò và kayak trang trí trong vụng để khách tự bơi / chèo vào. Bãi cát cuối vụng, dải cát và hồ kín là vật cản (không bơi lên cát)
+      bayKarstRec=null;{const th=-(f+Math.PI);for(let j=0;j<=10;j++){const a=th-1.1+2.2*j/10;DR.push([cvx+Math.cos(a)*r*.385,cvz-Math.sin(a)*r*.385,r*.075])}}
+      {const [sx0,sz0]=P(.08,.3),[sx1,sz1]=P(.55,.42);for(let j=0;j<=8;j++)DR.push([sx0+(sx1-sx0)*j/8,sz0+(sz1-sz0)*j/8,r*.04])}DR.push([lx,lz,lr*1.1]);
     }
     else if(q.shape==='trio'){
       // Bãi tắm Ba Trái Đào (vẽ theo ảnh mẫu chị gửi): ba hòn đá vôi tròn như trái đào liền chân nhau, phủ cây rậm, chân vách xám trắng lộ ra;
@@ -702,7 +687,6 @@
       {const R0=r*1.45,cg=new THREE.CircleGeometry(R0,48),cp=cg.attributes.position,cc=new Float32Array(cp.count*3),c0=new THREE.Color('#9af2df'),c1=new THREE.Color('#2fb3a4'),tc=new THREE.Color();
         for(let i=0;i<cp.count;i++){const d=Math.hypot(cp.getX(i),cp.getY(i))/R0;tc.copy(c0).lerp(c1,baySm(.35,1,d));cc[i*3]=tc.r;cc[i*3+1]=tc.g;cc[i*3+2]=tc.b}cg.setAttribute('color',new THREE.BufferAttribute(cc,3));
         const m=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.38,depthWrite:false}));m.rotation.x=-Math.PI/2;const [cx,cz]=P(.15,0);m.position.set(cx,.13,cz);m.renderOrder=2;bayGroup.add(m)}
-      for(const [u,v,ry,c] of [[1.1,.55,.4,'#f2c14e'],[1.25,-.1,-.3,'#e2512c'],[.95,-.75,.9,'#f2c14e']]){const [kx,kz]=P(u,v);decoKayak(kx,kz,-f+ry,c)}
       for(const [u,v] of [[.62,.2],[.6,-.05],[.66,.45]]){const [hx,hz]=P(u,v),pp=new THREE.Mesh(new THREE.CapsuleGeometry(.28,1,4,8),decoMat(u>.61?'#e2512c':'#2f6fb0'));pp.position.set(hx,1.1,hz);bayGroup.add(pp)}
     }
     else if(q.shape==='toad'){
@@ -748,7 +732,7 @@
         sand(.62,.98,.28,'#f4ead0',.36);sand(.96,1.1,.2,'#cdb995',.36);
         for(const sd of [-1,1])addKarst(...P(r*.25,sd*r*.62),r*.36,h*(sd>0?1.05:.9),k+3+sd,{taper:.05,dome:.35,sx:.8,sz:1.3,rot:f,ribs:9,ribAmp:.14,notch:.34});
         addKarst(...P(-r*.35,0),r*.55,h*.95,k,{shape:0,sx:1.4,rot:f+Math.PI/2});addBeachTrees(x,z,f,r*.92,6,k,.3);
-        for(let j=0;j<3;j++){const ky=new THREE.Mesh(new THREE.SphereGeometry(1,14,8),decoMat(['#e2412c','#f2c14e','#2f9a8a'][j]));ky.scale.set(.5,.25,2.1);const [kx,kz]=P(r*1.05,(j-1)*4);ky.position.set(kx,.2,kz);ky.rotation.y=-f;bayGroup.add(ky)}}
+        /* 27/11: bỏ kayak trang trí */}
       else if(p.id==='dao_nam_cat'){
         // Nam Cát: đồi thấp phủ rừng, bãi cát trắng có dãy nhà gỗ (bungalow) mái lá ven biển
         addKarst(x,z,r*.6,h*.85,k,{taper:.1,dome:.6,ribs:4,rough:.16});addKarst(...P(-r*.35,-r*.4),r*.4,h*.6,k+1,{shape:2});
@@ -766,11 +750,11 @@
     }
     else if(q.shape==='cove'){
       // Áng nước kín kiểu Lan Hạ / Cống Đỏ: vòng vách đá dựng đứng, đỉnh tròn phủ rừng, mở về phía tàu; nhà bè nhỏ trong áng
-      const sh=[0,3,4,0,3,0,4];for(let j=0;j<7;j++){const a=f+.75+j*(2*Math.PI-1.5)/6,d=r*(.95+bayHash(k,j,3)*.15);
+      const DR=bayKarstRec=p._discs=[];const sh=[0,3,4,0,3,0,4];for(let j=0;j<7;j++){const a=f+.75+j*(2*Math.PI-1.5)/6,d=r*(.95+bayHash(k,j,3)*.15);
         addKarst(x+Math.cos(a)*d,z+Math.sin(a)*d,r*(.3+bayHash(k,j,1)*.1),h*(.78+bayHash(k,j,2)*.4),k+j,{shape:sh[j],rot:a+Math.PI/2,taper:.05,dome:.5,ribs:10,ribAmp:.13,rough:.22})}
       const g=new THREE.Group();g.position.set(x-fx*r*.15,0,z-fz*r*.15);g.rotation.y=-f;decoBox(g,12,.5,8,'#8a6f52',0,.25,0);decoBox(g,6,3,5,'#4f9a8c',-1.5,2,0);decoBox(g,7,.3,6,'#5f8f6a',-1.5,3.6,0);
       for(let j=0;j<4;j++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1,10),decoMat('#2f6fb0'));b.position.set(3+j%2*1.2,1,-2+Math.floor(j/2)*1.2);g.add(b)}bayGroup.add(g);
-      const sp=makeSampan(true);sp.position.set(x-fx*r*.15+fz*12,0,z-fz*r*.15-fx*12);sp.rotation.y=-f;bayGroup.add(sp);
+      bayKarstRec=null;DR.push([g.position.x,g.position.z,7.5]);/* nhà bè trong áng là vật cản; còn lại là nước, bơi / chèo vào được */
     }
     else if(q.shape==='island_beach'){
       // Bãi biển Bái Tử Long (Quan Lạn, Minh Châu, Ngọc Vừng, Thắng Lợi): đảo đất thấp, đồi thoai thoải dài phủ rừng (không phải tháp đá vôi),
@@ -796,7 +780,6 @@
         for(let b=0;b<3;b++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.95,10),decoMat(b%2?'#2f6fb0':'#3b82c4'));c.position.set(2+b*1.1,.95,-3.4);g.add(c)}
         if(j%3===0){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,6,5),decoMat('#d9d2c2'));pole.position.set(-4.5,4,2.5);g.add(pole);decoBox(g,.05,1,1.6,'#d2332b',-4.5,6.3,3.3)}
         bayGroup.add(g)}
-      for(const [s,cn] of [[-1,true],[1,false],[.3,true]]){const sp=makeSampan(cn);sp.position.set(x+px*s*30-fx*(back-12),0,z+pz*s*30-fz*(back-12));sp.rotation.y=-f+(s>0?.2:-.3);bayGroup.add(sp)}
       // vòng đảo tháp đá vôi đa dạng bao quanh làng, chừa luồng tàu và lối vào phía tàu ghé
       for(const v of villageRocks(p))addKarst(v[0],v[1],v[2],v[3],v[4],{shape:v[5]})}
     else if(q.shape==='pier'){
@@ -1899,14 +1882,14 @@
   function meHeadRig(y){bw.head.rotation.set(0,y,0)}
   function playWearSwim(on){const P=bayPlay;if(on){playSwimWear();if(!P.outfit){P.outfit=bayOutfit;bayOutfit={style:'swim',color:bayOutfit.color,acc:[]}/* mặc áo phao xuống biển (trượt phao, bơi, chèo kayak): tháo kính, khăn, nón; lên lại tàu mới đeo lại */}}else if(P&&P.outfit){bayOutfit=P.outfit;P.outfit=null}}
   // ---- Vật cản cho người bơi / kayak: thân tàu, cầu trượt, kayak buộc mạn phải; đĩa đá / đảo / bờ quanh người (gom lại khi đi xa chỗ gom trước)
-  function playScan(cx,cz,R){const out=[],lands=[],arches=[],near=(x,z,r)=>Math.hypot(x-cx,z-cz)<R+r;
+  function playScan(cx,cz,R){let stale=false;const out=[],lands=[],arches=[],near=(x,z,r)=>Math.hypot(x-cx,z-cz)<R+r;
     for(const n of bayData.nature)if(n.kind==='karst_field')for(const [x,z,r,,v] of n.params.items){const er=r*(v===3?1.9:v===4?1.35:1)*1.02;if(near(x,z,er))out.push([x,z,er])}
     for(const p of bayData.props){const q=p.params||{};if(p.kind==='moored_boat'&&near(p.x,p.z,6))out.push([p.x,p.z,6]);if(p.kind==='landmark'){if(q.shape==='pier'&&near(p.x,p.z+22,12))out.push([p.x,p.z+22,12]);
-      if(q.shape==='arch'){const A=archLayout(p);if(near(p.x,p.z,A.R))arches.push(A)}else if(q.radius>0){const r=q.radius*(q.shape==='big_island'?1.08:1.2);if(near(p.x,p.z,r))out.push([p.x,p.z,r])}if(q.shape==='village'){const f=lmFacing(p),x=p.x-Math.cos(f)*34,z=p.z-Math.sin(f)*34;if(near(x,z,48))out.push([x,z,48])}}}
+      if(q.shape==='arch'){const A=archLayout(p);if(near(p.x,p.z,A.R))arches.push(A)}else if(q.radius>0){const r=q.radius*(q.shape==='big_island'?1.08:1.2);if(p._discs&&/^(dragon_eye|cove)$/.test(q.shape)){if(near(p.x,p.z,r))for(const d of p._discs)if(near(d[0],d[1],d[2]))out.push(d)}else if(near(p.x,p.z,r)){out.push([p.x,p.z,r]);if(/^(dragon_eye|cove)$/.test(q.shape))stale=true/* chưa dựng xong: chặn tạm cả vòng, dựng xong quét lại */}}/* đảo có vụng, áng: chặn theo từng khối đá, không chặn cả vòng */if(q.shape==='village'){const f=lmFacing(p),x=p.x-Math.cos(f)*34,z=p.z-Math.sin(f)*34;if(near(x,z,48))out.push([x,z,48])}}}
     for(const [x,z,rr] of bayExtraRocks)if(near(x,z,rr))out.push([x,z,rr*.85]);
     for(const L of bayLand){let a=1e9,b=-1e9,c=1e9,d=-1e9;for(const [x,z] of L.pts){a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,z);d=Math.max(d,z)}if(cx+R>a&&cx-R<b&&cz+R>c&&cz-R<d)lands.push(L.pts)}
-    return {discs:out,lands,arches,x:cx,z:cz,R}}
-  function playObs(x,z){const P=bayPlay;if(!P.obs||Math.hypot(x-P.obs.x,z-P.obs.z)>P.obs.R-PLAY.tap-40)P.obs=playScan(x,z,PLAY.tap+260)}
+    return {discs:out,lands,arches,x:cx,z:cz,R,stale,t:performance.now()}}
+  function playObs(x,z){const P=bayPlay;if(!P.obs||Math.hypot(x-P.obs.x,z-P.obs.z)>P.obs.R-PLAY.tap-40||(P.obs.stale&&performance.now()-P.obs.t>1000))P.obs=playScan(x,z,PLAY.tap+260)}
   function inPoly(P,x,z){let ins=false;for(let a=0,b=P.length-1;a<P.length;b=a++){const [x1,z1]=P[a],[x2,z2]=P[b];if((z1>z)!==(z2>z)&&x<x1+(z-z1)*(x2-x1)/(z2-z1))ins=!ins}return ins}
   let playPortR=null;function playPortRects(){if(playPortR&&playPortR.n===BAY_PORTS.length)return playPortR;const out=[],b=new THREE.Box3();out.n=BAY_PORTS.length;
     for(const g of BAY_PORTS){g.updateMatrixWorld(true);g.traverse(o=>{if(!o.isMesh)return;b.setFromObject(o);if(b.min.y<1.3&&b.max.y>.2&&b.max.x-b.min.x<200&&b.max.z-b.min.z<200)out.push([b.min.x-BAY.x,b.max.x-BAY.x,b.min.z-BAY.z,b.max.z-BAY.z])})}return playPortR=out}
@@ -2036,7 +2019,7 @@
     try{bayChunks.clear();
       const hulls=['#7d5a3d','#8a6446','#6f4f36','#94704d'];
       [[.45,112,0],[1.05,98,1],[1.6,124,0],[2.2,104,1],[-.35,118,1],[-.95,102,0],[-1.55,128,1],[-2.25,108,0],[2.62,150,1],[-2.62,146,0]].forEach(([a,d,sp],i)=>{
-        const x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d,b=sp?makeSampan(i%2===0):makeJunk(hulls[i%4]);b.position.set(x,0,z);b.rotation.y=-a+(i%2?.35:-.4);if(!sp)b.scale.setScalar(1.15);g.add(b);bayBuoys.push({g:b,x,z});
+        const x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d,b=sp?null:makeJunk(hulls[i%4]);/* 27/11: bỏ đò nâu nhỏ, giữ thuyền gỗ lớn */if(b){b.position.set(x,0,z);b.rotation.y=-a+(i%2?.35:-.4);b.scale.setScalar(1.15);g.add(b);bayBuoys.push({g:b,x,z})}
         const buoy=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8),decoMat(i%2?'#d8483a':'#f2c14e'));buoy.position.set(x+Math.cos(a)*7,.2,z+Math.sin(a)*7);g.add(buoy);bayBuoys.push({g:buoy,x:buoy.position.x,z:buoy.position.z})});
       for(let k=0;k<11;k++){const a=k*.571+.2,d=430+bayHash(k,3,1)*230,x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d,sh=[0,1,3,4,2,5,1,3,0,4,6][k],r=18+bayHash(k,4,2)*26;
         addKarst(x,z,r,r*(sh===2?.9:sh===0?3.6:2.1)+12,8800+k,{shape:sh})}
