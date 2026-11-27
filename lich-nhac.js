@@ -26,8 +26,8 @@
     if(r.error){if(/anyen_my_next_session|schema cache|does not exist|PGRST202/i.test((r.error.code||'')+' '+r.error.message))off=true;return}
     const s=r.data;shown=s||null;
     if(!s||hiddenFor===s.slot+'-'+s.start){bar.hidden=true;return}
-    const started=s.now>=s.start,who=s.host?(s.guests?s.guests+' khách đã nhận lời':'chưa có khách'):'Healer đang chờ bạn';
-    bar.querySelector('span').textContent='🌿 '+(started?'Phiên đang diễn ra':'Phiên lúc '+hhmm(s.start))+' · '+s.venue_name+' · '+hhmm(s.start)+'–'+hhmm(s.end)+' · '+who;
+    const started=s.now>=s.start,home=s.kind==='home',who=s.host?(s.guests?s.guests+(home?' bạn đã nhận lời':' khách đã nhận lời'):(home?'chưa có bạn nhận lời':'chưa có khách')):(home?'Chủ nhà đang chờ bạn':'Healer đang chờ bạn');
+    bar.querySelector('span').textContent='🌿 '+(started?(home?'Buổi hẹn đang diễn ra':'Phiên đang diễn ra'):(home?'Hẹn lúc ':'Phiên lúc ')+hhmm(s.start))+' · '+s.venue_name+' · '+hhmm(s.start)+'–'+hhmm(s.end)+' · '+who;
     bar.hidden=false;
   }
 

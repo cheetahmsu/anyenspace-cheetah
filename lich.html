@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lịch trị liệu · Làng Yên</title>
+<title>Lịch hẹn · Làng Yên</title>
 <meta name="theme-color" content="#04201b">
 <style>
 :root{--bg:#04201b;--line:rgba(200,169,106,.28);--ivory:#f4e7c6;--ivory2:#f8ebc9;--mut:#b9c7bd;--mut2:#9fb0a6;--gold:#d8b575;--cta:linear-gradient(135deg,#e0c183,#b8935a);--ink:#1a2a22;--serif:Georgia,"Times New Roman",serif;--err:#f0a8a0;--ok:#a9dcb8}
@@ -26,7 +26,7 @@ h2{font-size:21px}h3{font-size:17px;margin-top:22px;color:var(--gold);font-famil
 .chip{min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(4,32,27,.6);cursor:pointer;font-size:14px}
 .chip[aria-pressed=true]{background:linear-gradient(160deg,#1d5a4b,#0e3a30);border-color:rgba(216,181,117,.9);color:var(--ivory2)}
 label.f{display:block;margin-top:14px;font-size:13px;color:var(--mut)}
-select,input[type=email],textarea{width:100%;min-height:48px;margin-top:6px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(4,32,27,.85);font-size:16px}
+select,input[type=email],input[type=date],textarea{width:100%;min-height:48px;margin-top:6px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(4,32,27,.85);font-size:16px}
 textarea{min-height:76px;resize:vertical}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;margin-top:12px;border:0;border-radius:999px;background:var(--cta);color:var(--ink);font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
@@ -61,9 +61,9 @@ details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);
 <body>
 <div class="wrap">
 <header class="top"><a class="back" href="index.html">🏠 Trang chính</a><a class="back" href="account.html?next=lich.html" id="acctLink">Tài khoản</a></header>
-<span class="eyebrow">Healing House · 1 Healer + 5 khách</span>
-<h1>Lịch trị liệu</h1>
-<p class="sub">Healer tự mở khung 30 phút ở sáu Nhà của Rừng Yên. Thành viên xin tham gia, Healer nhận lời; hoặc Healer mời bạn và bạn đồng ý. Mỗi phiên tối đa 5 khách.</p>
+<span class="eyebrow">Healing House · Tư Gia · Đảo Yên</span>
+<h1>Lịch hẹn</h1>
+<p class="sub">Đặt phiên với Healer ở sáu Nhà của Rừng Yên, hoặc mời bạn bè tới Tư Gia, Đảo Yên của mình. Hai bên cùng đồng ý là khớp lịch. Mỗi buổi tối đa 6 người.</p>
 
 <div id="liveBox" class="live" hidden></div>
 
@@ -78,6 +78,7 @@ details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);
 <div class="tabs" role="tablist">
 <button class="on" data-tab="book" role="tab" aria-selected="true">Đặt lịch</button>
 <button data-tab="mine" role="tab" aria-selected="false">Lịch của tôi <span id="mineCount"></span></button>
+<button data-tab="home" role="tab" aria-selected="false">Mời bạn</button>
 <button data-tab="open" role="tab" aria-selected="false" id="tabOpen" hidden>Mở lịch</button>
 </div>
 
@@ -96,11 +97,30 @@ details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);
 <h3>Người xin tham gia</h3>
 <div id="reqList"></div>
 </div>
+<h3>Lời mời tới chơi</h3>
+<div id="homeInvList"></div>
 <h3>Phiên tôi tham gia</h3>
 <div id="myBookList"></div>
 <div class="msg" id="mineMsg" role="alert"></div>
 </section>
 
+<!-- Mời bạn tới Tư Gia / Đảo Yên -->
+<section id="t-home" hidden>
+<div class="card">
+<h2>Mời bạn tới chơi</h2>
+<p class="sub">Một buổi hẹn riêng, không lặp lại. Tạo buổi rồi mời bạn bằng email, tối đa 5 bạn.</p>
+<div class="chips" id="hPlace" aria-label="Nơi đón bạn"></div>
+<label class="f">Ngày<input type="date" id="hDate"></label>
+<label class="f">Giờ bắt đầu<select id="hStart"></select></label>
+<div class="f" style="margin-top:14px;font-size:13px;color:var(--mut)">Thời lượng</div>
+<div class="chips" id="hDur"></div>
+<label class="f">Lời nhắn cho bạn bè (không bắt buộc)<textarea id="hNote" maxlength="300" placeholder="Ví dụ: ngồi trà, nghe mưa, kể chuyện tuần qua"></textarea></label>
+<div class="msg" id="homeMsg" role="alert"></div>
+<button class="btn wide" id="hBtn" type="button">Tạo buổi hẹn</button>
+</div>
+<h3>Buổi hẹn tôi mời</h3>
+<div id="homeList"></div>
+</section>
 <!-- Mở lịch (Healer) -->
 <section id="t-open" hidden>
 <div class="card">
@@ -131,21 +151,22 @@ var $=function(s){return document.querySelector(s)};
 var cfg=window.ANYEN_CONFIG||{},client=null,me=null,sched=null,openList=[],venues=[],venueFilter='all',busy=false;
 var DONE={declined:'Đã từ chối',cancelled:'Đã hủy',expired:'Hết hạn'};
 var WD=['','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'],WDS=['','T2','T3','T4','T5','T6','T7','CN'];
-var ICON={xong_huong:'🌿',nha_hoa_lan:'🌸',xuong_gom:'🏺',quan_tra:'🍵',chuong_gio:'🎐',nha_niem:'🕯️'};
+var ICON={xong_huong:'🌿',nha_hoa_lan:'🌸',xuong_gom:'🏺',quan_tra:'🍵',chuong_gio:'🎐',nha_niem:'🕯️',tu_gia:'🏡',tu_dao:'🏝'};
+var PLACES={tu_gia:'🏡 Tư Gia · Rừng Yên',tu_dao:'🏝 Đảo Yên · Vịnh Yên'};
 function hhmm(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function msg(id,type,text){var e=$(id);e.className='msg'+(type?' '+type:'');e.textContent=text||''}
 function dateLabel(d){var t=new Date(d+'T00:00:00'),today=new Date();today.setHours(0,0,0,0);var diff=Math.round((t-today)/864e5);
  var wd=WD[t.getDay()===0?7:t.getDay()];var dm=t.getDate()+'/'+(t.getMonth()+1);return diff===0?'Hôm nay · '+wd+' '+dm:diff===1?'Ngày mai · '+wd+' '+dm:wd+' · '+dm}
 function vi(e){var m=(e&&e.message)||String(e||'');
- if(/schema cache|does not exist|PGRST202|anyen_sched_open|anyen_my_schedule/i.test(m))return 'Máy chủ chưa có lịch trị liệu. Cần chạy supabase_lich_chinh.sql trên Supabase.';
+ if(/schema cache|does not exist|PGRST202|anyen_sched_open|anyen_my_schedule/i.test(m))return 'Máy chủ chưa có Lịch hẹn. Cần chạy supabase_lich_chinh.sql trên Supabase.';
  if(/network|fetch/i.test(m))return 'Không kết nối được mạng. Hãy thử lại.';return m}
 function seats(n){var s=el('span','seats');s.setAttribute('aria-label',n+' trên 5 khách');for(var i=0;i<5;i++){var d=el('i',i<n?'on':'');s.appendChild(d)}return s}
 async function rpc(name,args){var r=await client.rpc(name,args||{});if(r.error)throw r.error;return r.data}
 
 /* ---- Tabs ---- */
 function tab(t){document.querySelectorAll('.tabs button').forEach(function(b){var on=b.dataset.tab===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))});
- ['book','mine','open'].forEach(function(k){$('#t-'+k).hidden=k!==t});try{sessionStorage.setItem('yen_lich_tab',t)}catch(e){}}
+ ['book','mine','home','open'].forEach(function(k){$('#t-'+k).hidden=k!==t});try{sessionStorage.setItem('yen_lich_tab',t)}catch(e){}}
 document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){tab(b.dataset.tab)}});
 
 /* ---- Tải dữ liệu ---- */
@@ -153,7 +174,7 @@ async function load(){
  var res=await Promise.all([rpc('anyen_my_schedule'),rpc('anyen_sched_open',{p_days:14,p_venue:null})]);
  sched=res[0]||{};openList=res[1]||[];
  $('#tabOpen').hidden=!sched.therapist;
- renderVenueChips();renderBook();renderMine();renderOpenSlots();renderLive();
+ renderVenueChips();renderBook();renderMine();renderHomeInvites();renderHomes();renderOpenSlots();renderLive();
 }
 async function act(fn,msgId,okText){if(busy)return;busy=true;msg(msgId);
  try{await fn();await load();if(okText)msg(msgId,'ok',okText)}catch(e){msg(msgId,'err',vi(e))}finally{busy=false}}
@@ -162,8 +183,8 @@ async function act(fn,msgId,okText){if(busy)return;busy=true;msg(msgId);
 async function renderLive(){var box=$('#liveBox');var s=null;try{s=await rpc('anyen_my_next_session')}catch(e){}
  if(!s){box.hidden=true;return}box.hidden=false;box.textContent='';
  var started=s.now>=s.start;box.appendChild(el('b',null,(started?'Phiên đang diễn ra':'Phiên sắp bắt đầu')+' · '+(ICON[s.venue]||'')+' '+s.venue_name));
- box.appendChild(el('div','note',hhmm(s.start)+'–'+hhmm(s.end)+' · '+(s.host?(s.guests+' khách đã nhận lời · bạn là Healer'):'Healer đang chờ bạn')));
- var a=el('a','btn','Vào phiên ở Rừng Yên →');a.href='index.html?vao='+encodeURIComponent(s.venue);box.appendChild(a)}
+ var home=s.kind==='home';box.appendChild(el('div','note',hhmm(s.start)+'–'+hhmm(s.end)+' · '+(s.host?(s.guests+(home?' bạn đã nhận lời · bạn là Chủ nhà':' khách đã nhận lời · bạn là Healer')):(home?'Chủ nhà đang chờ bạn':'Healer đang chờ bạn'))));
+ var a=el('a','btn',s.venue==='tu_dao'?'Về Đảo Yên ở Vịnh Yên →':'Vào ở Rừng Yên →');a.href='index.html?vao='+encodeURIComponent(s.venue);box.appendChild(a)}
 
 /* ---- Đặt lịch ---- */
 function renderVenueChips(){var box=$('#venueChips');box.textContent='';
@@ -197,7 +218,7 @@ function confirmSoft(b){if(b.dataset.arm)return true;b.dataset.arm='1';var t=b.t
 
 /* ---- Lịch của tôi ---- */
 function renderMine(){var books=sched.bookings||[],reqs=sched.requests||[];
- var pend=books.filter(function(b){return b.status==='pending'&&b.direction==='invite'}).length+reqs.filter(function(r){return r.status==='pending'&&r.direction==='request'}).length;
+ var pend=(sched.home_invites||[]).filter(function(h){return h.status==='pending'}).length+books.filter(function(b){return b.status==='pending'&&b.direction==='invite'}).length+reqs.filter(function(r){return r.status==='pending'&&r.direction==='request'}).length;
  $('#mineCount').textContent=pend?'· '+pend:'';
  var box=$('#myBookList');box.textContent='';
  if(!books.length)box.appendChild(el('p','empty','Bạn chưa đặt phiên nào. Xem tab Đặt lịch để chọn phiên.'));
@@ -227,6 +248,44 @@ function renderMine(){var books=sched.bookings||[],reqs=sched.requests||[];
  if(!pendReq.length)rl.appendChild(el('p','empty','Chưa có ai đang chờ bạn nhận lời.'));
  pendReq.forEach(function(q){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,q.guest_name));l.appendChild(el('small',null,q.venue_name+' · '+dateLabel(q.date)));if(q.message)l.appendChild(el('small',null,'“'+q.message+'”'));
   row.append(l,el('div','time',hhmm(q.start)+'–'+hhmm(q.end)));c.appendChild(row);var a=el('div','acts');a.appendChild(respondBtn(q.id,true,'#mineMsg'));a.appendChild(respondBtn(q.id,false,'#mineMsg'));c.appendChild(a);rl.appendChild(c)})}
+
+/* ---- Lời mời tới Tư Gia / Đảo Yên ---- */
+function placeLabel(p){return (ICON[p]||'')+' '+(p==='tu_dao'?'Đảo Yên':'Tư Gia')}
+function homeBtn(text,cls,fn,msgId,okText,soft){var b=el('button','btn sm'+(cls?' '+cls:''),text);b.type='button';b.onclick=function(){if(soft&&!confirmSoft(b))return;act(fn,msgId,okText)};return b}
+function renderHomeInvites(){var box=$('#homeInvList');box.textContent='';var list=(sched.home_invites||[]).slice();
+ list=list.filter(function(h){return h.status==='pending'||h.status==='accepted'}).concat(list.filter(function(h){return h.status!=='pending'&&h.status!=='accepted'}));
+ if(!list.length){box.appendChild(el('p','empty','Chưa có lời mời nào. Bạn bè mời bạn tới Tư Gia hay Đảo Yên thì sẽ hiện ở đây.'));return}
+ list.forEach(function(h){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,placeLabel(h.place)+' của '+h.host_name));l.appendChild(el('small',null,dateLabel(h.date)+' · '+h.accepted+'/5 bạn đã nhận lời'));
+  if(h.message)l.appendChild(el('small',null,'“'+h.message+'”'));else if(h.note)l.appendChild(el('small',null,'“'+h.note+'”'));
+  row.append(l,el('div','time',hhmm(h.start)+'–'+hhmm(h.end)));c.appendChild(row);var a=el('div','acts');
+  if(h.status==='pending'){a.appendChild(el('span','badge','Chờ bạn trả lời'));a.appendChild(homeBtn('Đồng ý','',function(){return rpc('anyen_home_respond',{p_invite:h.id,p_accept:true})},'#mineMsg','Đã nhận lời. Đến giờ, trang chính sẽ nhắc bạn vào.'));a.appendChild(homeBtn('Từ chối','ghost',function(){return rpc('anyen_home_respond',{p_invite:h.id,p_accept:false})},'#mineMsg','Đã từ chối.'))}
+  else if(h.status==='accepted'){a.appendChild(el('span','badge ok','Đã khớp lịch'));a.appendChild(homeBtn('Hủy','ghost',function(){return rpc('anyen_home_invite_cancel',{p_invite:h.id})},'#mineMsg','Đã hủy. Chủ nhà sẽ thấy chỗ trống.',true))}
+  else{a.appendChild(el('span','badge wait',DONE[h.status]||h.status));c.classList.add('past')}
+  c.appendChild(a);box.appendChild(c)})}
+var hPlace='tu_gia',hDur=60;
+function todayISO(add){var t=new Date();t.setHours(0,0,0,0);t.setDate(t.getDate()+(add||0));return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')}
+function renderHomeForm(){var pp=$('#hPlace');pp.textContent='';Object.keys(PLACES).forEach(function(k){var b=el('button','chip',PLACES[k]);b.type='button';b.setAttribute('aria-pressed',String(hPlace===k));b.onclick=function(){hPlace=k;renderHomeForm()};pp.appendChild(b)});
+ var d=$('#hDate');d.min=todayISO(0);d.max=todayISO(365);if(!d.value)d.value=todayISO(1);
+ var sel=$('#hStart');if(!sel.options.length){for(var m=360;m<=1380;m+=30){var o=el('option',null,hhmm(m));o.value=m;sel.appendChild(o)}sel.value='1140'}
+ var dd=$('#hDur');dd.textContent='';[[30,'30 phút'],[60,'1 giờ'],[90,'1 giờ 30'],[120,'2 giờ']].forEach(function(x){var b=el('button','chip',x[1]);b.type='button';b.setAttribute('aria-pressed',String(hDur===x[0]));b.onclick=function(){hDur=x[0];renderHomeForm()};dd.appendChild(b)})}
+$('#hBtn').onclick=function(){var d=$('#hDate').value,s=+$('#hStart').value;if(!d)return msg('#homeMsg','err','Chọn ngày hẹn.');
+ if(s+hDur>1440)return msg('#homeMsg','err','Buổi hẹn cần kết thúc trước nửa đêm.');
+ var starts=[];for(var m=s;m<s+hDur;m+=30)starts.push(m);var note=$('#hNote').value.trim()||null;
+ act(function(){return rpc('anyen_home_open',{p_place:hPlace,p_date:d,p_starts:starts,p_note:note}).then(function(){$('#hNote').value=''})},'#homeMsg','Đã tạo buổi hẹn. Mời bạn bằng email ở ngay bên dưới.')};
+function renderHomes(){var box=$('#homeList');box.textContent='';var list=sched.homes||[];
+ if(!list.length){box.appendChild(el('p','empty','Bạn chưa có buổi hẹn nào sắp tới.'));return}
+ list.forEach(function(h){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,placeLabel(h.place)));l.appendChild(el('small',null,dateLabel(h.date)));if(h.note)l.appendChild(el('small',null,'“'+h.note+'”'));
+  var r=el('div');r.style.textAlign='right';r.appendChild(el('div','time',hhmm(h.start)+'–'+hhmm(h.end)));var sc=el('small',null,h.accepted+'/5 bạn');sc.appendChild(seats(h.accepted));r.appendChild(sc);row.append(l,r);c.appendChild(row);
+  (h.guests||[]).forEach(function(g){var line=el('div','acts');line.style.marginTop='6px';line.appendChild(el('small',null,(g.status==='accepted'?'✓ ':g.status==='declined'?'✕ ':'… ')+g.name+(g.status==='pending'?' · chờ trả lời':g.status==='declined'?' · đã từ chối':'')));
+   if(!h.started&&g.status!=='declined')line.appendChild(homeBtn('Hủy lời mời','ghost',function(){return rpc('anyen_home_invite_cancel',{p_invite:g.id})},'#homeMsg','Đã hủy lời mời.',true));c.appendChild(line)});
+  if(!h.started){var a=el('div','acts');
+   if(h.accepted<5){var d=el('details','inv');d.appendChild(el('summary',null,'Mời bạn bằng email'));var em=el('input');em.type='email';em.placeholder='Email thành viên';em.setAttribute('aria-label','Email thành viên');em.autocomplete='off';var ta=el('textarea');ta.maxLength=300;ta.placeholder='Lời mời (không bắt buộc)';ta.setAttribute('aria-label','Lời mời');
+    var go=el('button','btn sm','Gửi lời mời');go.type='button';go.style.marginTop='8px';go.onclick=function(){var v=em.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)){msg('#homeMsg','err','Email chưa hợp lệ.');return}
+     act(function(){return rpc('anyen_home_invite_email',{p_session:h.id,p_email:v,p_message:ta.value.trim()||null})},'#homeMsg','Đã gửi lời mời. Bạn đồng ý thì sẽ hiện ✓ ở buổi này.')};
+    d.append(em,ta,go);a.appendChild(d)}
+   else a.appendChild(el('span','badge ok','Đã đủ 5 bạn'));
+   a.appendChild(homeBtn('Hủy buổi hẹn','ghost',function(){return rpc('anyen_home_cancel',{p_session:h.id})},'#homeMsg','Đã hủy buổi hẹn. Lời mời của bạn bè hủy theo.',true));c.appendChild(a)}
+  box.appendChild(c)})}
 
 /* ---- Mở lịch (Healer) ---- */
 var oDays=new Set(),oCells=new Set(),oPeriod='sang';
@@ -264,7 +323,7 @@ function renderOpenSlots(){var box=$('#slotList');box.textContent='';var s=(sche
  try{var vr=await client.from('anyen_venues').select('id,name,kind,schedulable,sort').eq('schedulable',true).eq('kind','house').order('sort');if(vr.error)throw vr.error;venues=vr.data||[];
   await load()}
  catch(e){$('#v-nocfg').hidden=false;$('#nocfgText').textContent=vi(e);return}
- $('#main').hidden=false;renderOpenForm();
+ $('#main').hidden=false;renderOpenForm();renderHomeForm();
  var t='book';try{t=sessionStorage.getItem('yen_lich_tab')||'book'}catch(e){}if(t==='open'&&!sched.therapist)t='book';if(location.hash==='#mine')t='mine';tab(t);
  setInterval(function(){if(!document.hidden&&!busy)load().catch(function(){})},60000);
 })();
