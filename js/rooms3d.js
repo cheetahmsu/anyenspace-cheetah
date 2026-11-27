@@ -1044,7 +1044,13 @@
       g.userData.flowers=fl;g.userData.kind=k;return g}
     // 6 chậu chính trên bục vòng cung, Vanda treo từ xà mái
     const spots=[[-1.9,-1.2],[-1.15,-1.85],[-.38,-2.1],[.38,-2.1],[1.15,-1.85]],pots=[];
-    rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.5,.32,40,1,false,Math.PI*.62,Math.PI*.76),deck),0,.16,.2);
+    /* 27/11: bục là một dải vòng cung khối kín (trước là miếng trụ cắt hở hai mặt bên, đáy trùng sàn nên nhấp nháy, lộ lối sỏi bên dưới) */
+    {const r0=1.85,r1=2.75,a0=Math.PI*.62,a1=Math.PI*1.38,P=(r,a)=>[r*Math.sin(a),r*Math.cos(a)],sh=new THREE.Shape(),N=32;
+      for(let i=0;i<=N;i++){const [x,z]=P(r1,a0+(a1-a0)*i/N);i?sh.lineTo(x,-z):sh.moveTo(x,-z)}for(let i=N;i>=0;i--){const [x,z]=P(r0,a0+(a1-a0)*i/N);sh.lineTo(x,-z)}
+      const dg=new THREE.ExtrudeGeometry(sh,{depth:.3,bevelEnabled:false,curveSegments:1});dg.rotateX(-Math.PI/2);
+      rAdd(st,new THREE.Mesh(dg,new THREE.MeshStandardMaterial({color:'#6b4e36',roughness:1})),0,.02,.2);
+      /* không cho nhân vật đi xuyên qua bục: chia cung thành từng đoạn chữ nhật nhỏ */
+      st.blocks=st.blocks||[];for(let i=0;i<9;i++){const xs=[],zs=[];for(const a of [a0+(a1-a0)*i/9,a0+(a1-a0)*(i+1)/9])for(const r of [r0,r1]){const [x,z]=P(r,a);xs.push(x);zs.push(z+.2)}st.blocks.push([Math.min(...xs),Math.min(...zs),Math.max(...xs),Math.max(...zs)])}}
     KINDS.forEach((k,i)=>{const o=orchid(k);if(k.hang){o.position.set(1.95,1.95,-1.25);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.7,4),iron);ch.position.y=.95;o.add(ch)}else{const [x,z]=spots[i];o.position.set(x,.32,z);o.rotation.y=Math.atan2(-x,2-z)*.6}
       st.sc.add(o);pots.push(o);rTap(st,o,()=>focus(i))});
     // chậu nhỏ trang trí trên kệ (bản sao thu nhỏ)
