@@ -1094,7 +1094,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     if(parts.lap){parts.lap.visible=!!sitting;parts.legMat.color.set(safe);}
     
   }
-  const meOutfit=outfitParts(me,meTorso);let myStyle='robe',myColor='#687b48';
+  const meOutfit=outfitParts(me,meTorso);let myStyle='linen',myColor='#687b48';
   let meActivity='idle', mePosition=new THREE.Vector3(0,0,24), thirdPerson=true;const spawnSlots=[[-8,24],[-4,27],[0,20.4],[4,27],[8,24],[-12,20],[12,20],[-16,17],[16,17]];const spawnIndex=(crypto.getRandomValues(new Uint32Array(1))[0])%spawnSlots.length;mePosition.set(spawnSlots[spawnIndex][0]+(Math.random()-.5)*1.2,0,spawnSlots[spawnIndex][1]+(Math.random()-.5)*1.2);
   // Navigation around the lotus pond and temple: visibility graph, shortest valid route.
   const zoneWalkPoints={gate:[0,30],garden:[-12,17],lotus:[6,11],meditation:[0,STATUE.z+7.2],sanctuary:[0,STATUE.z+4.2]};
@@ -1156,7 +1156,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     document.getElementById('zenHint').textContent='🚶 Đang di chuyển đến điểm bạn chọn…';return true;
   }
 
-  function paintMe(){let p={};try{p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}')}catch{};myStyle=p.style||'robe';myColor=p.color||'#687b48';dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');meCtx.clearRect(0,0,512,112);meCtx.fillStyle='#f4e2b9';meCtx.font='bold 36px sans-serif';meCtx.textAlign='center';meCtx.textBaseline='middle';meCtx.fillText(String(p.name||'Khách Yên').slice(0,24),256,57,470);meTexture.needsUpdate=true;}
+  function paintMe(){let p={};try{p=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}')}catch{};myStyle=p.style||'linen';myColor=p.color||'#687b48';dressAvatar(meOutfit,meTorso,myColor,myStyle,meActivity==='sit');meCtx.clearRect(0,0,512,112);meCtx.fillStyle='#f4e2b9';meCtx.font='bold 36px sans-serif';meCtx.textAlign='center';meCtx.textBaseline='middle';meCtx.fillText(String(p.name||'Khách Yên').slice(0,24),256,57,470);meTexture.needsUpdate=true;}
   // Tọa cụ ưu tiên Chánh điện; mở rộng theo vòng ngoài khi đầy.
   const cushions=[];
   // Two kinds of seat: the inner rings use the brown zabuton (square mat) with a round zafu on its outer half;
@@ -1343,7 +1343,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       await c.put(full,new Response(t,{headers:{'Content-Type':r.headers.get('Content-Type')||'text/plain'}}))}catch(e){}}
     return t}
   window.anyenCachedText=cachedText;
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=593c2163').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=e37179b0').then(code=>{eval(code);if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP&&!window.anyenLite)loadBayModule().catch(()=>{});/* lite: không tải sẵn Vịnh Yên */if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
