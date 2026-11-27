@@ -278,7 +278,7 @@ body.immersive:not(.yen-bay) #zenToolbar button span,body.immersive:not(.yen-bay
 .rm-ui-tog svg{width:34px;height:12px;display:block;transform:rotate(180deg);transition:transform .25s}
 #roomBox.rm-ui-off .rm-ui-tog{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 #roomBox.rm-ui-off .rm-ui-tog svg{transform:none}
-#roomBox.rm-ui-off .rm-walkpad,#roomBox.rm-ui-off .rm-hint,#roomBox.rm-ui-off .rm-panel{display:none!important}
+#roomBox.rm-ui-off .rm-hint,#roomBox.rm-ui-off .rm-panel{display:none!important}
 #roomBox:not(.rm-ui-off) .rm-walkpad{bottom:44px!important}
 #roomBox.niem-quiet:not(.peek) .rm-ui-tog{opacity:0;pointer-events:none}
 /* ---- Trang chủ · ba ngôi nhà (Kiểu 2): laptop giữ nguyên dock 7 nút; điện thoại xếp theo Hiểu mình · Chăm sóc mình · Kết nối với nhau và ẩn nút trùng ---- */
