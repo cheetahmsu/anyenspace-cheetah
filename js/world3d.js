@@ -1800,7 +1800,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=3188c0ca').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=fc3e8eea').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   /* Trang lite: mở thẳng bên trong nhà (không đi qua cửa, không đổi vị trí ngoài rừng); toạ thiền: đặt ngay lên tọa cụ trước tượng Phật */
@@ -1826,6 +1826,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       if(pts.size===2&&pinch0){const d=pd();st.dist=Math.max(st.minD,Math.min(st.maxD,st.dist*Math.max(.8,Math.min(1.25,pinch0/d))));pinch0=d;return}
       if(!drag||pts.size!==1)return;if(Math.abs(dx)+Math.abs(dy)>2)drag.mv=(drag.mv||0)+Math.abs(dx)+Math.abs(dy);if(drag.mv>8)drag.moved=true;st.yaw=Math.max(st.yawC-.9,Math.min(st.yawC+.9,st.yaw-dx*.006));st.pitch=Math.max(.02,Math.min(.6,st.pitch+dy*.004))};
     rmCanvas.onpointerup=e=>{if(!pts.delete(e.pointerId))return;pinch0=pts.size===2?pd():0;if(pts.size)return;const d=drag;drag=null;if(!d||d.moved)return;const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
+      /* phòng tự xử lý chạm (Nhà Sắc · Tìm năm sắc) */if(st.tapAny&&st.tapAny(ray))return;
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(!hit)return;let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk)pk.fn()};
     rmCanvas.onpointercancel=e=>{pts.delete(e.pointerId);pinch0=0;if(!pts.size)drag=null};rmCanvas.onwheel=e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:1);st.dist=Math.max(st.minD,Math.min(st.maxD,st.dist*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.005:.001))))))};
     const resize=()=>{const w=rmCanvas.clientWidth||600,h=rmCanvas.clientHeight||400;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};resize();st.resize=resize;
@@ -1887,6 +1888,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     rmCanvas.onpointerup=e=>{const d=endP(e);if(!d)return;if(d.axis==='x'&&performance.now()-swT<90&&Math.abs(W.yv)>.3){W.inert=true}else W.yv=0;if(d.mv>8)return;
       const nt=performance.now();if(W.lt&&nt-W.lt.t<330&&Math.hypot(e.clientX-W.lt.x,e.clientY-W.lt.y)<28){W.lt=null;W.zf=W.zf>.85?.65:1;W.yo=0;W.pl=0;return}W.lt={t:nt,x:e.clientX,y:e.clientY};
       const rc=rmCanvas.getBoundingClientRect(),p=new THREE.Vector2((e.clientX-rc.left)/rc.width*2-1,-(e.clientY-rc.top)/rc.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,cam);
+      if(st.tapAny&&st.tapAny(ray))return;
       const hit=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(hit){let o=hit.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk){pk.fn();return}}
       const o=ray.ray.origin,dr=ray.ray.direction;if(dr.y<-.01){const s=-o.y/dr.y;W.dest={x:o.x+dr.x*s,z:o.z+dr.z*s};const sv=[W.x,W.z];W.x=W.dest.x;W.z=W.dest.z;clampP();const tx=W.x,tz=W.z;W.x=sv[0];W.z=sv[1];setDest(tx,tz)}};
     rmCanvas.onpointercancel=e=>{endP(e)};
