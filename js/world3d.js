@@ -1803,7 +1803,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=3e13d3ab').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=d773f6eb').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   /* Trang lite: mở thẳng bên trong nhà (không đi qua cửa, không đổi vị trí ngoài rừng); toạ thiền: đặt ngay lên tọa cụ trước tượng Phật */
@@ -2175,8 +2175,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   const HOME_STYLES={gian_di:{label:'Giản Dị',wall:'#d8cbb0',floor:'#8a6a48',acc:'#6b4a32'},sang_chanh:{label:'Sang Chảnh',wall:'#2f3a3a',floor:'#5a3a2a',acc:'#c8a96a'},hanh_phuc:{label:'Hạnh Phúc',wall:'#f1d6c8',floor:'#b98a5e',acc:'#e58aa6'}};
   ROOM_BUILDERS.tu_gia_me=['#d8cbb0','#8a6a48',st=>roomTuGia(st),{bare:true}];
   const TU_DAO_SPACE={id:'tu_dao_me',name:'Đảo Yên của bạn',icon:'🏝',note:''};let roomFromIsland=false;
-  ROOM_BUILDERS.tu_dao_me=['#d8cbb0','#8a6a48',st=>{roomTuGia(st);rmHint('🏝 Đảo Yên · '+(window.__tuDaoSpot||'Bãi đảo')+' · tạm dùng không gian Tư Gia · Trở về để xuống tàu ở cầu tàu')},{bare:true}];
-  const TU_DAO_HOUSE={id:'dao_yen_nha',name:'Đảo Yên · Nhà chính',icon:'🏡',note:''};ROOM_BUILDERS.dao_yen_nha=['#efe6d6','#a8754a',st=>roomDaoYen(st),{bare:true}];
+  ROOM_BUILDERS.tu_dao_me=['#d8cbb0','#8a6a48',st=>{roomTuGia(st,'tu_dao_me');rmHint('🏝 Đảo Yên · '+(window.__tuDaoSpot||'Bãi đảo')+' · tạm dùng không gian Tư Gia · Trở về để xuống tàu ở cầu tàu')},{bare:true}];
+  const TU_DAO_HOUSE={id:'dao_yen_nha',name:'Đảo Yên · Nhà chính',icon:'🏡',note:''};ROOM_BUILDERS.dao_yen_nha=['#efe6d6','#a8754a',st=>roomDaoYen(st),{bare:true,venue:'tu_dao_me'}];/* 27/11: nhà chính là nơi gặp nhau của buổi hẹn Đảo Yên (kênh tu_dao_me__h<buổi>) */
   const TU_DAO_THIEN={id:'dao_yen_thien',name:'Đảo Yên · Nhà Thiền',icon:'🧘',note:''};ROOM_BUILDERS.dao_yen_thien=['#efe3c8','#9a6a42',st=>roomDaoThien(st),{bare:true}];
   function openTuDaoSpace(kind){TU_DAO_SPACE.name='Đảo Yên · '+(window.__tuDaoSpot||'Bãi đảo');roomFromIsland=true;window.__tdExitDoor=(kind==='house'||kind==='med')?kind:false;Promise.resolve(openRoom(kind==='house'?TU_DAO_HOUSE:kind==='med'?TU_DAO_THIEN:TU_DAO_SPACE)).then(()=>{const bk=roomBox.querySelector('[data-rm="back"]');if(bk&&roomOpen)bk.textContent=(kind==='house'||kind==='med')?'🚪 Ra cửa':'← Xuống tàu · Vịnh Yên'})}
   // A folded robe on a wooden tray (used on the head, on the dais and on the shelves).
@@ -2532,8 +2532,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Nhà chưa có phòng thì đứng trước cửa và giữ chỗ trong không gian của Nhà đó để vào kênh phiên.
   // Lịch hẹn Tư Gia / Đảo Yên (v3.9): đến giờ hẹn, Chủ nhà và bạn đã khớp vào Tư Gia / Đảo Yên của mình là cùng một kênh.
   function goSchedHouse(id){
-    if(id==='tu_dao'){if(roomOpen||boatRide)return false;if(bayMode){window.__goTuDao&&window.__goTuDao(true);return true}
-      enterBay();(function wait(n){if(bayMode&&window.__goTuDao){setTimeout(()=>window.__goTuDao(true),400);return}if(n>0)setTimeout(()=>wait(n-1),500)})(40);return true}
+    if(id==='tu_dao'){/* 27/11: buổi hẹn Đảo Yên: cập cầu tàu rồi đi thẳng lên trước cửa nhà chính, chạm cửa là vào gặp mọi người */const toHouse=()=>setTimeout(()=>{if(bayMode&&window.__bay&&window.__bay.tdTap)window.__bay.tdTap('house')},900);if(roomOpen||boatRide)return false;if(bayMode){window.__goTuDao&&window.__goTuDao(true);toHouse();return true}
+      enterBay();(function wait(n){if(bayMode&&window.__goTuDao){setTimeout(()=>{window.__goTuDao(true);toHouse()},400);return}if(n>0)setTimeout(()=>wait(n-1),500)})(40);return true}
     if(id==='tu_gia'){if(bayMode||boatRide||roomOpen)return false;goHome(true);return true}
     if(bayMode||boatRide||roomOpen)return false;const h=SENSE_HOUSES.find(x=>x.id===id)||(id==='nha_van_hoa'?VAN_HOA:id==='nha_hoa_lan'?NHA_SAC:null);let door,yaw;
     if(h){door=h.door;yaw=h.rot+Math.PI}else if(id==='nha_hoa_lan'){door=ORCHID_DOOR;yaw=ORCHID.rot+Math.PI}else return false;
