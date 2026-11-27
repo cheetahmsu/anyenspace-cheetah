@@ -420,6 +420,7 @@
     const seats=[];for(let k=0;k<6;k++){const a=Math.PI+k*Math.PI/3,x=Math.sin(a)*2.4,z=Math.cos(a)*2.4,healer=k===0;
       const m=M(healer?C.brass:C.pine,{emissive:healer?'#7a5a24':'#1f4a3a',emissiveIntensity:0,roughness:.85});const s=add(new THREE.CylinderGeometry(.36,.4,.14,8),m,x,.08,z);s.userData={k,healer};seats.push(s)}
     const seatA=k=>Math.PI+k*Math.PI/3;
+    st.blocks=(st.blocks||[]).concat([[-.45,-.45,.45,.45]]);/* 27/11: Đèn Thở giữa vòng: đi vòng, không xuyên qua */
     // nhân vật ngồi tọa thiền (kiết già) trên tọa cụ: thân áo + vạt chân là 1 Lathe, đầu là khối 20 mặt; mỗi người 68 tam giác
     const ROBE=['#b8873f','#5b7f6b','#8a6a8e','#4f6f86','#9a6b4f','#6f7d52'],SKIN=new THREE.Color('#e2b98f');
     const bodyG=new THREE.LatheGeometry([[.34,0],[.36,.08],[.2,.17],[.22,.42],[.07,.5]].map(([a,b])=>new THREE.Vector2(a,b)),6);
@@ -536,18 +537,21 @@
         if(S.healer){if(!occ[0]||!occ[0].me){occ[0]={id:S.me,name:'Bạn',healer:true,me:true}}if(S.mySeat!==0||!S.colSent){S.colSent=true;claim(0)}}
         else{const mine=Object.entries(occ).find(([k,o])=>o.me);if(mine)S.mySeat=+mine[0];else if(S.list.length){/* chờ danh sách có mặt rồi mới chọn chỗ */const free=[1,2,3,4,5].filter(k=>!occ[k]),k=free.includes(S.mySeat)?S.mySeat:free[0];if(k!=null){claim(k);occ[k]={id:S.me,name:'Bạn',me:true}}}}}
       S.occ=occ;drawPeople()}
-    function drawPeople(){let n=0;for(let k=0;k<6;k++){const o=S.occ[k];seats[k].material.emissiveIntensity=o?(o.me?.9:.45):0;if(!o)continue;const a=seatA(k);
+    function drawPeople(){let n=0;for(let k=0;k<6;k++){const o=S.occ[k];seats[k].material.emissiveIntensity=o?(o.me?.9:.45):0;if(!o||(o.me&&st.walk))continue;/* mình đã có nhân vật đi lại, không vẽ thêm hình ngồi */const a=seatA(k);
         dummy.position.set(Math.sin(a)*2.4,.15,Math.cos(a)*2.4);dummy.rotation.set(0,a+Math.PI,0);dummy.scale.set(1.2,1,.95);dummy.updateMatrix();bodies.setMatrixAt(n,dummy.matrix);bodies.setColorAt(n,new THREE.Color(o.me?myRobe():o.col||(o.healer||k===0?ROBE[0]:ROBE[k])));/* màu áo mỗi người tự chọn, gửi qua presence */
         dummy.position.y=.15+.6;dummy.scale.set(1,1.12,1);dummy.updateMatrix();heads.setMatrixAt(n,dummy.matrix);heads.setColorAt(n,SKIN);n++}
       bodies.count=heads.count=n;bodies.instanceMatrix.needsUpdate=heads.instanceMatrix.needsUpdate=true;if(n){bodies.instanceColor.needsUpdate=heads.instanceColor.needsUpdate=true}}
     const myRobe=()=>{try{const c=JSON.parse(localStorage.getItem('yenGuestProfile17')||'{}').color;return /^#[0-9a-f]{6}$/i.test(c)?c:ROBE[3]}catch(e){return ROBE[3]}};
     function litSeats(){seatPeople()}
-    function tapSeat(k){if(!S.entered)return;const o=S.occ[k];
-      if(o&&o.me){goView('seat');return}
+    /* 27/11: chạm tọa cụ thì nhân vật của mình đi tới ngồi đúng chỗ đó, mặt hướng vào Đèn Thở */
+    function sitAt(k){const W=st.walk;if(!W||!W.goSeat)return;const a=seatA(k);W.goSeat({x:Math.sin(a)*2.4,z:Math.cos(a)*2.4,a:a+Math.PI,y:.13,ax:Math.sin(a)*2.95,az:Math.cos(a)*2.95})}
+    function tapSeat(k){const o=S.occ[k];
+      if(!S.entered){if(k===0&&!S.healer){rmHint('Tọa cụ vàng đồng dành cho Healer dẫn phiên');return}if(!inSession())S.mySeat=k;sitAt(k);return}
+      if(o&&o.me){sitAt(k);goView('seat');return}
       if(k===0&&!S.healer){rmHint('Tọa cụ vàng đồng dành cho Healer dẫn phiên');return}
       if(S.healer&&inSession()){rmHint('Healer ngồi ở tọa cụ vàng đồng, quay lưng ra cửa vòm Trăng');return}
       if(o){rmHint('Chỗ này đã có '+o.name+' ngồi · chạm một tọa cụ còn trống');return}
-      claim(k);seatPeople();goView('seat');rmHint('🧘 Đã ngồi vào tọa cụ K'+k);if(S.tab!=='bowl')render()}
+      claim(k);seatPeople();sitAt(k);goView('seat');rmHint('🧘 Đã ngồi vào tọa cụ K'+k);if(S.tab!=='bowl')render()}
     // ---- chạm vào vật trong phòng
     rTap(st,lamp,()=>{if(!S.entered)return;S.tab='breath';goView('seat');render()});/* ngồi tại tọa cụ của mình */
     rTap(st,board,()=>{if(!S.entered)return;if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()});rTap(st,counter,()=>{if(S.entered){if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()}});
