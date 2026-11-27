@@ -1688,9 +1688,9 @@
   /* camera nhìn từ phía trong đảo ra biển, hơi cao, hình vỏ sò chiếm khoảng nửa màn hình; bảng ở dưới nên hình nằm nửa trên */
   function shArtCam(R,wide){const A=TD_ACT;if(!R)return;
     /* Trang lite: nhìn thẳng từ trên xuống, ô xếp phẳng không nghiêng, rộng hết chiều ngang màn hình (laptop: vừa phần trên bảng xếp) */
-    if(window.anyenLite){const [fx,fz]=R.f,ph=camera.aspect<1,half=Math.tan(camera.fov*Math.PI/360),D=2*((R.rm||1)+.6),vis=ph?.5:.62,el=89.5*Math.PI/180;
-      let dist=Math.max((D/2)/(half*camera.aspect),(D/2)/(half*vis))*(ph?1.0:1.04);if(wide)dist*=1.1;
-      const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.36)*dist*half,L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
+    if(window.anyenLite){const [fx,fz]=R.f,ph=camera.aspect<1,half=Math.tan(camera.fov*Math.PI/360),D=2*((R.rm||1)+.6),vis=ph?.5:.74,el=(ph?89.5:72)*Math.PI/180;/* laptop: camera cao, nghiêng nhẹ, ô xếp to */
+      let dist=Math.max((D/2)/(half*camera.aspect),(D/2)/(half*vis))*(ph?1.0:.96);if(wide)dist*=1.1;
+      const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.3)*dist*half/Math.sin(el),L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
       A.cairnCam={t:0,L,P:new THREE.Vector3(L.x+fx*dist*Math.cos(el),gy+dist*Math.sin(el),L.z+fz*dist*Math.cos(el))};A.shCam=true;A.artCam=null;return}/* camera sau lưng người ngồi: xoay hướng nhìn về phía bên người ngồi ~25°, người nằm ở góc dưới, không che hình */const b=0,[f0,f1]=R.f,fx=f0*Math.cos(b)+f1*Math.sin(b),fz=f1*Math.cos(b)-f0*Math.sin(b),ph=camera.aspect<1,D=2*((R.rm||1)+.6),half=Math.tan(camera.fov*Math.PI/360),el=(wide?(ph?38:30):(ph?46:38))*Math.PI/180/* thấp vừa đủ để thấy biển và chân trời phía sau hình */;
     let dist=Math.max(D*Math.sin(el)/(.5*2*half),D/((ph?.9:.6)*2*half*camera.aspect));if(wide)dist*=1.15;
     const gy=tdTerrainY(R.cx,R.cz),g=(ph?.4:.22)*dist*half/Math.sin(el),L=new THREE.Vector3(R.cx+fx*g,gy,R.cz+fz*g);
