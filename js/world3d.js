@@ -1800,7 +1800,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=39594967').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=9e020849').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   /* Trang lite: mở thẳng bên trong nhà (không đi qua cửa, không đổi vị trí ngoài rừng); toạ thiền: đặt ngay lên tọa cụ trước tượng Phật */
@@ -1839,6 +1839,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     tu_gia_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,1.25],cap:2.6,chw:3.7,chd:3.3,maxD:8.5,fov:70},tu_dao_me:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,1.25],cap:2.6,chw:3.7,chd:3.3,maxD:8.5,fov:70},
     dao_yen_thien:{hw:3.55,hd:3.2,cx:0,cz:0,start:[0,.3],cap:2.9,chw:3.7,chd:3.35,maxD:8.5,fov:70},
     dao_yen_nha:{hw:5.75,hd:3.75,cx:0,cz:0,start:[0,1.3],cap:3.0,chw:5.7,chd:3.7,maxD:9.5,fov:70},
+    /* 27/11: Nhà Vị: camera cao và lệch phải để thấy bàn trà, không bị nhân vật che */
+    quan_tra:{hw:3.5,hd:3.1,cx:0,cz:0,start:[.9,1.7],cap:3.4,chw:3.7,chd:3.25,maxD:11,fov:66,teaCam:{look:[0,.36,-.1],back:1.9,side:1.3,h:2.9}},
     van_hoa:{hw:7.3,hd:4.9,cx:0,cz:.3,zmin:-2.3,start:[2.3,4.4],cap:6.2,front:0,maxD:11,fov:74,capAt:z=>4.6+Math.max(0,5.4-Math.abs(z))/5.4*2.2-.4}};
   function enableWalk(st,id){const cfg=Object.assign({},ROOM_WALK.default,ROOM_WALK[id]||{}),cam=st.cam,sc=st.sc;if(ROOM_WALK[id]&&ROOM_WALK[id].chd==null){delete cfg.chw;delete cfg.chd}/* nhà tự đặt khung camera riêng (Nhà Niệm, Nhà Văn Hóa) thì không lấy khung mặc định */
     const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));torso.position.y=1.05;g.add(torso);
@@ -1864,12 +1866,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     document.addEventListener('keydown',key);document.addEventListener('keyup',key);
     // nút đi cho điện thoại
     const pad=document.createElement('div');pad.className='rm-walkpad';pad.style.cssText='position:absolute;left:10px;bottom:10px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:6px;z-index:5;touch-action:none;user-select:none';
-    for(const [k,lab,gc,gr] of [['f','▲',2,1],['l','◀',1,2],['b','▼',2,2],['r','▶',3,2]]){const b=document.createElement('button');b.type='button';b.textContent=lab;b.setAttribute('aria-label',{f:'Đi tới',b:'Lùi',l:'Quay trái',r:'Quay phải'}[k]);b.style.cssText='grid-column:'+gc+';grid-row:'+gr+';border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(20,16,12,.55);color:#f4e2b9;font-size:18px;touch-action:none';
+    /* 27/11: trong mọi nhà bỏ nút mũi tên (chạm sàn để đi, máy tính vẫn dùng W A S D) */if(false)for(const [k,lab,gc,gr] of [['f','▲',2,1],['l','◀',1,2],['b','▼',2,2],['r','▶',3,2]]){const b=document.createElement('button');b.type='button';b.textContent=lab;b.setAttribute('aria-label',{f:'Đi tới',b:'Lùi',l:'Quay trái',r:'Quay phải'}[k]);b.style.cssText='grid-column:'+gc+';grid-row:'+gr+';border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(20,16,12,.55);color:#f4e2b9;font-size:18px;touch-action:none';
       const dn=e=>{e.preventDefault();e.stopPropagation();W.keys.add(k);W.dest=null;try{b.setPointerCapture(e.pointerId)}catch(_){}},up=e=>{e.stopPropagation();W.keys.delete(k)};b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault());pad.appendChild(b)}
     // ngồi xuống / đứng lên tại chỗ; chạm sàn hay bấm nút đi thì tự đứng lên rồi đi
     const sitB=document.createElement('button');sitB.type='button';sitB.style.cssText='grid-column:4;grid-row:1 / span 2;border-radius:12px;border:1px solid #c8a96a;background:rgba(20,16,12,.6);color:#f4e2b9;font-size:13px;line-height:1.2;width:58px;touch-action:none';pad.style.gridTemplateColumns='repeat(3,44px) 58px';
-    const setSit=on=>{if(!on&&W.seat){W.x=W.seat.ax;W.z=W.seat.az;W.seat=null;W.seatY=0}/* đứng lên khỏi ghế: bước ra phía trước ghế */W.sit=on;torso.scale.set(1,on?.6:1,1);torso.position.y=on?.42:1.05;head.position.y=on?1.06:1.85;dress(on);sitB.innerHTML=on?'🚶<br>Đứng lên':'🧘<br>Ngồi';if(on){W.dest=null;W.keys.clear()}};
-    sitB.addEventListener('pointerdown',e=>e.stopPropagation());sitB.addEventListener('click',e=>{e.stopPropagation();setSit(!W.sit)});sitB.innerHTML='🧘<br>Ngồi';pad.appendChild(sitB);W.setSit=setSit;W.goSeat=S=>{if(W.sit)setSit(false);W.seat=S;W.keys.clear();setDest(S.ax,S.az)};
+    /* 27/11: chỉ ngồi khi chạm vào ghế, bồ đoàn; lúc đang ngồi mới hiện một nút Đứng lên nhỏ gọn bên trái */pad.style.gridTemplateColumns='auto';pad.style.gridTemplateRows='auto';sitB.style.cssText='border-radius:18px;border:1px solid #c8a96a;background:rgba(20,16,12,.6);color:#f4e2b9;font-size:13px;line-height:1;padding:8px 12px;white-space:nowrap;touch-action:none';sitB.hidden=true;
+    const setSit=on=>{if(!on&&W.seat){W.x=W.seat.ax;W.z=W.seat.az;W.seat=null;W.seatY=0}/* đứng lên khỏi ghế: bước ra phía trước ghế */W.sit=on;torso.scale.set(1,on?.6:1,1);torso.position.y=on?.42:1.05;head.position.y=on?1.06:1.85;dress(on);sitB.innerHTML='🚶 Đứng lên';sitB.hidden=!on;if(on){W.dest=null;W.keys.clear()}};
+    sitB.addEventListener('pointerdown',e=>e.stopPropagation());sitB.addEventListener('click',e=>{e.stopPropagation();if(W.sit)setSit(false)});sitB.innerHTML='🚶 Đứng lên';pad.appendChild(sitB);W.setSit=setSit;W.goSeat=S=>{if(W.sit)setSit(false);W.seat=S;W.keys.clear();setDest(S.ax,S.az)};
     const stage=rmCanvas.parentNode;stage.style.position=stage.style.position||'relative';stage.appendChild(pad);
     // chạm: vật tương tác thì mở, sàn thì bước tới; kéo một ngón để xoay nhìn quanh; chụm/lăn để zoom
     // Cùng quy tắc với Rừng Yên và Vịnh Yên: vuốt ngang xoay góc nhìn (có quán tính), vuốt dọc nâng/hạ camera, hai ngón chụm/mở để zoom, chạm đúp để zoom gần/xa.
@@ -1910,9 +1913,13 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       let px=lx+Math.sin(W.cy)*Math.cos(p)*D,pz=lz+Math.cos(W.cy)*Math.cos(p)*D,py=ty+Math.sin(p)*D;
       {const cw=cfg.chw||cfg.hw-.3;px=Math.max(cfg.cx-cw,Math.min(cfg.cx+cw,px));pz=Math.max(cfg.cz-(cfg.chd||cfg.hd-.3),Math.min(cfg.cz+(cfg.chd||cfg.hd+(cfg.front||0)),pz));/* camera bị vách chặn, đứng gần nhân vật hơn: hạ thấp theo, để vẫn nhìn ngang vào phòng thay vì chúi xuống sàn */if(cfg.chd){const hz=Math.hypot(px-lx,pz-lz);py=Math.min(py,asp<1?ty+1.3+hz*.75:ty+.75+hz*.5)}/* điện thoại dọc: góc cao hơn một chút để thấy rộng hơn */}py=Math.min(py,cfg.capAt?cfg.capAt(pz):cfg.cap);
       if(cfg.R){const d=Math.hypot(px-cfg.cx,pz-cfg.cz);if(d>cfg.R+.8){px=cfg.cx+(px-cfg.cx)/d*(cfg.R+.8);pz=cfg.cz+(pz-cfg.cz)/d*(cfg.R+.8)}}
+      if(cfg.teaCam){/* Nhà Vị: camera sau lưng chếch phải và cao; ngồi thì nhìn thẳng vào bàn trà */const T=cfg.teaCam,bk=T.back*(W.sit?(asp>1?.85:1):1.3)*W.zf,sd=T.side*W.zf,cy=W.sit?W.a+Math.PI+W.yo:W.cy;/* đang ngồi: đứng sau lưng chỗ ngồi */
+        px=lx+Math.sin(cy)*bk+Math.cos(cy)*sd;pz=lz+Math.cos(cy)*bk-Math.sin(cy)*sd;py=Math.min(cfg.cap,T.h+W.pl*2);
+        px=Math.max(cfg.cx-cfg.chw,Math.min(cfg.cx+cfg.chw,px));pz=Math.max(cfg.cz-cfg.chd,Math.min(cfg.cz+cfg.chd,pz));
+        if(W.sit&&asp>1){cam.fov=44;W.fov=-1;cam.updateProjectionMatrix()}/* màn hình ngang: thu hẹp góc nhìn để bàn trà to rõ */if(W.sit)cam.position.set(px,py,pz),cam.lookAt(T.look[0],T.look[1],T.look[2]);else{cam.position.set(px,py,pz);cam.lookAt(lx,ty*.6,lz)}return}
       cam.position.set(px,py,pz);cam.lookAt(lx,ty,lz);cam.rotateX(Math.atan(Math.tan(vh)/3))};
     st.walk=W;st.walkAvatar=g;const oc=st.cleanup;st.cleanup=()=>{document.removeEventListener('keydown',key);document.removeEventListener('keyup',key);pad.remove();if(oc)oc()};
-    rmHint('Chạm sàn hoặc dùng W A S D / nút ▲◀▶▼ để đi lại · kéo để nhìn quanh · chụm/lăn để zoom')}
+    rmHint('Chạm sàn để đi · chạm ghế, bồ đoàn để ngồi · kéo để nhìn quanh · chụm/lăn để zoom')}
   const rTap=(st,obj,fn)=>{st.picks.push({obj,fn});return obj};
   const rAdd=(st,m,x,y,z)=>{m.position.set(x,y,z);st.sc.add(m);return m};
   // ---------------------------------------------------------------- Nhà chuông gió
