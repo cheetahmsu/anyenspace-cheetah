@@ -98,6 +98,14 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Ngồi tọa thiền**: mỗi người hiện thành một nhân vật ngồi kiết già trên tọa cụ, mặt hướng Đèn Thở (68 tam giác/người; đủ 6 người là 1.692 tam giác). Solo chỉ thấy mình (mặc định K3, chạm tọa cụ khác để đổi). Trong Phiên 1+5, Healer luôn ngồi tọa cụ vàng đồng; khách vào sau tự ngồi vào chỗ trống đầu tiên hoặc chạm một tọa cụ trống để ngồi. Chỗ ngồi đi qua presence của kênh phiên (`anyenSpaceChat.meta({c})`), kèm màu áo mỗi người tự chọn (`col`), nên chỉ người trong cùng phiên thấy nhau; hai người chọn trùng chỗ thì ai vào trước giữ chỗ.
 - Không tạo kho vật phẩm mới. Giai đoạn 2 (3 phong cách trong nhà) chưa làm.
 
+## Phiên chung 6 người trong các nhà (27/11, đợt 1: Nhà Vị, Nhà Thanh)
+
+- Dùng chung `roomShare(venue)` và `roomSeats(st,sh,seats,opt)` trong `js/rooms3d.js`: vào nhà là vào kênh chung của nhà qua `space-chat.js` (tối đa 6 người, thành viên đã đăng nhập; trong giờ phiên Healer thì người đã khớp lịch vào kênh phiên riêng). Ngoài kênh vẫn trải nghiệm riêng như cũ.
+- **Thấy nhau ngồi**: người đang ngồi trên bồ đoàn hiện thành nhân vật ngồi đúng màu áo, kiểu áo, có tên (presence `c` = chỗ ngồi, `col`, `sty`; `c:-1` là đứng lên). Ai giữ chỗ trước được chỗ, người sau tự sang chỗ trống.
+- **Nhà Vị · phiên trà**: vào phiên là tự tới ngồi; bồ đoàn đầu bàn cạnh ấm và bếp dành cho Healer. Healer bấm từng bước pha trà, cả phòng cùng thấy (`{k:'tea',s,inv}`, người vào trễ được gửi lại trạng thái); mỗi bước có một câu lời dẫn, Healer chạm **💬 Gửi lời dẫn** để gửi vào khung chat (`anyenSpaceChat.say`). Bước cuối **🙏 Mời trà cả phòng**: chén trước mặt mỗi người đầy trà, khách bấm **Nâng chén nhận trà** để nhận một lời nhắn, cả phòng thấy chén nâng lên (`{k:'cup'}`). Trước khi Healer bắt đầu, khách vẫn tự pha được.
+- **Nhà Thanh**: mỗi người tự chạm chuông, chiêng, chuông gió; người cùng ở trong nhà nghe cùng tiếng đó (`{k:'cg',a}`), nhiều người chạm cùng lúc thì các tiếng ngân chồng lên nhau. Thiền âm thanh 3 phút vẫn là của riêng mỗi người.
+- Nhà Sắc giữ ngắm hoa riêng từng người. Bản full và bản lite chạy cùng code. Không cần chạy thêm SQL.
+
 ## Nhà Văn Hóa · 36 người · Ca Múa Nhạc và 5 hoạt động tập thể
 
 - Đi tới cửa Nhà Văn Hóa (hoặc mở `index.html?vao=nha_van_hoa`) là vào gian 16 × 11 × 6,8 m gỗ trầm `#42362A`, 6 cột `#2A1F15`, mái hai dốc có khe sáng cổ diêm dọc nóc. Sân khấu gỗ 6,4 × 2,8 m phía Nam, màn chiếu 16:9, 6 cụm bàn × 6 ghế = 36 chỗ, Tường Tây triển lãm 9 ô, Tường Đông 18 lời chúc và Quầy trà.
