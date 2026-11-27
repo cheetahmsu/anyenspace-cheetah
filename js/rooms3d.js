@@ -1198,7 +1198,7 @@
     const AZ=-HD+.75,woodS=M('#c8955c',{roughness:.6});B(2.6,.46,1.0,woodD,0,.23,AZ);B(2.8,.06,1.15,woodS,0,.49,AZ);B(1.3,.3,.7,woodS,0,.67,AZ-.12);
     const P=(geo,m,x,y,z,par)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);(par||sc).add(o);return o};
     const bd=new THREE.Group();bd.position.set(0,.82,AZ-.12);sc.add(bd);
-    {const ivory=M('#fbf3e4',{roughness:.5,emissive:'#fff0d8',emissiveIntensity:.28}),robe=M('#f5ead6',{roughness:.55,emissive:'#fff0d8',emissiveIntensity:.22}),fold=M('#e9dbbf',{roughness:.6,emissive:'#ffe8c0',emissiveIntensity:.18}),lotusM=M('#e9c68e',{roughness:.5,emissive:'#6a4818',emissiveIntensity:.15});
+    {const ivory=M('#f6dca6',{roughness:.45,emissive:'#e8a850',emissiveIntensity:.22}),robe=M('#f1d49a',{roughness:.5,emissive:'#e0a048',emissiveIntensity:.18}),fold=M('#e2bf80',{roughness:.55,emissive:'#d89840',emissiveIntensity:.15})/* 27/11: vàng kem ấm như ảnh mẫu */,lotusM=M('#e9c68e',{roughness:.5,emissive:'#6a4818',emissiveIntensity:.15});
       // đài sen: đế tròn + hai vòng cánh sen
       P(new THREE.CylinderGeometry(.42,.46,.1,24),lotusM,0,.05,0,bd);
       for(const [n,r,y,s,o] of [[12,.42,.17,.18,0],[12,.32,.24,.16,.5]])for(let i=0;i<n;i++){const a=(i+o)/n*Math.PI*2,pt=P(new THREE.SphereGeometry(s,10,8),lotusM,Math.cos(a)*r,y,Math.sin(a)*r,bd);pt.rotation.order='YXZ';pt.rotation.y=Math.PI/2-a;pt.rotation.x=-.45;pt.scale.set(.62,1,.3)}/* cánh sen nhọn, ngả ra ngoài */
