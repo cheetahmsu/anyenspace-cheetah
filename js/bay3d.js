@@ -2069,7 +2069,7 @@
     if(ts.sun_elevation!=null){const e=ts.sun_elevation,a=ts.sun_azimuth||0;bayU.sunDir.value.set(Math.sin(a)*Math.cos(e),Math.sin(e),Math.cos(a)*Math.cos(e)).normalize()}
     bayU.fogD.value=Number(d.map.fog_density)||.00105;bayU.sunCol.value.set(d.map.sun_color||'#fff2dc');
     const root=bayGroup;bayGroup=bayLandGroup;
-    /* Trang lite: chỉ dựng quanh Đảo Yên (đất liền, đảo đá, danh thắng ở xa thì bỏ), không dựng cả vịnh */const LITE=!!window.anyenLite,nearTD=(x,z,r=0)=>!LITE||Math.hypot(x-TU_DAO.x,z-TU_DAO.z)<650+r;
+    /* Trang lite: chỉ dựng quanh Đảo Yên (đất liền, đảo đá, danh thắng ở xa thì bỏ), không dựng cả vịnh */const LITE=!!window.anyenLite,nearTD=(x,z,r=0)=>!LITE||Math.hypot(x-TU_DAO.x,z-TU_DAO.z)<150+r;
     for(const n of d.nature){
       if(n.kind==='land')for(const L of n.params.polygons){if(LITE&&!L.pts.some(([x,z])=>nearTD(x,z)))continue;const s=new THREE.Shape(L.pts.map(([x,z])=>new THREE.Vector2(x,-z)));const geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(1,L.height-6),bevelEnabled:L.height>4,bevelThickness:6,bevelSize:14,bevelSegments:3,curveSegments:4});geo.rotateX(-Math.PI/2);
         const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:L.color,roughness:1}));m.position.y=-4;bayGroup.add(m);bayLand.push(L);

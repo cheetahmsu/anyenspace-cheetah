@@ -597,3 +597,5 @@ html.lite #zenToolbar [data-zen="boat"]{display:none!important}
 .lite-resume{display:block;margin:0 auto 14px;padding:11px 20px;border-radius:999px;border:1px solid #e3c27faa;background:linear-gradient(180deg,#c8a96a33,#c8a96a18);color:#f6e7c1;font-size:15px;cursor:pointer}
 .lite-resume[hidden]{display:none}
 .lite-resume:hover{background:#c8a96a40}
+.lite-grid button[hidden]{display:none!important}
+@media(min-width:761px){html.lite .lite-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}html.lite .lite-grid button small{font-size:11px}}
