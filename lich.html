@@ -53,6 +53,7 @@ textarea{min-height:76px;resize:vertical}
 .grid button:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
 .live{border:1px solid #c8a96a;background:linear-gradient(160deg,#1d5a4b,#0b2d28);border-radius:18px;padding:14px 16px;margin-top:16px}
 .empty{color:var(--mut);font-size:14px;margin-top:12px}
+.sess.past{opacity:.6}
 details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);font-size:14px;min-height:36px;display:flex;align-items:center}
 </style>
 <style>html{-webkit-text-size-adjust:100%;text-size-adjust:100%}*{touch-action:manipulation}@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:max(16px,1em)!important}}</style>
@@ -128,6 +129,7 @@ details.inv{margin-top:8px}details.inv summary{cursor:pointer;color:var(--gold);
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var cfg=window.ANYEN_CONFIG||{},client=null,me=null,sched=null,openList=[],venues=[],venueFilter='all',busy=false;
+var DONE={declined:'Đã từ chối',cancelled:'Đã hủy',expired:'Hết hạn'};
 var WD=['','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'],WDS=['','T2','T3','T4','T5','T6','T7','CN'];
 var ICON={xong_huong:'🌿',nha_hoa_lan:'🌸',xuong_gom:'🏺',quan_tra:'🍵',chuong_gio:'🎐',nha_niem:'🕯️'};
 function hhmm(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
@@ -136,7 +138,7 @@ function msg(id,type,text){var e=$(id);e.className='msg'+(type?' '+type:'');e.te
 function dateLabel(d){var t=new Date(d+'T00:00:00'),today=new Date();today.setHours(0,0,0,0);var diff=Math.round((t-today)/864e5);
  var wd=WD[t.getDay()===0?7:t.getDay()];var dm=t.getDate()+'/'+(t.getMonth()+1);return diff===0?'Hôm nay · '+wd+' '+dm:diff===1?'Ngày mai · '+wd+' '+dm:wd+' · '+dm}
 function vi(e){var m=(e&&e.message)||String(e||'');
- if(/schema cache|does not exist|PGRST202|anyen_sched_open|anyen_my_schedule/i.test(m))return 'Máy chủ chưa có lịch trị liệu. Cần chạy supabase_phase1c.sql trên Supabase.';
+ if(/schema cache|does not exist|PGRST202|anyen_sched_open|anyen_my_schedule/i.test(m))return 'Máy chủ chưa có lịch trị liệu. Cần chạy supabase_lich_chinh.sql trên Supabase.';
  if(/network|fetch/i.test(m))return 'Không kết nối được mạng. Hãy thử lại.';return m}
 function seats(n){var s=el('span','seats');s.setAttribute('aria-label',n+' trên 5 khách');for(var i=0;i<5;i++){var d=el('i',i<n?'on':'');s.appendChild(d)}return s}
 async function rpc(name,args){var r=await client.rpc(name,args||{});if(r.error)throw r.error;return r.data}
@@ -180,7 +182,7 @@ function renderBook(){var box=$('#bookList');box.textContent='';
   row.append(left,right);c.appendChild(row);
   var acts=el('div','acts');
   if(s.mine){acts.appendChild(el('span','badge','Phiên của bạn'))}
-  else if(s.my_status==='accepted'){acts.appendChild(el('span','badge ok','Đã được nhận'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
+  else if(s.my_status==='accepted'){acts.appendChild(el('span','badge ok','Đã khớp lịch'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
   else if(s.my_status==='pending'&&s.my_direction==='invite'){acts.appendChild(el('span','badge','Healer mời bạn'));acts.appendChild(respondBtn(s.my_booking,true,'#bookMsg'));acts.appendChild(respondBtn(s.my_booking,false,'#bookMsg'))}
   else if(s.my_status==='pending'){acts.appendChild(el('span','badge wait','Chờ Healer nhận lời'));acts.appendChild(cancelBtn(s.my_booking,'#bookMsg'))}
   else if(s.accepted>=5){acts.appendChild(el('span','badge wait','Đã đủ 5 khách'))}
@@ -199,9 +201,12 @@ function renderMine(){var books=sched.bookings||[],reqs=sched.requests||[];
  $('#mineCount').textContent=pend?'· '+pend:'';
  var box=$('#myBookList');box.textContent='';
  if(!books.length)box.appendChild(el('p','empty','Bạn chưa đặt phiên nào. Xem tab Đặt lịch để chọn phiên.'));
+ // lịch còn hiệu lực lên trước, lịch đã hủy / từ chối / hết hạn xuống cuối
+ books=books.filter(function(b){return b.status==='pending'||b.status==='accepted'}).concat(books.filter(function(b){return b.status!=='pending'&&b.status!=='accepted'}));
  books.forEach(function(b){var c=el('div','sess'),row=el('div','row'),l=el('div');l.appendChild(el('b',null,(ICON[b.venue]||'')+' '+b.venue_name));l.appendChild(el('small',null,dateLabel(b.date)+' · Healer '+b.therapist_name));if(b.message)l.appendChild(el('small',null,'“'+b.message+'”'));
   row.append(l,el('div','time',hhmm(b.start)+'–'+hhmm(b.end)));c.appendChild(row);var a=el('div','acts');
-  if(b.status==='accepted'){a.appendChild(el('span','badge ok','Đã được nhận'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
+  if(b.status==='accepted'){a.appendChild(el('span','badge ok','Đã khớp lịch'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
+  else if(b.status!=='pending'){a.appendChild(el('span','badge wait',DONE[b.status]||b.status));c.classList.add('past')}
   else if(b.direction==='invite'){a.appendChild(el('span','badge','Healer mời bạn'));a.appendChild(respondBtn(b.id,true,'#mineMsg'));a.appendChild(respondBtn(b.id,false,'#mineMsg'))}
   else{a.appendChild(el('span','badge wait','Chờ Healer nhận lời'));a.appendChild(cancelBtn(b.id,'#mineMsg'))}
   c.appendChild(a);box.appendChild(c)});

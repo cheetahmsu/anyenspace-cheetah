@@ -118,7 +118,8 @@ Nút **⏸️ Ngắm cảnh** trên hàng trên: thuyền dừng giữa hành tr
 - **Đặt lịch hai chiều**: thành viên xin tham gia một phiên (kèm lời nhắn), Healer bấm Đồng ý; hoặc Healer mời bằng email, khách bấm Đồng ý. Mỗi phiên tối đa 5 khách (khóa cứng trên máy chủ).
 - **Phiên song song**: nhiều Healer có thể dẫn phiên cùng giờ ở cùng một Nhà. Mỗi phiên có `session_instance_id` và kênh trò chuyện riêng (`anyen:sp:<nhà>__s<phiên>`), tối đa 6 người. Người không có lịch vào Nhà đang có phiên thì trải nghiệm riêng.
 - **Vào đúng ca**: từ 15 phút trước giờ phiên, trang chính hiện nút **Vào phiên** (`lich-nhac.js`); bấm là vào Rừng Yên và tới thẳng cửa Nhà đã đăng ký. Liên kết `index.html?vao=<id Nhà>` làm việc tương tự.
-- Cần chạy `supabase_phase1c.sql` (sau `supabase_phase1.sql` và `supabase_phase1b.sql`). Chưa chạy thì trang Lịch báo "Máy chủ chưa có lịch trị liệu", các trang khác không bị ảnh hưởng.
+- **Nguyên tắc v3.9 (đợt 1, `supabase_phase1d.sql`)**: đã khớp một phiên thì không khớp thêm phiên chồng giờ (kể cả giờ mình đang dẫn phiên), muốn đổi phải hủy lịch cũ trước; mỗi khung giờ chỉ tự xin tối đa 1 phiên, lời mời thì nhận thoải mái; lời mời / lời xin chưa khớp tự **Hết hạn** khi phiên bắt đầu; hủy được bất cứ lúc nào trước giờ phiên; Đảo trị liệu tạm chưa nhận lịch. Lịch của tôi hiện cả lịch Đã hủy / Đã từ chối / Hết hạn.
+- Supabase chính: dán một lần `supabase_lich_chinh.sql` (gộp sẵn phase1 → 1b → 1c → 1d, tạo lại bằng `tools/gop_sql_lich.sh`). Chưa chạy thì trang Lịch báo "Máy chủ chưa có lịch trị liệu", các trang khác không bị ảnh hưởng.
 
 ## Lưu ý
 - Đây là bản beta; chưa được kiểm thử trực tiếp trên iPhone và nhiều thiết bị thật.
