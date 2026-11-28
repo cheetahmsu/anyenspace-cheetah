@@ -46,10 +46,10 @@ const homeClear=(x,z)=>{if(Math.hypot(x-HOME.x,z-HOME.z)<15)return true;const [a
 const KOTA={x:-52.5,z:-74,R:4.1},SNOWMAN={x:-52,z:86},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
-// 28/11 (người dùng dặn): nhà chính đổi chỗ với nhà chữ A (nhà chính sang -29°, nhà chữ A về chính bắc); cửa hàng lưu niệm lùi xa về sau (29 → 47 m) cho quảng trường thoáng. Sau đó nhà chính lùi sát bìa rừng thông (45 → 54 m), rừng chỉ chừa sát quanh nhà.
+// 28/11 (người dùng dặn): nhà chính đổi chỗ với nhà chữ A (nhà chính sang -29°, nhà chữ A về chính bắc); cửa hàng lưu niệm lùi xa về sau (29 → 47 m) cho quảng trường thoáng. Sau cùng (người dùng chốt): nhà chính kéo lại gần cây thông trung tâm (-25°, 36 m), nhà chữ A dời sang phải (15°, 40 m) để không bị che.
 // [góc (0 = bắc, dương = đông), bán kính, rộng, sâu, cao, màu, loại]
-const VH=[[-29,54,9,19.8,4.4,'#c99d70','main'],[-60,47,8,7,3.8,'#b8906a','shop'],[58,29,8.5,8,3.6,'#c99d70','cafe'],[118,29,7,7.5,3.4,'#b8906a','chalet'],
-  [0,37,7,8,3.3,'#a8805c','aframe'],[29,43,7,7.5,3.4,'#b8906a','chalet']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
+const VH=[[-25,36,9,19.8,4.4,'#c99d70','main'],[-60,47,8,7,3.8,'#b8906a','shop'],[58,29,8.5,8,3.6,'#c99d70','cafe'],[118,29,7,7.5,3.4,'#b8906a','chalet'],
+  [15,40,7,8,3.3,'#a8805c','aframe'],[29,43,7,7.5,3.4,'#b8906a','chalet']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
@@ -1120,7 +1120,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const labels=[];
   function signTex(t1,t2){const c=document.createElement('canvas');c.width=512;c.height=180;const g=c.getContext('2d');g.fillStyle='rgba(14,22,36,.72)';g.beginPath();if(g.roundRect)g.roundRect(8,8,496,164,40);else g.rect(8,8,496,164);g.fill();g.strokeStyle='rgba(214,184,120,.7)';g.lineWidth=3;g.stroke();
     g.textAlign='center';g.fillStyle='#f1e2bf';g.font='600 50px Georgia,serif';g.fillText(t1,256,90,470);g.fillStyle='#cfd8e6';g.font='28px system-ui,sans-serif';g.fillText(t2,256,138,470);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return tx}
-  for(const zn of ZONES){if(zn.id==='don')continue;const p={rungkinh:[...IGLOOS[1],8],lang:[3,27,9.5],hobang:[LAKE.x,LAKE.z,4],rung:[12,-40,6],vuichoi:[-30,64,7],tuanloc:[FARM.x,FARM.z-12,5],dinh:[SKI.x,SKI.z-2,12],chua:[...tw(0,0),12]}[zn.id];if(!p)continue;
+  for(const zn of ZONES){if(zn.id==='don')continue;const p={rungkinh:[...IGLOOS[1],8],lang:[12,24,9.5],hobang:[LAKE.x,LAKE.z,4],rung:[12,-40,6],vuichoi:[-30,64,7],tuanloc:[FARM.x,FARM.z-12,5],dinh:[SKI.x,SKI.z-2,12],chua:[...tw(0,0),12]}[zn.id];if(!p)continue;
     const s=new THREE.Sprite(new THREE.SpriteMaterial({map:signTex(zn.name.toUpperCase(),zn.note.split('.')[0].slice(0,40)),transparent:true,fog:false,depthWrite:false}));s.scale.set(4.6,1.6,1);labels.push(s);s.position.set(p[0],H(p[0],p[1])+p[2],p[1]);sc.add(s)}
 
   // ---------- tuyết rơi ----------
