@@ -1804,7 +1804,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=fdbb26bb').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=f2320a0b').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   /* Trang lite: mở thẳng bên trong nhà (không đi qua cửa, không đổi vị trí ngoài rừng); toạ thiền: đặt ngay lên tọa cụ trước tượng Phật */
@@ -1925,6 +1925,8 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
     st.walk=W;st.walkAvatar=g;const oc=st.cleanup;st.cleanup=()=>{document.removeEventListener('keydown',key);document.removeEventListener('keyup',key);pad.remove();if(oc)oc()};
     rmHint('Chạm sàn để đi · chạm ghế, bồ đoàn để ngồi · kéo để nhìn quanh · chụm/lăn để zoom')}
   const rTap=(st,obj,fn)=>{st.picks.push({obj,fn});return obj};
+  /* 28/11: vùng chạm vô hình trên một đồ vật (mọi hoạt động trong nhà bắt đầu bằng chạm đồ vật, không bấm nút trong bảng) */
+  const rHit=(st,x,y,z,w,h,d,fn)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({visible:false}));m.position.set(x,y,z);st.sc.add(m);return rTap(st,m,fn)};
   const rAdd=(st,m,x,y,z)=>{m.position.set(x,y,z);st.sc.add(m);return m};
   // ---------------------------------------------------------------- Nhà chuông gió
   // ---------------------------------------------------------------- Haromy · Ngôi nhà của mùi thơm Hạnh phúc

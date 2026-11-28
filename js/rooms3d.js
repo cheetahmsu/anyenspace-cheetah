@@ -47,7 +47,7 @@
       tap(k){const p=O[k];if(p&&p.id!==sh.me){if(opt.hint)opt.hint('Chỗ này đã có '+(p.name||'một người bạn')+' ngồi · chạm một chỗ còn trống');return false}
         if(reserved(k)&&!sh.healer){if(opt.hint)opt.hint(opt.healerNote||'Chỗ này dành cho Healer dẫn phiên');return false}sit(k);return true},
       free:()=>free(O),reset(){auto=false},dispose(){for(const f of figs.values())st.sc.remove(f.g);figs.clear()}}}
-  function roomChuongGio(st){rmHint('Chạm vào chuông xoay, chiêng hay chuông gió để nghe · Kéo để nhìn quanh');
+  function roomChuongGio(st){rmHint('Chạm vào chuông xoay, chiêng hay chuông gió để nghe · chạm lư hương để thiền âm thanh 3 phút');
     const bowlM=new THREE.MeshStandardMaterial({color:'#b88d45',metalness:.6,roughness:.35});rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(2.4,.32,1),mat('#4e3a2a')),0,.16,0);
     const bowls=[];[[-.8,.26,196],[0,.32,147],[.8,.22,262]].forEach(([x,r,f],k)=>{const b=rAdd(st,new THREE.Mesh(new THREE.LatheGeometry([[0,0],[r*.6,.02],[r,.14],[r*1.05,.2]].map(([a,c])=>new THREE.Vector2(a,c)),24),bowlM),x,.33,0);bowls.push([b,f]);
       const cushion=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,.05,16),mat('#7a2f2f')),x,.33,0);rTap(st,b,()=>act(['bowl1','bowl0','bowl2'][k]));st.tick.push(()=>{const u=(performance.now()-(b.userData.ring||0))/1000;b.scale.setScalar(u<1.2?1+Math.sin(u*40)*.012*(1.2-u):1)})});
@@ -71,11 +71,16 @@
       if(now-(sentT[a]||0)>150){sentT[a]=now;sh.send({k:'cg',a})}}
     const sh=roomShare('chuong_gio',{msg:(m,name)=>{if(m.k==='cg')act(String(m.a),name)},people:(S,grew)=>{render()}});
     let sess=null;
-    function render(){const n=sh.joined?sh.n:0;rmPanel.innerHTML='<p>Âm thanh là một cửa vào tĩnh lặng. Lắng nghe một tiếng chuông từ lúc ngân đến khi tắt hẳn.'+(n>=2?' · 🔔 '+n+' người cùng nghe chuông trong nhà':'')+'</p><div class="rm-row"><button class="rm-gold" data-cg="sess">'+(sess?'⏹ Dừng thiền âm thanh · '+sess.left+'s':'🧘 Thiền âm thanh 3 phút')+'</button></div>'}
-    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-cg]')?.dataset.cg;if(!a)return;
-      if(a!=='sess'){act(a);return}
+    /* 28/11: lư hương nhỏ giữa bàn chuông: chạm để bắt đầu thiền âm thanh 3 phút, nén hương cháy ngắn dần theo thời gian; chạm lại để dừng */
+    const burner=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.09,14),bowlM),0,.365,.38);const stick=rAdd(st,new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.3,4),mat('#8a3a2a')),0,.56,.38);const ember=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.012,6,4),new THREE.MeshStandardMaterial({color:'#ff7030',emissive:'#ff5010',emissiveIntensity:2})),0,.71,.38);stick.visible=ember.visible=false;
+    rHit(st,0,.5,.38,.3,.5,.3,()=>toggleSess());
+    const smk=[];{const m=new THREE.MeshBasicMaterial({color:'#e9e4da',transparent:true,opacity:.25,depthWrite:false});for(let k=0;k<6;k++){const p=rAdd(st,new THREE.Mesh(new THREE.SphereGeometry(.02,6,4),m.clone()),0,.7,.38);p.userData.k=k;p.visible=false;smk.push(p)}}
+    st.tick.push(t=>{const u=sess?sess.left/180:0;stick.visible=ember.visible=!!sess;if(sess){stick.scale.y=Math.max(.05,u);stick.position.y=.41+.15*u;ember.position.y=.41+.3*u}for(const p of smk){const v=(t*.25+p.userData.k/6)%1;p.visible=!!sess;p.position.set(Math.sin(v*8+p.userData.k)*.03*v*2,.42+.3*u+v*.7,.38);p.scale.setScalar(1+v*2.5);p.material.opacity=.25*(1-v)}});
+    function render(){const n=sh.joined?sh.n:0;rmPanel.innerHTML='<p>Âm thanh là một cửa vào tĩnh lặng. Lắng nghe một tiếng chuông từ lúc ngân đến khi tắt hẳn.'+(n>=2?' · 🔔 '+n+' người cùng nghe chuông trong nhà':'')+'</p><p class="rm-note">'+(sess?'🧘 Đang thiền âm thanh · còn '+sess.left+' giây · chạm lư hương để dừng':'Chạm lư hương giữa bàn chuông để thiền âm thanh 3 phút.')+'</p>'}
+    function toggleSess(){
       if(sess){clearInterval(sess.id);sess=null;rmHint('Đã dừng buổi thiền âm thanh');render();return}sess={left:180,id:0};strike(98,9,.18,[[1,1],[1.48,.5],[2.3,.3]]);rmHint('Ngồi thẳng, thả lỏng vai · Mỗi tiếng chuông là một lần trở về hơi thở');
-        sess.id=setInterval(()=>{if(!roomOpen){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)strike([147,196,262][(sess.left/20)%3],7,.12);if(sess.left%45===0)playChime();if(sess.left<=0){clearInterval(sess.id);sess=null;strike(98,10,.18,[[1,1],[1.48,.5]]);setTimeout(()=>strike(98,10,.16,[[1,1],[1.48,.5]]),3500);rmHint('🙏 Buổi thiền âm thanh đã xong · Mang sự tĩnh lặng này theo bạn')}render()},1000)};
+        sess.id=setInterval(()=>{if(!roomOpen){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)strike([147,196,262][(sess.left/20)%3],7,.12);if(sess.left%45===0)playChime();if(sess.left<=0){clearInterval(sess.id);sess=null;strike(98,10,.18,[[1,1],[1.48,.5]]);setTimeout(()=>strike(98,10,.16,[[1,1],[1.48,.5]]),3500);rmHint('🙏 Buổi thiền âm thanh đã xong · Mang sự tĩnh lặng này theo bạn')}render()},1000)}
+    render();rmPanel.onclick=null;
     st.cleanup=()=>{if(sess)clearInterval(sess.id);sh.off()}}
   function roomXongHuong(st){
     const W=st.sc,amb=new THREE.PointLight('#ffcf8a',4,7,1.6);amb.position.set(0,2.2,-1.4);W.add(amb);
@@ -252,16 +257,18 @@
       if(step>=TEA_STEPS.length){quote=pick();if(lead()){inv=true;rmHint('🙏 Bạn đã mời trà cả phòng · mọi người đang nâng chén')}else rmHint('Mời bạn một chén trà · '+quote)}}
     function apply(s,iv){s=Math.max(0,Math.min(TEA_STEPS.length,+s||0));const first=!seen;seen=true;
       if(s===0){if(step)reset()}else if(s===step+1&&!first)advance();else if(s!==step){reset();step=s;H.jump(s,seatList())}
-      if(iv&&!inv){inv=true;lifted=false;quote=pick();rmHint('🍵 '+who()+' mời bạn một chén trà · bấm Nâng chén');if(typeof setRoomUi==='function')setRoomUi(true)/* mở bảng để thấy nút Nâng chén */}if(!iv&&step<TEA_STEPS.length)inv=false;render()}
+      if(iv&&!inv){inv=true;lifted=false;quote=pick();rmHint('🍵 '+who()+' mời bạn một chén trà · chạm chén trà trước mặt để nâng chén')}if(!iv&&step<TEA_STEPS.length)inv=false;render()}
     function render(){const L=TEA_STEPS.length,strip='<div class="rm-steps">'+TEA_STEPS.map((x,i)=>'<span class="'+(i<step?'done':i===step?'on':'')+'">'+x[0]+'</span>').join('')+'</div>';let h;
       if(H.soloHidden&&!sh.session){H.el.innerHTML='';return}
       if(watch()&&!seen){H.el.innerHTML='<p>🍵 '+esc(who())+' sẽ pha trà mời mọi người · cứ tự nhiên trò chuyện, đứng ngồi tùy ý</p>';return}
       if(watch()){h='<p>🍵 '+esc(who())+' đang pha trà cho cả phòng · '+(H.watchText||'ngồi yên, nhìn và thở theo từng bước')+'</p>'+strip+(step?'<p>'+TEA_STEPS[step-1][0]+' · '+TEA_STEPS[step-1][1]+'</p>':'');
-        if(inv&&!lifted)h+='<div class="rm-row"><button class="rm-gold" data-qt="lift">🙏 Nâng chén nhận trà</button></div>';if(lifted)h+='<p class="rm-quote">🍵 '+esc(quote)+'</p>'}
-      else{const s=TEA_STEPS[step];h=(lead()?'<p>🍵 Bạn đang pha trà cho cả phòng · mỗi bước bạn làm, mọi người cùng thấy</p>':'')+'<p>'+(step<L?'Bước '+(step+1)+'/'+L+' · '+s[1]:'')+'</p>'+strip+'<div class="rm-row">'+(step<L?'<button class="rm-gold" data-qt="next">'+(lead()&&step===L-1?'🙏 Mời trà cả phòng':s[0])+'</button>':'<button data-qt="again">🔁 Pha ấm mới</button>')+'</div>';
-        if(lead()&&step>0)h+='<p class="rm-quote">“'+esc(TEA_TALK[step-1])+'”</p><div class="rm-row"><button data-qt="talk">💬 Gửi lời dẫn vào khung chat</button></div>';
+        if(inv&&!lifted)h+='<p class="rm-note">🙏 Chạm chén trà trước mặt để nâng chén nhận trà</p>';if(lifted)h+='<p class="rm-quote">🍵 '+esc(quote)+'</p>'}
+      else{const s=TEA_STEPS[step];h=(lead()?'<p>🍵 Bạn đang pha trà cho cả phòng · mỗi bước bạn làm, mọi người cùng thấy</p>':'')+'<p>'+(step<L?'Bước '+(step+1)+'/'+L+' · '+s[1]:'')+'</p>'+strip+'<p class="rm-note">'+(step<L?'Chạm ấm trà để '+(lead()&&step===L-1?'mời trà cả phòng':s[0].replace(/^\S+\s*/,'').toLowerCase()):'Chạm ấm trà để pha ấm mới')+'</p>';
+        if(lead()&&step>0)h+='<p class="rm-quote">“'+esc(TEA_TALK[step-1])+'”</p>';
         else if(step>=L)h+='<p class="rm-quote">🍵 '+esc(quote)+'</p>'}
       H.el.innerHTML=h}
+    /* 28/11: pha trà bằng cách chạm ấm trà (mỗi lần chạm là một bước), nâng chén bằng cách chạm chén trà; người dẫn chạm ấm thì lời dẫn tự gửi vào khung chat */
+    function tap(k){if(k==='cup'){if(inv&&!lifted)click('lift');return}if(H.soloHidden&&!sh.session){rmHint('🍵 Ấm trà dành cho buổi hẹn · Chủ nhà pha trà mời mọi người');return}if(watch()){if(inv&&!lifted)click('lift');else rmHint('🍵 '+who()+' đang pha trà · ngồi yên, nhìn và thở theo từng bước');return}click(step<TEA_STEPS.length?'next':'again');if(lead()&&step>0&&step<=TEA_TALK.length)click('talk')}
     function click(a){if(a==='next'){if(watch())return;advance();if(lead())sh.send(msg())}
       else if(a==='again'){if(watch())return;reset();if(lead())sh.send(msg())}
       else if(a==='talk'){if(!lead()||!step)return;if(!sh.say(TEA_TALK[step-1]))rmHint('Chờ một chút rồi gửi lời dẫn nhé')}
@@ -272,7 +279,7 @@
     function onPeople(grew){if(lead()&&grew&&step>0)sh.send(msg());render()/* tên người dẫn có thể tới sau kết quả vào kênh */}
     function onChange(was){if(was&&!sh.session){seen=false;if(step||inv)rmHint(H.soloHidden?'Buổi hẹn đã kết thúc':'Phiên trà đã kết thúc · bạn tiếp tục pha trà riêng');if(H.soloHidden)reset()}
       if(!was&&sh.session){seen=false;reset();rmHint(sh.healer?(H.leadHint||'🍵 Bạn dẫn phiên trà · mỗi bước bạn pha, cả phòng cùng thấy'):(H.guestHint?H.guestHint(who()):'🍵 Đã vào phiên trà cùng '+who()+' · ngồi xuống, nhìn và thở theo từng bước pha'))}render()}
-    return {render,click,onMsg,onPeople,onChange}}
+    return {render,click,tap,onMsg,onPeople,onChange}}
   // ---- Lượt làm (Nhà Hương, Nhà Chạm): trong phiên, Healer làm mẫu trước rồi mời lần lượt từng người; cả phòng xem người đang làm.
   // Healer chọn lượt ở hàng "Lượt làm" ({k:'turn',id}; id rỗng = mọi người tự làm). Người đang làm gửi trạng thái sau mỗi bước ({k:'snap',s});
   // người khác thấy cảnh và bảng theo trạng thái đó, không bấm được. Ngoài phiên hoặc khi "mọi người tự làm" thì ai cũng làm của mình như cũ.
@@ -325,6 +332,7 @@
     const sh=roomShare('quan_tra',{change:(S,was)=>{seatsH.refresh();tea.onChange(was)},people:(S,grew)=>{seatsH.refresh();tea.onPeople(grew)},msg:(m,name)=>tea.onMsg(m,name)});
     const seatsH=roomSeats(st,sh,SEATS,{auto:true,healerSeat:4,healerNote:'Bồ đoàn cạnh ấm trà dành cho Healer pha trà',hint:rmHint});
     rmPanel.innerHTML='<div id="teaBox"></div>';H.el=rmPanel.querySelector('#teaBox');const tea=roomTea(sh,seatsH,H);tea.render();
+    /* 28/11: chạm ấm trà hoặc ấm đun để pha từng bước, chạm chén để nâng chén */rHit(st,-.35,.5,0,.42,.42,.42,()=>tea.tap('pot'));rHit(st,-1.95,.4,-.95,.5,.55,.5,()=>tea.tap('pot'));{const CUPS=cups.concat(seatCups);for(const c of CUPS){const q=c.g.position;rHit(st,q.x,q.y+.08,q.z,.24,.24,.24,()=>tea.tap('cup'))}}
     rmPanel.onclick=e=>{const a=e.target.closest('[data-qt]')?.dataset.qt;if(a)tea.click(a)};
     st.cleanup=()=>{sh.off();seatsH.dispose()}}
   // 3.41: Tư Gia bên trong theo ảnh phối cảnh: sàn gỗ, thảm, bàn trà tròn thấp có ấm 6 chén, 6 bồ đoàn ngồi được (khớp 6 người: chủ nhà + 5 bạn), kệ ô gỗ có đèn,
@@ -374,7 +382,7 @@
     {const lx=-HW+.5,lz=HD-1.1;B(.34,.06,.34,woodD,lx,.03,lz);for(const a of [-1,1])for(const b of [-1,1])B(.03,1.1,.03,woodD,lx+a*.14,.58,lz+b*.14);B(.26,.6,.26,M('#f6e6c4',{emissive:'#ffcc80',emissiveIntensity:.9}),lx,.9,lz);B(.36,.04,.36,woodD,lx,1.22,lz)}
     st.blocks=[[TX-.85,TZ-.85,TX+.85,TZ+.85],[-3.45,-HD,-1.65,-HD+.55],[.4,-HD,1.6,-HD+.65],[CX-.5,-HD,HW,CZ+.5],[-HW,HD-1.35,-HW+.75,HD-.85]];
     function apply(k){sty=k;try{localStorage.setItem('yen_home_style',k)}catch(e){}const S=HOME_STYLES[k];wallM.color.set(k==='gian_di'?'#efe2c6':S.wall);floorM.color.set(new THREE.Color(S.floor).lerp(new THREE.Color('#ffffff'),.55));accM.color.set(S.acc);cushM.color.set(k==='sang_chanh'?'#c8a96a':k==='hanh_phuc'?'#f3c3cf':'#c9b38a');render()}
-    function render(){rmPanel.innerHTML='<div id="teaBox"></div><p>🏡 <b>Tư Gia Rừng Yên</b> · chạm bồ đoàn để ngồi bên bàn trà · Phong cách:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'<button type="button" data-hs="sit">🍵 Ngồi bàn trà</button></div>'+
+    function render(){rmPanel.innerHTML='<div id="teaBox"></div><p>🏡 <b>Tư Gia Rừng Yên</b> · chạm bồ đoàn để ngồi bên bàn trà; trong buổi hẹn, Chủ nhà chạm ấm trà để pha trà mời mọi người.</p><p class="rm-note">Phong cách nhà:</p><div class="rm-row">'+Object.entries(HOME_STYLES).map(([k,v])=>'<button type="button" data-hs="'+k+'"'+(k===sty?' class="sel"':'')+'>'+v.label+'</button>').join('')+'</div>'+
       '<p class="rm-note">Bàn trà 6 bồ đoàn · Kệ Lưu Hương 9 ô · Góc Gieo Hạt ở cạnh nhà.</p>';TH.el=rmPanel.querySelector('#teaBox');if(tea)tea.render()}
     // 27/11: buổi hẹn Tư Gia (Chủ nhà + tối đa 5 bạn): thấy nhau đi lại, đứng ngồi tự do, trò chuyện qua khung chat; Chủ nhà pha trà và mời trà như Healer ở Nhà Vị.
     let boiling=false,pour=0;const steamP=[];{const m=new THREE.MeshBasicMaterial({color:'#efe9dc',transparent:true,opacity:.2,depthWrite:false});for(let k=0;k<6;k++){const s=add(new THREE.SphereGeometry(.035,6,4),m.clone(),TX,.6,TZ);s.userData.k=k;s.visible=false;steamP.push(s)}}
@@ -388,6 +396,7 @@
       lift(k){const c=cups[k];if(c&&c.t.visible){c.lift=performance.now();strike(660,1.4,.015,[[1,1],[2,.2]])}}};
     let tea=null;const sh=roomShare(venue||'tu_gia_me',{change:(S,was)=>{seatsH.refresh();tea.onChange(was)},people:(S,grew)=>{seatsH.onPeople(grew);tea.onPeople(grew)},msg:(m,name)=>{if(!seatsH.onMsg(m))tea.onMsg(m,name)}});
     const seatsH=roomSeats(st,sh,SEATS,{walkers:true,hint:rmHint});tea=roomTea(sh,seatsH,TH);
+    /* 28/11: chạm ấm trà để pha từng bước, chạm chén để nâng chén */rHit(st,TX,.5,TZ,.4,.4,.4,()=>tea.tap('pot'));{const CUPS=cups;for(const c of CUPS){const q=c.g.position;rHit(st,q.x,q.y+.08,q.z,.24,.24,.24,()=>tea.tap('cup'))}}
     rmPanel.onclick=e=>{const q=e.target.closest('[data-qt]');if(q){tea.click(q.dataset.qt);return}const b=e.target.closest('[data-hs]');if(!b)return;if(b.dataset.hs==='sit'){const k=seatsH.free();if(k!=null&&seatsH.tap(k))rmHint('🍵 Ngồi bên bàn trà · bấm Đứng lên hoặc đi để rời chỗ');else rmHint('Bàn trà đã kín chỗ');return}apply(b.dataset.hs)};apply(sty);
     rmHint('🏡 Tư Gia · chạm sàn để đi, chạm bồ đoàn để ngồi bên bàn trà · 🚪 Ra cửa để ra hiên');
     st.cleanup=()=>{for(const t of texs)t.dispose();sh.off();seatsH.dispose()}}
@@ -1447,6 +1456,7 @@
       lift(k){const c=cupOf(k);if(c&&c.t.visible){c.lift=performance.now();strike(660,1.4,.015,[[1,1],[2,.2]])}}};
     let tea=null;const sh=roomShare('tu_dao_me',{change:(S,was)=>{seatsH.refresh();tea.onChange(was)},people:(S,grew)=>{seatsH.onPeople(grew);tea.onPeople(grew)},msg:(m,name)=>{if(!seatsH.onMsg(m))tea.onMsg(m,name)}});
     const seatsH=roomSeats(st,sh,SEATS,{walkers:true,hint:rmHint});rmPanel.innerHTML='<div id="teaBox"></div>';TH.el=rmPanel.querySelector('#teaBox');tea=roomTea(sh,seatsH,TH);tea.render();
+    /* 28/11: chạm ấm trà để pha từng bước, chạm chén để nâng chén */{const q=pot.position;rHit(st,q.x,q.y+.1,q.z,.4,.4,.4,()=>tea.tap('pot'))}{const CUPS=cups;for(const c of CUPS){const q=c.g.position;rHit(st,q.x,q.y+.08,q.z,.24,.24,.24,()=>tea.tap('cup'))}}
     rmPanel.onclick=e=>{const q=e.target.closest('[data-qt]');if(q)tea.click(q.dataset.qt)};
     st.cleanup=()=>{for(const t of texs)t.dispose();sh.off();seatsH.dispose()}}
   // Nhà Thiền trên Đảo Yên (bên trong): sàn gỗ, vách giấy dó khung gỗ, bàn thờ Phật ngồi thiền, 6 bồ đoàn, chuông lớn; Thỉnh chuông và Nghi thức chỉ có ở đây.
@@ -1540,12 +1550,11 @@
     let incT=0;st.tick.push(t=>{if(!sticks.visible)return;for(const p of smoke){const u=((t*.18+p.userData.o)%1);p.position.set(Math.sin(u*9+p.userData.o*6)*.06*u*3,1.08+u*1.6,AZ+.42+Math.cos(u*7)*.04);p.material.opacity=.32*(1-u)*Math.min(1,u*6);p.scale.setScalar(1+u*3)}for(const [f,l] of flames)if(f.visible){l.intensity=1.1+Math.sin(t*13+f.position.x)*.15}});
     const RIT={incense:['🪔 Dâng hương','Nén hương đã thắp · khói hương nhẹ bay, tâm lắng xuống',()=>{sticks.visible=true}],flower:['🪷 Dâng hoa sen','Hoa sen đã dâng trước bàn thờ',()=>{lotus.visible=true}],candle:['🕯 Dâng đèn','Hai ngọn đèn đã thắp sáng',()=>{for(const [f,l] of flames){f.visible=true;l.intensity=1.1}}],vase:['💐 Dâng hoa','Hai bình hoa đã cắm hoa tươi',()=>{for(const v of vases)v.visible=true}]};
     let ritOpen=false;
-    function render(){rmPanel.innerHTML='<p>🧘 <b>Nhà Thiền Đảo Yên</b> · ngồi trên bồ đoàn, thỉnh một tiếng chuông, dâng hương hoa trước bàn thờ.</p><div class="rm-row"><button type="button" data-th="bell">🥣 Thỉnh chuông</button><button type="button" data-th="rit"'+(ritOpen?' class="sel"':'')+'>🪷 Nghi thức</button><button type="button" data-th="sit">🧘 Toạ thiền</button></div>'+(ritOpen?'<div class="rm-row">'+Object.entries(RIT).map(([k,v])=>'<button type="button" data-th="r:'+k+'">'+v[0]+'</button>').join('')+'</div>':'')}
-    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-th]')?.dataset.th;if(!a)return;
-      if(a==='bell'){ring();rmHint('🥣 Tiếng chuông ngân · thở vào, thở ra theo tiếng chuông')}
-      else if(a==='rit'){ritOpen=!ritOpen;render()}
-      else if(a==='sit'){const W=st.walk;if(W&&W.goSeat){const [x,z]=cush[1];W.goSeat({x,z,a:Math.PI,y:.24,ax:x,az:z+.8});rmHint('🧘 Đi tới bồ đoàn giữa để ngồi thiền')}}
-      else if(a.startsWith('r:')){const r=RIT[a.slice(2)];if(r){r[2]();rmHint('🙏 '+r[1]);playChime&&playChime()}}};
+    /* 28/11: nghi thức bắt đầu bằng chạm đồ vật trên bàn thờ: lư hương, hai cây đèn, hai bình hoa, chỗ dâng sen trước bàn thờ */
+    const rit=k=>{const r=RIT[k];if(r){r[2]();rmHint('🙏 '+r[1]);playChime&&playChime()}};
+    rHit(st,0,.78,AZ+.42,.35,.35,.3,()=>rit('incense'));for(const sx of [-1,1]){rHit(st,sx*.95,.75,AZ+.28,.45,.5,.25,()=>rit('candle'));rHit(st,sx*1.2,.85,AZ-.32,.3,.5,.3,()=>rit('vase'))}rHit(st,0,.25,AZ+.95,.7,.5,.5,()=>rit('flower'));
+    function render(){rmPanel.innerHTML='<p>🧘 <b>Nhà Thiền Đảo Yên</b> · ngồi trên bồ đoàn, thỉnh một tiếng chuông, dâng hương hoa trước bàn thờ.</p><ul class="rm-guide"><li>Chạm bồ đoàn để ngồi thiền</li><li>Chạm chuông lớn bên trái bàn thờ để thỉnh chuông</li><li>Chạm lư hương, cây đèn, bình hoa trên bàn thờ để dâng hương, đèn, hoa; chạm trước bàn thờ để dâng hoa sen</li></ul>'}
+    render();rmPanel.onclick=null;
     rmHint('🧘 Nhà Thiền · chạm sàn để đi, chạm bồ đoàn để ngồi, chạm chuông để thỉnh · 🚪 Ra cửa để ra ngoài');
     st.cleanup=()=>{for(const t of texs)t.dispose()}}
   __roomsExport({roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien});
