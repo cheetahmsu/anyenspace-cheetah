@@ -200,27 +200,27 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
        Chân rèm viền hồng, lõi xanh lục, lên cao ngả xanh ngọc rồi tím. Lớp xa đường chân trời mờ dần để không răng cưa. */
     float band(vec2 q,float c,float A,float k,float ph,float w,float sd,out float al){al=q.x;
       float e=q.y-(c+A*sin(k*q.x+ph+time*.06)+A*.5*sin(k*2.7*q.x-ph*1.3-time*.045));e=abs(e);if(e>w*2.6)return 0.;
-      float ray=n2(vec2(q.x*2.6+time*.4,sd));ray=.08+1.9*ray*ray*ray;ray*=.45+.9*smoothstep(.2,.8,n2(vec2(q.x*.07-time*.05,sd+4.)));
+      float ray=.08+1.3*smoothstep(.3,.8,n2(vec2(q.x*.045-time*.03,sd+4.)));/* 28/11 (tối): bỏ tia sọc, chỉ còn mảng sáng tối lớn dọc dải */
       return exp(-e*e/(w*w))*ray;}
     float bandRep(vec2 q,float sp,float A,float k,float w,float sd){float c=A*sin(k*q.x+time*.05+sd)+A*.5*sin(k*2.3*q.x-time*.04);float y=q.y-c,id=floor(y/sp+.5),e=abs(y-id*sp);if(e>w*2.6)return 0.;
-      float ray=n2(vec2(q.x*2.4+time*.35,sd+id*5.7));ray=.08+1.9*ray*ray*ray;ray*=.4+.9*smoothstep(.25,.8,n2(vec2(q.x*.06-time*.05,id*3.1+sd)));return exp(-e*e/(w*w))*ray;}/* dải lặp đều khắp trời: hướng nào cũng có rèm */
+      float ray=.05+1.2*smoothstep(.35,.8,n2(vec2(q.x*.04-time*.03,id*3.1+sd)));return exp(-e*e/(w*w))*ray;}/* dải lặp đều khắp trời: hướng nào cũng có rèm */
     vec3 aurora(vec3 d){if(d.y<.012)return vec3(0.);vec3 c=vec3(0.);const int N=${AUR_STEPS};
-      float jit=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))))*.8;vec2 wp=d.xz/(d.y+.08)*16.;vec2 warp=vec2(fbm(wp*.03+time*.01),fbm(wp*.03+7.3))*7.-3.5;
+      float jit=.5;/* không rắc nhiễu: mảng mịn liền khối */vec2 wp=d.xz/(d.y+.08)*16.;vec2 warp=vec2(fbm(wp*.03+time*.01),fbm(wp*.03+7.3))*7.-3.5;
       for(int i=0;i<N;i++){float v=(float(i)+jit)/float(N),h=12.+v*14.;vec2 p=d.xz*(h/d.y),pw=p+warp*(.6+v*.4);float dist=length(p);if(dist>130.)break;
         float a0,a1,a2,a3,a4;
-        float b=band(pw,-6.,4.5,.07,0.,1.1,1.,a0)*1.2;/* dải lớn vắt qua đỉnh đầu, lệch bắc */
-        b+=band(pw,-30.,7.,.045,1.7,1.6,7.,a1)+band(pw,-52.,9.,.035,2.6,2.,11.,a1)*.8;/* hai dải phía bắc, dải xa sát núi *//* dải bắc rộng */
-        b+=band(vec2(pw.x*.7-pw.y*.71,pw.x*.71+pw.y*.7),13.,5.5,.06,3.1,1.2,13.,a2)*.9;/* dải chéo đông nam */
-        b+=band(vec2(pw.y,-pw.x),-20.,6.,.05,4.6,1.4,19.,a3)*.8;/* dải phía tây */
-        b+=band(vec2(pw.y,pw.x),24.,6.,.05,2.2,1.4,23.,a4)*.7;/* dải phía đông */
-        b+=band(vec2(pw.x*.87+pw.y*.5,-pw.x*.5+pw.y*.87),7.,3.5,.08,5.3,1.1,29.,a0)*.85;/* dải mảnh chéo ngang đỉnh trời, lệch nam */
-        b+=bandRep(vec2(pw.x*.94+pw.y*.34,-pw.x*.34+pw.y*.94),24.,5.,.05,1.4,37.)*.6;/* rèm lặp mờ hơn phủ khắp vòm trời */
+        float b=band(pw,-6.,4.5,.07,0.,2.6,1.,a0)*1.2;/* dải lớn vắt qua đỉnh đầu, lệch bắc */
+        b+=band(pw,-30.,7.,.045,1.7,3.2,7.,a1)+band(pw,-52.,9.,.035,2.6,4.,11.,a1)*.8;/* hai dải phía bắc, dải xa sát núi *//* dải bắc rộng */
+        b+=band(vec2(pw.x*.7-pw.y*.71,pw.x*.71+pw.y*.7),13.,5.5,.06,3.1,2.6,13.,a2)*.9;/* dải chéo đông nam */
+        b+=band(vec2(pw.y,-pw.x),-20.,6.,.05,4.6,2.8,19.,a3)*.8;/* dải phía tây */
+        b+=band(vec2(pw.y,pw.x),24.,6.,.05,2.2,2.8,23.,a4)*.7;/* dải phía đông */
+        b+=band(vec2(pw.x*.87+pw.y*.5,-pw.x*.5+pw.y*.87),7.,3.5,.08,5.3,2.2,29.,a0)*.85;/* dải mảnh chéo ngang đỉnh trời, lệch nam */
+        b+=bandRep(vec2(pw.x*.94+pw.y*.34,-pw.x*.34+pw.y*.94),26.,5.,.05,2.6,37.)*.45;/* rèm lặp mờ hơn phủ khắp vòm trời */
         if(b<.002)continue;
         float prof=smoothstep(0.,.05,v)*pow(1.-v,.9)*(1.+1.6*exp(-v*9.));
         vec3 col=mix(vec3(1.,.25,.6),vec3(.12,1.,.45),smoothstep(.02,.17,v));col=mix(col,vec3(.15,.95,.78),smoothstep(.32,.55,v));col=mix(col,vec3(.62,.32,1.),smoothstep(.5,.85,v));
         col=mix(col,vec3(1.,.38,.75),.5*smoothstep(.6,.85,n2(pw*.04+time*.02))*smoothstep(.3,.8,v));/* mảng hồng tím từng lúc */
         c+=col*b*prof*smoothstep(130.,55.,dist);}
-      c*=3.2/float(N)*smoothstep(.012,.1,d.y)*boost;return c/(1.+c*.35);}
+      c*=1.25/float(N)*smoothstep(.012,.1,d.y)*boost;return c/(1.+c*.35);}
     vec3 skyCol(vec3 d){float y=d.y;vec3 c=mix(vec3(.3,.42,.6),vec3(.07,.13,.28),smoothstep(0.,.28,y));c=mix(c,vec3(.012,.025,.075),smoothstep(.28,.9,y));/* 28/11: đỉnh trời xanh đêm thẫm cho cực quang nổi */c*=mix(1.,.32,night);/* bản Giáng sinh: trời tối */
       float south=max(0.,d.z);c+=vec3(.22,.12,.2)*pow(south,2.)*exp(-max(y,0.)*9.)*.5;
       vec2 g=floor(d.xz/(abs(d.y)+.35)*260.);float st=step(.9965,h2(g))*smoothstep(.04,.3,y);c+=vec3(.9,.95,1.)*st*(.55+.45*sin(time*2.+h2(g+3.)*40.));
