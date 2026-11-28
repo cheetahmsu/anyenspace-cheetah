@@ -46,9 +46,9 @@ const homeClear=(x,z)=>{if(Math.hypot(x-HOME.x,z-HOME.z)<15)return true;const [a
 const KOTA={x:-52.5,z:-74,R:4.1},SNOWMAN={x:-52,z:86},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
-// 28/11 (người dùng dặn): nhà chính đổi chỗ với nhà chữ A (nhà chính sang -29°, nhà chữ A về chính bắc); cửa hàng lưu niệm lùi xa về sau (29 → 47 m) cho quảng trường thoáng. Sau cùng (người dùng chốt): nhà chính kéo lại gần cây thông trung tâm (-25°, 36 m), nhà chữ A dời sang phải (15°, 40 m) để không bị che.
+// 28/11 (người dùng dặn): nhà chính đổi chỗ với nhà chữ A (nhà chính sang -29°, nhà chữ A về chính bắc); cửa hàng lưu niệm lùi xa về sau (29 → 47 m) cho quảng trường thoáng. Cửa hàng lưu niệm kéo lại gần cây thông một chút (47 → 38 m, -62°), vẫn cách vòng ngựa gỗ. Sau cùng (người dùng chốt): nhà chính kéo lại gần cây thông trung tâm (-25°, 36 m), nhà chữ A dời sang phải (15°, 40 m) để không bị che.
 // [góc (0 = bắc, dương = đông), bán kính, rộng, sâu, cao, màu, loại]
-const VH=[[-25,36,9,19.8,4.4,'#c99d70','main'],[-60,47,8,7,3.8,'#b8906a','shop'],[58,29,8.5,8,3.6,'#c99d70','cafe'],[118,29,7,7.5,3.4,'#b8906a','chalet'],
+const VH=[[-25,36,9,19.8,4.4,'#c99d70','main'],[-62,38,8,7,3.8,'#b8906a','shop'],[58,29,8.5,8,3.6,'#c99d70','cafe'],[118,29,7,7.5,3.4,'#b8906a','chalet'],
   [15,40,7,8,3.3,'#a8805c','aframe'],[29,43,7,7.5,3.4,'#b8906a','chalet']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
