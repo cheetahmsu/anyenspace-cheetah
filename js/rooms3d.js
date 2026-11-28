@@ -428,12 +428,13 @@
       st.blocks=(st.blocks||[]).concat([[-1.6,-.75,1.6,-.45],[-2.45,0,-1.65,.75],[SX-.3,-2.4,SX+.4,-.4],[MX-.35,MZ-.35,MX+.35,MZ+.35],[3.1,-3.2,3.8,-2.6],[TX-.55,TZ-.35,TX+.55,TZ+.35]])}
     const kv={on:false,t0:0,from:null};/* camera: sewing frame, or up to the robe store on the back wall */
     st.tick.push(()=>{if(!kv.from)return;const u=Math.min(1,(performance.now()-kv.t0)/900),q=u*u*(3-2*u),to=kv.on?[2.3,-3.3,4.3,.02]:[1.2,0,3.6,.08];st.target.y=kv.from[0]+(to[0]-kv.from[0])*q;st.target.z=kv.from[1]+(to[1]-kv.from[1])*q;st.dist=kv.from[2]+(to[2]-kv.from[2])*q;st.pitch=kv.from[3]+(to[3]-kv.from[3])*q;if(u>=1)kv.from=null});
+    const kvSet=on=>{kv.on=on;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch];render()};
     let dip=null;const dipTo=c=>{dye.material.color.set(c);dip={t0:performance.now(),from:strip.material.color.clone(),to:new THREE.Color(c)};strike(240,1.2,.03,[[1,1]])};
     const cloth=new THREE.Group();cloth.position.set(0,1.25,-.55);st.sc.add(cloth);let pieces=[],sewn=0;const stitches=[];
     function layout(){const oldP=new Set(pieces);st.picks=st.picks.filter(x=>!oldP.has(x.obj));cloth.clear();pieces=[];sewn=0;stitches.length=0;const cols=kat.dieu,W=2.7,H=1.45,gap=.045,cw=(W-gap*(cols+1))/cols,c=new THREE.Color(kat.color),dark=new THREE.Color('#4a2e1e');
       const back=new THREE.Mesh(new THREE.PlaneGeometry(W+.08,H+.08),new THREE.MeshStandardMaterial({color:dark,roughness:.95,side:THREE.DoubleSide}));back.position.z=-.005;cloth.add(back);
       for(let i=0;i<cols;i++){/* each strip: two long pieces and one short, alternating up/down like rice-field plots */const longH=(H-gap*4)*.4,shortH=(H-gap*4)*.2,seq=i%2?[shortH,longH,longH]:[longH,longH,shortH];let y=H/2-gap;
-        for(const h of seq){const m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:c,roughness:.9,transparent:true,opacity:.12,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);m.userData.wh=[cw,h];cloth.add(m);pieces.push(m);rTap(st,m,()=>{if(m.userData.ci!=null){m.userData.ci=curIdx();m.material.color.set(kat.color);strike(620,.4,.02,[[1,1]]);render()}else sewNext()});y-=h+gap}}
+        for(const h of seq){const m=new THREE.Mesh(new THREE.PlaneGeometry(cw,h),new THREE.MeshStandardMaterial({color:c,roughness:.9,transparent:true,opacity:.12,side:THREE.DoubleSide}));m.position.set(-W/2+gap+cw/2+i*(cw+gap),y-h/2,0);m.userData.wh=[cw,h];cloth.add(m);pieces.push(m);rTap(st,m,()=>{if(kv.on){kvSet(false);return}if(m.userData.ci!=null){m.userData.ci=curIdx();m.material.color.set(kat.color);strike(620,.4,.02,[[1,1]]);render()}else sewNext()});y-=h+gap}}
       render()}
     const curIdx=()=>Math.max(0,KAT_COLORS.findIndex(x=>x[1]===kat.color));
     function tintUnsewn(){for(const m of pieces)if(m.userData.ci==null)m.material.color.set(kat.color)}
@@ -443,7 +444,7 @@
     st.tick.push(()=>{const now=performance.now();for(const s of stitches){const u=Math.min(1,(now-s.t0)/700);s.g.setDrawRange(0,Math.floor(u*s.n/2)*2)}
       if(dip){const u=Math.min(1,(now-dip.t0)/1400);strip.position.y=1.05-Math.sin(u*Math.PI)*.6;if(u>.5)strip.material.color.copy(dip.from).lerp(dip.to,Math.min(1,(u-.5)*2.5));if(u>=1)dip=null}});
     function sewNext(){if(kv.on){kv.on=false;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch]}if(sewn>=pieces.length)return;const m=pieces[sewn++];m.userData.ci=curIdx();m.material.color.set(kat.color);m.material.opacity=1;m.material.transparent=false;stitch(m);katSwish();
-      if(sewn%3===0){strike(1320,2.5,.025,[[1,1],[2.4,.3]]);rmHint('🪡 '+KAT_SEW_WORDS[(sewn/3-1)%KAT_SEW_WORDS.length])}render();if(sewn>=pieces.length){rmHint('Tấm y đã may xong · Gửi lời hồi hướng (nếu muốn) rồi gấp y');strike(196,4,.08)}}
+      if(sewn%3===0){strike(1320,2.5,.025,[[1,1],[2.4,.3]]);rmHint('🪡 '+KAT_SEW_WORDS[(sewn/3-1)%KAT_SEW_WORDS.length])}render();if(sewn>=pieces.length){rmHint('Tấm y đã may xong · Gửi lời hồi hướng (nếu muốn) rồi chạm khay trên bàn nhỏ để gấp y');strike(196,4,.08)}}
     const esc=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     function render(){const done=sewn>=pieces.length;rmPanel.innerHTML='<p>Y được may từ nhiều mảnh ghép như ruộng lúa xứ Magadha, mỗi đường viền là một bờ ruộng. Mỗi mũi khâu là một hơi thở có mặt.</p>'
       +'<p class="rm-note">Nhuộm vải: chọn một chậu thuốc nhuộm. Mỗi mảnh khâu nhận màu đang chọn, có thể may nhiều màu; chạm mảnh đã khâu để đổi màu.</p>'
@@ -451,13 +452,17 @@
       +'<div class="rm-row">'+KAT_DIEU.map(d=>'<button data-kd="'+d+'"'+(kat.dieu===d?' class="sel"':'')+'>'+d+' điều</button>').join('')+'<span class="rm-note">Đã khâu '+sewn+'/'+pieces.length+' mảnh</span></div>'
       +'<p class="rm-note">'+KAT_DIEU_INFO[kat.dieu]+'</p>'
       +(done?'<label class="kt-wish">Lời hồi hướng (không bắt buộc, sẽ hiện trong sổ kho y)<input data-kw maxlength="80" value="'+esc(kat.wish)+'" placeholder="Ví dụ: Hồi hướng bình an cho mẹ"></label><div class="rm-row">'+KAT_WISHES.map(w=>'<button data-kwt="'+esc(w)+'">'+w+'</button>').join('')+'</div>':'')
-      +'<div class="rm-row">'+(done?'<button class="rm-gold" data-ks="fold">🙏 Gấp y, đặt lên khay và đội lên đầu</button>':'<button class="rm-gold" data-ks="sew">🪡 Khâu mảnh tiếp</button>')+'</div>'
-      +'<div class="rm-row"><button data-ks="view">'+(kv.on?'🪡 Về khung may':'🧺 Nhìn kho y')+'</button><button data-ks="kho">📜 Sổ kho y</button></div><p class="rm-note">Kho y treo 9 tấm y gần nhất, trải đủ như lúc may · chạm vào tấm y hoặc Sổ kho y để xem đầy đủ.</p>'}
+      +'<ul class="rm-guide">'+(done?'<li>🙏 Chạm khay trên bàn nhỏ để gấp y, đặt lên khay và đội lên đầu</li>':'<li>🪡 Chạm khung may để khâu mảnh tiếp</li>')
+      +(kv.on?'<li>🪡 Chạm khung may để quay về · chạm kho y lần nữa để mở sổ kho y</li>':'<li>🧺 Chạm kho y trên tường sau để ngắm 9 tấm y gần nhất</li>')+'</ul>'}
     rmPanel.oninput=e=>{if(e.target.matches('[data-kw]'))kat.wish=e.target.value.slice(0,80)};
     rmPanel.onclick=e=>{const c=e.target.closest('[data-kc]'),d=e.target.closest('[data-kd]'),s2=e.target.closest('[data-ks]'),wt=e.target.closest('[data-kwt]');if(c){kat.color=c.dataset.kc;tintUnsewn();dipTo(kat.color);render();return}if(d){kat.dieu=+d.dataset.kd;layout();return}
       if(wt){kat.wish=wt.dataset.kwt;render();return}
-      if(s2?.dataset.ks==='kho'){openArchive('robes');return}if(s2?.dataset.ks==='view'){kv.on=!kv.on;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch];render();return}if(s2?.dataset.ks==='sew')sewNext();else if(s2?.dataset.ks==='fold'){kat.wish=String(kat.wish||'').trim().slice(0,80);kat.pieces=pieces.map(m=>m.userData.ci).join('');const cnt=[0,0,0,0];for(const ch of kat.pieces)cnt[+ch]++;kat.color=KAT_COLORS[cnt.indexOf(Math.max(...cnt))][1];kat.phase='carry';closeRoom();setCarry(true);refreshKatPill();say('🟧 Bạn đang đội y trên đầu · Bấm "Rước y" để nhiễu Phật ba vòng')}};
-    layout();strip.material.color.set(kat.color);st.onKho=drawKho;rTap(st,shelf,()=>openArchive('robes'))}
+      if(s2?.dataset.ks==='kho'){openArchive('robes');return}if(s2?.dataset.ks==='view'){kv.on=!kv.on;kv.t0=performance.now();kv.from=[st.target.y,st.target.z,st.dist,st.pitch];render();return}if(s2?.dataset.ks==='sew')sewNext();else if(s2?.dataset.ks==='fold')doFold()};
+    function doFold(){kat.wish=String(kat.wish||'').trim().slice(0,80);kat.pieces=pieces.map(m=>m.userData.ci).join('');const cnt=[0,0,0,0];for(const ch of kat.pieces)cnt[+ch]++;kat.color=KAT_COLORS[cnt.indexOf(Math.max(...cnt))][1];kat.phase='carry';closeRoom();setCarry(true);refreshKatPill();say('🟧 Bạn đang đội y trên đầu · Bấm "Rước y" để nhiễu Phật ba vòng')}
+    layout();strip.material.color.set(kat.color);st.onKho=drawKho;rTap(st,shelf,()=>{if(kv.on)openArchive('robes');else kvSet(true)});
+    /* 28/11: gấp y bằng chạm khay trên bàn nhỏ, khâu bằng chạm khung may */
+    const foldY=()=>{if(sewn<pieces.length){rmHint('🪡 Khâu đủ '+pieces.length+' mảnh rồi mới gấp y · còn '+(pieces.length-sewn)+' mảnh');return}doFold()};
+    rHit(st,2.7,.75,1.3,1.05,.45,.65,foldY);rTap(st,fr,()=>{if(kv.on){kvSet(false);return}sewNext()})}
   function roomXuongGom(st){st.target.set(0,.85,0);st.dist=3.5;st.pitch=.16;
     if(gom.phase==='fire'||gom.phase==='spray'){rmHint('🔥 Gốm của bạn đang nung ngoài bãi bên hông nhà');rmPanel.innerHTML='<p>Gốm của bạn đang nằm trong lửa ở bãi nung bên hông nhà. Ra bãi nung để chờ lửa tàn và phun nước tạo màu.</p>';return}
     if(gom.phase==='carry'){setGomCarry(false);refreshGomPill();gom.phase='room';gom.step='xong'}
@@ -503,20 +508,22 @@
         else if(anim.kind==='vround')setPot((anim.from+(anim.to-anim.from)*u)/GOM_ROUNDS);/* xem người khác đi lùi một vòng: thân gốm cao dần */
         if(u>=1){const k=anim.kind;anim=null;if(k==='round'&&gom.rounds>=GOM_ROUNDS){gom.step='chuot';setPot(1)}render()}}});
     st.cleanup=()=>{clearInterval(dryT);st.onPots=null;roomBox.classList.remove('cham-lite');share.off();seatsH.dispose()};
-    const btn=(k,label,gold)=>'<button data-gm="'+k+'"'+(gold?' class="rm-gold"':'')+(anim?' disabled':'')+'>'+label+'</button>';
+    /* 28/11: không còn nút hành động, chỉ hướng dẫn chạm vào đồ vật */
+    const GOBJ={knead:'khối đất',sand:'đôn gỗ',start:'khối đất',round:'khối đất',polish0:'thân gốm',polish1:'thân gốm',carve:'thân gốm',dry:'thân gốm',carry:'thân gốm'};
+    const btn=(k,label)=>anim?'':'<p class="rm-note">👆 Chạm '+GOBJ[k]+' · '+label+'</p>';
     function render(){if(turns.watching()){const v=V;rmPanel.innerHTML=turns.bar()+'<p>👀 <b>'+esc(turns.who(turns.turn()))+'</b> đang nặn gốm'+(v.step==='nan'?' · vòng '+v.rounds+'/'+GOM_ROUNDS:'')+'</p><p>'+talkOf(v.step)+'</p>';return}
       const s=gom.step;let h='';
       if(s==='nhao')h='<p>Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.</p><div class="rm-row">'+btn('knead','👐 Nhào đất · '+gom.kneads+'/5',1)+'</div>';
       else if(s==='cat')h='<p>Rắc một lớp cát trắng mỏng lên mặt đôn để đất không dính, rồi đặt khối đất lên.</p><div class="rm-row">'+btn('sand','🤲 Rắc cát, đặt đất lên đôn',1)+'</div>';
       else if(s==='dang')h='<p>Chọn dáng gốm. Ở Bàu Trúc không dùng khuôn: mỗi món là một độc bản.</p><div class="rm-row">'+GOM_SHAPES.map((g,i)=>'<button data-gs="'+i+'"'+(gom.shape===i?' class="sel"':'')+'>'+g.name+'</button>').join('')+'</div><div class="rm-row">'+btn('start','🚶 Bắt đầu nặn',1)+'</div>';
       else if(s==='nan')h='<p>Không có bàn xoay: người thợ cúi xuống, đôi tay vuốt đất, chân đi lùi quanh đôn. Mỗi vòng thân gốm cao thêm một chút. Bước theo hơi thở.</p><div class="rm-row">'+btn('round','🚶 Đi lùi một vòng · '+gom.rounds+'/'+GOM_ROUNDS,1)+'</div>';
-      else if(s==='chuot')h='<p>Chuốt láng thân gốm: vuốt bằng miếng vải ướt, rồi làm bóng bằng cật tre.</p><div class="rm-row">'+btn('polish0','💧 Vuốt vải ướt'+(gom.polish>=1?' ✓':''),!gom.polish)+btn('polish1','🎋 Làm bóng bằng cật tre',gom.polish===1)+'</div>';
+      else if(s==='chuot')h='<p>Chuốt láng thân gốm: vuốt bằng miếng vải ướt, rồi làm bóng bằng cật tre.</p><div class="rm-row">'+(gom.polish?btn('polish1','🎋 Làm bóng bằng cật tre'):btn('polish0','💧 Vuốt vải ướt'))+'</div>';
       else if(s==='hoavan')h='<p>Khắc hoa văn bằng những dụng cụ mộc mạc.</p><div class="rm-row">'+GOM_TOOLS.map((t,i)=>'<button data-gt="'+i+'"'+(gom.pattern===i?' class="sel"':'')+'>'+t[0]+' · '+t[1]+'</button>').join('')+'</div><div class="rm-row">'+btn('carve','✍️ Khắc hoa văn',1)+'</div>';
       else if(s==='phoi')h='<p>Phơi gốm dưới nắng cho khô. <span class="rm-note">Thực tế ở Bàu Trúc gốm phơi nắng khoảng 4–6 giờ; trong Rừng Yên rút lại '+GOM_DRY_SEC+' giây.</span></p><div class="rm-row">'+(dryT?'<span class="rm-note">☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây</span>':btn('dry','☀️ Phơi nắng',1))+'</div>';
       else if(s==='xong')h='<p>Gốm mộc đã khô. Đội gốm lên đầu như các bà, các mẹ ở làng gốm, mang ra bãi nung bên hông nhà.</p><div class="rm-row">'+btn('carry','🏺 Đội gốm ra bãi nung',1)+'</div>';
       if(s==='xong'&&window.anyenLite)h='<p>Gốm mộc đã khô. Ở bản nhẹ, gốm được nung ngay, có áo gốm hỏa biến và vào kho gốm luôn.</p><div class="rm-row">'+btn('carry','🔥 Nung gốm',1)+'</div>';
       if(!anim){const LH={nhao:'👐 Chạm khối đất để nhào · '+gom.kneads+'/5',cat:'🤲 Chạm đôn để rắc cát, đặt đất lên',dang:'Chọn dáng gốm bên dưới, rồi chạm đất để bắt đầu nặn',nan:'🚶 Chạm đất, đi lùi một vòng quanh đôn · '+gom.rounds+'/'+GOM_ROUNDS,chuot:gom.polish?'🎋 Chạm gốm để làm bóng bằng cật tre':'💧 Chạm gốm để vuốt vải ướt',hoavan:'✍️ Chọn dụng cụ bên dưới, rồi chạm gốm để khắc',phoi:dryT?'☀️ Đang phơi nắng · còn '+gom.dryLeft+' giây':'☀️ Chạm gốm để đem phơi nắng',xong:LT?'🔥 Chạm gốm để nung':'🏺 Chạm gốm để đội ra bãi nung'};if(LH[s])rmHint(LH[s])}
-      rmPanel.innerHTML=turns.bar()+h+'<div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button></div><p class="rm-note">Kệ gốm 6 × 6 bày 36 chiếc gần nhất · chạm kệ hoặc nút trên để xem đầy đủ.</p>';turns.share(snap())}
+      rmPanel.innerHTML=turns.bar()+h+'<p class="rm-note">📜 Kệ gốm bày 36 chiếc gần nhất · chạm kệ để xem kho gốm đầy đủ.</p>';turns.share(snap())}
     // 27/11: phiên Healer ở Nhà Chạm: Healer nặn mẫu trước, rồi mời lần lượt từng người (roomTurns); cả phòng thấy khối gốm của người đang làm lớn dần trên đôn
     // và thấy họ đi lùi quanh đôn (roomSeats walkers). Lời dẫn từng bước Healer gửi vào khung chat bằng một chạm.
     const GOM_TALK={nhao:'Đất sét ven sông được đập nhỏ, trộn cát rồi nhào kỹ. Mỗi lần nhào là một hơi thở.',cat:'Rắc một lớp cát trắng mỏng lên mặt đôn để đất không dính, rồi đặt khối đất lên.',dang:'Ở Bàu Trúc không dùng khuôn: mỗi món là một độc bản. Chọn dáng gốm hợp với lòng mình.',nan:'Không có bàn xoay: người thợ cúi xuống, đôi tay vuốt đất, chân đi lùi quanh đôn. Mỗi vòng thân gốm cao thêm một chút. Bước theo hơi thở.',chuot:'Chuốt láng thân gốm: vuốt bằng miếng vải ướt, rồi làm bóng bằng cật tre.',hoavan:'Khắc hoa văn bằng những dụng cụ mộc mạc: que tre, răng lược, vỏ sò.',phoi:'Phơi gốm dưới nắng cho khô. Chờ đợi cũng là một phần của việc làm gốm.',xong:'Gốm mộc đã khô, sẵn sàng vào lửa. Hỏa biến sẽ để lại những sắc màu không lặp lại.'};
@@ -544,7 +551,7 @@
       else if(a==='carve'){gom.step='phoi';retex('wet');strike(900,.5,.02,[[1,1],[2.2,.3]]);render()}
       else if(a==='dry'){gom.dryLeft=GOM_DRY_SEC;dryT=setInterval(()=>{gom.dryLeft--;if(gom.dryLeft<=0){clearInterval(dryT);dryT=null;gom.step='xong';retex('dry');rmHint('☀️ Gốm mộc đã khô')}render()},1000);render()}
       else if(a==='carry'&&window.anyenLite&&window.__gomLiteFire){const R=window.__gomLiteFire();pot.visible=false;sand.visible=false;lump.visible=true;lump.scale.set(1,.75,1);rmHint('🏺 Gốm nung xong · đã vào kho gốm');
-        rmPanel.innerHTML='<p><b>🏺 '+R.name+' · áo gốm '+R.fired+'</b></p><div class="rm-gom-done"></div><p>Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Gốm đã vào kho gốm và Túi An Yên.</p><div class="rm-row"><button data-gm="kho">📜 Xem kho gốm</button><button class="rm-gold" data-gm="again">👐 Nặn gốm mới</button></div>';
+        rmPanel.innerHTML='<p><b>🏺 '+R.name+' · áo gốm '+R.fired+'</b></p><div class="rm-gom-done"></div><p>Hỏa biến đã để lại trên gốm của bạn những sắc màu không lặp lại. Gốm đã vào kho gốm và Túi An Yên.</p><p class="rm-note">👐 Chạm khối đất để nặn gốm mới · 📜 chạm kệ để xem kho gốm</p>';
         if(R.img){R.img.style.cssText='display:block;max-width:180px;margin:4px auto';rmPanel.querySelector('.rm-gom-done').appendChild(R.img)}drawShelf()}
       else if(a==='again'){render()}
       else if(a==='carry'){closeRoom();gom.phase='carry';setGomCarry(true);refreshGomPill();say('🏺 Đội gốm ra bãi nung · Chạm nút bên dưới để đi');}}}
@@ -1253,7 +1260,7 @@
       /* không cho nhân vật đi xuyên qua bục: chia đường cong thành từng đoạn chữ nhật nhỏ */
       st.blocks=st.blocks||[];for(let i=0;i<16;i++){const xa=-TL-TW/2+(2*TL+TW)*i/16,xb=-TL-TW/2+(2*TL+TW)*(i+1)/16,zs=[];for(let t=0;t<=4;t++){const x=Math.max(-TL,Math.min(TL,xa+(xb-xa)*t/4));zs.push(tz(x))}st.blocks.push([xa,Math.min(...zs)-TW/2,xb,Math.max(...zs)+TW/2])}}
     KINDS.forEach((k,i)=>{const o=orchid(k);if(k.hang){o.position.set(1.95,1.95,-1.25);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.7,4),iron);ch.position.y=.95;o.add(ch)}else{const [x,z]=spots[i];o.position.set(x,.32,z);o.rotation.y=Math.atan2(-x,2-z)*.6}
-      st.sc.add(o);pots.push(o);rTap(st,o,()=>focus(i))});
+      st.sc.add(o);pots.push(o);rTap(st,o,()=>tapPot(i))});
     // chậu nhỏ trang trí trên kệ (bản sao thu nhỏ)
     for(let t=0;t<3;t++)for(let j=0;j<6;j++){const k=KINDS[(j+t*2)%5],o=orchid(k);o.scale.setScalar(.55);o.position.set(-2.75+j*1.1+(t%2)*.3,[.48,.93,1.38][t],[-3.05,-3.2,-3.3][t]);o.rotation.y=j;st.sc.add(o)}
     const want={tx:0,ty:.9,tz:-.6,dist:4.4,pitch:.14};let cur=-1,sess=null;
@@ -1261,7 +1268,7 @@
       for(const [i,o] of pots.entries()){const sway=Math.sin(t*.8+i)*.012;for(const [j,f] of o.userData.flowers.entries())f.rotation.z=sway*(1+j*.2)}
       if(sess)sky.intensity=1.1+Math.sin(t*2*Math.PI/10)*.35});
     function focus(i){cur=i;const o=pots[i],p=new THREE.Vector3();o.getWorldPosition(p);const k=KINDS[i];want.tx=p.x;want.ty=p.y+(k.hang?.35:.75);want.tz=p.z;want.dist=1.6;st.yawC=st.yaw=Math.atan2(-p.x,1);
-      rmHint(k.name+' · '+k.sci+' · '+k.note);render()}
+      rmHint(k.name+' · '+k.sci+' · chạm lần nữa để thiền ngắm hoa');render()}
     function overview(){cur=-1;want.tx=0;want.ty=.9;want.tz=-.6;want.dist=4.4;st.yawC=0;render()}
     // 27/11: hai bài nhìn chậm, nhẹ cho cả bản lite (không thêm đèn, chỉ một vòng sáng nhỏ):
     // · Tìm năm sắc: chạm năm màu khác nhau mình thấy trong nhà kính, mỗi lần một tiếng chuông nhỏ và tên màu hiện lên.
@@ -1288,7 +1295,7 @@
     function stopAct(){if(act&&act.id)clearInterval(act.id);act=null;st.tapAny=null;tint.want=0}
     function hitColor(ray){for(const h of ray.intersectObjects(st.sc.children,true)){let o=h.object,vis=o.isMesh;for(let p=o;p&&vis;p=p.parent)if(!p.visible)vis=false;if(!vis)continue;
         let m=o.material;if(Array.isArray(m))m=m[h.face?h.face.materialIndex:0];if(!m||!m.color||(m.transparent&&m.opacity<.3))continue;return {h,c:m.color}}return null}
-    function tapSac(ray){if(!act||act.k!=='nam'||act.done)return false;const r=hitColor(ray);if(!r){rmHint('Chạm vào một chậu lan, chiếc lá hay sàn gỗ nhé');return true}
+    function tapSac(ray){if(!act||act.k!=='nam'||act.done)return false;{const hp=ray.intersectObjects(st.picks.map(x=>x.obj),true)[0];if(hp){let o=hp.object;while(o&&!st.picks.some(x=>x.obj===o))o=o.parent;const pk=st.picks.find(x=>x.obj===o);if(pk&&pk.fn===tapPalette){tapPalette();return true}}}const r=hitColor(ray);if(!r){rmHint('Chạm vào một chậu lan, chiếc lá hay sàn gỗ nhé');return true}
       ping.position.copy(r.h.point);ping.userData.t0=performance.now();ping.visible=true;const n=sacName(r.c);
       if(act.found.some(f=>f.n===n)){rmHint('Màu '+n+' bạn đã thấy rồi · thử nhìn sang chỗ khác');return true}
       act.found.push({n,hex:'#'+r.c.getHexString(THREE.SRGBColorSpace)});strike(SAC_BELLS[act.found.length-1],4,.07,[[1,1],[2.76,.2]]);
@@ -1299,40 +1306,52 @@
       E.unshift({kind:'sac',title:'🌸 Nhà Sắc · Một màu hôm nay',start:t,end:t,when:d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),dur:'',
         line:'Màu '+m[0]+' · '+m[2]+' · Mang về đời thực: tìm màu ấy ở '+m[3],hex:m[1],qa:[]});
       localStorage.setItem('yenSacLog',JSON.stringify(E.slice(0,60)));window.dispatchEvent(new Event('anyen-ansense-refresh'));return true}catch(e){return false}}
+    /* 28/11: mọi hoạt động bắt đầu bằng chạm đồ vật, bảng bên phải chỉ còn hướng dẫn */
+    const note=t=>'<p class="rm-note">'+t+'</p>';
     function render(){const k=KINDS[cur];
       if(act&&act.k==='nam'){rmPanel.innerHTML='<p>🎨 <b>Tìm năm sắc</b> · '+(act.done?'Năm sắc của bạn lúc này. Lát nữa ra ngoài, thử tìm lại vài màu trong số này quanh mình.':'Nhìn chậm quanh nhà kính, chạm vào năm màu khác nhau mà bạn thấy: cánh hoa, chậu đất, chiếc lá, sàn gỗ…')+'</p>'+
         '<div class="rm-row">'+[0,1,2,3,4].map(i=>{const f=act.found[i];return '<span style="font-size:13px;padding:3px 8px;border-radius:999px;border:1px solid #c8a96a44">'+(f?dot(f.hex)+f.n:dot('',1)+'<span style="opacity:.5">…</span>')+'</span>'}).join('')+'</div>'+
-        '<div class="rm-row">'+(act.done?'<button data-ns="nam">🔁 Tìm lại</button>':'')+'<button data-ns="stop">↩ '+(act.done?'Xong':'Dừng')+'</button></div>';return}
+        note(act.done?'Chạm bảng màu trên bàn bên trái để tìm lại':'Chạm bảng màu trên bàn bên trái để dừng');return}
       if(act&&act.k==='mau'){const m=MAU[act.m];
-        if(act.phase==='pick'){rmPanel.innerHTML='<p>🌈 <b>Một màu hôm nay</b> · Lòng mình lúc này gần với màu nào? Không có màu đúng hay sai.</p><div class="rm-row">'+
-          MAU.map((x,i)=>'<button data-ns="m'+i+'" title="'+x[2]+'">'+dot(x[1])+x[0]+'</button>').join('')+'</div><div class="rm-row"><button data-ns="stop">↩ Thôi</button></div>';return}
-        if(act.phase==='sit'){rmPanel.innerHTML='<p>'+dot(m[1])+'<b>'+m[0]+'</b> · '+m[2]+'. Ngồi yên, để màu ấy lan nhẹ khắp nhà kính · còn <span data-ns-left>'+act.left+'</span>s</p><div class="rm-row"><button data-ns="stop">⏹ Dừng</button></div>';return}
-        rmPanel.innerHTML='<p>'+dot(m[1])+'Hôm nay, thử tìm màu <b>'+m[0]+'</b> ngoài đời: '+m[3]+'. Gặp được thì dừng lại một hơi thở.</p><div class="rm-row">'+
-          (act.saved?'<span style="font-size:13px;opacity:.85">✓ Đã ghi vào Nhật ký · Kết quả AnSense</span>':'<button data-ns="log">📓 Ghi màu này vào nhật ký</button>')+'<button data-ns="stop">↩ Xong</button></div>'+(act.saved?'':'<p class="rm-quote" style="font-size:12px">Ghi hay không tuỳ bạn.</p>');return}
+        if(act.phase==='sit'){rmPanel.innerHTML='<p>'+dot(m[1])+'<b>'+m[0]+'</b> · '+m[2]+'. Ngồi yên, để màu ấy lan nhẹ khắp nhà kính · còn <span data-ns-left>'+act.left+'</span>s</p>'+note('Chạm lại bình màu này để dừng');return}
+        rmPanel.innerHTML='<p>'+dot(m[1])+'Hôm nay, thử tìm màu <b>'+m[0]+'</b> ngoài đời: '+m[3]+'. Gặp được thì dừng lại một hơi thở.</p>'+
+          note(act.saved?'✓ Đã ghi vào Nhật ký · Kết quả AnSense':'📓 Muốn ghi lại thì chạm cuốn sổ nhỏ trên bàn bên phải · ghi hay không tuỳ bạn');return}
       rmPanel.innerHTML='<p>'+(sess?'🧘 '+(KINDS[sess.i].look)+' · còn '+sess.left+'s':k?'<b>'+k.name+'</b> <i>'+k.sci+'</i> · '+k.note:'Sắc là cửa của mắt. Chọn một chậu lan, nhìn thật chậm, không cần gọi tên điều mình thấy.')+'</p>'+
-        (sess?'':'<div class="rm-row">'+KINDS.map((x,i)=>'<button data-ns="f'+i+'"'+(i===cur?' class="rm-gold"':'')+'>🌸 '+x.name.replace('Lan ','')+'</button>').join('')+'</div>')+
-        '<div class="rm-row"><button class="rm-gold" data-ns="sess">'+(sess?'⏹ Dừng thiền ngắm hoa':'🧘 Thiền ngắm hoa 2 phút')+'</button>'+(sess?'':'<button data-ns="nam">🎨 Tìm năm sắc</button><button data-ns="mau">🌈 Một màu hôm nay</button>')+(cur>=0&&!sess?'<button data-ns="all">↩ Nhìn toàn nhà</button>':'')+'</div>'+
+        (sess?note('Chạm chậu lan để dừng'):'<ul class="rm-guide">'+
+          (k?'<li>🧘 Chạm chậu lan này lần nữa để thiền ngắm hoa 2 phút</li>':'<li>🌸 Chạm một chậu lan để ngắm gần, chạm lần nữa để thiền ngắm hoa 2 phút</li>')+
+          '<li>🎨 Chạm bảng màu trên bàn bên trái để Tìm năm sắc</li><li>🌈 Chọn một bình màu trên bàn bên phải để ngồi cùng Một màu hôm nay</li></ul>')+
         '<p class="rm-quote">🌀 Muốn sang cảnh Viverse “ORCHID hoa lan”, hãy ra Cổng Viverse bên hông nhà.</p>'}
     const LOOKS=['Thở vào, mắt mở nhẹ. Thở ra, để ánh nhìn mềm lại.','Nhìn màu sắc như lần đầu được thấy.','Nếu ý nghĩ trôi đi, nhẹ nhàng đưa mắt về bông hoa.','Nhìn cả khoảng trống quanh bông hoa.','Một bông hoa nở không vội. Hơi thở cũng không cần vội.','Mỉm cười với bông hoa, rồi khép mắt một hơi thở.'];
     const MAU_LOOKS={40:'Màu này đang ở đâu trong lòng bạn? Không cần trả lời, chỉ cần cảm.',20:'Thở ra thật dài · vai mềm xuống'};
     function stopSess(){if(sess){clearInterval(sess.id);sess=null;sky.intensity=1.1}}
-    render();rmPanel.onclick=e=>{const a=e.target.closest('[data-ns]')?.dataset.ns;if(!a)return;
-      if(a==='stop'){const was=act&&act.k;stopAct();rmHint(was==='nam'?'Mắt đã nghỉ một chút · chạm một chậu lan để ngắm gần':'Nhà Sắc · chạm một chậu lan để ngắm gần');render();return}
-      if(a==='nam'){stopSess();stopAct();overview();act={k:'nam',found:[]};st.tapAny=tapSac;rmHint('Nhìn quanh nhà kính · chạm vào một màu bạn thấy');render();return}
-      if(a==='mau'){stopSess();stopAct();overview();act={k:'mau',phase:'pick',m:0};rmHint('Chọn một màu hợp với lòng mình lúc này');render();return}
-      if(a[0]==='m'&&act&&act.k==='mau'&&act.phase==='pick'){const m=MAU[act.m=+a.slice(1)];tint.c.set(m[1]);tint.want=1;act.phase='sit';act.left=60;strike(262,6,.07,[[1,1],[2.76,.3]]);rmHint('Để màu '+m[0]+' lan nhẹ khắp nhà kính · thở chậm, chỉ cần ngắm');render();
-        act.id=setInterval(()=>{if(!roomOpen||!st.run||!act||act.k!=='mau'){if(act&&act.id)clearInterval(act.id);return}act.left--;if(MAU_LOOKS[act.left])rmHint(MAU_LOOKS[act.left]);
-          if(act.left<=0){clearInterval(act.id);act.id=0;act.phase='done';strike(196,8,.08,[[1,1],[2.76,.3]]);rmHint('🙏 Một phút cùng màu '+MAU[act.m][0]+' đã xong');render();return}
-          const s=rmPanel.querySelector('[data-ns-left]');if(s)s.textContent=act.left},1000);return}
-      if(a==='log'&&act&&act.k==='mau'){act.saved=sacLog(MAU[act.m]);if(!act.saved)rmHint('Chưa ghi được, trình duyệt đang chặn lưu trữ');render();return}
-      if(act)return;
-      if(a[0]==='f'){if(sess)return;focus(+a.slice(1));return}
-      if(a==='all'){overview();return}
-      if(a==='sess'){if(sess){stopSess();rmHint('Đã dừng thiền ngắm hoa');render();return}
-        const i=cur>=0?cur:Math.floor(Math.random()*KINDS.length);focus(i);sess={i,left:120,id:0};strike(262,6,.08,[[1,1],[2.76,.3]]);rmHint(LOOKS[0]);render();
-        sess.id=setInterval(()=>{if(!roomOpen||!st.run){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)rmHint(LOOKS[(120-sess.left)/20%LOOKS.length]);
-          if(sess.left<=0){clearInterval(sess.id);sess=null;sky.intensity=1.1;strike(196,8,.1,[[1,1],[2.76,.3]]);rmHint('🙏 Buổi thiền ngắm hoa đã xong · Mang ánh nhìn dịu dàng này ra ngoài kia')}
-          const p=rmPanel.querySelector('p');if(p&&sess)p.textContent='🧘 '+KINDS[sess.i].look+' · còn '+sess.left+'s';else render()},1000)}};
+    function startSess(i){focus(i);sess={i,left:120,id:0};strike(262,6,.08,[[1,1],[2.76,.3]]);rmHint(LOOKS[0]);render();
+      sess.id=setInterval(()=>{if(!roomOpen||!st.run){clearInterval(sess.id);sess=null;return}sess.left--;if(sess.left%20===0&&sess.left>0)rmHint(LOOKS[(120-sess.left)/20%LOOKS.length]);
+        if(sess.left<=0){clearInterval(sess.id);sess=null;sky.intensity=1.1;strike(196,8,.1,[[1,1],[2.76,.3]]);rmHint('🙏 Buổi thiền ngắm hoa đã xong · Mang ánh nhìn dịu dàng này ra ngoài kia')}
+        const p=rmPanel.querySelector('p');if(p&&sess)p.textContent='🧘 '+KINDS[sess.i].look+' · còn '+sess.left+'s';else render()},1000)}
+    function tapPot(i){if(sess){stopSess();rmHint('Đã dừng thiền ngắm hoa');overview();return}
+      if(act){stopAct()}if(cur!==i){focus(i);return}startSess(i)}
+    function tapPalette(){stopSess();if(act&&act.k==='nam'&&!act.done){stopAct();rmHint('Mắt đã nghỉ một chút · chạm một chậu lan để ngắm gần');render();return}
+      stopAct();overview();act={k:'nam',found:[]};st.tapAny=tapSac;rmHint('Nhìn quanh nhà kính · chạm vào một màu bạn thấy');render()}
+    function tapJar(i){stopSess();if(act&&act.k==='mau'&&act.m===i&&act.phase==='sit'){stopAct();rmHint('Nhà Sắc · chạm một chậu lan để ngắm gần');render();return}
+      stopAct();overview();const m=MAU[i];act={k:'mau',phase:'sit',m:i,left:60};tint.c.set(m[1]);tint.want=1;strike(262,6,.07,[[1,1],[2.76,.3]]);rmHint('Để màu '+m[0]+' lan nhẹ khắp nhà kính · thở chậm, chỉ cần ngắm');render();
+      act.id=setInterval(()=>{if(!roomOpen||!st.run||!act||act.k!=='mau'){if(act&&act.id)clearInterval(act.id);return}act.left--;if(MAU_LOOKS[act.left])rmHint(MAU_LOOKS[act.left]);
+        if(act.left<=0){clearInterval(act.id);act.id=0;act.phase='done';strike(196,8,.08,[[1,1],[2.76,.3]]);rmHint('🙏 Một phút cùng màu '+MAU[act.m][0]+' đã xong');render();return}
+        const s=rmPanel.querySelector('[data-ns-left]');if(s)s.textContent=act.left},1000)}
+    function tapBook(){if(act&&act.k==='mau'&&act.phase==='done'&&!act.saved){act.saved=sacLog(MAU[act.m]);rmHint(act.saved?'📓 Đã ghi màu '+MAU[act.m][0]+' vào nhật ký':'Chưa ghi được, trình duyệt đang chặn lưu trữ');render();return}
+      rmHint('📓 Sổ màu · ngồi cùng một bình màu xong, chạm sổ để ghi lại')}
+    /* bàn trái: bảng màu gỗ (Tìm năm sắc) · bàn phải: sáu bình thuỷ tinh màu + cuốn sổ (Một màu hôm nay) */
+    const wood=mat('#7a5a3e'),TBZ=.9;
+    for(const sx of [-1,1]){rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(1.1,.05,.6),wood),sx*2.8,.78,TBZ);for(const dx of [-.48,.48])for(const dz of [-.24,.24])rAdd(st,new THREE.Mesh(new THREE.BoxGeometry(.05,.76,.05),wood),sx*2.8+dx,.38,TBZ+dz);
+      st.blocks.push([sx*2.8-.6,TBZ-.35,sx*2.8+.6,TBZ+.35])}
+    {const pal=new THREE.Group(),sh=new THREE.Shape();sh.absellipse(0,0,.3,.21,0,Math.PI*2);const hole=new THREE.Path();hole.absarc(-.17,.06,.04,0,Math.PI*2,true);sh.holes.push(hole);
+      const pg=new THREE.ExtrudeGeometry(sh,{depth:.02,bevelEnabled:false});pg.rotateX(-Math.PI/2);pal.add(new THREE.Mesh(pg,mat('#c9a77c')));
+      ['#d0507a','#f0c93a','#4f7a3a','#7f6ac0','#f6f0f4'].forEach((c,i)=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.02,14),mat(c));d.position.set(-.02+Math.cos(i*1.1-.6)*.17,.025,-Math.sin(i*1.1-.6)*.11);pal.add(d)});
+      pal.position.set(-2.8,.81,TBZ);pal.rotation.y=.3;st.sc.add(pal);rTap(st,pal,tapPalette);rHit(st,-2.8,.95,TBZ,.75,.35,.55,tapPalette)}
+    const glassJ=new THREE.CylinderGeometry(.06,.07,.2,16);
+    MAU.forEach((m,i)=>{const j=new THREE.Mesh(glassJ,new THREE.MeshStandardMaterial({color:m[1],roughness:.15,metalness:.05,transparent:true,opacity:.8,emissive:m[1],emissiveIntensity:.15}));
+      const x=2.45+(i%3)*.2,z=TBZ-.1+Math.floor(i/3)*.22;j.position.set(x,.91,z);st.sc.add(j);rTap(st,j,()=>tapJar(i));rHit(st,x,.95,z,.18,.3,.2,()=>tapJar(i))});
+    {const bk=new THREE.Mesh(new THREE.BoxGeometry(.22,.04,.28),mat('#8a3b2e'));bk.position.set(3.13,.83,TBZ);bk.rotation.y=-.2;st.sc.add(bk);rTap(st,bk,tapBook);rHit(st,3.13,.9,TBZ,.28,.2,.32,tapBook)}
+    render();rmPanel.onclick=null;
     st.cleanup=()=>{if(sess)clearInterval(sess.id);if(act&&act.id)clearInterval(act.id);st.tapAny=null}}
   // ---------------------------------------------------------------- Nhà chính Đảo Yên (theo phối cảnh: nhà gỗ mái dốc, trần đan mây, sofa chữ L, bàn ăn 6 ghế, kệ san hô)
   function roomDaoYen(st){

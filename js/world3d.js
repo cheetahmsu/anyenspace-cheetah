@@ -1804,7 +1804,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Các hàm dựng phòng nằm ở js/rooms3d.js, tải khi mở phòng đầu tiên (hoặc lúc rảnh).
   let roomNhaSac,roomChuongGio,roomXongHuong,roomQuanTra,roomTuGia,roomTinhThat,roomXuongGom,roomNhaNiem,roomNhaVanHoa,roomDaoYen,roomDaoThien,roomsReady=false,roomsP=null;
   function __roomsExport(o){roomNhaSac=o.roomNhaSac;roomChuongGio=o.roomChuongGio;roomXongHuong=o.roomXongHuong;roomQuanTra=o.roomQuanTra;roomTuGia=o.roomTuGia;roomTinhThat=o.roomTinhThat;roomXuongGom=o.roomXuongGom;roomNhaNiem=o.roomNhaNiem;roomNhaVanHoa=o.roomNhaVanHoa;roomDaoYen=o.roomDaoYen;roomDaoThien=o.roomDaoThien;roomsReady=true}
-  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=f2320a0b').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
+  function loadRoomsModule(){if(roomsP)return roomsP;roomsP=fetch('js/rooms3d.js?v=d79ef693').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{eval(code);if(!roomsReady)throw Error('rooms module')}).catch(e=>{roomsP=null;throw e});return roomsP}
   window.anyenLoadRooms=loadRoomsModule;
   /* Link thẳng từ AnSense (index.html?vao=nha-niem …): đặt người trước cửa nhà rồi mở không gian bên trong. */
   /* Trang lite: mở thẳng bên trong nhà (không đi qua cửa, không đổi vị trí ngoài rừng); toạ thiền: đặt ngay lên tọa cụ trước tượng Phật */
