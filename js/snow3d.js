@@ -29,10 +29,12 @@ const IGLOOS=[[-1.1,4],[-.62,17],[.28,2]].map(([a,o])=>lakeShore(a,o));/* Lều 
 const toLake=([x,z],d)=>{const dx=LAKE.x-x,dz=LAKE.z-z,l=Math.hypot(dx,dz);return [x+dx/l*d,z+dz/l*d]};
 {const z=ZONES.find(q=>q.id==='rungkinh'),[x0,z0]=IGLOOS[1],[x1,z1]=toLake(IGLOOS[1],12);z.x=x1;z.z=z1;z.cam=[x0-x1,z0-z1]}
 const PIER=(()=>{const a=lakeShore(2.95,0),b=toLake(a,9);return [a,b]})();/* cầu gỗ bờ tây, xuất phát xe trượt */
-const SLOOP=Array.from({length:64},(_,i)=>lakeShore(Math.PI-i/64*Math.PI*2,0,.72));/* tuyến xe trượt trên hồ (khép kín) */
+// Tuyến xe trượt băng: vòng khép kín cách bờ 6 m, chạy theo một chiều. 3 bến đậu sát bờ tây, chỗ cầu tàu cũ (đã bỏ cầu tàu).
+const SLOOP=Array.from({length:240},(_,i)=>{const a=Math.PI-i/240*Math.PI*2;return [...lakeShore(a,-6),a]});
+const SDOCK=[2.84,2.95,3.06].map(a=>({a,p:lakeShore(a,-2.2),m:lakeShore(a,-6)}));
 const SKI={x:104,z:-118,r:66,h:50},SKIRUNS=[[[98,-110],[93,-102],[94,-94],[99,-86],[97,-78],[90,-70],[88,-60]],[[112,-110],[118,-101],[121,-92],[117,-84],[119,-75],[125,-66],[124,-58]]],LIFT=[[78,-60],[94,-110]];
-const HTRAILS=[[[14,96],[24,80],[34,62],[38,40],[34,18],[26,-4],[14,-12],[22,-22],[10,-32],[18,-42],[10,-50]],[[10,-50],[40,-58],[66,-56],[80,-58]],[[10,-50],[-16,-66],[-42,-80]],[[26,-4],[70,8],[110,4],[140,-2],[176,-2]],[[35,52],[24,50]]];/* tuyến husky chính có nhánh */
-const HR=[[22,-22],[10,-32],[18,-42],[10,-50],[40,-58],[66,-56],[80,-58]];/* xe husky chạy đi về */
+const HTRAILS=[[[14,96],[30,88],[40,74],[41,58],[39,40],[36,18],[26,-4],[15,-11],[14.8,-15.5],[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50]],/* vòng ngoài phía đông làng, vào bãi husky qua hai cửa rào */[[10,-50],[40,-58],[66,-56],[80,-58]],[[10,-50],[-16,-66],[-42,-80]],[[26,-4],[70,8],[110,4],[140,-2],[176,-2]],[[40.8,54],[24.8,53]]];/* tuyến husky chính có nhánh */
+const HR=[[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50],[40,-58],[66,-56],[80,-58]];/* xe husky chạy đi về */
 const HUSKY={x:10,z:-50,rx:1,rz:1};
 const along=(pts,closed,u)=>{const P=closed?[...pts,pts[0]]:pts;let tot=0;const L=[];for(let i=0;i+1<P.length;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l}
   let d=((u%1)+1)%1*tot;if(!closed&&u>=1)d=tot;for(let i=0;i<L.length;i++){if(d<=L[i]||i===L.length-1){const t=Math.min(1,d/L[i]),a=P[i],b=P[i+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=L[i]}};
@@ -41,7 +43,7 @@ const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},CAR={x:-22,z:62},
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
 // [góc (0 = bắc, dương = đông), bán kính, rộng, sâu, cao, màu, loại]
 const VH=[[0,23,10,9,4.4,'#c99d70','main'],[-58,22,8,7,3.8,'#b8906a','shop'],[58,22,8,7,3.6,'#c99d70','cafe'],[104,22,7,7.5,3.4,'#b8906a'],
-  [-29,38,6.5,7,3.3,'#a8805c'],[29,38,7,7.5,3.4,'#b8906a'],[81,38,6.5,7,3.3,'#a8805c'],[-88,40,6,6.5,3.2,'#c99d70']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
+  [-29,38,6.5,7,3.3,'#a8805c'],[29,38,7,7.5,3.4,'#b8906a'],[-88,40,6,6.5,3.2,'#c99d70']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
 const VRING=15,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
 const PATHS=[[[14,98],[17,80],[12.5,71]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
@@ -56,7 +58,7 @@ const STATIONS=[
   {id:'carousel',x:-22,z:69.6,label:'🎠 Ngồi vòng ngựa gỗ'},
   {id:'wheel',x:-36,z:56.4,label:'🎡 Lên vòng quay ngắm làng'}];
 {const q=STATIONS.find(o=>o.id==='aurora'),[x,z]=toLake(IGLOOS[1],7.4);q.x=x;q.z=z}
-{const q=STATIONS.find(o=>o.id==='sled');q.x=PIER[1][0];q.z=PIER[1][1];const zn=ZONES.find(o=>o.id==='hobang');zn.x=PIER[0][0]-4;zn.z=PIER[0][1];zn.cam=[PIER[1][0]-PIER[0][0],PIER[1][1]-PIER[0][1]]}
+{const q=STATIONS.find(o=>o.id==='sled'),d=lakeShore(2.95,1.6);q.x=d[0];q.z=d[1];const zn=ZONES.find(o=>o.id==='hobang');zn.x=PIER[0][0]-4;zn.z=PIER[0][1];zn.cam=[PIER[1][0]-PIER[0][0],PIER[1][1]-PIER[0][1]]}
 
 export function openSnow(THREE,opts){opts=opts||{};
   if(window.__snowOpen)return window.__snowOpen;
@@ -391,7 +393,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     block(X,Z,ISLE.r)}
   for(let k=0;k<3;k++){const a=k*2.1+.5;lantern(ISLE.x+Math.cos(a)*ISLE.r*.95,ISLE.z+Math.sin(a)*ISLE.r*.95,1.3)}
   {let dx=-.95,dz=-.3;const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ax=ISLE.x+dx*ISLE.r*1.05,az=ISLE.z+dz*ISLE.r*1.05;let len=2;while(len<60&&lakeE(ax+dx*len,az+dz*len)<1.08)len+=.5;
-    const ry=Math.atan2(-dz,dx),n=Math.ceil(len/1.05);for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+dx*len*t,z=az+dz*len*t,y=ICE_Y+.45+Math.sin(Math.PI*t)*1.1;S.b('#c99d70',x,y,z,1.0,.16,2.6,ry);S.b(IVORY,x,y+.09,z,.6,.02,2.3,ry);
+    const ry=Math.atan2(-dz,dx),n=Math.ceil(len/1.05);let sc=len*.8,bd=1e9;for(let q=0;q<=len;q+=.25){const x=ax+dx*q,z=az+dz*q;for(const w of SLOOP){const d=Math.hypot(w[0]-x,w[1]-z);if(d<bd){bd=d;sc=q}}}/* chỗ tuyến xe trượt chạy dưới cầu: cầu vồng cao lên để xe lọt qua */
+    for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+dx*len*t,z=az+dz*len*t,y=ICE_Y+.45+Math.sin(Math.PI*t)*1.1+2.3*Math.exp(-Math.pow((len*t-sc)/6,2));S.b('#c99d70',x,y,z,1.0,.16,2.6,ry);S.b(IVORY,x,y+.09,z,.6,.02,2.3,ry);
       for(const sd of [-1.25,1.25]){S.b('#d8b48a',x+Math.sin(ry)*sd,y+.95,z+Math.cos(ry)*sd,1.06,.1,.12,ry);S.b('#d8b48a',x+Math.sin(ry)*sd,y+.55,z+Math.cos(ry)*sd,1.06,.06,.06,ry);if(i%3===0)S.b('#b8906a',x+Math.sin(ry)*sd,y+.5,z+Math.cos(ry)*sd,.18,1.1,.18)}
       }}
   // ---------- 9 Đỉnh Tuyết Yên: nhà nghỉ trên đỉnh, cáp treo, cờ, dốc trượt ----------
@@ -418,14 +421,48 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const shore=[];for(let a=-1.3;a<=.12;a+=.06)shore.push(lakeShore(a,2.6));walk(shore);shore.forEach((q,i)=>{if(i%5===2)lantern(...toLake(q,-1.6),1.3)});
     for(const q of IGLOOS){const f=toLake(q,DR+2.4);let best=shore[0],bd=1e9;for(const w of shore){const dd=Math.hypot(w[0]-f[0],w[1]-f[1]);if(dd<bd){bd=dd;best=w}}if(bd>1.5)walk([f,best])}}
   // ---------- 6 Hồ Băng & Xe Trượt: cầu gỗ bờ tây, xe trượt tuyết đỏ chạy chậm, đèn băng ----------
-  {const [[ax,az],[bx,bz]]=PIER,ln=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax),n=Math.ceil(ln/1.15);for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;S.b('#9a7a5a',x,.05,z,1.05,.14,2.2,ry);S.b(SNOW,x,.13,z,.8,.04,2.1,ry);if(i%3===0)for(const sd of [-1.2,1.2])S.b('#9a7a5a',x-Math.sin(ry)*sd*0+Math.sin(ry)*sd,.3,z+Math.cos(ry)*sd,.16,1,.16)}}
   
   // tuyến trượt băng nét đứt xanh chạy vòng trên mặt hồ (tấm 07 mới)
-  for(let i=0;i<SLOOP.length;i+=2){const [x0,z0]=SLOOP[i],[x1,z1]=SLOOP[(i+1)%SLOOP.length];S.b('#9fd0e6',(x0+x1)/2,ICE_Y+.03,(z0+z1)/2,.3,.02,Math.hypot(x1-x0,z1-z0)*.8,Math.atan2(x1-x0,z1-z0))}
+  for(let i=0;i<SLOOP.length;i+=6){const [x0,z0]=SLOOP[i],[x1,z1]=SLOOP[(i+3)%SLOOP.length];S.b('#9fd0e6',(x0+x1)/2,ICE_Y+.03,(z0+z1)/2,.3,.02,Math.hypot(x1-x0,z1-z0)*.8,Math.atan2(x1-x0,z1-z0))}
   function kickSled(B){B.b('#8c2f2a',0,.5,.2,.55,.08,.5);B.b('#8c2f2a',0,.75,-.05,.55,.5,.06);for(const sx of [-.22,.22]){B.b('#2b2622',sx,.05,-.2,.04,.04,2.2);B.b('#2b2622',sx,.55,-.35,.04,1.1,.04,0,.2);B.b('#2b2622',sx,1.05,-.4,.04,.04,.3)}B.b('#2b2622',0,1.08,-.48,.5,.04,.04)}
-  for(const [x,z] of [[PIER[0][0]+2,PIER[0][1]-5],[PIER[0][0]+2,PIER[0][1]+5]]){S.at(x,0,z,1.3);kickSled(S);S.reset()}
   function snowmobile(B){B.b('#2b2622',0,.25,-.5,.9,.4,1.8);B.b('#b8322c',0,.55,.2,1,.45,1.6);B.add(G.sph,'#b8322c',MX(0,.6,1,.5,.35,.6));B.b('#1d1a18',0,.82,-.35,.6,.18,1.1);B.b('#9fc4dd',0,1.0,.55,.7,.4,.05,0,-.5);for(const sx of [-.45,.45])B.b('#2b2622',sx,.05,1.2,.12,.06,1.2);B.b('#c8a96a',0,.95,.25,.8,.05,.05);L.reset()}
-  const sledG=new THREE.Group();{const B=new Batch();snowmobile(B);sledG.add(B.mesh(LAM));sc.add(sledG)}
+  // 3 xe trượt băng kiểu xe kéo Bắc Âu, ba cỡ: nhỏ 1 chỗ (ngà), vừa 2 chỗ (đỏ trầm), lớn 4 chỗ (gỗ sồi, đệm xanh thông).
+  // Luật chạy: mọi xe chạy một chiều trên vòng sát bờ; xe sau giữ cách xe trước ít nhất 9 m (chậm lại khi gần);
+  // xe chỉ vào vòng khi khoảng trống quanh điểm nhập đủ rộng; người lái bấm vào bờ thì xe ghé bờ chỗ đó và cho xuống.
+  // Lúc vắng, xe có người khác lái chạy một vòng rồi về bến, nhưng luôn chừa ít nhất 1 xe ở bến cho mình.
+  function sleigh(B,k){const L0=[2.2,3,4.2][k],W=[1,1.3,1.6][k],body=['#efe6d6','#8c2f2a','#c99d70'][k],seat=['#8c2f2a','#efe6d6','#2f5a4a'][k],trim='#d6b878';
+    for(const sx of [-W/2+.08,W/2-.08]){B.b('#3a3430',sx,.06,0,.07,.06,L0+.3);B.add(G.cyl12,'#3a3430',MX(sx,.32,L0/2+.15,.26,.05,.26,0,0,Math.PI/2));for(const z of [-L0*.3,L0*.3])B.b('#3a3430',sx,.28,z,.06,.44,.06)}/* càng trượt cong mũi */
+    B.b(body,0,.62,0,W,.38,L0);B.b(trim,0,.82,0,W+.04,.04,L0+.04);
+    B.b(body,0,1.05,L0/2-.15,W,.5,.3,-.35,0,0);B.add(G.cyl12,body,MX(0,1.25,L0/2-.05,W/2,.12,W/2,0,0,Math.PI/2));B.b(trim,0,1.33,L0/2-.02,W*.9,.04,.12);/* mũi cong */
+    const rows=[1,1,2][k];for(let r=0;r<rows;r++){const z=-L0/2+.55+r*1.6;B.b(seat,0,.86,z+.25,W-.16,.12,.8);B.b(body,0,1.25,z-.12,W,.75,.14);B.b(seat,0,1.2,z-.04,W-.2,.55,.06)}
+    B.b(trim,0,1.64,-L0/2+.42,W*.9,.04,.08);for(const sx of [-1,1])B.b(body,sx*(W/2-.03),.98,-L0/2+.9,.06,.32,1.1)}
+  const sleds=[0,1,2].map(k=>{const g=new THREE.Group(),B=new Batch();sleigh(B,k);g.add(B.mesh(LAM));
+    const npc=new THREE.Group();{const c=new THREE.Mesh(new THREE.CylinderGeometry(.3,.4,.8,10),new THREE.MeshLambertMaterial({color:['#2f5a4a','#c5a36f','#8c2f2a'][k]}));c.position.y=1.3;npc.add(c);const h=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshLambertMaterial({color:'#e7c9a8'}));h.position.y=1.92;npc.add(h);const hat=new THREE.Mesh(new THREE.ConeGeometry(.24,.34,10),new THREE.MeshLambertMaterial({color:'#efe6d6'}));hat.position.y=2.15;npc.add(hat);npc.position.z=-[2.2,3,4.2][k]/2+.75;npc.visible=false;g.add(npc)}
+    const d=SDOCK[k],ry=Math.atan2(d.m[0]-d.p[0],d.m[1]-d.p[1]);g.position.set(d.p[0],ICE_Y,d.p[1]);g.rotation.y=ry;sc.add(g);
+    return {k,g,npc,st:'park',s:0,v:0,from:null,to:null,exitS:null,exit:null,rider:null,wait:15+k*22,len:[2.2,3,4.2][k],seatZ:-[2.2,3,4.2][k]/2+.75}});
+  const SLL=(()=>{const c=[0];for(let i=1;i<=SLOOP.length;i++){const a=SLOOP[i-1],b=SLOOP[i%SLOOP.length];c.push(c[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]))}return c})(),STOT=SLL[SLOOP.length];
+  const sAt=s=>{s=((s%STOT)+STOT)%STOT;let i=0,j=SLOOP.length;while(j-i>1){const m=(i+j)>>1;if(SLL[m]<=s)i=m;else j=m}const a=SLOOP[i],b=SLOOP[(i+1)%SLOOP.length],t=(s-SLL[i])/(SLL[i+1]-SLL[i]);return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1]),a[2]]};
+  const sNear=(x,z)=>{let bi=0,bd=1e9;SLOOP.forEach((q,i)=>{const d=Math.hypot(q[0]-x,q[1]-z);if(d<bd){bd=d;bi=i}});return SLL[bi]};
+  const fwd=(a,b)=>((b-a)%STOT+STOT)%STOT;/* quãng đường xuôi chiều từ a tới b */
+  const gapFree=(s0,me0)=>sleds.every(o=>o===me0||o.st!=='loop'||(fwd(o.s,s0)>14&&fwd(s0,o.s)>9));/* điểm nhập trống: không xe nào sắp tới trong 14 m hay vừa qua trong 9 m */
+  let mySled=null;
+  const sledStart=(o,rider)=>{o.rider=rider;o.npc.visible=rider==='npc';o.from=[o.g.position.x,o.g.position.z];const d=SDOCK[o.k];o.to=d.m;o.mS=sNear(...d.m);o.exitS=fwd(0,o.mS-6);o.exit={dock:true};o.st='merge';o.v=0;o.laps=0};
+  let sledK=1;window.__sledFast=k=>{sledK=k;return STOT};
+  function sledTick(dt0){const dt=dt0*sledK;for(const o of sleds){const g=o.g;
+      if(o.st==='park'){if(o.rider==null&&(o.wait-=dt)<0){o.wait=40+Math.random()*50;if(sleds.filter(q=>q.st==='park').length>=2)sledStart(o,'npc')}continue}
+      if(o.st==='merge'||o.st==='leave'){const [tx,tz]=o.to,dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
+        if(o.st==='merge'&&d<1.2&&!gapFree(o.mS,o)){o.v=0;continue}
+        o.v=Math.min(3,o.v+dt*3);const st=Math.min(d,o.v*dt);if(d>.05){g.position.x+=dx/d*st;g.position.z+=dz/d*st;let ry=Math.atan2(dx,dz),dr=ry-g.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));g.rotation.y+=dr*Math.min(1,dt*4)}
+        if(d<.1){if(o.st==='merge'){o.st='loop';o.s=o.mS}else{
+          if(o.exit.dock){o.st='park';o.rider=null;o.npc.visible=false;const d0=SDOCK[o.k];g.rotation.y=Math.atan2(d0.m[0]-d0.p[0],d0.m[1]-d0.p[1])}
+          else{if(o===mySled){mySled=null;const [lx,lz]=o.exit.land;stand();P.x=lx;P.z=lz;P.a=g.rotation.y;caption('🛷 Đã ghé bờ. Xe tự chạy về bến.',4000)}o.rider=null;o.npc.visible=false;o.from=null;o.to=[...SLOOP[0]];o.to=[...sAt(sNear(g.position.x,g.position.z)+5)].slice(0,2);o.mS=sNear(...o.to);const d0=SDOCK[o.k];o.exitS=fwd(0,sNear(...d0.m)-6);o.exit={dock:true};o.st='merge';o.v=0}}}continue}
+      if(o.st==='loop'){let vmax=o.rider==='me'?5.5:4.5;for(const q of sleds)if(q!==o&&q.st==='loop'){const ahead=fwd(o.s,q.s);if(ahead<16)vmax=Math.min(vmax,Math.max(0,(ahead-9)/7)*q.v+(ahead>9?.6:0))}/* giữ khoảng cách xe trước */
+        o.v+=(vmax-o.v)*Math.min(1,dt*1.8);const ns=o.s+o.v*dt,hit=o.exitS!=null&&fwd(o.s,o.exitS)<=o.v*dt+.01&&(o.rider!=='npc'||o.laps>0||fwd(o.mS,o.s)>STOT*.5);
+        if(fwd(o.mS,ns)<fwd(o.mS,o.s))o.laps++;o.s=ns%STOT;const [x,z,ry]=sAt(o.s);g.position.set(x,ICE_Y,z);let dr=ry-g.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));g.rotation.y+=dr*Math.min(1,dt*6);
+        if(hit){o.st='leave';o.v=Math.min(o.v,3);o.to=o.exit.dock?SDOCK[o.k].p:o.exit.water}}}}
+  // bấm vào bờ khi đang ngồi xe: xe chạy tiếp tới điểm gần chỗ bấm nhất trên vòng rồi rẽ vào bờ
+  function sledLand(x,z){const o=mySled;if(!o)return false;const a=Math.atan2(0,1);const s0=sNear(x,z),q=sAt(s0),aa=q[3],water=lakeShore(aa,-1.6),land=lakeShore(aa,1.8);
+    o.exitS=fwd(0,s0);o.exit={water,land};if(o.st==='park'){}caption('🛷 Xe sẽ ghé bờ chỗ bạn chọn.',3500);return true}
   // ---------- 3 Rừng Thông & Husky ----------
   const huskyG=new THREE.Group();const dogs=[];{const DG=(()=>{const B=new Batch();const g='#8a8f98',w='#f1f1ee';B.add(G.sph,g,MX(0,.5,0,.2,.2,.42));B.add(G.sph,w,MX(0,.42,.05,.16,.15,.35));B.add(G.sph,g,MX(0,.72,.42,.15,.14,.17));B.add(G.sph,w,MX(0,.66,.56,.08,.07,.1));for(const sx of [-1,1]){B.add(G.cone,g,MX(sx*.07,.9,.4,.04,.12,.04));for(const sz of [-.25,.25])B.add(G.cyl,w,MX(sx*.09,.2,sz,.04,.4,.04))}B.add(G.cyl,g,MX(0,.62,-.42,.05,.3,.05,-.9,0,0));return B.geo()})();
     for(let i=0;i<6;i++){const m=new THREE.Mesh(DG,LAM);m.position.set(i%2?.4:-.4,0,2.2+Math.floor(i/2)*1.2);huskyG.add(m);dogs.push(m)}
@@ -461,7 +498,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const DG2=(x,z,r,lie)=>{const y=H(x,z);S.at(x,y,z,r);const g='#8a8f98',w='#f1f1ee';S.add(G.sph,g,MX(0,lie?.3:.5,0,.2,.2,.42));S.add(G.sph,w,MX(0,lie?.24:.42,.05,.16,.15,.35));S.add(G.sph,g,MX(0,lie?.45:.72,.42,.15,.14,.17));S.add(G.sph,w,MX(0,lie?.4:.66,.56,.08,.07,.1));for(const sx of [-1,1]){S.add(G.cone,g,MX(sx*.07,lie?.62:.9,.4,.04,.12,.04));if(!lie)for(const sz of [-.25,.25])S.add(G.cyl,w,MX(sx*.09,.2,sz,.04,.4,.04))}S.reset()};
     for(const [x,z,r,l] of [[-1.5,-10,1.6,1],[1.5,-9,1.2,1],[-3.5,-8,1.9,0],[3,-7.5,1.4,1],[16,-24,2.6,0],[17.2,-25.2,2.9,1]])DG2(x,z,r,l);
     // 3 Bãi xuất phát: bãi tuyết bầu dục rào gỗ thanh ngang, xe trượt gỗ tự nhiên đệm xám
-    fence(16,-22,7,30,[1.77,4.17]);{const x=13,z=-26,y=H(x,z);S.at(x,y,z,.6);S.b('#c99d70',0,.35,-.2,.9,.1,1.9);S.b('#8f949a',0,.55,-.4,.8,.25,1);S.b('#c99d70',0,.8,-.95,.86,.6,.1);for(const sx of [-.45,.45]){S.b('#b8906a',sx,.04,-.2,.06,.06,2.4);S.b('#b8906a',sx,.6,-1.05,.06,1.1,.06)}S.reset()}
+    fence(16,-22,7,30,[1.66,4.25]);{const x=20,z=-24,y=H(x,z);S.at(x,y,z,.6);S.b('#c99d70',0,.35,-.2,.9,.1,1.9);S.b('#8f949a',0,.55,-.4,.8,.25,1);S.b('#c99d70',0,.8,-.95,.86,.6,.1);for(const sx of [-.45,.45]){S.b('#b8906a',sx,.04,-.2,.06,.06,2.4);S.b('#b8906a',sx,.6,-1.05,.06,1.1,.06)}S.reset()}
     // cổng biển gỗ "Trại Husky" có hình đầu husky, mái nhỏ phủ tuyết
     {const x=9,z=-6,y=H(x,z);S.at(x,y,z,.3);for(const sx of [-1.3,1.3])S.b('#b8906a',sx,1.6,0,.25,3.2,.25);S.b('#c99d70',0,2.3,0,2.4,1,.16);S.b('#8a6a4a',0,3.3,0,3.2,.14,.9);S.b(SNOW,0,3.45,0,3.3,.2,1);
       S.add(G.sph,'#8a8f98',MX(0,3.05,.14,.32,.28,.06));S.add(G.sph,'#f1f1ee',MX(0,2.98,.18,.18,.16,.05));for(const sx of [-1,1])S.add(G.cone,'#8a8f98',MX(sx*.18,3.36,.14,.07,.16,.04));S.reset();block(x,z,1.6)}
@@ -585,7 +622,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   cv.addEventListener('wheel',e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);setZoom(camZoom*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012)))))},{passive:false});
   const keys=new Set();const onKey=e=>{const k={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'}[e.key.toLowerCase()];if(e.key==='Escape'&&e.type==='keydown'){if(!mapEl.hidden)mapEl.hidden=true;else if(P.mode!=='walk')stand();return}if(!k)return;e.preventDefault();if(e.type==='keydown'){keys.add(k);P.dest=null}else keys.delete(k)};
   document.addEventListener('keydown',onKey);document.addEventListener('keyup',onKey);
-  function tap(cx,cy){if(P.mode!=='walk')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
+  function tap(cx,cy){if(P.mode!=='walk'&&P.mode!=='sled')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
+    if(P.mode==='sled'){const h=ray.intersectObjects([groundMesh],false)[0];if(h&&lakeE(h.point.x,h.point.z)>=1&&Math.hypot(h.point.x-LAKE.x,h.point.z-LAKE.z)<90)sledLand(h.point.x,h.point.z);else caption('Bấm vào bờ hồ để ghé bờ nhé.',2500);return}
     const hit=ray.intersectObjects([ice,groundMesh],false)[0];if(!hit)return;let x=hit.point.x,z=hit.point.z;
     const st=STATIONS.find(s=>Math.hypot(s.x-x,s.z-z)<4.5);if(st){x=st.x;z=st.z}
     if(Math.hypot(x,z)>220){caption('Phía xa là núi tuyết, mình dạo quanh làng thôi nhé');return}P.dest={x,z}}
@@ -597,7 +635,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   function act(){const s=near;if(!s)return;P.dest=null;
     if(s.id==='aurora'){P.mode='aurora';P.ride=0;caption('✨ Nằm yên trong lều kính, nhìn bầu trời và mặt hồ. Thở theo vòng sáng: hít vào khi nó lớn, thở ra khi nó nhỏ.',9000);breathEl.hidden=false;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false)}
     else if(s.id==='husky'){P.mode='husky';P.ride=0;caption('🐕 Đàn husky chạy chậm một vòng rừng thông. Vuốt để nhìn quanh.',6000)}
-    else if(s.id==='sled'){P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe trượt lướt chậm một vòng hồ. Nhìn cực quang soi xuống mặt băng.',6000)}
+    else if(s.id==='sled'){const o=sleds.filter(q=>q.st==='park').sort((a,b)=>Math.hypot(a.g.position.x-P.x,a.g.position.z-P.z)-Math.hypot(b.g.position.x-P.x,b.g.position.z-P.z))[0];if(!o){caption('🛷 Cả 3 xe đang chạy, đợi một chút xe về bến nhé.',4000);return}mySled=o;sledStart(o,'me');P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe chạy vòng sát bờ hồ. Muốn lên bờ thì bấm vào bờ chỗ bạn thích.',6000)}
     else if(s.id==='sit'){setSit(true);P.mode='sit';{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
     else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:-44,z:84.6,y:H(-44,82)+.5,a:Math.PI};caption('🔥 Hơ tay bên lửa. Ấm áp là điều nhỏ mà thật.',7000)}
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
@@ -605,7 +643,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='wheel'){P.mode='wheel';P.ride=0;setSit(true);caption('🎡 Vòng quay lên rất chậm. Từ trên cao nhìn cả làng tuyết và bầu trời.',7000)}
     actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=['husky','sled','carousel','wheel'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
-  function stand(){const m=P.mode;P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
+  function stand(){if(P.mode==='sled'&&mySled){const o=mySled;if(o.st==='park'||o.st==='merge'&&o.to===SDOCK[o.k].m&&Math.hypot(o.g.position.x-SDOCK[o.k].p[0],o.g.position.z-SDOCK[o.k].p[1])<1.5){o.st='park';o.rider=null;mySled=null}else{const [x,z]=sAt(o.s+12);sledLand(...lakeShore(sAt(o.s+12)[3],3));return}}const m=P.mode;P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
     setSit(false);const st=id=>{const q=STATIONS.find(s=>s.id===id);return [q.x,q.z]},back={aurora:st('aurora'),husky:st('husky'),sled:st('sled'),carousel:st('carousel'),wheel:st('wheel'),sit:P.sitAt&&P.sitAt.z<-50?st('sit'):st('fire')}[m];if(back){P.x=back[0];P.z=back[1]}P.sitAt=null;
     if(m==='aurora')caption('Mang Yên về đời thực: tối nay, trước khi ngủ, thử ngước nhìn bầu trời một phút.',7000)}
   actBtn.onclick=act;stopBtn.onclick=stand;
@@ -636,7 +674,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     // đàn husky và xe trượt chạy vòng (kể cả khi không ngồi trên xe)
     const hu=P.mode==='husky'?(P.ride+=dt*.03):0,[hx,hz,hr]=along(HR,false,1-Math.abs(1-2*hu));huskyG.position.set(hx,H(hx,hz),hz);huskyG.rotation.y=hu>.5?hr+Math.PI:hr;
     dogs.forEach((d,i)=>{d.position.y=P.mode==='husky'?Math.abs(Math.sin(t*9+i))*.08:0});
-    const su=P.mode==='sled'?(P.ride+=dt*.025):0,[sx,sz,sr]=along(SLOOP,true,su);sledG.position.set(sx,ICE_Y,sz);sledG.rotation.y=sr;
+    sledTick(dt);
     carousel.rotation.y=t*.18;for(const h of horses)h.position.y=1.7+Math.sin(t*1.6+h.userData.ph)*.35;wheel.rotation.z=-t*.08;for(const g of gondolas){const a=g.userData.a;g.position.set(Math.cos(a)*WR,Math.sin(a)*WR,0);g.rotation.z=t*.08}if(fireFl){fireFl.scale.set(1+Math.sin(t*13)*.08,1+Math.sin(t*7.3)*.18,1+Math.cos(t*11)*.08);fireLight.intensity=12+Math.sin(t*9)*2+Math.sin(t*23)*1.2}
     if(P.mode==='walk'){let mvx=0,mvz=0;if(keys.size){const f=(keys.has('f')?1:0)-(keys.has('b')?1:0),s=(keys.has('r')?1:0)-(keys.has('l')?1:0),sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);mvx=-sy*f+cy*s;mvz=-cy*f-sy*s}
       else if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.15)P.dest=null;else{mvx=dx/d;mvz=dz/d}}
@@ -647,7 +685,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       near=null;for(const s of STATIONS)if(Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near;if(near)actBtn.textContent=near.label;
       tgt.set(P.x,me.position.y+1.5,P.z)}
     else if(P.mode==='husky'){me.position.copy(huskyG.position).add(_v.set(0,.35,-.1).applyAxisAngle(_v2.set(0,1,0),huskyG.rotation.y));me.rotation.set(0,huskyG.rotation.y,0);follow(huskyG.rotation.y,dt);if(P.ride>=1)stand();tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
-    else if(P.mode==='sled'){me.position.copy(sledG.position).add(_v.set(0,.42,-.45).applyAxisAngle(_v2.set(0,1,0),sledG.rotation.y));me.rotation.set(0,sledG.rotation.y,0);follow(sledG.rotation.y,dt);if(P.ride>=1)stand();tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
+    else if(P.mode==='sled'&&mySled){const g=mySled.g;me.position.copy(g.position).add(_v.set(0,.5,mySled.seatZ).applyAxisAngle(_v2.set(0,1,0),g.rotation.y));me.rotation.set(0,g.rotation.y,0);follow(g.rotation.y,dt);tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='carousel'){P.ride+=dt;const a=-carousel.rotation.y;const h0=horses[1];me.position.set(CAR.x+Math.cos(a+h0.userData.q-.26)*h0.userData.r,carousel.position.y+h0.position.y+.1,CAR.z+Math.sin(a+h0.userData.q-.26)*h0.userData.r);me.rotation.set(0,-a+Math.PI,0);tgt.set(CAR.x,carousel.position.y+2,CAR.z);if(P.ride>50)stand()}
     else if(P.mode==='wheel'){P.ride+=dt;const a=gondolas[0].userData.a+wheel.rotation.z;me.position.set(WHEEL.x+Math.cos(a)*WR,wheel.position.y+Math.sin(a)*WR-1.05,WHEEL.z);me.rotation.set(0,0,0);tgt.set(me.position.x,me.position.y+1.2,me.position.z);follow(0,dt);if(P.ride>78)stand()}
     else if(P.mode==='sit'){const s=P.sitAt;follow(s.a,dt);me.position.set(s.x,s.y,s.z);me.rotation.set(0,s.a,0);tgt.set(s.x,me.position.y+1.2,s.z)}
@@ -670,6 +708,6 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     sc.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=o.material;if(m.map)m.map.dispose();m.dispose()}});R.dispose();try{R.forceContextLoss()}catch(e){}
     box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
   // Chụp thử: __snowCam([x,y,z],[tx,ty,tz]) đặt camera cố định, __snowCam(null) để trả lại; __snowGo('leukinh') tới một khu; __snowAct('aurora') mở hoạt động
-  window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
+  window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__sleds=()=>sleds.map(o=>[o.st,o.rider,+o.s.toFixed(1),+o.v.toFixed(1)]);window.__sledLand=(x,z)=>sledLand(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
   window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
   const api={close};window.__snowOpen=api;return api}
