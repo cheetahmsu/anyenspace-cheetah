@@ -58,7 +58,11 @@ const STATIONS=[
   {id:'fire',x:25,z:79.6,label:'🔥 Ngồi sưởi bên bếp lửa'},
   {id:'deer',x:122.6,z:86,label:'🦌 Cho tuần lộc ăn rêu'},
   {id:'carousel',x:-25,z:58.6,label:'🎠 Ngồi vòng ngựa gỗ'},
-  {id:'wheel',x:-48,z:43.4,label:'🎡 Lên vòng quay ngắm làng'}];
+  {id:'wheel',x:-48,z:43.4,label:'🎡 Lên vòng quay ngắm làng'},
+  {id:'snowman',x:-39,z:79,label:'⛄ Đắp người tuyết'},
+  {id:'tree',x:10,z:66.5,label:'🎄 Treo lời chúc lên cây thông'},
+  {id:'skate',x:-3,z:71.6,label:'⛸ Xỏ giày trượt băng'}];
+{const q=STATIONS.find(o=>o.id==='skate'),GA=Math.atan2(ARCH.z-RINK.z,ARCH.x-RINK.x);q.x=RINK.x+Math.cos(GA)*(RINK.rx+1.6);q.z=RINK.z+Math.sin(GA)*(RINK.rz+1.6)}
 {const q=STATIONS.find(o=>o.id==='aurora'),[x,z]=toLake(IGLOOS[1],7.4);q.x=x;q.z=z}
 {const q=STATIONS.find(o=>o.id==='sled'),d=lakeShore(2.95,1.6);q.x=d[0];q.z=d[1];const zn=ZONES.find(o=>o.id==='hobang');zn.x=PIER[0][0]-4;zn.z=PIER[0][1];zn.cam=[PIER[1][0]-PIER[0][0],PIER[1][1]-PIER[0][1]]}
 
@@ -78,6 +82,7 @@ export function openSnow(THREE,opts){opts=opts||{};
 #snowBox button{border:1px solid #d6b87888;border-radius:999px;background:#0e1f33cc;color:#f5e8cc;padding:8px 13px;font-size:14px;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 #snowBox .sn-cap{position:absolute;left:50%;top:calc(56px + env(safe-area-inset-top));transform:translateX(-50%);max-width:min(560px,92vw);text-align:center;padding:8px 14px;border-radius:14px;background:#0b142499;opacity:0;transition:opacity .8s;pointer-events:none;font-size:14px}
 #snowBox .sn-cap.on{opacity:1}
+#snowBox .sn-wish{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(420px,92vw);padding:14px;border-radius:16px;background:#0b1424e6;border:1px solid #c8a96a55;color:#f3ead8;z-index:6;font-size:14px}#snowBox .sn-wish b{display:block;margin-bottom:8px}#snowBox .sn-wish .wr{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}#snowBox .sn-wish .wr button{padding:7px 10px;border-radius:12px;border:1px solid #ffffff33;background:#ffffff14;color:inherit;font-size:14px}#snowBox .sn-wish .wr button.on{background:#c8a96a;color:#13202c;border-color:#c8a96a}#snowBox .sn-wish input{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:10px;border:1px solid #ffffff33;background:#ffffff10;color:inherit;font-size:14px;margin-bottom:8px}#snowBox .sn-wish .rw{display:flex;gap:8px;justify-content:flex-end}#snowBox .sn-wish .rw button{padding:8px 14px;border-radius:12px;border:1px solid #ffffff33;background:none;color:inherit}#snowBox .sn-wish .rw .go{background:#c8a96a;color:#13202c;border-color:#c8a96a;font-weight:600}
 #snowBox .sn-bottom{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 12px;pointer-events:none}
 #snowBox .sn-bottom button{pointer-events:auto;padding:11px 18px;font-size:15px}#snowBox .sn-act{background:#c8a96a;color:#13202c;font-weight:600;border-color:#c8a96a}
 #snowBox [hidden]{display:none!important}
@@ -904,10 +909,12 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   cv.addEventListener('wheel',e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);setZoom(camZoom*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012)))))},{passive:false});
   const keys=new Set();const onKey=e=>{const k={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'}[e.key.toLowerCase()];if(e.key==='Escape'&&e.type==='keydown'){if(!mapEl.hidden)mapEl.hidden=true;else if(P.mode!=='walk')stand();return}if(!k)return;e.preventDefault();if(e.type==='keydown'){keys.add(k);P.dest=null}else keys.delete(k)};
   document.addEventListener('keydown',onKey);document.addEventListener('keyup',onKey);
-  function tap(cx,cy){if(P.mode==='santa'){if(SR.wait&&!SR.gift){const c=SR.stops[SR.leg-1],r=cv.getBoundingClientRect(),p=new THREE.Vector3(c.x,c.y,c.z).project(cam),sx=r.left+(p.x+1)/2*r.width,sy=r.top+(1-p.y)/2*r.height;if(Math.hypot(sx-cx,sy-cy)<110)santaDrop((Math.random()*WISHES.length)|0)}return}if(P.mode!=='walk'&&P.mode!=='sled')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
+  function tap(cx,cy){if(P.mode==='santa'){if(SR.wait&&!SR.gift){const c=SR.stops[SR.leg-1],r=cv.getBoundingClientRect(),p=new THREE.Vector3(c.x,c.y,c.z).project(cam),sx=r.left+(p.x+1)/2*r.width,sy=r.top+(1-p.y)/2*r.height;if(Math.hypot(sx-cx,sy-cy)<110)santaDrop((Math.random()*WISHES.length)|0)}return}if(P.mode!=='walk'&&P.mode!=='sled'&&P.mode!=='skate')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
     if(P.mode==='sled'){const h=ray.intersectObjects([groundMesh],false)[0];if(h&&lakeE(h.point.x,h.point.z)>=1&&Math.hypot(h.point.x-LAKE.x,h.point.z-LAKE.z)<90)sledLand(h.point.x,h.point.z);else caption('Bấm vào bờ hồ để ghé bờ nhé.',2500);return}
+    if(P.mode==='skate'){const h=ray.intersectObjects([groundMesh],false)[0];if(h&&Math.hypot(h.point.x-RINK.x,h.point.z-RINK.z)<RINK.rx-.9){P.dest={x:h.point.x,z:h.point.z};P.camAim=Math.atan2(h.point.x-P.x,h.point.z-P.z)}else caption('Chạm vào mặt băng để lướt. Muốn ra thì bấm Rời sân băng.',3000);return}
+    P.autoAct=null;{const o=ray.intersectObjects([...PROX,santaG,huskyG],true)[0],gh=ray.intersectObjects([ice,groundMesh],false)[0];if(o&&(!gh||o.distance<gh.distance+.5)){let q=o.object;while(q&&!q.userData.st&&q!==santaG&&q!==huskyG)q=q.parent;const id=q===santaG?'gift':q===huskyG?'husky':q&&q.userData.st,st=id&&STATIONS.find(s=>s.id===id);if(st&&!(id==='husky'&&Math.hypot(huskyG.position.x-st.x,huskyG.position.z-st.z)>8)&&!(id==='gift'&&SR.on)){P.autoAct=id;if(Math.hypot(st.x-P.x,st.z-P.z)<.6){near=st;P.autoAct=null;act();return}P.dest={x:st.x,z:st.z};P.camAim=Math.atan2(st.x-P.x,st.z-P.z);return}}}
     const hit=ray.intersectObjects([ice,groundMesh],false)[0];if(!hit)return;let x=hit.point.x,z=hit.point.z;
-    const st=STATIONS.find(s=>Math.hypot(s.x-x,s.z-z)<4.5);if(st){x=st.x;z=st.z}
+    const st=STATIONS.find(s=>Math.hypot(s.x-x,s.z-z)<4.5);if(st){x=st.x;z=st.z;P.autoAct=st.id}
     if(Math.hypot(x,z)>220){caption('Phía xa là núi tuyết, mình dạo quanh làng thôi nhé');return}P.dest={x,z};if(Math.hypot(x-P.x,z-P.z)>.5)P.camAim=Math.atan2(x-P.x,z-P.z)}
   // Va chạm khi đi: nhà, công trình (colliders), thân cây (lưới TG 8 m), xe trượt và đàn husky đang đứng hay chạy. Không đi xuyên, không đè lên nhau.
   const hitC=(x,z)=>{for(const c of colliders)if(Math.hypot(x-c[0],z-c[1])<c[2])return c;const gx=(x/8)|0,gz=(z/8)|0;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=TG[(gx+i)+','+(gz+j)];if(a)for(const c of a)if(Math.hypot(x-c[0],z-c[1])<c[2])return c}
@@ -919,6 +926,54 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   let first=true;
   // ---------- hoạt động ----------
   let near=null;
+  // ---------- đợt 3: đắp người tuyết, treo lời chúc lên cây thông, trượt băng ----------
+  const lam=c=>new THREE.MeshLambertMaterial({color:c}),gSph=new THREE.SphereGeometry(1,18,12),gCone=new THREE.ConeGeometry(1,1,10),gCyl=new THREE.CylinderGeometry(1,1,1,14);
+  // Người tuyết tự đắp: tối đa 4 chỗ phía tây bãi tuyết, đắp chỗ thứ 5 thì thay người tuyết cũ nhất
+  const BUILD=[[-46.2,74.4],[-45.4,79.4],[-45.4,69.4],[-42.6,84]].map(([x,z])=>({x,z,g:null,c:null}));let buildK=0,myMan=null;
+  function snowmanBuild(){const sp=BUILD[buildK%BUILD.length];buildK++;if(sp.g){sc.remove(sp.g);const i=colliders.indexOf(sp.c);if(i>=0)colliders.splice(i,1)}
+    const g=new THREE.Group(),y=H(sp.x,sp.z),sn=lam('#f4f7fb'),dark=lam('#2b2622');g.position.set(sp.x,y,sp.z);g.rotation.y=Math.atan2(TREE.x-sp.x,TREE.z-sp.z)+.4;
+    const ball=(r,h)=>{const m=new THREE.Mesh(gSph,sn);m.userData={r,h};m.scale.setScalar(.001);m.position.y=h;g.add(m);return m};
+    const parts={b0:ball(.85,.75),b1:ball(.6,1.9),b2:ball(.42,2.7),deco:new THREE.Group()};g.add(parts.deco);parts.deco.visible=false;
+    for(const sx of [-.15,.15]){const e=new THREE.Mesh(gSph,dark);e.scale.setScalar(.05);e.position.set(sx,2.82,.37);parts.deco.add(e)}
+    for(const h of [1.75,1.95,2.15]){const e=new THREE.Mesh(gSph,dark);e.scale.setScalar(.055);e.position.set(0,h,.58+(h-1.95)*-.08);parts.deco.add(e)}
+    {const n=new THREE.Mesh(gCone,lam('#e07a3a'));n.scale.set(.07,.36,.07);n.rotation.x=Math.PI/2;n.position.set(0,2.7,.55);parts.deco.add(n)}
+    {const sc2=new THREE.Mesh(gCyl,lam(outfitNow().scarf));sc2.scale.set(.47,.14,.47);sc2.position.y=2.33;parts.deco.add(sc2);const tail=new THREE.Mesh(new THREE.BoxGeometry(.16,.55,.05),sc2.material);tail.position.set(.22,2.05,.4);tail.rotation.z=.15;parts.deco.add(tail)}
+    {const hm=lam(outfitNow().hat),hb=new THREE.Mesh(gCyl,hm);hb.scale.set(.34,.32,.34);hb.position.y=3.08;parts.deco.add(hb);const pom=new THREE.Mesh(gSph,lam('#f4f7fb'));pom.scale.setScalar(.12);pom.position.y=3.3;parts.deco.add(pom)}
+    for(const sx of [-1,1]){const a=new THREE.Mesh(gCyl,lam('#6e4632'));a.scale.set(.035,.9,.035);a.position.set(sx*.85,2.05,0);a.rotation.z=-sx*1.05;parts.deco.add(a)}
+    sc.add(g);sp.g=g;sp.c=[sp.x,sp.z,1];colliders.push(sp.c);const a=Math.atan2(sp.x-SNOWMAN.x,sp.z-SNOWMAN.z);
+    const vx=Math.sin(a),vz=Math.cos(a),dx=vz,dz=-vx;/* đứng chếch bên cạnh, camera nhìn dọc theo hướng tiếp tuyến để thấy cả người lẫn người tuyết */
+    myMan={sp,g,parts,t:0,stage:-1,me:[sp.x-dx*2.3+vx*1.1,sp.z-dz*2.3+vz*1.1],yaw:Math.atan2(-dx,-dz)};return myMan}
+  const BSAY=['⛄ Lăn một quả cầu tuyết thật to làm thân. Tuyết ẩm, nén nhẹ tay.','⛄ Thêm quả cầu vừa vừa đặt lên trên.','⛄ Giờ là cái đầu tròn nhỏ.','⛄ Cà rốt làm mũi, khăn và mũ len giống của bạn. Xong rồi!'];
+  const outfitNow=()=>{try{return Object.assign({hat:'#efe6d6',scarf:'#8c2f2a'},JSON.parse(localStorage.getItem('xuyen-outfit')||'{}'))}catch(e){return {hat:'#efe6d6',scarf:'#8c2f2a'}}};
+  function buildTick(dt){const m=myMan;if(!m)return;m.t+=dt;const T=m.t,st=T<4?0:T<7.5?1:T<10.5?2:3;if(st!==m.stage){m.stage=st;caption(BSAY[st],st===3?6000:3800);if(st===3)m.parts.deco.visible=true}
+    const grow=(o,t0,t1)=>{const k=Math.max(0,Math.min(1,(T-t0)/(t1-t0))),e=1-Math.pow(1-k,2),r=o.userData.r;o.scale.setScalar(Math.max(.001,r*e));o.position.y=o.userData.h-r*(1-e)};
+    grow(m.parts.b0,0,4);grow(m.parts.b1,4,7.5);grow(m.parts.b2,7.5,10.5);if(T>10.5){const k=Math.min(1,(T-10.5)/.5);m.parts.deco.scale.setScalar(.6+.4*k)}
+    if(T>14){myMan=null;stand(true);caption('⛄ Người tuyết của bạn đứng canh bãi tuyết rồi. Nhìn thành quả nhỏ, thấy lòng vui.',6000)}}
+  // Lời chúc trên cây thông: quả châu sáng treo trên tán, lưu trên máy, ghi vào Nhật ký
+  const TW_KEY='xuyen-tree-wishes',TWC={'Bình an':'#cfe4ff','Ấm áp':'#ffb36b','Niềm vui':'#ffe07a','Ngủ ngon':'#c7b8ff','Vững vàng':'#9fe0b8'},orn=[];
+  const treeRad=t=>7.6*Math.pow(1-t,.92)+.25;
+  function hangWish(w,i){const t=.1+((i*37)%55)/100,a=Math.PI/2+(((i*53)%100)/100-.5)*2.4,r=treeRad(t)*.84+.1,y=H(TREE.x,TREE.z)+1.6+t*26-1.1,x=TREE.x+Math.cos(a)*r,z=TREE.z+Math.sin(a)*r;
+    const b=new THREE.Mesh(gSph,new THREE.MeshBasicMaterial({color:TWC[w.w]||'#ffe07a'}));b.scale.setScalar(.38);b.position.set(x,y,z);const cap=new THREE.Mesh(gCyl,lam('#c8a96a'));cap.scale.set(.09,.1,.09);cap.position.set(x,y+.32,z);sc.add(b,cap);orn.push(b,cap);return b}
+  const readTW=()=>{try{const v=JSON.parse(localStorage.getItem(TW_KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}};readTW().slice(-30).forEach((w,i)=>hangWish(w,i));
+  const wishEl=document.createElement('div');wishEl.className='sn-wish';wishEl.hidden=true;box.appendChild(wishEl);wishEl.addEventListener('pointerdown',e=>e.stopPropagation());wishEl.addEventListener('keydown',e=>e.stopPropagation());
+  let wishPick='Bình an';
+  function wishOpen(){wishPick='Bình an';wishEl.innerHTML='<b>🎄 Bạn muốn treo lời chúc gì lên cây?</b><div class="wr">'+Object.keys(TWC).map(k=>'<button type="button" data-w="'+k+'"'+(k===wishPick?' class="on"':'')+'>'+k+'</button>').join('')+'</div><input maxlength="80" placeholder="Viết thêm vài chữ cho ai đó (không bắt buộc)"><div class="rw"><button type="button" data-x>Thôi</button><button type="button" class="go" data-go>Treo lên cây</button></div>';wishEl.hidden=false}
+  wishEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.w){wishPick=b.dataset.w;wishEl.querySelectorAll('[data-w]').forEach(o=>o.classList.toggle('on',o===b));return}
+    if(b.dataset.x!=null){wishEl.hidden=true;return}
+    if(b.dataset.go!=null){const txt=wishEl.querySelector('input').value.trim().slice(0,80),list=readTW(),w={w:wishPick,txt,at:Date.now()};list.push(w);try{localStorage.setItem(TW_KEY,JSON.stringify(list.slice(-60)))}catch(err){}
+      const o=hangWish(w,list.length-1);wishEl.hidden=true;o.scale.setScalar(.01);const t0=performance.now(),pop=()=>{const k=Math.min(1,(performance.now()-t0)/700);o.scale.setScalar(.38*(1+Math.sin(k*Math.PI)*.5)*k||.01);if(k<1)requestAnimationFrame(pop)};pop();
+      if(window.__xuyenJournal)window.__xuyenJournal(wishPick+(txt?': '+txt:''),'🎄 Lời chúc trên cây thông');caption('🎄 Quả châu "'+wishPick+'" đã sáng trên cây. Lời chúc cũng được ghi vào Nhật ký.',6000)}});
+  // Trượt băng: chạm mặt băng để lướt tới, có quán tính, không ra khỏi sân
+  const SK={vx:0,vz:0};
+  function skateTick(dt,t){let ax=0,az=0;if(keys.size){const f=(keys.has('f')?1:0)-(keys.has('b')?1:0),s2=(keys.has('r')?1:0)-(keys.has('l')?1:0),sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);ax=-sy*f+cy*s2;az=-cy*f-sy*s2}
+    else if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.6)P.dest=null;else{ax=dx/d;az=dz/d}}
+    const l=Math.hypot(ax,az);if(l){SK.vx+=ax/l*4.2*dt;SK.vz+=az/l*4.2*dt}const v=Math.hypot(SK.vx,SK.vz),vm=3.8;if(v>vm){SK.vx*=vm/v;SK.vz*=vm/v}const fr=Math.exp(-dt*(l?.6:.9));SK.vx*=fr;SK.vz*=fr;
+    let nx=P.x+SK.vx*dt,nz=P.z+SK.vz*dt;const dr=Math.hypot(nx-RINK.x,nz-RINK.z),R=RINK.rx-.9;if(dr>R){const ux=(nx-RINK.x)/dr,uz=(nz-RINK.z)/dr,vn=SK.vx*ux+SK.vz*uz;nx=RINK.x+ux*R;nz=RINK.z+uz*R;if(vn>0){SK.vx-=ux*vn*1.6;SK.vz-=uz*vn*1.6}}
+    P.x=nx;P.z=nz;const sp=Math.hypot(SK.vx,SK.vz);if(sp>.2)P.a=Math.atan2(SK.vx,SK.vz);me.position.set(P.x,groundY(P.x,P.z)+.06,P.z);let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*4);me.rotation.z=Math.sin(t*2.2)*.09*Math.min(1,sp/2);me.rotation.x=.12*Math.min(1,sp/2);
+    if(P.camAim!=null){follow(P.camAim,dt,3);let d=P.camAim+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<.03||pts.size)P.camAim=null}tgt.set(P.x,me.position.y+1.5,P.z)}
+  // Bấm vào đồ vật để bắt đầu: vùng chạm vô hình quanh cây thông, bãi tuyết, vòng quay, vòng ngựa gỗ, bếp lửa, tượng Phật
+  const PROX=[],proxM=new THREE.MeshBasicMaterial({visible:false});
+  for(const [id,x,z,r,h,y0] of [['tree',TREE.x,TREE.z,6.5,27,1],['snowman',SNOWMAN.x,SNOWMAN.z,4.6,8,0],['wheel',WHEEL.x,WHEEL.z+3,WR,WY+WR,0],['carousel',CAR.x,CAR.z,6.4,8,0],['fire',25,77,1.6,2.4,0],['bell',...tw(10.5,1.5),2.6,6,1]]){const m=new THREE.Mesh(gCyl,proxM);m.scale.set(r,h,r);m.position.set(x,H(x,z)+y0+h/2,z);m.userData.st=id;sc.add(m);PROX.push(m)}
   function act(){const s=near;if(!s)return;P.dest=null;
     if(s.id==='aurora'){P.mode='aurora';P.ride=0;caption('✨ Nằm yên trong lều kính, nhìn bầu trời và mặt hồ. Thở theo vòng sáng: hít vào khi nó lớn, thở ra khi nó nhỏ.',9000);breathEl.hidden=false;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false)}
     else if(s.id==='gift'){santaStart()}
@@ -929,10 +984,13 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
     else if(s.id==='deer'){caption('🦌 Tuần lộc ăn rêu địa y. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
+    else if(s.id==='snowman'){const m=snowmanBuild();P.mode='build';P.x=m.me[0];P.z=m.me[1];P.a=Math.atan2(m.sp.x-P.x,m.sp.z-P.z);P.yaw=m.yaw;P.camAim=null;first=true;near=null}
+    else if(s.id==='tree'){wishOpen();P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;first=true;return}
+    else if(s.id==='skate'){P.mode='skate';SK.vx=SK.vz=0;const GA=Math.atan2(s.z-RINK.z,s.x-RINK.x);P.x=RINK.x+Math.cos(GA)*(RINK.rx-2);P.z=RINK.z+Math.sin(GA)*(RINK.rz-2);P.yaw=Math.atan2(Math.cos(GA),Math.sin(GA));P.a=P.yaw+Math.PI;first=true;caption('⛸ Chạm vào mặt băng để lướt tới. Lướt dài, thở dài, để cơ thể tự cân bằng.',7000)}
     else if(s.id==='wheel'){P.mode='wheel';P.ride=0;setSit(true);caption('🎡 Vòng quay lên rất chậm. Từ trên cao nhìn cả làng tuyết và bầu trời.',7000)}
-    actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=['husky','sled','carousel','wheel','santa'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
-  function stand(fin){if(P.mode==='santa'&&SR.on&&!fin)santaEnd(true);if(P.mode==='sled'&&mySled){const o=mySled;if(o.st==='park'||o.st==='merge'&&o.to===SDOCK[o.k].m&&Math.hypot(o.g.position.x-SDOCK[o.k].p[0],o.g.position.z-SDOCK[o.k].p[1])<1.5){o.st='park';o.rider=null;mySled=null}else{const [x,z]=sAt(o.s+12);sledLand(...lakeShore(sAt(o.s+12)[3],3));return}}const m=P.mode;P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
-    setSit(false);const st=id=>{const q=STATIONS.find(s=>s.id===id);return [q.x,q.z]},back={santa:st('gift'),aurora:st('aurora'),husky:st('husky'),sled:st('sled'),carousel:st('carousel'),wheel:st('wheel'),sit:P.sitAt&&P.sitAt.z<-50?st('sit'):st('fire')}[m];if(back){P.x=back[0];P.z=back[1]}P.sitAt=null;
+    actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=P.mode==='skate'?'⛸ Rời sân băng':P.mode==='build'?'↩ Dừng đắp':['husky','sled','carousel','wheel','santa'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
+  function stand(fin){if(P.mode==='santa'&&SR.on&&!fin)santaEnd(true);if(P.mode==='sled'&&mySled){const o=mySled;if(o.st==='park'||o.st==='merge'&&o.to===SDOCK[o.k].m&&Math.hypot(o.g.position.x-SDOCK[o.k].p[0],o.g.position.z-SDOCK[o.k].p[1])<1.5){o.st='park';o.rider=null;mySled=null}else{const [x,z]=sAt(o.s+12);sledLand(...lakeShore(sAt(o.s+12)[3],3));return}}const m=P.mode;if(m==='build'&&myMan){myMan.parts.deco.visible=true;myMan.parts.deco.scale.setScalar(1);for(const k of ['b0','b1','b2']){const o=myMan.parts[k];o.scale.setScalar(o.userData.r);o.position.y=o.userData.h}myMan=null}if(m==='skate'){me.rotation.x=me.rotation.z=0}P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
+    setSit(false);const st=id=>{const q=STATIONS.find(s=>s.id===id);return [q.x,q.z]},back={skate:st('skate'),build:st('snowman'),santa:st('gift'),aurora:st('aurora'),husky:st('husky'),sled:st('sled'),carousel:st('carousel'),wheel:st('wheel'),sit:P.sitAt&&P.sitAt.z<-50?st('sit'):st('fire')}[m];if(back){P.x=back[0];P.z=back[1]}P.sitAt=null;
     if(m==='aurora')caption('Mang Yên về đời thực: tối nay, trước khi ngủ, thử ngước nhìn bầu trời một phút.',7000)}
   actBtn.onclick=act;stopBtn.onclick=stand;
 
@@ -958,8 +1016,8 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const head=t=>'<div class="sn-sh"><b>'+t+'</b><button type="button" data-rl="x">✕</button></div>';
     // Hoạt động: chia theo "Hôm nay, bạn cần gì?"; hoạt động đã có thì tới nơi và bắt đầu luôn, hoạt động đang dựng thì đưa tới nơi và báo sắp mở
     const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn',null,[RH.x+3,RH.z+10]],['stars','🌌','Nằm tuyết ngắm sao',null,[24,92]]]],
-      ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng',null,[ARCH.x-3,ARCH.z+4]],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
-      ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['tree','🎄','Trang trí cây thông, treo lời chúc',null,[TREE.x,TREE.z+15]],['snowman','⛄','Đắp người tuyết',null,[SNOWMAN.x+1,SNOWMAN.z+5]],['deer','🦌','Cho tuần lộc ăn','deer']]]];
+      ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng','skate'],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
+      ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['tree','🎄','Trang trí cây thông, treo lời chúc','tree'],['snowman','⛄','Đắp người tuyết','snowman'],['deer','🦌','Cho tuần lộc ăn','deer']]]];
     const goAct=(st,pos,label)=>{close();if(P.mode!=='walk')stand();let x,z;if(st){const s=STATIONS.find(o=>o.id===st);x=s.x;z=s.z}else[x,z]=pos;
       for(let k=0;k<12&&blocked(x,z);k++){x+=Math.cos(k)*1.2;z+=Math.sin(k)*1.2}P.x=x;P.z=z;P.dest=null;first=true;
       if(st){near=STATIONS.find(o=>o.id===st);setTimeout(()=>{near=STATIONS.find(o=>o.id===st);act()},350)}else caption(label+' · hoạt động này đang được dựng, sắp mở. Bạn cứ dạo quanh đây nhé.',6000)};
@@ -1022,17 +1080,20 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       me.position.x=P.x;me.position.z=P.z;let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);
       if(P.camAim!=null){follow(P.camAim,dt,3);let d=P.camAim+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<.03||pts.size)P.camAim=null}
       near=null;for(const s of STATIONS)if(Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near;if(near)actBtn.textContent=near.label;
+      if(P.autoAct&&!P.dest){const id=P.autoAct;P.autoAct=null;if(near&&near.id===id)act()}/* đã bấm vào đồ vật: tới nơi là bắt đầu luôn */
       tgt.set(P.x,me.position.y+1.5,P.z)}
     else if(P.mode==='husky'){me.position.copy(huskyG.position).add(_v.set(0,.35,-.1).applyAxisAngle(_v2.set(0,1,0),huskyG.rotation.y));me.rotation.set(0,huskyG.rotation.y,0);follow(huskyG.rotation.y,dt);if(P.ride>=1)stand();tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='santa'){me.position.copy(santaG.position).add(_v.set(.45,1.05,-.2).applyEuler(santaG.rotation));me.rotation.set(santaG.rotation.x,santaG.rotation.y,0);if(!SR.wait)follow(santaG.rotation.y,dt);else{const c=SR.stops[SR.leg-1];if(c)follow(Math.atan2(c.x-me.position.x,c.z-me.position.z),dt,4)}tgt.set(me.position.x,me.position.y+1.4,me.position.z);if(SR.wait){const c=SR.stops[SR.leg-1];if(c)tgt.set(c.x*.75+me.position.x*.25,c.y+.4,c.z*.75+me.position.z*.25)}P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='sled'&&mySled){const g=mySled.g;me.position.copy(g.position).add(_v.set(0,.5,mySled.seatZ).applyAxisAngle(_v2.set(0,1,0),g.rotation.y));me.rotation.set(0,g.rotation.y,0);follow(g.rotation.y,dt);tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='carousel'){P.ride+=dt;const a=-carousel.rotation.y;const h0=horses[1];me.position.set(CAR.x+Math.cos(a+h0.userData.q-.26)*h0.userData.r,carousel.position.y+h0.position.y+.1,CAR.z+Math.sin(a+h0.userData.q-.26)*h0.userData.r);me.rotation.set(0,-a+Math.PI,0);tgt.set(CAR.x,carousel.position.y+2,CAR.z);if(P.ride>50)stand()}
     else if(P.mode==='wheel'){P.ride+=dt;const a=gondolas[0].userData.a+wheel.rotation.z;me.position.set(WHEEL.x+Math.cos(a)*WR,wheel.position.y+Math.sin(a)*WR-1.05,WHEEL.z);me.rotation.set(0,0,0);tgt.set(me.position.x,me.position.y+1.2,me.position.z);follow(0,dt);if(P.ride>78)stand()}
+    else if(P.mode==='skate')skateTick(dt,t);
+    else if(P.mode==='build'){buildTick(dt);if(P.mode==='build'){me.position.set(P.x,groundY(P.x,P.z)-Math.abs(Math.sin(t*3))*.12,P.z);me.rotation.set(0,P.a,0);if(P.camAim!=null){follow(P.camAim,dt,3)}tgt.set(P.x,me.position.y+1.5,P.z)}}
     else if(P.mode==='sit'){const s=P.sitAt;follow(s.a,dt);me.position.set(s.x,s.y,s.z);me.rotation.set(0,s.a,0);tgt.set(s.x,me.position.y+1.2,s.z)}
     // camera
     U.fadeR.value=0;if(camFix){cam.position.set(...camFix[0]);cam.lookAt(...camFix[1])}
     else if(P.mode==='aurora'){P.ride+=dt;const x=70,z=6.2,y=H(70,6)+.45+1.1;cam.position.set(x,y,z);cam.lookAt(x+Math.sin(P.ride*.05)*8,y+9+Math.sin(P.ride*.07)*.8,z+11)}
-    else{camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const cz=camZoomS,ride=P.mode!=='walk',gy=ride?tgt.y-1.05:groundY(P.x,P.z),behind=(ride?(P.mode==='sit'?.55:.7):1)*14*cz,cx=tgt.x+Math.sin(P.yaw)*behind,ccz=tgt.z+Math.cos(P.yaw)*behind;
+    else{camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const cz=camZoomS,ride=!['walk','skate','build'].includes(P.mode),gy=ride?tgt.y-1.05:groundY(P.x,P.z),behind=(ride?(P.mode==='sit'?.55:.7):1)*14*cz,cx=tgt.x+Math.sin(P.yaw)*behind,ccz=tgt.z+Math.cos(P.yaw)*behind;
       const cy=Math.max(5.6*cz*camLift*(ride?.7:1)+Math.max(0,cz-1.5)*7+gy,groundY(cx,ccz)+2.2);/* như Rừng Yên: thu nhỏ quá 1,5 thì camera lên cao dần để thấy toàn cảnh */
       cpos.set(cx,cy,ccz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*9));U.meP.value.set(tgt.x,gy+1.05,tgt.z);U.fadeR.value=1.8+Math.min(camZoomS,2)*.9;cam.lookAt(tgt.x,gy+1.05,tgt.z);cam.rotateX(Math.atan(Math.tan(cam.fov*Math.PI/360)/3));/* nhân vật ở giữa, trên đường một phần ba dưới */
       sc.fog.density=fogK/(1+Math.max(0,cz-1.2)*.7)}
@@ -1049,5 +1110,5 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     snowCleanup.forEach(f=>{try{f()}catch(e){}});box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
   // Chụp thử: __snowCam([x,y,z],[tx,ty,tz]) đặt camera cố định, __snowCam(null) để trả lại; __snowGo('leukinh') tới một khu; __snowAct('aurora') mở hoạt động
   window.__snowPos=(x,z,yaw)=>{P.x=x;P.z=z;P.dest=null;if(yaw!=null)P.yaw=yaw;first=true};window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__sleds=()=>sleds.map(o=>[o.st,o.rider,+o.s.toFixed(1),+o.v.toFixed(1)]);window.__sledLand=(x,z)=>sledLand(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
-  window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
+  window.__snowBuildT=x=>{if(myMan)myMan.t=x};window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
   const api={close};window.__snowOpen=api;return api}
