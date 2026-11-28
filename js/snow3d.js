@@ -184,22 +184,29 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const seeThrough=m=>{m.onBeforeCompile=sh=>{sh.uniforms.camP=U.camP;sh.uniforms.meP=U.meP;sh.uniforms.fadeR=U.fadeR;
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vSeeW;').replace('#include <project_vertex>','#include <project_vertex>\nvSeeW=(modelMatrix*vec4(transformed,1.)).xyz;');
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vSeeW;uniform vec3 camP,meP;uniform float fadeR;').replace('void main() {','void main() {\n if(fadeR>0.){vec3 ab=meP-camP;float L2=max(dot(ab,ab),1.),t=dot(vSeeW-camP,ab)/L2,lim=1.-2.2/sqrt(L2);if(t>0.&&t<lim){float d=length(vSeeW-(camP+ab*t)),k=smoothstep(fadeR,fadeR*.45,d)*smoothstep(0.,.08,t);float n=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(n<k*.75)discard;}}');};m.customProgramCacheKey=()=>'seeThrough'};seeThrough(LAM);seeThrough(GLOW);
-  const AUR_STEPS=LOW?9:14;
+  const AUR_STEPS=LOW?10:16;
   const SKYFN=`uniform float time,boost,night;
     float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}
     float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<3;i++){v+=a*n2(p);p=p*2.1+vec2(3.1,1.7);a*=.5;}return v;}
-    vec3 aurora(vec3 d){if(d.y<.015)return vec3(0.);vec3 acc=vec3(0.);
-      for(int i=0;i<${AUR_STEPS};i++){float v=float(i)/${AUR_STEPS}.;float h=1.+v*.75;vec2 p=d.xz*(h/d.y)*.32;
-        float w=fbm(vec2(p.x*.35+time*.015,time*.01))*1.6;
-        float c1=p.y+.32+sin(p.x*.55+time*.04)*.45+w*.4;/* dải chính vắt ngang trời phía bắc */
-        float c2=p.y+1.05+sin(p.x*.32-time*.03+1.3)*.6+w*.5;/* dải thấp sát núi */
-        float c3=p.y-.28+sin(p.x*.8+time*.05+2.)*.35+w*.3;/* dải mảnh gần đỉnh đầu */
-        float b=exp(-c1*c1*60.)+exp(-c2*c2*30.)*.85+exp(-c3*c3*90.)*.55;
-        float rays=.08+.92*pow(n2(vec2(p.x*14.+w*3.+time*.2,v*.3)),2.)*1.4;
-        vec3 col=mix(vec3(.12,.95,.7),vec3(.35,.95,.9),smoothstep(.2,.5,v));col=mix(col,vec3(.72,.52,.98),smoothstep(.5,1.,v));
-        acc+=col*b*rays*(1.15-v*.75);}
-      return acc*(4.2/${AUR_STEPS}.)*smoothstep(.015,.12,d.y)*boost;}
+    /* 28/11 vẽ lại cực quang theo ảnh mẫu: mỗi dải là một tấm rèm đứng thật (giao tia nhìn với mặt rèm), chân rèm sắc hồng, lõi xanh lục sáng,
+       tia dọc rõ, phía trên ngả xanh ngọc rồi tím nhạt dần; có rèm ở phía bắc, ngang đỉnh đầu, phía đông, tây và nam nên nhìn đâu cũng thấy */
+    vec3 curtain(vec3 d,float z0,float A,float k,float ph,float yb,float yt,float sd,float gain){float hx=d.x,hz=d.z;if(hz*z0<=0.||abs(hz)<.03)return vec3(0.);
+      float u=z0/hz;for(int i=0;i<4;i++){float s=u*hx;u=(z0+A*sin(k*s+ph+time*.05)+A*.45*sin(k*2.3*s-ph*1.7-time*.04))/hz;}if(u<=0.||u>45.)return vec3(0.);float s0=u*hx,res=abs(u*hz-(z0+A*sin(k*s0+ph+time*.05)+A*.45*sin(k*2.3*s0-ph*1.7-time*.04)));if(res>.25)return vec3(0.);/* chưa hội tụ (nhìn xiên dọc rèm): bỏ, tránh vệt răng cưa */
+      float y=u*d.y,v=(y-yb)/(yt-yb),s=u*hx;if(v<-.25||v>1.)return vec3(0.);
+      float ray=n2(vec2(s*5.5+time*.35,sd));ray=.12+1.6*ray*ray*ray;ray*=.55+.9*smoothstep(.25,.75,n2(vec2(s*.35-time*.03,sd+4.)));/* tia dọc sắc, mảng sáng tối dọc rèm */
+      float prof=v<0.?exp(v*22.)*.1:smoothstep(0.,.035,v)*pow(1.-v,1.6)*(1.+1.2*exp(-v*14.));/* chân rèm sắc, sáng nhất ngay trên chân, nhạt dần lên cao; quầng mờ dưới chân */
+      vec3 col=v<0.?vec3(.15,1.,.45):mix(vec3(1.,.3,.6),vec3(.15,1.,.45),smoothstep(.0,.06,v));col=mix(col,vec3(.25,.95,.55),smoothstep(.3,.55,v));col=mix(col,vec3(.62,.36,1.),smoothstep(.5,.9,v));
+      col=mix(col,vec3(1.,.4,.7),.55*smoothstep(.62,.85,n2(vec2(s*.25+sd,time*.02)))*smoothstep(.35,.8,v));/* mảng hồng tím từng lúc */
+      return col*prof*mix(1.,ray,exp(-u*.03))*gain*exp(-u*.035)*smoothstep(40.,22.,u)*smoothstep(.25,.05,res)*smoothstep(.06,.3,abs(hz)/max(length(vec2(hx,hz)),.001));}/* xa thì tia mịn lại để không lấp lánh răng cưa */
+    vec3 aurora(vec3 d){if(d.y<.01)return vec3(0.);vec3 c=vec3(0.);
+      c+=curtain(d,-4.,1.1,.55,0.,1.,3.2,1.,1.25);/* rèm lớn phía bắc */
+      c+=curtain(d,-9.,2.,.3,1.3,1.,3.4,7.,.9);/* rèm thấp sát núi phía bắc */
+      c+=curtain(d,-.7,.6,.9,2.,1.,3.,13.,.85);/* rèm vắt qua đỉnh đầu */
+      c+=curtain(d.zyx,5.5,1.3,.45,4.,1.,3.,19.,.8);/* rèm phía đông */
+      c+=curtain(d.zyx,-7.,1.6,.4,5.,1.,3.,23.,.6);/* rèm phía tây */
+      c+=curtain(d,7.5,1.8,.35,3.,1.,3.,29.,.55);/* rèm phía nam */
+      c*=smoothstep(.01,.08,d.y)*boost*1.15;return c/(1.+c*.3);}
     vec3 skyCol(vec3 d){float y=d.y;vec3 c=mix(vec3(.3,.42,.6),vec3(.1,.19,.36),smoothstep(0.,.3,y));c=mix(c,vec3(.035,.07,.18),smoothstep(.3,.95,y));c*=mix(1.,.32,night);/* bản Giáng sinh: trời tối */
       float south=max(0.,d.z);c+=vec3(.22,.12,.2)*pow(south,2.)*exp(-max(y,0.)*9.)*.5;
       vec2 g=floor(d.xz/(abs(d.y)+.35)*260.);float st=step(.9965,h2(g))*smoothstep(.04,.3,y);c+=vec3(.9,.95,1.)*st*(.55+.45*sin(time*2.+h2(g+3.)*40.));
@@ -1357,7 +1364,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='sit'){setSit(true);P.mode='sit';setIncense(true);{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
     else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:25,z:79.1,y:H(25,79.1)+.5,a:Math.PI};P.yaw=.75;first=true;caption('🔥 Hơ tay bên lửa. Nếu muốn, viết ra một điều bạn muốn buông và thả vào lửa.',7000);setTimeout(()=>{if(P.mode==='sit'&&P.sitAt&&P.sitAt.z>70)letOpen()},1200)}
     else if(s.id==='cocoa'){setSit(true);P.mode='sit';P.sitAt={x:s.x,z:s.z,y:H(s.x,s.z)+.5,a:s.a,cup:1};P.yaw=s.a;first=true;cup.visible=true;caption('☕ Hai tay ôm ly cacao nóng. Hít mùi thơm, thở ra làn hơi ấm. Uống từng ngụm nhỏ.',8000)}
-    else if(s.id==='stars'){P.mode='stars';P.ride=0;caption('🌌 Nằm ngửa trên tuyết, nhìn lên bầu trời. Đếm mười hơi thở chậm, mỗi hơi thở một ngôi sao.',9000);breathEl.hidden=false}
+    else if(s.id==='stars'){const y=H(s.x,s.z);auroraStart({pos:[s.x,y+.7,s.z],yaw:Math.PI,back:[s.x,s.z,Math.PI],msg:'🌌 Nằm ngửa trên tuyết ngắm trời sao và cực quang. Đếm mười hơi thở chậm'});camLift=1.6;return}/* như các chỗ ngắm khác: kéo xoay nhìn cả bầu trời */
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
     else if(s.id==='deer'){P.a=Math.atan2(FARM.x-P.x,FARM.z-P.z);P.yaw=P.a+Math.PI-.5;first=true;const now=performance.now();if(now-deerFed.t>600000)deerFed.n=0;deerFed.t=now;deerFed.n++;if(deerFed.n>3){caption('🦌 Tuần lộc no rồi, chúng nằm xuống nhai lại thong thả. Để chúng nghỉ, lát nữa ghé lại nhé.',7000);return}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption(deerFed.n===3?'🦌 Tuần lộc ăn nắm rêu cuối cùng rồi thở ra một làn hơi ấm. Chúng gần no rồi.':'🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
@@ -1484,7 +1491,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(farView){camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const k=Math.max(.6,Math.min(2.2,camZoomS)),a=P.yaw+.7,d=34*k,cx=tgt.x+Math.sin(a)*d,ccz=tgt.z+Math.cos(a)*d;/* ngắm xe từ xa: lùi xa, lên cao, chếch một bên, như góc Toàn cảnh của du thuyền */cpos.set(cx,Math.max(groundY(cx,ccz)+4,tgt.y+20*k),ccz);cam.position.lerp(cpos,1-Math.exp(-dt*2.5));U.meP.value.set(tgt.x,tgt.y,tgt.z);U.fadeR.value=6;/* cây, nhà giữa camera và xe tự mờ đi */cam.lookAt(tgt.x,tgt.y-.6,tgt.z)}
     else{camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const cz=camZoomS,ride=!['walk','skate','build','bridge'].includes(P.mode),gy=P.mode==='bridge'?me.position.y:ride?tgt.y-1.05:groundY(P.x,P.z),behind=(ride?(P.mode==='sit'?.55:.7):1)*14*cz,cx=tgt.x+Math.sin(P.yaw)*behind,ccz=tgt.z+Math.cos(P.yaw)*behind;
       const cy=Math.max(5.6*cz*camLift*(ride?.7:1)+Math.max(0,cz-1.5)*7+gy,groundY(cx,ccz)+2.2);/* như Rừng Yên: thu nhỏ quá 1,5 thì camera lên cao dần để thấy toàn cảnh */
-      cpos.set(cx,cy,ccz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*9));U.meP.value.set(tgt.x,gy+1.05,tgt.z);U.fadeR.value=1.8+Math.min(camZoomS,2)*.9;cam.lookAt(tgt.x,gy+1.05,tgt.z);cam.rotateX(Math.atan(Math.tan(cam.fov*Math.PI/360)/3));/* nhân vật ở giữa, trên đường một phần ba dưới */
+      cpos.set(cx,cy,ccz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*9));U.meP.value.set(tgt.x,gy+1.05,tgt.z);U.fadeR.value=1.8+Math.min(camZoomS,2)*.9;cam.lookAt(tgt.x,gy+1.05,tgt.z);cam.rotateX(Math.atan(Math.tan(cam.fov*Math.PI/360)/3));if(camLift<.8)cam.rotateX((.8-camLift)/.45*1.05);/* vuốt lên hạ camera sát đất và ngước nhìn trời: ở đâu cũng ngắm được cực quang *//* nhân vật ở giữa, trên đường một phần ba dưới */
       sc.fog.density=fogK/(1+Math.max(0,cz-1.2)*.7)}
     // tuyết bay quanh camera
     const A=snowG.attributes.position.array;for(let i=0;i<SNN;i++){let y=A[i*3+1]-dt*(.8+(i%7)*.12);A[i*3]+=Math.sin(t*.6+i)*dt*.25;if(y<0)y+=30;A[i*3+1]=y}snowG.attributes.position.needsUpdate=true;snow.position.set(cam.position.x,cam.position.y-12,cam.position.z);
@@ -1493,7 +1500,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   /* 28/11 (2): mọi hoạt động di chuyển (đi bộ, trượt băng, xe husky, xe trượt, xe ông già Noel, đu quay): camera không tự xoay, chỉ đi theo giữ người ở giữa một phần ba dưới; muốn xoay thì kéo màn hình. Có nút ngắm xe từ xa */
   function follow(h,dt,k=3){if(pts.size||performance.now()-lastDrag<1200)return;let d=h+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));P.yaw+=d*Math.min(1,dt*k)}/* camera về sau lưng, bám theo cả khi xe đổi hướng; vuốt xoay thì tạm dừng 1,2 giây */
   requestAnimationFrame(loop);
-  caption('❄ Xứ Yên · Hít một hơi lạnh trong lành, thở ra thật chậm. Chạm mặt tuyết để đi, vuốt để nhìn quanh.',7000);
+  caption('❄ Xứ Yên · Hít một hơi lạnh trong lành, thở ra thật chậm. Chạm mặt tuyết để đi, vuốt ngang để nhìn quanh, vuốt lên để ngước nhìn cực quang.',7000);
 
   function close(){if(!run)return;run=false;removeEventListener('resize',resize);document.removeEventListener('keydown',onKey);document.removeEventListener('keyup',onKey);
     sc.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=o.material;if(m.map)m.map.dispose();m.dispose()}});R.dispose();try{R.forceContextLoss()}catch(e){}
