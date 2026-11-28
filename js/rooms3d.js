@@ -132,7 +132,7 @@
     const pinch=[];for(let k=0;k<3;k++){const p=new THREE.Group();p.visible=false;cen.add(p);pinch.push(p)}
     /* 27/11: 6 tọa cụ xếp quanh bàn (2 trước, 2 sau, 2 đầu bàn), chạm tọa cụ để ngồi quay vào bàn */
     const HSEATS=[];{const TZ=-1.6;for(const [x,z] of [[-.5,TZ+.85],[.5,TZ+.85],[-.5,TZ-.85],[.5,TZ-.85],[-1.4,TZ],[1.4,TZ]]){const cu=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.12,16),mat('#6a7a5a'));cu.position.set(x,.06,z);W.add(cu);
-      const end=Math.abs(z-TZ)<.3,face=end?(x>0?-Math.PI/2:Math.PI/2):z>TZ?Math.PI:0,ax=end?x+Math.sign(x)*.55:x,az=end?z:z+Math.sign(z-TZ)*.55;/* ngồi thẳng mặt vào bàn */const k=HSEATS.length;HSEATS.push({x,z,a:face,y:.1,ax,az});rTap(st,cu,()=>{st.camOv=false;if(seatsH.tap(k))rmHint('🧘 Ngồi trên tọa cụ bên bàn hương · bấm Đứng lên để rời chỗ')})}
+      const end=Math.abs(z-TZ)<.3,face=end?(x>0?-Math.PI/2:Math.PI/2):z>TZ?Math.PI:0,ax=end?x+Math.sign(x)*.55:x,az=end?z:z+Math.sign(z-TZ)*.55;/* ngồi thẳng mặt vào bàn */const k=HSEATS.length;HSEATS.push({x,z,a:face,y:.1,ax,az});rTap(st,cu,()=>{st.camOv=false;if((S.step==='drip'||S.step==='burn')&&S.done>=S.plan.length&&!turns.watching())doA('sit');if(seatsH.tap(k))rmHint('🧘 Ngồi trên tọa cụ bên bàn hương · bấm Đứng lên để rời chỗ')})}
       st.blocks=(st.blocks||[]).concat([[-1.0,TZ-.45,1.0,TZ+.45]])}
     // mist / smoke above the two stations
     const fogMat=()=>new THREE.MeshBasicMaterial({color:'#f2efe6',transparent:true,opacity:0,depthWrite:false});const mist=[],smoke=[];
@@ -143,7 +143,7 @@
       const plinth=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.4),wd);plinth.position.y=.15;shelf.add(plinth);const book=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,.22),mat('#7a3f2a'));book.position.set(-.25,.325,.02);shelf.add(book);const cd=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.1,10),mat('#f2e6c8'));cd.position.set(.25,.35,.02);shelf.add(cd);const fl=new THREE.Mesh(new THREE.ConeGeometry(.012,.04,6),new THREE.MeshBasicMaterial({color:'#ffcf6a'}));fl.position.set(.25,.42,.02);shelf.add(fl)}
     const shelfItems=new THREE.Group();shelf.add(shelfItems);
     const drawShelf2=()=>{while(shelfItems.children.length)shelfItems.remove(shelfItems.children[0]);aromaRows.slice(0,9).forEach((r,i)=>{const m=makeAromaGift(r,.8);m.position.set(-.4+(i%3)*.4,[1.775,1.175,.575][Math.floor(i/3)],0);shelfItems.add(m)})};
-    drawShelf2();st.onAromas=drawShelf2;rTap(st,shelf,()=>openArchive('aromas'));loadAromas();
+    drawShelf2();st.onAromas=drawShelf2;rTap(st,shelf,()=>{if(S.step==='gift'&&!turns.watching()){doA('keep');return}openArchive('aromas')});loadAromas();
     haromyDecor(st);
     // ---- camera views (own drag handling so a view can face any wall)
     const VIEWS={home:{t:[0,1.35,-1.2],yaw:0,pitch:.14,dist:4.4},left:{t:[-3.4,1.75,-1.45],yaw:Math.PI/2,pitch:.05,dist:2.6},right:{t:[3.4,1.75,-1.45],yaw:-Math.PI/2,pitch:.05,dist:2.6},
@@ -158,7 +158,7 @@
     // ---- state and flow
     let S={step:'mood',sel:[],mood:null,info:null,method:null,drops:[],done:0,form:'lo',title:'',wish:'',breath:[4,4,6]};const OWN=S;/* S: bài hương đang hiện (của mình, hoặc của người đang làm khi xem lượt của họ) */
     const tier=id=>AR(id).tier,ordered=()=>S.sel.slice().sort((a,b)=>tier(a)-tier(b));
-    function arTap(id){if(turns.watching()){rmHint('👀 Đang xem '+turns.who(turns.turn())+' làm · chờ tới lượt mình nhé');return}if(S.step!=='pick'&&S.step!=='mood')return;if(S.step==='mood')S.step='pick';const i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=3){rmHint('Tối đa 3 mùi để bài hương thanh tao · bỏ bớt một mùi trước');S.info=id;render();return}S.sel.push(id)}S.mood=null;S.info=id;strike(660+AR(id).tier*-110,1.4,.03,[[1,1],[2,.25]]);render()}
+    function arTap(id){if(turns.watching()){rmHint('👀 Đang xem '+turns.who(turns.turn())+' làm · chờ tới lượt mình nhé');return}if(S.step==='done'){doA('again')}if(S.step!=='pick'&&S.step!=='mood')return;if(S.step==='mood')S.step='pick';const i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else{if(S.sel.length>=3){rmHint('Tối đa 3 mùi để bài hương thanh tao · bỏ bớt một mùi trước');S.info=id;render();return}S.sel.push(id)}S.mood=null;S.info=id;strike(660+AR(id).tier*-110,1.4,.03,[[1,1],[2,.25]]);render()}
     let glowT=0;st.tick.push(t=>{
       if(tw){const u=Math.min(1,(performance.now()-tw.t0)/900),q=u*u*(3-2*u);st.target.lerpVectors(tw.from.t,new THREE.Vector3(...tw.to.t),q);st.yaw=tw.from.yaw+(tw.to.yaw-tw.from.yaw)*q;st.pitch=tw.from.pitch+(tw.to.pitch-tw.from.pitch)*q;st.dist=tw.from.dist+(tw.to.dist-tw.from.dist)*q;if(u>=1)tw=null}
       const pulse=.55+Math.sin(t*3)*.25;for(const a of AROMAS){const on=S.sel.includes(a.id),inf=S.info===a.id;const e=on?pulse:inf?.25:0;herbMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');herbMeshes[a.id].emissiveIntensity=e;bottleMeshes[a.id].emissive.set(on||inf?'#c8962e':'#000000');bottleMeshes[a.id].emissiveIntensity=e;for(const r of rings[a.id])r.material.opacity=on?.85:inf?.35:0}
@@ -175,21 +175,20 @@
     const chips=ids=>ids.map(id=>'<span class="ar-chip" style="--c:'+AR(id).c+'">'+AR(id).name+'</span>').join(' ');
     function render(){if(turns.watching()){const ids=ordered();rmPanel.innerHTML=turns.bar()+'<p>👀 <b>'+esc(turns.who(turns.turn()))+'</b> đang pha hương · '+AR_SEE(S)+'</p>'+(ids.length?'<p>'+chips(ids)+'</p>':'')+(S.step==='pick'&&S.info&&AR(S.info)?card(S.info):'')+'<p class="rm-note">'+arTalk(S.step)+'</p>';return}
       let h='';const s=S.step;
-      if(s==='mood'){h='<p><b>Hôm nay lòng và cơ thể bạn đang thế nào?</b></p><div class="rm-row">'+AR_MOODS.map(m=>'<button data-mood="'+m.id+'">'+m.label+'</button>').join('')+'</div><div class="rm-row"><button data-ar="self">🌿 Tự dạo hai tủ 18 mùi</button></div>'}
-      else if(s==='pick'){const ids=ordered(),hint=arBalanceHint(ids);h='<p>'+(S.mood?'Gợi ý cho <b>'+AR_MOODS.find(m=>m.id===S.mood).label+'</b>: ':'Chọn 1–3 mùi (chạm trên hai tủ hoặc bên dưới): ')+(ids.length?chips(ids):'<i>chưa chọn</i>')+'</p>'
-          +[0,1,2].map(ti=>'<div class="rm-row"><span class="rm-note" style="min-width:76px">'+AR_TIERS[ti]+'</span>'+AROMAS.filter(a=>a.tier===ti).map(a=>'<button data-sc="'+a.id+'"'+(S.sel.includes(a.id)?' class="sel"':'')+'><span class="rm-dot" style="background:'+a.c+'"></span>'+a.name+'</button>').join('')+'</div>').join('')
+      if(s==='mood'){h='<p><b>Hôm nay lòng và cơ thể bạn đang thế nào?</b></p><div class="rm-row">'+AR_MOODS.map(m=>'<button data-mood="'+m.id+'">'+m.label+'</button>').join('')+'</div><p class="rm-note">Chọn một tâm trạng để được gợi ý, hoặc tự chạm vào bó thảo mộc, lọ tinh dầu trên hai tủ.</p>'}
+      else if(s==='pick'){const ids=ordered(),hint=arBalanceHint(ids);h='<p>'+(S.mood?'Gợi ý cho <b>'+AR_MOODS.find(m=>m.id===S.mood).label+'</b>: ':'Chạm 1–3 mùi trên hai tủ: ')+(ids.length?chips(ids):'<i>chưa chọn</i>')+'</p>'
           +(S.info?card(S.info):'')+(hint?'<p class="rm-note">💡 '+hint+'</p>':'')
-          +(ids.length?'<p class="rm-note">Tỷ lệ: '+arRatio(ids).map(([id,d])=>AR(id).name+' '+d+' giọt').join(' + ')+' (hoặc '+(ids.length===1?2:3)+' nhúm thảo mộc)</p><div class="rm-row"><button class="rm-gold" data-ar="drip">💧 Nhỏ tinh dầu vào đèn xông</button><button class="rm-gold" data-ar="burn">🔥 Đốt thảo mộc khô trên lư</button></div>':'')
-          +'<div class="rm-row"><button data-ar="look-left">👈 Nhìn tủ thảo mộc</button><button data-ar="look-right">Nhìn tủ tinh dầu 👉</button><button data-ar="look-home">⌂ Toàn cảnh</button><button data-ar="back">↺ Chọn lại tâm trạng</button></div>'}
-      else if(s==='drip'){const plan=S.plan,n=S.done;h='<p>💧 Nhỏ tinh dầu vào bát nước ấm · '+n+'/'+plan.length+' giọt</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><div class="rm-row">'+(n<plan.length?'<button class="rm-gold" data-ar="drop">💧 Nhỏ giọt</button>':'<button class="rm-gold" data-ar="sit">🧘 Ngồi thở cùng hương</button>')+'</div>'}
-      else if(s==='burn'){const plan=S.plan,n=S.done;h='<p>🔥 Đặt thảo mộc khô lên than hồng · '+n+'/'+plan.length+' nhúm</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><div class="rm-row">'+(n<plan.length?'<button class="rm-gold" data-ar="pinch">🔥 Đặt thảo mộc lên than</button>':'<button class="rm-gold" data-ar="sit">🧘 Ngồi thở cùng hương</button>')+'</div>'}
-      else if(s==='sit'){const b=S.breath;h='<p>🧘 Ngồi trên tọa cụ, nhìn ra Hồ Hương. Nhịp thở theo bài hương: hít '+b[0]+' · giữ '+b[1]+' · thở '+b[2]+'.</p><div class="rm-row">'+(S.br?'<button data-ar="stop">⏹ Dừng</button>':'<button class="rm-gold" data-ar="b6">🌬 6 nhịp (~'+Math.round(6*(b[0]+b[1]+b[2])/60*10)/10+' phút)</button><button data-ar="b3">🕯 3 phút tĩnh tâm</button><button data-ar="gift">Bỏ qua · làm quà mang về</button>')+'</div>'}
+          +(ids.length?'<p class="rm-note">Tỷ lệ: '+arRatio(ids).map(([id,d])=>AR(id).name+' '+d+' giọt').join(' + ')+' (hoặc '+(ids.length===1?2:3)+' nhúm thảo mộc)</p><ul class="rm-guide"><li>💧 Chạm đèn xông bên trái bàn để nhỏ tinh dầu</li><li>🔥 Hoặc chạm lư đất bên phải để đốt thảo mộc khô</li></ul>':'')
+          +(ids.length?'':'<div class="rm-row">'+AR_MOODS.map(m=>'<button data-mood="'+m.id+'">'+m.label+'</button>').join('')+'</div>')}
+      else if(s==='drip'){const plan=S.plan,n=S.done;h='<p>💧 Nhỏ tinh dầu vào bát nước ấm · '+n+'/'+plan.length+' giọt</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><p class="rm-note">'+(n<plan.length?'👆 Chạm đèn xông để nhỏ giọt tiếp':'🧘 Chạm tọa cụ hoặc đèn xông để ngồi thở cùng hương')+'</p>'}
+      else if(s==='burn'){const plan=S.plan,n=S.done;h='<p>🔥 Đặt thảo mộc khô lên than hồng · '+n+'/'+plan.length+' nhúm</p><p class="rm-note">'+plan.map((id,i)=>'<span style="opacity:'+(i<n?1:.45)+'">'+AR(id).name+'</span>').join(' · ')+'</p><p class="rm-note">'+(n<plan.length?'👆 Chạm lư đất để đặt nhúm tiếp':'🧘 Chạm tọa cụ hoặc lư đất để ngồi thở cùng hương')+'</p>'}
+      else if(s==='sit'){const b=S.breath;h='<p>🧘 Ngồi trên tọa cụ, nhìn ra Hồ Hương. Nhịp thở theo bài hương: hít '+b[0]+' · giữ '+b[1]+' · thở '+b[2]+'.</p>'+(S.br?'<p class="rm-note">Chạm '+(S.method==='burn'?'lư đất':'đèn xông')+' để dừng</p>':'<div class="rm-row"><button data-brm="b6"'+(S.brm!=='b3'&&S.brm!=='gift'?' class="sel"':'')+'>🌬 6 nhịp (~'+Math.round(6*(b[0]+b[1]+b[2])/60*10)/10+' phút)</button><button data-brm="b3"'+(S.brm==='b3'?' class="sel"':'')+'>🕯 3 phút tĩnh tâm</button><button data-brm="gift"'+(S.brm==='gift'?' class="sel"':'')+'>Bỏ qua · làm quà</button></div><p class="rm-note">Chọn cách thở rồi chạm '+(S.method==='burn'?'lư đất':'đèn xông')+' để bắt đầu</p>')}
       else if(s==='gift'){h='<p>🎁 Quà mang về Túi An Yên</p><div class="rm-row"><button data-form="lo"'+(S.form==='lo'?' class="sel"':'')+'>🫙 Lọ Ước tinh dầu</button><button data-form="tui"'+(S.form==='tui'?' class="sel"':'')+'>👝 Túi thảo mộc khô</button></div>'
           +'<label class="kt-wish">Tên bài hương<input data-ti maxlength="40" value="'+escA(S.title)+'"></label><label class="kt-wish">Một dòng cảm nhận / điều ước (không bắt buộc)<input data-wi maxlength="80" value="'+escA(S.wish)+'" placeholder="Ví dụ: Nguyện đêm nay ngủ ngon"></label>'
-          +'<div class="rm-row"><button class="rm-gold" data-ar="keep">🎒 Cất vào Túi An Yên</button></div>'}
+          +'<p class="rm-note">🗄 Chạm Kệ Lưu Hương ở góc phải để cất vào Túi An Yên</p>'}
       else if(s==='done'){const mix=S.mix;h='<p>🙏 <b>'+escA(S.title)+'</b> đã vào Túi An Yên, lên Kệ Lưu Hương và được ghi vào Nhật ký An Yên.</p>'
           +'<p class="rm-note">Dùng tại nhà: '+(S.form==='lo'?'máy khuếch tán 100 ml nước, nhỏ '+mix.map(([id,d])=>d+' giọt '+AR(id).name.toLowerCase()).join(' + ')+'; xông 20–30 phút rồi nghỉ.':'cho '+mix.map(([id])=>AR(id).name.toLowerCase()).join(', ')+' khô vào túi vải, bóp nhẹ cho dậy mùi; hoặc đun một nồi nước lá với các vị này, xông hơi 5–10 phút.')+' Tinh dầu dùng ngoài, không uống; phụ nữ mang thai, trẻ nhỏ, người có bệnh hô hấp nên hỏi ý kiến bác sĩ.</p>'
-          +'<div class="rm-row"><button data-ar="again">🌿 Pha bài hương khác</button><button data-ar="shelf">🗄 Xem Kệ Lưu Hương</button><button data-ar="kho">📜 Kho Lọ Ước & Túi thơm</button></div>'}
+          +'<ul class="rm-guide"><li>🌿 Chạm một mùi trên tủ để pha bài hương khác</li><li>🗄 Chạm Kệ Lưu Hương để xem kho Lọ Ước & Túi thơm</li></ul>'}
       rmPanel.innerHTML=turns.bar()+h;turns.share(snapA())}
     const escA=t=>String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const brEl=roomBox.querySelector('#roomBreath');
@@ -209,7 +208,9 @@
     rmPanel.onclick=e=>{if(turns.click(e)||turns.watching())return;const md=e.target.closest('[data-mood]');if(md){const m=AR_MOODS.find(x=>x.id===md.dataset.mood);S.mood=m.id;S.sel=m.mix.map(x=>x[0]);S.breath=m.breath;S.info=S.sel[0];S.step='pick';goView('home');strike(523,2,.04);render();return}
       const sc=e.target.closest('[data-sc]');if(sc){arTap(sc.dataset.sc);return}
       const fm=e.target.closest('[data-form]');if(fm){S.form=fm.dataset.form;render();return}
-      const a=e.target.closest('[data-ar]')?.dataset.ar;if(!a)return;
+      const bm=e.target.closest('[data-brm]');if(bm){S.brm=bm.dataset.brm;render();return}
+      doA(e.target.closest('[data-ar]')?.dataset.ar)};
+    function doA(a){if(!a)return;if(turns.watching()){rmHint('👀 Đang xem '+turns.who(turns.turn())+' làm · chờ tới lượt mình nhé');return}
       if(a==='self'){S.step='pick';S.mood=null;S.sel=[];S.breath=[4,4,6];goView('left');render()}
       else if(a==='look-left')goView('left');else if(a==='look-right')goView('right');else if(a==='look-home')goView('home');
       else if(a==='back'){S.step='mood';S.sel=[];S.mood=null;S.info=null;goView('home');render()}
@@ -222,7 +223,14 @@
       else if(a==='gift'){S.step='gift';render()}
       else if(a==='keep')keepGift();
       else if(a==='again'){S.step='mood';S.sel=[];S.mood=null;S.info=null;S.method=null;S.done=0;S.drops=[];for(const p of pinch)p.visible=false;goView('home');render()}
-      else if(a==='shelf')goView('shelf');else if(a==='kho')openArchive('aromas')};
+      else if(a==='shelf')goView('shelf');else if(a==='kho')openArchive('aromas')}
+    /* 28/11: các bước pha hương bắt đầu bằng chạm đồ vật trên bàn và kệ */
+    function tapTool(m){const s=S.step;
+      if((s==='pick'||s==='mood')){if(!S.sel.length){rmHint('🌿 Chạm 1–3 mùi trên hai tủ trước đã');return}doA(m);return}
+      if(s===m){doA(S.done<S.plan.length?(m==='drip'?'drop':'pinch'):'sit');return}
+      if(s==='sit'){if(S.br){doA('stop');return}const k=S.brm||'b6';doA(k);return}
+      if(s==='drip'||s==='burn')rmHint(s==='drip'?'💧 Đang nhỏ tinh dầu ở đèn xông':'🔥 Đang đặt thảo mộc ở lư đất')}
+    rHit(st,-.5,.75,-1.6,.4,.6,.4,()=>tapTool('drip'));rHit(st,.5,.6,-1.6,.42,.4,.42,()=>tapTool('burn'));
     st.cleanup=()=>{if(OWN.br)clearTimeout(OWN.br.t);brEl.hidden=true;st.onAromas=null;share.off();seatsH.dispose()};
     // 27/11: phiên Healer ở Nhà Hương: Healer pha mẫu trước, rồi mời lần lượt từng người (roomTurns); cả phòng thấy mùi đang chọn sáng trên hai tủ, giọt tinh dầu,
     // thảo mộc trên than, sương khói đổi màu theo bài hương của người đang làm. Lời dẫn từng bước Healer gửi vào khung chat bằng một chạm.
@@ -747,10 +755,15 @@
       if(o){rmHint('Chỗ này đã có '+o.name+' ngồi · chạm một tọa cụ còn trống');return}
       claim(k);seatPeople();sitAt(k);goView('seat');rmHint('🧘 Đã ngồi vào tọa cụ K'+k);if(S.tab!=='bowl')render()}
     // ---- chạm vào vật trong phòng
-    rTap(st,lamp,()=>{if(!S.entered)return;S.tab='breath';goView('seat');render()});/* ngồi tại tọa cụ của mình */
+    const relNow=()=>{const inp=rmPanel.querySelector('form[data-nm="rel"] input');if(inp&&inp.value.trim()){const v=inp.value;inp.value='';inp.blur();release(v);return true}return false};
+    const preWash=()=>{if(S.entered)return false;if(!S.washed){S.washed=true;splash();setTimeout(bamboo,700);render()}else rmHint('Chọn Solo hoặc Phiên 1+5 trong bảng để bước vào');return true};
+    const actOn=k=>S.act&&S.act.kind===k&&!(S.act.shared&&!S.healer);
+    rTap(st,lamp,()=>{if(preWash())return;if(actOn('breath')||actOn('silence')){stopAct(false);return}if(S.tab==='breath'&&!S.act){startBreath(S.bp||'446',S.bm||3,0,false);return}S.tab='breath';goView(S.healer&&inSession()?'seatH':'seat');render()});
+    rHit(st,0,MY,-R+.15,MR*2,MR*2,.2,()=>{if(preWash())return;if(actOn('silence')){stopAct(false);return}if(S.tab==='silence'&&!S.act){startSilence(0,false);return}S.tab='silence';goView(S.healer&&inSession()?'seatH':'seat');render()});
+    rHit(st,0,.25,-R+.3,3.8,.5,.6,()=>{if(preWash())return;rmHint('Bậu đá bazan dưới cửa vòm Trăng')});/* ngồi tại tọa cụ của mình */
     rTap(st,board,()=>{if(!S.entered)return;if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()});rTap(st,counter,()=>{if(S.entered){if(S.tab!=='beads'){S.tab='beads';goView('beads');render()}else bead()}});
-    rTap(st,cards,()=>{if(!S.entered)return;S.tab='cards';drawCard();render()});
-    rTap(st,bowl,()=>{if(!S.entered)return;S.tab='bowl';goView('bowl');render()});rTap(st,water,()=>{if(!S.entered)return;S.tab='bowl';goView('bowl');render()});
+    rTap(st,cards,()=>{if(preWash())return;S.tab='cards';goView('cards');drawCard();render()});
+    {const bt=()=>{if(preWash())return;if(S.tab==='bowl'&&relNow())return;S.tab='bowl';goView('bowl');render()};rTap(st,bowl,bt);rTap(st,water,bt)}
     rTap(st,bell,()=>{if(!S.entered)return;bellSound();if(inSession()&&S.healer)send({k:'bell'})});
     seats.forEach(s=>rTap(st,s,()=>tapSeat(s.userData.k)));
     const spaceKey=e=>{if(e.code!=='Space'||!S.entered||S.tab!=='beads')return false;const t=e.target;return !(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))};
@@ -761,23 +774,23 @@
       if(inSession())return '<p class="nm-mode">🌿 Phiên 1+5'+(S.healer?' · bạn là Healer dẫn phiên':' · cùng Healer')+' · '+Math.max(1,S.people)+'/6 người · phiên khác không thấy phiên này <button type="button" data-nm="solo">Chuyển Solo</button></p>';
       return '<p class="nm-mode">🧘 Solo · yên tĩnh, không ai thấy bạn <button type="button" data-nm="session">Vào Phiên 1+5</button></p>'}
     function render(){let h='';const t=S.tab,a=S.act;
-      if(!S.entered){h='<p><b>00 · Nghi thức Gột bụi</b> · Trước khi bước qua cửa vòm Trăng, chạm bồn đá bazan để rửa tay và nghe một tiếng chuông gió tre.</p>'+
+      if(!S.entered){h='<p><b>00 · Nghi thức Gột bụi</b> · Trước khi bước vào, chạm bậu đá bazan dưới cửa vòm Trăng để rửa tay và nghe một tiếng chuông gió tre.</p>'+
         (S.washed?'<p class="rm-quote">Bụi đường đã lắng. Mời bạn chọn cách bước vào.</p><div class="rm-row"><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'':'rm-gold')+'" data-nm="go-solo">🧘 Đi Solo · hoàn toàn yên tĩnh</button><button type="button" class="'+(window.__anyenSchedHouse==='nha_niem'?'rm-gold':'')+'" data-nm="go-session">🌿 Vào Phiên 1+5 cùng Healer</button></div><p class="rm-note">Phiên 1+5 là phiên bạn đã đặt ở Lịch trị liệu. Mỗi phiên có kênh riêng; các phiên chạy song song không thấy nhau.</p>'
-        :'<div class="rm-row"><button type="button" class="rm-gold" data-nm="wash">💧 Chạm bồn đá · rửa tay</button></div>');rmPanel.innerHTML=h;return}
+        :'<p class="rm-note">💧 Chạm bậu đá bazan dưới cửa vòm Trăng để rửa tay</p>');rmPanel.innerHTML=h;return}
       h=modeBadge()+(S.sessNote&&!inSession()?'<p class="rm-note">'+esc(S.sessNote)+(/Lịch trị liệu|đặt lịch/.test(S.sessNote)?' · <a href="lich.html" style="color:#f2dca8">Mở Lịch trị liệu</a>':'')+'</p>':'');
-      h+='<div class="rm-row nm-tabs">'+[['breath','🕯️ 01 Thở'],['silence','🌙 02 Khoảng Lặng'],['beads','📿 03 Chuỗi 108'],['bowl','💧 04 Buông Bỏ'],['cards','🃏 Kệ 9 thẻ']].map(([k,l])=>'<button type="button" data-tab="'+k+'"'+(t===k||t===k+'Done'?' class="sel"':'')+'>'+l+'</button>').join('')+'</div>';
-      if(inSession()&&S.healer)h+='<div class="rm-row"><button type="button" class="rm-gold" data-nm="bell">🔔 Thỉnh chuông đồng · cả phòng cùng nghe</button></div>';
+      /* 28/11: không còn thanh chọn mục và nút bắt đầu; mọi chặng mở bằng chạm đồ vật trong phòng */
+      if(inSession()&&S.healer)h+='<p class="rm-note">🔔 Chạm chuông đồng để thỉnh chuông cho cả phòng cùng nghe</p>';
       {const names=Object.entries(S.occ).filter(([k,o])=>!o.me).map(([k,o])=>(+k===0?'Healer ':'K'+k+' ')+esc(o.name));h+='<p class="rm-note">🧘 Bạn ngồi ở '+(S.mySeat===0?'tọa cụ Healer':'K'+(S.mySeat==null?'…':S.mySeat))+(names.length?' · cùng ngồi: '+names.join(' · '):'')+' · chạm một tọa cụ trống để đổi chỗ</p>'}
-      if(t==='home')h+='<p>Chạm Đèn Thở ở tâm phòng, bảng 108 hạt ở tường trái, Bát Buông Bỏ và Kệ thẻ ở tường phải. Kéo để nhìn quanh.</p>';
-      else if(t==='breath'){if(a&&a.kind==='breath')h+='<p>Quả cầu sáng và cột nắng giếng trời co giãn theo nhịp '+a.p.split('').join('–')+' · '+a.m+' phút. Không chấm điểm, chỉ cần có mặt.</p><div class="rm-row"><button type="button" data-nm="stop">⏹ Dừng</button></div>';
-        else{const sel=S.bp||'446',sm=S.bm||3,follow=inSession()&&!S.healer;h+='<p><b>01 · Thở Chánh Niệm cùng Đèn Thở</b>'+(follow?' · Healer sẽ bắt đầu cho cả phòng; bạn cũng có thể thở riêng.':'')+'</p><div class="rm-row">Nhịp: '+[['446','4–4–6'],['478','4–7–8']].map(([k,l])=>'<button type="button" data-bp="'+k+'"'+(k===sel?' class="sel"':'')+'>'+l+'</button>').join('')+'</div><div class="rm-row">Thời gian: '+[3,6,10].map(m=>'<button type="button" data-bm="'+m+'"'+(m===sm?' class="sel"':'')+'>'+m+' phút</button>').join('')+'</div><div class="rm-row"><button type="button" class="rm-gold" data-nm="breathe">🕯️ '+(inSession()&&S.healer?'Bắt đầu cho cả phòng':'Bắt đầu thở')+'</button></div>'}}
-      else if(t==='breathDone')h+='<p class="rm-quote">Bạn vừa thở cùng Đèn Thở. Mang nhịp thở này theo bạn ra khỏi Nhà Niệm.</p><div class="rm-row"><button type="button" data-tab="breath">🔁 Thở thêm</button></div>';
-      else if(t==='silence'){if(a&&a.kind==='silence'){const el=Math.floor((Date.now()-a.t0)/1000);h+='<p>🌙 Khoảng Lặng · phút '+Math.min(18,Math.floor(el/60))+'/18 · chuông ngân ở phút 0 · 9 · 18. Chữ và nút tự ẩn, chạm màn hình để hiện lại.</p><div class="rm-row"><button type="button" data-nm="stop">⏹ Kết thúc sớm</button></div>'}
-        else{const stt=ansense();h+='<p><b>02 · Khoảng Lặng 18 phút</b> · Ánh sáng dịu xuống tông ấm, chỉ còn gió rừng thông và nước Hồ Niệm. Ba tiếng chuông ở phút 0 · 9 · 18.</p>'+(stt?'<p class="rm-note">Theo bài test AnSense, trạng thái hôm nay của bạn là <b>'+STATE_LINES[stt][0]+'</b>: '+STATE_LINES[stt][1]+'</p>':'<p class="rm-note">Làm bài test AnSense 3 phút trước để Khoảng Lặng và Kệ thẻ gợi ý theo trạng thái hôm nay của bạn. <a href="ansense.html" style="color:#f2dca8">Mở AnSense</a></p>')+'<div class="rm-row"><button type="button" class="rm-gold" data-nm="silence">🌙 '+(inSession()&&S.healer?'Bắt đầu cho cả phòng':'Bắt đầu 18 phút')+'</button></div>'}}
+      if(t==='home')h+='<ul class="rm-guide"><li>🕯️ Chạm Đèn Thở ở tâm phòng để thở</li><li>🌙 Chạm cửa vòm Trăng để ngồi Khoảng Lặng</li><li>📿 Chạm bảng 108 hạt ở tường trái</li><li>💧 Chạm Bát Buông Bỏ, 🃏 Kệ thẻ ở tường phải</li></ul>';
+      else if(t==='breath'){if(a&&a.kind==='breath')h+='<p>Quả cầu sáng và cột nắng giếng trời co giãn theo nhịp '+a.p.split('').join('–')+' · '+a.m+' phút. Không chấm điểm, chỉ cần có mặt.</p><p class="rm-note">Chạm Đèn Thở để dừng</p>';
+        else{const sel=S.bp||'446',sm=S.bm||3,follow=inSession()&&!S.healer;h+='<p><b>01 · Thở Chánh Niệm cùng Đèn Thở</b>'+(follow?' · Healer sẽ bắt đầu cho cả phòng; bạn cũng có thể thở riêng.':'')+'</p><div class="rm-row">Nhịp: '+[['446','4–4–6'],['478','4–7–8']].map(([k,l])=>'<button type="button" data-bp="'+k+'"'+(k===sel?' class="sel"':'')+'>'+l+'</button>').join('')+'</div><div class="rm-row">Thời gian: '+[3,6,10].map(m=>'<button type="button" data-bm="'+m+'"'+(m===sm?' class="sel"':'')+'>'+m+' phút</button>').join('')+'</div><p class="rm-note">👆 Chọn nhịp và thời gian, rồi chạm Đèn Thở để '+(inSession()&&S.healer?'bắt đầu cho cả phòng':'bắt đầu')+'</p>'}}
+      else if(t==='breathDone')h+='<p class="rm-quote">Bạn vừa thở cùng Đèn Thở. Mang nhịp thở này theo bạn ra khỏi Nhà Niệm.</p><p class="rm-note">Chạm Đèn Thở nếu muốn thở thêm</p>';
+      else if(t==='silence'){if(a&&a.kind==='silence'){const el=Math.floor((Date.now()-a.t0)/1000);h+='<p>🌙 Khoảng Lặng · phút '+Math.min(18,Math.floor(el/60))+'/18 · chuông ngân ở phút 0 · 9 · 18. Chữ tự ẩn, chạm màn hình để hiện lại.</p><p class="rm-note">Chạm Đèn Thở hoặc cửa vòm Trăng để kết thúc sớm</p>'}
+        else{const stt=ansense();h+='<p><b>02 · Khoảng Lặng 18 phút</b> · Ánh sáng dịu xuống tông ấm, chỉ còn gió rừng thông và nước Hồ Niệm. Ba tiếng chuông ở phút 0 · 9 · 18.</p>'+(stt?'<p class="rm-note">Theo bài test AnSense, trạng thái hôm nay của bạn là <b>'+STATE_LINES[stt][0]+'</b>: '+STATE_LINES[stt][1]+'</p>':'<p class="rm-note">Làm bài test AnSense 3 phút trước để Khoảng Lặng và Kệ thẻ gợi ý theo trạng thái hôm nay của bạn. <a href="ansense.html" style="color:#f2dca8">Mở AnSense</a></p>')+'<p class="rm-note">👆 Chạm cửa vòm Trăng lần nữa để '+(inSession()&&S.healer?'bắt đầu cho cả phòng':'bắt đầu 18 phút')+'</p>'}}
       else if(t==='silenceDone')h+='<p class="rm-quote">Mười tám phút lặng đã trọn. Bạn có thể nối tiếp sáu chặng Khoảng Lặng của AnSense, hoặc ghi lại một dòng.</p><div class="rm-row"><button type="button" data-nm="jsilence">📔 Ghi vào Nhật ký An Yên</button><a href="ansense.html#silence" style="color:#f2dca8">Khoảng Lặng sáu chặng (AnSense) →</a></div>';
-      else if(t==='beads'){const n=S.beads%108||(S.full?108:0);h+='<p><b>03 · Lần chuỗi 108 hạt</b> · Chạm bảng hạt hoặc bấm phím Space theo mỗi nhịp thở. Mốc 18 · 54 · 108 vòng sáng đồng bừng lên và ghi nhẹ vào Nhật ký An Yên. Không chuỗi ngày, không áp lực.</p><div class="rm-row"><button type="button" class="rm-gold" data-nm="bead">📿 Lần 1 hạt · '+n+'/108</button></div>'}
-      else if(t==='bowl')h+='<p><b>04 · Bát Nước Buông Bỏ</b> · Gõ một nỗi lo rồi thả vào bát. Chữ tan thành gợn sóng và biến mất hẳn: chỉ ở trên máy bạn trong vài giây, không lưu, không gửi đi đâu.</p><form class="rm-row" data-nm="rel"><input type="text" maxlength="80" autocomplete="off" placeholder="Một nỗi lo (tối đa 80 ký tự)" aria-label="Nỗi lo muốn buông" style="flex:1;min-width:0;border:1px solid #a18a5e;border-radius:10px;background:#0b2d28;color:#f6e3b4;padding:8px 10px;font-size:16px"><button type="submit" class="rm-gold">💧 Thả vào bát</button></form>';
-      else if(t==='cards'){if(S.card==null)h+='<p><b>Kệ 9 thẻ chánh niệm</b> · Rút một lời nhắc an tĩnh cho hôm nay'+(ansense()?' (gợi ý theo trạng thái AnSense của bạn)':'')+'.</p><div class="rm-row"><button type="button" class="rm-gold" data-nm="card">🃏 Rút thẻ hôm nay</button></div>';
+      else if(t==='beads'){const n=S.beads%108||(S.full?108:0);h+='<p><b>03 · Lần chuỗi 108 hạt</b> · Chạm bảng hạt (hoặc phím Space) theo mỗi nhịp thở. Mốc 18 · 54 · 108 vòng sáng đồng bừng lên và ghi nhẹ vào Nhật ký An Yên. Không chuỗi ngày, không áp lực.</p><p class="rm-note">📿 '+n+'/108</p>'}
+      else if(t==='bowl')h+='<p><b>04 · Bát Nước Buông Bỏ</b> · Gõ một nỗi lo rồi thả vào bát. Chữ tan thành gợn sóng và biến mất hẳn: chỉ ở trên máy bạn trong vài giây, không lưu, không gửi đi đâu.</p><form class="rm-row" data-nm="rel"><input type="text" maxlength="80" autocomplete="off" placeholder="Một nỗi lo (tối đa 80 ký tự)" aria-label="Nỗi lo muốn buông" style="flex:1;min-width:0;border:1px solid #a18a5e;border-radius:10px;background:#0b2d28;color:#f6e3b4;padding:8px 10px;font-size:16px"></form><p class="rm-note">Gõ xong, chạm vào bát nước để thả (hoặc bấm Enter)</p>';
+      else if(t==='cards'){if(S.card==null)h+='<p><b>Kệ 9 thẻ chánh niệm</b> · Rút một lời nhắc an tĩnh cho hôm nay'+(ansense()?' (gợi ý theo trạng thái AnSense của bạn)':'')+'.</p><p class="rm-note">🃏 Chạm kệ thẻ để rút thẻ hôm nay</p>';
         else h+='<p class="rm-quote">“'+esc(CARDS[S.card][0])+'”</p><p class="rm-note">'+(S.cardAgain?'Đây là thẻ bạn đã rút hôm nay. Mai kệ sẽ có lời nhắc mới.':'Thẻ của hôm nay. Mai kệ sẽ có lời nhắc mới.')+'</p>'}
       rmPanel.innerHTML=h;const f=rmPanel.querySelector('form[data-nm="rel"]');if(f){const inp=f.querySelector('input');f.onsubmit=e=>{e.preventDefault();const v=inp.value;inp.value='';inp.blur();release(v)}}}
     on(rmPanel,'click',e=>{const b=e.target.closest('button');if(!b)return;const tab=b.dataset.tab,a=b.dataset.nm;
@@ -807,7 +820,7 @@
       else if(((t*10)|0)%3===0)paintWater(1);
       const up=(now-(ripple.userData.t0||-1e9))/1000;if(up>0&&up<4){ripple.scale.setScalar(.08+up*.11);ripple.material.opacity=.6*(1-up/4)}else ripple.material.opacity=0;
       if(S.act&&S.tab==='silence'&&((t*2)|0)!==S.lastSec){S.lastSec=(t*2)|0;if(((t)|0)%15===0)render()}});
-    rmHint('Nhà Niệm · chạm bồn đá ở hiên để Gột bụi trước khi bước vào');render();
+    rmHint('Nhà Niệm · chạm bậu đá dưới cửa vòm Trăng để Gột bụi trước khi bước vào');render();
     st.cleanup=()=>{roomBox.classList.remove('niem');clearTimeout(pendT);clearTimeout(peekT);ambientOff();setQuiet(false);roomBox.classList.remove('peek');brEl.hidden=true;S.rel=null;textCv.getContext('2d').clearRect(0,0,256,256);
       for(const f of offs)f();for(const t of texs)t.dispose();sc.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())});delete window.__niem};
     // kiểm tra: số tam giác nội thất, số PointLight, trạng thái; tua nhanh hoạt động
