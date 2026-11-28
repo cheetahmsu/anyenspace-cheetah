@@ -19,7 +19,7 @@ const ZONES=[
   {id:'hobang',n:'7',name:'Hồ Băng Lớn',icon:'❄️',x:30,z:14,ml:[60,24],cam:[1,-.1],note:'Xe trượt lướt chậm trên mặt hồ soi bóng cực quang.'},
   {id:'dinh',n:'9',name:'Đỉnh Tuyết Yên',icon:'⛷️',x:100,z:-36,cam:[0,-1],note:'Khu trượt tuyết trên núi, ngắm toàn cảnh Xứ Yên.'},
   {id:'chua',n:'8',name:'Chùa Tuyết Yên',icon:'🪷',x:-46,z:-76,cam:[-.6,-1],note:'Chánh điện gỗ sồi và tượng Phật ngoài trời giữa núi tuyết.'}];
-const LAKE={x:108,z:46,rx:54,rz:24,rot:-.42},RINK={x:-12,z:83,rx:13,rz:13},ICE_Y=-.12,HILL={x:-72,z:-112,r:40,h:16},STAIR={x:-48,z:-80};
+const LAKE={x:108,z:46,rx:54,rz:24,rot:-.42},RINK={x:-17,z:90,rx:13,rz:13}/* 28/11: lùi sân trượt băng xa cổng đỏ cho quảng trường rộng (cũ: -12,83) */,ICE_Y=-.12,HILL={x:-72,z:-112,r:40,h:16},STAIR={x:-48,z:-80};
 const RSH=a=>1;/* sân băng tròn đều như sân thật */
 const LSH=a=>1+.2*Math.sin(2*a+.7)+.15*Math.sin(3*a+2.1)+.09*Math.sin(5*a+1.3)+.07*Math.sin(4*a+.4);/* bờ hồ uốn lượn tự nhiên */
 const LC=Math.cos(LAKE.rot),LS=Math.sin(LAKE.rot),LW=(u,v)=>[LAKE.x+u*LC-v*LS,LAKE.z+u*LS+v*LC];
@@ -416,9 +416,35 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     wheel.position.set(WHEEL.x,y+WY,WHEEL.z);sc.add(wheel);block(WHEEL.x,WHEEL.z,4);warm(WHEEL.x,y+3,WHEEL.z+5,12,22)}
   function deerFig(B,col){const T0=B.T.clone(),add=(g,c,m)=>{B.T=T0;B.add(g,c,m)};add(G.sph,col,MX(0,.9,0,.3,.3,.62));add(G.cyl,col,MX(0,1.3,.45,.1,.6,.1,-.5,0,0));add(G.sph,col,MX(0,1.6,.62,.13,.13,.24));for(const sx of [-1,1]){for(const sz of [-.35,.35])add(G.cyl,col,MX(sx*.14,.45,sz,.05,.8,.05));add(G.cyl,'#c8a96a',MX(sx*.12,1.85,.55,.025,.45,.025,-.3,0,-sx*.4))}add(G.box,'#8c2f2a',MX(0,1.18,0,.5,.06,.4));B.T=new THREE.Matrix4()}
   // Khu Vui Chơi theo tấm 03: cổng vòm đỏ, sân khấu vòm gỗ bông tuyết
-  {const ax=ARCH.x,az=ARCH.z,y=H(ax,az);S.at(ax,y,az,ARCH.ry);L.at(ax,y,az,ARCH.ry);/* cổng đỏ giữa cây thông và hồ trượt băng */for(const sx of [-1,1]){S.b('#b8322c',sx*2.8,1.9,0,.6,3.8,.6);S.b('#e9e0cf',sx*2.8,.15,0,.9,.3,.9)}
-    for(let i=0;i<14;i++){const t=i/13,a=Math.PI*t,x=-Math.cos(a)*2.8,yy=3.8+Math.sin(a)*1.4;S.b('#b8322c',x,yy,0,.62,.62,.62,0,0,a-Math.PI/2);if(i%2===0)L.add(G.sphLo,'#ffd27a',MX(x,yy+.42,.32,.09))}
-    S.b('#f1eee5',0,4.25,.35,3.4,.7,.06);S.b(SNOW,0,5.3,0,1.4,.18,.8);S.reset();L.reset();for(const sx of [-2.8,2.8]){const [bx,bz]=archW(sx,0);block(bx,bz,.5)}}
+  // cổng đỏ Giáng sinh giữa cây thông và hồ trượt băng (vẽ lại 28/11): cột sọc kẹo gậy đỏ trắng trên bệ đá phủ tuyết, chóp cột quả cầu vàng;
+  // vòm đỏ viền trắng, vòng lá thông ôm theo vòm có nơ đỏ và quả thông; vòng nguyệt quế giữa đỉnh; bảng gỗ "Xứ Yên"; hai chuông vàng treo dải ruy băng;
+  // hai cây thông nhỏ hai bên; đèn chỉ sáng khi bật Giáng sinh
+  {const ax=ARCH.x,az=ARCH.z,y=H(ax,az),RED='#b8322c',WH='#f4efe6',GR='#2f5b48',GR2='#3d6b52',GOLD='#d9b56a';S.at(ax,y,az,ARCH.ry);XL.at(ax,y,az,ARCH.ry);
+    for(const sx of [-1,1]){const px=sx*2.8;S.b('#d9d4ca',px,.2,0,1.0,.4,1.0);S.b(SNOW,px,.43,0,1.06,.08,1.06);S.b(RED,px,2.1,0,.56,3.4,.56);
+      for(let i=0;i<9;i++)S.b(WH,px,.65+i*.38,0,.6,.1,.6,0,0,sx*.42);/* sọc trắng chéo kiểu kẹo gậy */
+      S.b(WH,px,3.85,0,.7,.14,.7);S.add(G.sph,GOLD,MX(px,4.0,0,.16));}
+    const R=2.8,H0=3.85,HA=1.5,arc=t=>{const a=Math.PI*t;return [-Math.cos(a)*R,H0+Math.sin(a)*HA,a]};
+    for(let i=0;i<18;i++){const [x,yy,a]=arc(i/17);S.b(RED,x,yy,0,.56,.56,.56,0,0,a-Math.PI/2)}
+    for(let i=0;i<34;i++){const [x,yy,a]=arc(i/33),ox=-Math.cos(a)*.34,oy=Math.sin(a)*.34;S.b(WH,x+ox*.0,yy,.3,.2,.08,.04,0,0,a-Math.PI/2);/* viền trắng mặt trước */
+      S.add(G.sphLo,i%2?GR:GR2,MX(x+ox,yy+oy,(i%3-1)*.12,.26,.2,.3));if(i%3===0)XL.add(G.sphLo,['#ffd27a','#ff9a8a','#fff0d0'][(i/3)%3|0],MX(x+ox*1.5,yy+oy*1.5,.22,.08))}/* vòng lá thông ôm vòm */
+    for(const t of [.12,.3,.7,.88]){const [x,yy,a]=arc(t),ox=-Math.cos(a)*.5,oy=Math.sin(a)*.5;S.add(G.sph,RED,MX(x+ox-.1,yy+oy,.3,.12,.09,.06));S.add(G.sph,RED,MX(x+ox+.1,yy+oy,.3,.12,.09,.06));S.add(G.sph,'#8e2024',MX(x+ox,yy+oy,.33,.05));S.b(RED,x+ox,yy+oy-.17,.31,.06,.26,.03,0,0,.25);S.add(G.sph,'#6b4a2c',MX(x+ox,yy+oy-.05,-.3,.08,.12,.08))}/* nơ đỏ, quả thông */
+    // vòng nguyệt quế giữa đỉnh vòm, nơ đỏ dưới
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2;S.add(G.sphLo,i%2?GR:GR2,MX(Math.cos(a)*.48,H0+HA+.05+Math.sin(a)*.48,.42,.17,.17,.12))}for(let i=0;i<5;i++){const a=i/5*Math.PI*2+.3;S.add(G.sphLo,RED,MX(Math.cos(a)*.48,H0+HA+.05+Math.sin(a)*.48,.52,.06))}
+    S.add(G.sph,RED,MX(-.13,H0+HA-.43,.52,.13,.09,.06));S.add(G.sph,RED,MX(.13,H0+HA-.43,.52,.13,.09,.06));S.add(G.sph,'#8e2024',MX(0,H0+HA-.43,.55,.05));for(const sx of [-1,1])S.b(RED,sx*.08,H0+HA-.62,.53,.06,.3,.03,0,0,sx*.25);
+    S.b(SNOW,0,H0+HA+.38,0,1.6,.16,.8);for(const sx of [-1,1])S.b(SNOW,sx*2.0,H0+HA*.72+.34,0,1.2,.13,.7,0,0,-sx*.55);
+    // hai chuông vàng treo dải ruy băng đỏ dưới vòm
+    for(const sx of [-1,1]){const bx=sx*1.85,top=H0+HA*Math.sin(Math.acos(bx/R))-.25;S.b(RED,bx,top-.35,0,.05,.7,.05);S.add(G.cone,GOLD,MX(bx,top-.92,0,.2,.32,.2));S.add(G.sph,GOLD,MX(bx,top-1.1,0,.07));S.add(G.cyl12,GOLD,MX(bx,top-1.07,0,.21,.04,.21))}
+    S.reset();XL.reset();
+    // bảng gỗ "Xứ Yên" dưới vòm (canvas)
+    {const c=document.createElement('canvas');c.width=512;c.height=160;const g=c.getContext('2d');g.fillStyle='#f4efe6';g.fillRect(0,0,512,160);g.strokeStyle='#b8322c';g.lineWidth=12;g.strokeRect(6,6,500,148);g.strokeStyle='#d9b56a';g.lineWidth=3;g.strokeRect(20,20,472,120);
+      g.fillStyle='#9a2226';g.textAlign='center';g.font='700 76px Georgia,serif';g.fillText('Xứ Yên',256,104);g.fillStyle='#6f8fb0';g.font='38px serif';g.fillText('❄',70,96);g.fillText('❄',442,96);
+      const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(2.7,.84),new THREE.MeshLambertMaterial({map:tx}));const d=new THREE.Mesh(new THREE.PlaneGeometry(2.7,.84),new THREE.MeshLambertMaterial({map:tx}));
+      const fw=(lx,ly,lz)=>new THREE.Vector3(ax+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,y+ly,az-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz);m.position.copy(fw(0,4.35,.32));m.rotation.y=ARCH.ry;d.position.copy(fw(0,4.35,-.32));d.rotation.y=ARCH.ry+Math.PI;sc.add(m,d);
+      for(const sx of [-1,1]){const p=fw(sx*1.1,4.95,0);S.b('#9a7a56',p.x,p.y,p.z,.04,.4,.04)}}
+    for(const sx of [-2.8,2.8]){const [bx,bz]=archW(sx,0);block(bx,bz,.6)}
+    // hai cây thông nhỏ hai bên cổng, đèn khi Giáng sinh
+    for(const sx of [-1,1]){const [px,pz]=archW(sx*4.4,-1.2),py=H(px,pz);for(let k=0;k<4;k++){const r=1.1-k*.24,hh=.9;S.add(G.cone,k%2?GR:GR2,MX(px,py+.5+k*.55+hh/2,pz,r,hh,r));S.add(G.cone,SNOW,MX(px,py+.5+k*.55+hh*.72,pz,r*.55,hh*.35,r*.55))}S.add(G.cyl12,'#5e4330',MX(px,py+.25,pz,.14,.5,.14));
+      for(let i=0;i<10;i++){const a=i*2.1,hy=.7+i*.2,r=1.0-i*.08;bulb(px+Math.cos(a)*r,py+hy,pz+Math.sin(a)*r,i%2?'#ffd27a':'#ff9a8a')}block(px,pz,1)}}
   // Sân khấu Cung Băng (theo ảnh mẫu 28/11): bục tròn mặt băng hoa văn bông tuyết, ba bậc vòng cung, vòm nhọn băng có bông tuyết lớn, phông lâu đài băng dưới cực quang,
   // cụm tinh thể băng, rèm trắng, hai cờ xanh bông tuyết; mặt quay về sân trượt băng. Phong cách cung điện băng chung, không dùng tên, hình nhân vật hay biểu tượng của phim nào.
   {const sx0=STAGE.x,sz0=STAGE.z,y=H(sx0,sz0),ry=Math.atan2(RINK.x-sx0,RINK.z-sz0),ICE='#cfe5f4',ICE2='#a9d0ec',ICE3='#e8f4fc';S.at(sx0,y,sz0,ry);
@@ -492,7 +518,17 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       const m=new THREE.Mesh(new THREE.PlaneGeometry(1.1,.42),new THREE.MeshLambertMaterial({map:t}));m.position.set(x+Math.sin(ry)*(a+.24),y+2.42,z+Math.cos(ry)*(a+.24));m.rotation.y=ry;sc.add(m)}}{const fx=FIRE2.x,fz=FIRE2.z,y=H(fx,fz);const fire=new THREE.Group();const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,1,7),new THREE.MeshBasicMaterial({color:'#ffae4a',fog:false}));fl.position.y=.6;fire.add(fl);
     for(let i=0;i<8;i++){const a=i/8*6.28;S.add(G.sph,'#5e5a56',MX(fx+Math.cos(a)*1,y+.1,fz+Math.sin(a)*1,.2,.15,.2))}fire.position.set(fx,y,fz);sc.add(fire);block(fx,fz,1.3);var fireFl=fl;var fireLight=warm(fx,y+1.2,fz,14,14);
     for(const a of [0.6,1.57,2.6,3.6,4.6,5.6])S.b('#7a5a3e',fx+Math.cos(a)*2.6,y+.35,fz+Math.sin(a)*2.6,1.4,.3,.4,-a+Math.PI/2)}
-  for(const [sx,sz,k] of [[...archW(3.6,1.6),1]]){const y=H(sx,sz);S.add(G.sph,SNOW,MX(sx,y+.7*k,sz,.9*k));S.add(G.sph,SNOW,MX(sx,y+1.85*k,sz,.62*k));S.add(G.sph,SNOW,MX(sx,y+2.7*k,sz,.42*k));S.add(G.cone,'#e07a3a',MX(sx,y+2.7*k,sz+.5*k,.07*k,.35*k,.07*k,Math.PI/2,0,0));S.b('#8c2f2a',sx,y+2.3*k,sz,.9*k,.16*k,.9*k);S.add(G.cyl,'#2b2622',MX(sx,y+3.15*k,sz,.3*k,.4*k,.3*k));block(sx,sz,k)}
+  // người tuyết nhỏ bên cổng đỏ (vẽ lại 28/11): mắt than, má hồng, miệng cười, mũi cà rốt, cúc áo, tay cành cây vẫy chào, khăn len đỏ sọc trắng có đuôi, mũ len xanh quả bông, găng đỏ; quay mặt về hồ trượt băng
+  {const [sx,sz]=archW(3.7,1.8),y=H(sx,sz),k=1.2;S.at(sx,y,sz,ARCH.ry);
+    S.add(G.sph,SNOW,MX(0,.7*k,0,.9*k,.82*k,.9*k));S.add(G.sph,SNOW,MX(0,1.82*k,0,.62*k));S.add(G.sph,SNOW,MX(0,2.68*k,0,.44*k));S.add(G.cyl12,SNOW,MX(0,.06,0,1.1*k,.12,1.1*k));
+    for(const ex of [-.15,.15]){S.add(G.sph,'#1e1c1a',MX(ex*k,2.8*k,.39*k,.055*k));S.add(G.sph,'#e8a1a0',MX(ex*1.7*k,2.62*k,.36*k,.07*k,.045*k,.03*k))}S.add(G.cone,'#e07a3a',MX(0,2.68*k,.62*k,.07*k,.44*k,.07*k,Math.PI/2,0,0));
+    for(let i=0;i<5;i++){const t=(i-2)/2*.55;S.add(G.sph,'#1e1c1a',MX(Math.sin(t)*.22*k,2.54*k-Math.cos(t)*.06*k+.04*k,.4*k-Math.abs(t)*.03*k,.03*k))}
+    for(const [h,zz] of [[1.62,.6],[1.86,.62],[2.08,.58],[1.05,.86],[.7,.9]])S.add(G.sph,'#1e1c1a',MX(0,h*k,zz*k,.05*k));
+    S.add(G.cyl12,'#b8322c',MX(0,2.3*k,0,.5*k,.17*k,.5*k));for(const yy of [2.26,2.34])S.add(G.cyl12,'#f4efe6',MX(0,yy*k,0,.505*k,.025*k,.505*k));S.b('#b8322c',-.22*k,1.98*k,.44*k,.17*k,.62*k,.06*k,.12,0,-.2);for(const yy of [1.85,1.75])S.b('#f4efe6',-.23*k-(2.0-yy)*.07*k,yy*k,.47*k,.18*k,.035*k,.065*k,.12,0,-.2);
+    S.add(G.cyl12,'#5e4330',MX(-.95*k,2.0*k,0,.03*k,.95*k,.03*k,0,0,1.0));S.add(G.cyl12,'#5e4330',MX(.9*k,2.35*k,0,.03*k,.95*k,.03*k,0,0,-.55));S.add(G.cyl12,'#5e4330',MX(1.05*k,2.85*k,.02*k,.02*k,.3*k,.02*k,0,0,.3));/* một tay buông, một tay vẫy */
+    S.add(G.sph,'#b8322c',MX(-1.37*k,2.27*k,0,.11*k));S.add(G.sph,'#b8322c',MX(1.15*k,2.78*k,0,.11*k));
+    S.add(G.sph,'#3d6fb0',MX(0,2.98*k,0,.42*k,.3*k,.42*k));S.add(G.cyl12,'#f4efe6',MX(0,2.96*k,0,.43*k,.09*k,.43*k));for(let i=0;i<6;i++){const a=i/6*Math.PI*2;S.add(G.sphLo,'#f4efe6',MX(Math.sin(a)*.3*k,3.12*k,Math.cos(a)*.3*k,.035*k))}S.add(G.sph,'#f4efe6',MX(0,3.3*k,0,.13*k));
+    S.reset();block(sx,sz,1*k)}
   // người tuyết lớn giữa Nhà Ấm tròn và sân khấu: ba khối tuyết, mắt than, mũi cà rốt, miệng cười, cúc áo, tay cành cây, khăn len đỏ có đuôi, mũ chóp có dải đỏ và nhánh nhựa ruồi; quanh là vài cây thông nhỏ, quà và dây đèn chỉ hiện khi bật Giáng sinh
   {const sx=SNOWMAN.x,sz=SNOWMAN.z,y=H(sx,sz),k=3.4,ry=Math.atan2(RINK.x-sx,RINK.z-sz);S.at(sx,y,sz,ry);
     S.add(G.sph,SNOW,MX(0,.72*k,0,.92*k,.86*k,.92*k));S.add(G.sph,SNOW,MX(0,1.82*k,0,.64*k));S.add(G.sph,SNOW,MX(0,2.66*k,0,.44*k));S.add(G.cyl12,SNOW,MX(0,.08,0,1.15*k,.16,1.15*k));
