@@ -30,7 +30,7 @@ const toLake=([x,z],d)=>{const dx=LAKE.x-x,dz=LAKE.z-z,l=Math.hypot(dx,dz);retur
 {const z=ZONES.find(q=>q.id==='rungkinh'),[x0,z0]=IGLOOS[1],[x1,z1]=toLake(IGLOOS[1],12);z.x=x1;z.z=z1;z.cam=[x0-x1,z0-z1]}
 const PIER=(()=>{const a=lakeShore(2.95,0),b=toLake(a,9);return [a,b]})();/* cầu gỗ bờ tây, xuất phát xe trượt */
 // Tuyến xe trượt băng: vòng khép kín cách bờ 6 m, chạy theo một chiều. 3 bến đậu sát bờ tây, chỗ cầu tàu cũ (đã bỏ cầu tàu).
-const SLOOP=Array.from({length:240},(_,i)=>{const a=Math.PI-i/240*Math.PI*2;return [...lakeShore(a,-6),a]});
+const SLOOP=Array.from({length:240},(_,i)=>{const a=Math.PI-i/240*Math.PI*2,da=Math.atan2(Math.sin(a-.5),Math.cos(a-.5));return [...lakeShore(a,-6-6.5*Math.exp(-Math.pow(da/.13,2))),a]});/* 28/11: đoạn bờ đông trước Nhà Mái Cỏ lượn ra xa bờ thêm, xe không chạy xuyên nhà và hiên */
 const SDOCK=[2.84,2.95,3.06].map(a=>({a,p:lakeShore(a,-2.2),m:lakeShore(a,-6)}));
 const SKI={x:104,z:-118,r:66,h:50},SKIRUNS=[[[98,-110],[93,-102],[94,-94],[99,-86],[97,-78],[90,-70],[88,-60]],[[112,-110],[118,-101],[121,-92],[117,-84],[119,-75],[125,-66],[124,-58]]],LIFT=[[78,-60],[94,-110]];
 const HTRAILS=[[[14,96],[33,88],[45,74],[46,58],[44,40],[40,18],[27,-4],[15,-11],[14.8,-15.5],[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50]],/* vòng ngoài phía đông làng, vào bãi husky qua hai cửa rào */[[10,-50],[40,-58],[66,-56],[80,-58]],[[10,-50],[-16,-66],[-42,-80]],[[26,-4],[70,8],[110,4],[140,-2],[176,-2]],[[40.8,54],[24.8,53]]];/* tuyến husky chính có nhánh */
@@ -1197,8 +1197,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     M(bx,WH,W/2+.04,b0+1.05,1.2,.06,2.1,1.05);M(bx,'#d9d4ca',W/2+.08,b0+1.05,1.2,.02,1.8,.8);M(bx,"#c9a24a",W/2+.1,b0+1.0,.9,.04,.08,.08);M(bx,'#9a7a56',W/2+.75,.32,1.2,1.3,.12,1.3);M(bx,'#9a7a56',W/2+.75,.12,1.2,1.3,.12,1.3);
     M(bx,'#9a7a56',0,.42,D/2+1.3,W-.6,.12,2.4);for(const sx of [-1,1])M(bx,'#7a5a40',sx*(W/2-.4),.95,D/2+1.3,.08,.08,2.4);M(bx,'#7a5a40',0,.95,D/2+2.45,W-.7,.08,.08);for(let i=0;i<9;i++){const xx=-W/2+.4+i*(W-.8)/8;M(bx,'#7a5a40',xx,.68,D/2+2.45,.08,.55,.08)}M(bx,SNOW,0,.5,D/2+1.3,W-.7,.04,2.3);
     {const ch=(x)=>{M(bx,'#a07a56',x,.75,D/2+1.0,.5,.06,.5);M(bx,'#a07a56',x,1.0,D/2+.78,.5,.5,.06)};ch(-1.3);ch(1.3)}/* hai ghế gỗ trên hiên */
-    // thuyền gỗ kéo lên bờ cạnh nhà
-    {const q=new THREE.Group();q.position.set(-W/2-2.2,.25,D/2+1.2);q.rotation.y=.35;const hull=new THREE.Mesh(new THREE.SphereGeometry(1,12,6,0,Math.PI*2,Math.PI/2,Math.PI/2),lam('#efe6d6'));hull.scale.set(.75,.5,2.1);hull.rotation.x=Math.PI;hull.position.y=.5;q.add(hull);const rim=new THREE.Mesh(bx,lam('#2f5f8a'));rim.scale.set(1.5,.08,4.1);rim.position.y=.52;q.add(rim);const sn=new THREE.Mesh(gSph,lam(SNOW));sn.scale.set(.62,.12,1.7);sn.position.y=.5;q.add(sn);g.add(q)}
+    // 28/11: bỏ thuyền gỗ trước cửa nhà theo yêu cầu
     TGH.light=new THREE.PointLight('#ffc27a',2.5,8,1.6);TGH.light.position.set(0,b0+1.4,D/2+1.2);g.add(TGH.light);
     {const c=document.createElement('canvas');c.width=256;c.height=96;const g2=c.getContext('2d');g2.fillStyle='#f2efe8';g2.fillRect(0,0,256,96);g2.strokeStyle='#a3262a';g2.lineWidth=5;g2.strokeRect(5,5,246,86);g2.fillStyle='#7a1c20';g2.font='600 30px Georgia,serif';g2.textAlign='center';g2.fillText('Nhà Mái Cỏ Riêng',128,60,236);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.49),new THREE.MeshLambertMaterial({map:t}));m.position.set(W/2+.06,b0+1.75,-.2);m.rotation.y=Math.PI/2;g.add(m)}
     sc.add(g);TGH.g=g}
