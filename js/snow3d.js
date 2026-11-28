@@ -42,7 +42,7 @@ const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},CAR={x:-22,z:62},
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
 // [góc (0 = bắc, dương = đông), bán kính, rộng, sâu, cao, màu, loại]
-const VH=[[0,23,10,9,4.4,'#c99d70','main'],[-58,22,8,7,3.8,'#b8906a','shop'],[58,22,8,7,3.6,'#c99d70','cafe'],[104,22,7,7.5,3.4,'#b8906a'],
+const VH=[[0,29,9,19.8,4.4,'#c99d70','main'],[-58,22,8,7,3.8,'#b8906a','shop'],[58,22,8,7,3.6,'#c99d70','cafe'],[104,22,7,7.5,3.4,'#b8906a'],
   [-29,38,6.5,7,3.3,'#a8805c'],[29,38,7,7.5,3.4,'#b8906a'],[-88,40,6,6.5,3.2,'#c99d70']].map(([b,r,w,d,h,col,k])=>{const a=b*Math.PI/180,x=TREE.x+Math.sin(a)*r,z=TREE.z-Math.cos(a)*r,ry=Math.atan2(TREE.x-3-x,TREE.z+5-z);return {a,r,x,z,ry,w,d,h,col,k}});
 const VRING=15,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
@@ -269,12 +269,43 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     block(X,Z,8.8);warm(X,y+6,Z+9,34,40);
     for(let i=0;i<12;i++){const q=i/12*6.28+.2,rr=9.3+hs(i)*.6,sz=.6+hs(i+40)*.5;XS.b(['#9e2b2b','#efe6d2','#c8a24e','#2f5a4a'][i%4],X+Math.cos(q)*rr,y+sz/2,Z+Math.sin(q)*rr,sz,sz,sz,q);XS.b('#d6b878',X+Math.cos(q)*rr,y+sz/2,Z+Math.sin(q)*rr,sz+.02,sz+.02,.1,q)}}
   // Làng Lapland: các nhà theo VH, cửa quay về cây thông và hồ băng, lối lát đá từ cửa ra vòng quảng trường
-  for(const v of VH){cabin(v.x,v.z,v.ry,{col:v.col,w:v.w,d:v.d,h:v.h});const sn=Math.sin(v.ry),cs=Math.cos(v.ry),y=H(v.x,v.z);
-    S.at(v.x,y,v.z,v.ry);for(let k=0;k<3;k++)S.b('#b9b2a6',0,.1-k*.12,v.d/2+.45+k*.5,1.8,.2,.5);S.reset();/* bậc thềm */
-    if(v.k==='main'){const tx=v.x+cs*(v.w/2+1.4),tz=v.z-sn*(v.w/2+1.4);/* tháp đồng hồ cạnh nhà chính */
-      S.at(tx,y,tz,v.ry);L.at(tx,y,tz,v.ry);S.b('#b8906a',0,4.6,0,2.6,9.2,2.6);S.b('#9a7452',0,9.3,0,2.9,.3,2.9);S.add(G.pyr4,'#9a7a5a',MX(0,11.1,0,2.2,3.6,2.2));S.add(G.pyr4,SNOW,MX(0,10.9,0,2.05,3.1,2.05));
-      S.add(G.cyl12,'#f1eee5',MX(0,7.2,1.32,.75,.06,.75,Math.PI/2,0,0));L.add(G.cyl12,'#ffe2a8',MX(0,7.2,1.36,.6,.03,.6,Math.PI/2,0,0));S.b('#2b2622',0,7.35,1.4,.06,.5,.03);S.b('#2b2622',.12,7.2,1.4,.3,.06,.03);
-      L.add(G.sph,'#ffe9b0',MX(0,13.1,0,.2));stringLights(L,-1.45,9.2,1.46,1.45,9.2,1.46,8,0);S.reset();L.reset();block(tx,tz,1.8)}
+  // Kiến trúc nhà Làng Lapland (ảnh tham khảo 12): gỗ súc nâu ấm trên chân đá, mái dốc phủ tuyết dày, hiên cột gỗ tròn, khung cửa sổ đỏ trầm.
+  // Nhà chính: mặt bằng chữ thập, lõi đá và gỗ súc, tầng tháp gỗ sồi có dải cửa sổ sáng ấm và ban công lan can đỏ, mái loe rộng,
+  // chóp nhọn trắng rất cao có cột thu lôi; mặt trước và sau chóp gắn huy hiệu riêng của Xứ Yên (vòng vàng champagne, lục giác xanh thông).
+  const LOG='#7f5b3d',LOGD='#5e4029',STONE='#9a948c',RED='#9e2b2b',OAK='#c99d70';
+  const logWall=(cx,y0,cz,w,h,d)=>{S.b(LOG,cx,y0+h/2,cz,w,h,d);for(let yy=y0+.3;yy<y0+h-.1;yy+=.34){S.b(LOGD,cx,yy,cz+d/2+.02,w+.12,.06,.05);S.b(LOGD,cx,yy,cz-d/2-.02,w+.12,.06,.05);S.b(LOGD,cx+w/2+.02,yy,cz,.05,.06,d+.12);S.b(LOGD,cx-w/2-.02,yy,cz,.05,.06,d+.12)}
+    for(const sx of [-1,1])for(const sz of [-1,1])S.add(G.cyl,LOG,MX(cx+sx*(w/2),y0+h/2,cz+sz*(d/2),.2,h,.2))};
+  const snowRoof=(cx,y0,cz,w,rh,len,rot)=>{S.add(G.prism,OAK,MX(cx,y0-.12,cz,w+1.1,rh+.25,len+.9,0,rot,0));S.add(G.prism,SNOW,MX(cx,y0+.02,cz,w+1.3,rh+.45,len+1.1,0,rot,0))};/* mái tuyết dày, lộ viền gỗ sồi dưới mép */
+  const win=(x,y,z,ry,w,h)=>{S.b(RED,x,y,z,w+.24,h+.24,.1,ry);L.b('#ffd79a',x+Math.sin(ry)*.04,y,z+Math.cos(ry)*.04,w,h,.05,ry);S.b(RED,x+Math.sin(ry)*.07,y,z+Math.cos(ry)*.07,.07,h,.04,ry);S.b(RED,x+Math.sin(ry)*.07,y,z+Math.cos(ry)*.07,w,.07,.04,ry)};
+  function mainHall(v){const y=H(v.x,v.z);S.at(v.x,y,v.z,v.ry);L.at(v.x,y,v.z,v.ry);
+    S.b(STONE,0,.6,0,9.8,1.2,9.8);logWall(0,1.2,0,9,3.2,9);
+    S.add(G.pyr4,OAK,MX(0,5.15,0,6.2*1.414,1.7,6.2*1.414));S.add(G.pyr4,SNOW,MX(0,5.3,0,6.4*1.414,1.8,6.4*1.414));/* mái lõi loe */
+    S.b(STONE,0,5.6,0,6.4,1.2,6.4);S.b(OAK,0,7.2,0,6,2.4,6);for(let k=0;k<4;k++){const q=k*Math.PI/2;for(let i=-1.5;i<=1.5;i++){const fx=Math.sin(q)*3.02+Math.cos(q)*i*1.3,fz=Math.cos(q)*3.02-Math.sin(q)*i*1.3;S.b('#8a6244',fx,7.25,fz,1.1,1.4,.08,q);L.b('#ffd79a',fx+Math.sin(q)*.03,7.25,fz+Math.cos(q)*.03,.9,1.2,.04,q);S.b('#8a6244',fx+Math.sin(q)*.06,7.25,fz+Math.cos(q)*.06,.06,1.2,.03,q)}}/* dải cửa sổ tầng tháp */
+    S.b(RED,0,6.35,3.55,4.4,.1,.1);for(let i=-2;i<=2;i++)S.b(RED,i*1.05,5.95,3.55,.1,.8,.1);S.b(OAK,0,5.55,3.3,4.6,.14,.8);/* ban công lan can đỏ */
+    S.add(G.pyr4,OAK,MX(0,9.05,0,4.9*1.414,1.5,4.9*1.414));S.add(G.pyr4,SNOW,MX(0,9.2,0,5.1*1.414,1.6,5.1*1.414));/* mái tháp loe rộng */
+    const sp0=9.6,sh=9.6,sw=2.1;S.add(G.pyr4,'#eef0f2',MX(0,sp0+sh/2,0,sw*1.414,sh,sw*1.414));S.add(G.cyl12,'#d6b878',MX(0,sp0+sh+.1,0,.16,.3,.16));S.add(G.cyl,'#9a958e',MX(0,sp0+sh+1.3,0,.04,2.4,.04));S.add(G.sph,'#d6b878',MX(0,sp0+sh+2.5,0,.1));
+    {const ey=sp0+2.2,hw=sw*(1-(ey-sp0)/sh)+.05,t=Math.atan(sw/sh);for(let k=0;k<4;k+=2){const q=k*Math.PI/2,ex=Math.sin(q)*hw,ez=Math.cos(q)*hw;/* huy hiệu Xứ Yên ở mặt trước và mặt sau chóp */
+      S.add(G.cyl12,'#d6b878',MX(ex,ey,ez,.95,.05,.95,Math.PI/2-t,q,0));S.add(G.cyl12,IVORY,MX(ex+Math.sin(q)*.03,ey+.01,ez+Math.cos(q)*.03,.8,.05,.8,Math.PI/2-t,q,0));S.add(G.cyl6,'#2f5a4a',MX(ex+Math.sin(q)*.06,ey+.02,ez+Math.cos(q)*.06,.45,.05,.45,Math.PI/2-t,q,0));S.add(G.cyl6,IVORY,MX(ex+Math.sin(q)*.09,ey+.03,ez+Math.cos(q)*.09,.18,.05,.18,Math.PI/2-t,q,0))}}
+    XL.add(G.sph,'#fff0c4',MX(0,sp0+sh+2.5,0,.25));
+    for(const sx of [-1,1]){const cx=sx*8.3;S.b(STONE,cx,.3,0,7.8,.6,7.4);logWall(cx,.6,0,7.6,3,7);snowRoof(cx,3.6,0,7,2.6,7.8,Math.PI/2);/* hai cánh nhà thấp */
+      for(const wx of [-2.4,0,2.4])win(cx+wx,2.1,3.53,0,1,1.2);S.add(G.cyl6,'#5c5550',MX(cx+sx*1.8,6.2,-1.2,.45,1.6,.45))}
+    S.b(STONE,0,.3,-8.2,7.4,.6,7.6);logWall(0,.6,-8.2,7,3,7.2);snowRoof(0,3.6,-8.2,7,2.6,7.4,0);/* cánh sau */
+    {const pz=7.1;S.b(STONE,0,.35,pz,6.2,.7,4.6);for(const sx of [-2.3,2.3])for(const sz of [-1.6,1.6]){S.add(G.cyl12,OAK,MX(sx,2.3,pz+sz,.34,3.3,.34));S.add(G.cyl12,STONE,MX(sx,.85,pz+sz,.5,.3,.5))}/* hiên cổng cột gỗ tròn to */
+      for(const sx of [-2.3,2.3])S.add(G.cyl12,OAK,MX(sx,4,pz,.24,4.2,.24,Math.PI/2,0,0));S.add(G.cyl12,OAK,MX(0,4.05,pz+2.1,.24,5,.24,0,0,Math.PI/2));
+      snowRoof(0,4.1,pz,5.6,2.4,4.8,0);for(const sd of [-1,1])S.add(G.cyl12,OAK,MX(sd*1.4,4.8,pz+2.45,.16,3.1,.16,0,0,sd*1.0));/* giàn kèo gỗ tròn đầu hồi */
+      for(let k=0;k<4;k++)S.b('#b9b2a6',0,.62-k*.17,pz+2.6+k*.45,4.6,.17,.45);S.b('#4a3424',0,3.2,pz+2.25,2.6,.6,.12);S.add(G.cyl6,'#d6b878',MX(0,3.2,pz+2.33,.22,.04,.22,Math.PI/2,0,0));/* bậc thềm, biển gỗ */
+      S.b('#3b2a20',0,1.7,4.53,1.6,2.4,.1);L.b('#ffd08a',0,3.1,4.55,1.4,.5,.04);for(const sx of [-1,1])win(sx*2.9,2.3,4.53,0,1.1,1.3)}
+    for(const sx of [-1,1]){S.b(STONE,sx*8.3,.5,5,7.8,1,.6);S.b(RED,sx*8.3,1.35,5,7.8,.1,.1);for(let i=0;i<9;i++)S.b(RED,sx*8.3-3.6+i*.9,1.05,5,.08,.6,.08)}/* lan can đỏ trên kè đá */
+    S.reset();L.reset();const sn=Math.sin(v.ry),cs=Math.cos(v.ry);block(v.x,v.z,6);for(const sx of [-8.3,8.3])block(v.x+cs*sx,v.z-sn*sx,4.4);block(v.x-sn*8.2,v.z-cs*8.2,4.2);block(v.x+sn*7.1,v.z+cs*7.1,2.4)}
+  function logHouse(v){const y=H(v.x,v.z),w=v.w,d=v.d,h=v.h;S.at(v.x,y,v.z,v.ry);L.at(v.x,y,v.z,v.ry);
+    S.b(STONE,0,.35,0,w+.4,.7,d+.4);logWall(0,.7,0,w,h,d);snowRoof(0,.7+h,0,w,w*.62,d,0);
+    S.add(G.cyl6,'#6e6862',MX(w*.26,.7+h+w*.45,-d*.2,.4,1.8,.4));S.add(G.cyl6,SNOW,MX(w*.26,.7+h+w*.45+.95,-d*.2,.46,.14,.46));
+    S.b('#3b2a20',0,1.75,d/2+.06,1.2,2.1,.1);L.b('#ffd08a',0,3.0,d/2+.06,.9,.3,.04);for(const sx of [-1,1])win(sx*w*.3,2.1,d/2+.06,0,.95,1.05);
+    for(const sz of [-.25,.25])for(const sx of [-1,1])win(sx*(w/2+.06),2.1,sz*d,sx*Math.PI/2,.9,1);
+    {const pz=d/2+1.1;for(const sx of [-1.2,1.2])S.add(G.cyl12,OAK,MX(sx,1.4+.35,pz+.4,.17,2.1,.17));S.b(OAK,0,2.95,pz+.4,2.9,.14,.2);S.add(G.prism,SNOW,MX(0,2.95,pz-.1,3.3,1,2.4,0,0,0));S.b(OAK,0,2.88,pz-.1,3.1,.06,2.2)}/* mái hiên nhỏ cột tròn */
+    for(let k=0;k<3;k++)S.b('#b9b2a6',0,.45-k*.15,d/2+1.7+k*.42,1.8,.15,.42);
+    S.reset();L.reset();block(v.x,v.z,Math.max(w,d)*.55)}
+  for(const v of VH){const sn=Math.sin(v.ry),cs=Math.cos(v.ry);if(v.k==='main')mainHall(v);else logHouse(v);
     if(v.k==='cafe')for(const k of [-1.8,1.8]){const bx=v.x+cs*k+sn*(v.d/2+3.2),bz=v.z-sn*k+cs*(v.d/2+3.2),by=H(bx,bz);S.add(G.cyl12,'#a07a56',MX(bx,by+.45,bz,.5,.06,.5));S.b('#a07a56',bx,by+.22,bz,.1,.45,.1);S.b('#c5a36f',bx,by+1.6,bz,1.4,.06,1.4)}}
   for(let i=0;i<3;i++){const x=TREE.x-22,z=TREE.z-6+i*5.2,ry=Math.PI/2,y=H(x,z);S.at(x,y,z,ry);L.at(x,y,z,ry);/* chợ mùa đông: quầy mái bạt sọc đỏ trắng phía tây quảng trường */
     S.b('#a07a56',0,1.2,-.9,3.2,2.4,.15);for(const sx of [-1,1])S.b('#a07a56',sx*1.55,1.2,0,.15,2.4,1.9);S.b('#c9b48f',0,.95,.7,3.2,.12,.7);S.b('#8a6a4a',0,.45,.7,3,.9,.6);
@@ -353,7 +384,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const glassMat=new THREE.MeshPhongMaterial({color:'#cfe2ff',specular:'#ffffff',shininess:120,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
   const glowMat=new THREE.MeshBasicMaterial({color:'#ffb866',transparent:true,opacity:.22,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,fog:false});
   // 3 lều ngắm cực quang theo bộ thiết kế Rừng Kính: vòm kính khung tối, vách sau gỗ sồi, sàn gỗ, nội thất ấm (Lều Rừng Thông · Lều Đồi Tuyết · Lều Bờ Hồ)
-  const DR=4,OAK='#c99d70',RIB='#33383d',geo=new THREE.SphereGeometry(DR,28,12,0,Math.PI*2,0,Math.PI/2).toNonIndexed();
+  const DR=4,RIB='#33383d',geo=new THREE.SphereGeometry(DR,28,12,0,Math.PI*2,0,Math.PI/2).toNonIndexed();
   const ribM=new THREE.TorusGeometry(DR+.03,.055,4,28,Math.PI).toNonIndexed(),ribR=[[.0,1],[.5,Math.cos(Math.PI/6)],[.966,.26]].map(([sy,cr])=>[sy*DR,new THREE.TorusGeometry(DR*cr+.03,.05,4,36).rotateX(Math.PI/2).toNonIndexed()]);
   const glassB=new Batch(),glowB=new Batch();
   IGLOOS.forEach(([x,z],idx)=>{const y=H(x,z)+.5,r=DR,ry=Math.atan2(LAKE.x-x,LAKE.z-z);S.at(x,y,z,ry);L.at(x,y,z,ry);
