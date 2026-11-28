@@ -612,3 +612,9 @@ html.lite #enterSnow{display:none!important}
 @media(max-width:760px){#home>#enterSnow{order:6}#home>.portal-entry.sq{flex:0 0 calc(33.333% - 12px);box-sizing:border-box}}
 @media(min-width:761px){#home.hero{display:flex;flex-direction:row;flex-wrap:wrap;column-gap:12px;align-items:flex-start}#home>*{flex:0 0 100%;order:1}#home>.cta{order:2;flex:0 0 100%;margin:4px 0 16px}#home>br{display:none}#home>.cta+*{order:2}
   #home>.portal-entry.sq{order:3;flex:0 0 calc(33.333% - 12px);box-sizing:border-box;max-width:210px;margin:0 0 14px}#home>.dock{order:4}#home>#enter3D,#home>#enterBay,#home>#enterSnow{align-self:flex-start;margin:0 0 14px}}
+
+/* 28/11 ba ô Rừng Yên, Vịnh Yên, Xứ Yên đồng nhất: chữ viết bằng HTML cùng phông, cùng cỡ, cùng màu; icon cùng cỡ, cùng chỗ; vòng tròn quanh icon là một nét mảnh vàng dịu, không bóng, đã vẽ sẵn trong ảnh */
+#home>.portal-entry.sq{background-image:url(../img/o-rung-yen.webp?v=5ca726d2)!important;container-type:inline-size}
+#home>.portal-entry.sq.bay{background-image:url(../img/o-vinh-yen.webp?v=02f4fe4d)!important}
+#home>.portal-entry.sq.snow{background-image:url(../img/o-xu-yen.webp?v=039fe5e6)!important}
+#home>.portal-entry.sq>.portal-name{position:absolute;left:0;right:0;top:47.5%;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;text-align:center;font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:max(12.5px,8.6cqw);line-height:1.18;letter-spacing:.01em;color:#f3e4c2;text-shadow:0 1px 2px #0006;pointer-events:none}
