@@ -101,6 +101,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
 #snowBox .sn-note{font-size:12px;opacity:.75;margin:10px 0 2px}#snowBox .sn-ta{width:100%;min-height:76px;box-sizing:border-box;border-radius:12px;border:1px solid #d6b87866;background:#0e1f33;color:#f5e8cc;padding:8px;font:14px/1.4 system-ui,sans-serif;resize:vertical}
 #snowBox .sn-row{display:flex;justify-content:flex-end;margin:6px 0 4px}#snowBox .sn-gold{background:#c8a96a;color:#13202c;border-color:#c8a96a;font-weight:600}
 #snowBox .sn-sheet article{border-top:1px solid #d6b87833;padding:8px 2px}#snowBox .sn-sheet article b{display:block;font-size:13px;color:#f1e2bf}#snowBox .sn-sheet article small{font-size:11px;opacity:.7}#snowBox .sn-sheet article p{margin:4px 0 0;font-size:14px}
+#snowBox .sn-gift{position:absolute;left:50%;transform:translateX(-50%);top:calc(104px + env(safe-area-inset-top));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:min(560px,94vw);background:#0b1424dd;border:1px solid #d6b87866;border-radius:16px;padding:10px;z-index:3}#snowBox .sn-gift[hidden]{display:none}#snowBox .sn-gq{width:100%;text-align:center;font-size:13px;color:#f1e2bf}#snowBox .sn-gift button{font-size:14px;padding:8px 12px}#snowBox .sn-skip{opacity:.75}
 @media(max-width:520px){#snowBox .sn-rail{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));transform:none}#snowBox .sn-rail button{width:52px}#snowBox .sn-sheet{left:10px;right:72px;width:auto;top:auto;bottom:calc(84px + env(safe-area-inset-bottom));transform:none;max-height:62vh}}
 @media(max-width:520px){#snowBox .sn-top strong{display:none}#snowBox .sn-lb{display:none}#snowBox .sn-top button{padding:7px 10px;font-size:13px;white-space:nowrap}}`;
   document.head.appendChild(css);document.body.appendChild(box);document.body.classList.add('snow-open');
@@ -593,6 +594,51 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(let i=0;i<6;i++){const m=new THREE.Mesh(DG,LAM);m.position.set(i%2?.4:-.4,0,2.2+Math.floor(i/2)*1.2);huskyG.add(m);dogs.push(m)}
     const B=new Batch();B.b('#9a7a5a',0,.35,-.2,.9,.1,1.8);B.b('#c99d70',0,.6,-.1,.86,.5,1.2);B.b('#8f949a',0,.66,0,.7,.1,.9);for(const sx of [-.45,.45]){B.b('#2b2622',sx,.04,-.3,.05,.05,2.4);B.b('#2b2622',sx,.7,-1.05,.05,1.1,.05)}B.b('#2b2622',0,1.25,-1.05,.95,.05,.05);B.b('#7a5a40',0,.45,1.6,.03,.03,3.6);
     huskyG.add(B.mesh(LAM));sc.add(huskyG)}
+  // ---------- Chuyến xe trao Yên: xe tuần lộc của ông già Noel bay qua 5 ống khói trong làng, chạm để thả một lời chúc; lúc nào cũng chơi được ----------
+  const SP={x:FARM.x-23,z:FARM.z+5,ry:Math.PI},santaG=new THREE.Group(),santaLegs=[];
+  {const B=new Batch(),G0='#d6b04a',RD='#a8262b';
+    for(const sx of [-.85,.85]){B.b(G0,sx,.12,0,.12,.1,3.6);B.add(G.cyl12,G0,MX(sx,.45,1.85,.42,.08,.42,0,0,Math.PI/2))}for(const sz of [-1,0,1])for(const sx of [-.85,.85])B.b(G0,sx,.35,sz,.08,.45,.08);
+    B.b(RD,0,.95,-.3,1.9,.9,2.6);B.b(RD,0,1.55,-1.4,1.9,1.3,.5);B.add(G.cyl12,RD,MX(0,1.1,1.05,.95,.3,.95,0,0,Math.PI/2));B.b(G0,0,1.42,-.3,1.95,.08,2.65);B.b('#2f5b48',0,1.45,-.8,1.6,.12,1);
+    B.add(G.sph,'#7a4a2e',MX(0,1.95,-1.25,.6,.55,.5));B.b('#b8322c',.6,1.75,-.9,.45,.45,.45,.3);B.b('#2f5b48',-.6,1.7,-.8,.4,.38,.4,-.2);
+    // ông già Noel ngồi ghế trước, bên trái; chỗ trống bên phải dành cho bạn
+    B.add(G.cyl12,'#b8262b',MX(-.45,1.75,-.2,.42,.9,.38));B.add(G.sph,'#f1e2d0',MX(-.45,2.35,-.15,.22));B.add(G.sph,'#ffffff',MX(-.45,2.2,0,.24,.26,.16));B.add(G.cone,'#b8262b',MX(-.45,2.65,-.18,.22,.45,.22,-.3,0,0));B.add(G.sphLo,'#ffffff',MX(-.45,2.86,-.3,.08));B.b('#2b2622',-.45,1.42,-.2,.86,.08,.4);
+    B.b('#5e4330',0,.7,2.6,.08,.08,2);
+    const deer=(lx,lz)=>{const br='#8f7c66',dk='#4f4032',lt='#efe7d8',an='#cdb894';B.add(G.sph,br,MX(lx,1.05,lz,.38,.36,.76));B.add(G.sph,lt,MX(lx,.98,lz+.48,.3,.32,.24));B.add(G.cyl,lt,MX(lx,1.45,lz+.68,.14,.62,.14,-.5,0,0));B.add(G.sph,br,MX(lx,1.72,lz+.96,.15,.15,.26));B.add(G.sph,'#b8322c',MX(lx,1.68,lz+1.2,.06));
+      for(const sx of [-1,1]){for(const sz of [-.42,.42])B.add(G.cyl,dk,MX(lx+sx*.18,.45,lz+sz,.05,.9,.05));B.add(G.cyl,an,MX(lx+sx*.2,2.1,lz+.85,.03,.65,.03,-.35,0,-sx*.45));B.add(G.cyl,an,MX(lx+sx*.42,2.45,lz+.7,.025,.45,.025,-.7,0,-sx*.2))}
+      B.add(WREATH,'#b8322c',MX(lx,1.03,lz+.26,.92,.9,.42));B.add(G.sphLo,'#e0b04a',MX(lx,.66,lz+.34,.08))};
+    for(const [lx,lz] of [[-.6,3.7],[.6,3.7],[-.6,5.7],[.6,5.7]])deer(lx,lz);
+    santaG.add(B.mesh(LAM));santaG.position.set(SP.x,H(SP.x,SP.z),SP.z);santaG.rotation.y=SP.ry;sc.add(santaG)}
+  STATIONS.push({id:'gift',x:SP.x+2.6,z:SP.z-.5,label:'🎅 Lên xe tuần lộc đi trao Yên'});
+  const WISHES=[['🕊','Bình an'],['🔥','Ấm áp'],['✨','Niềm vui'],['🌙','Ngủ ngon'],['🌲','Vững vàng']],SANTA_SAY=['Ống khói năm nay hơi chật, ta thả nhẹ tay thôi nhé.','Nhà này ngủ sớm rồi. Suỵt, khẽ thôi.','Ta già rồi, ngắm cháu thả cho chuẩn.','Nhìn kìa, cửa sổ vừa sáng lên. Đẹp không?','Chà, ống khói này còn ấm. Chắc vừa nấu cacao.'];
+  const REAL=['Nhắn một lời cảm ơn cho một người đã giúp bạn gần đây.','Pha cho mình một cốc nước ấm, uống chậm từng ngụm.','Gọi cho một người thân chỉ để hỏi thăm, không cần lý do.','Tối nay tắt màn hình sớm hơn 15 phút và nằm nghe hơi thở.','Viết ra một điều nhỏ hôm nay làm bạn mỉm cười.','Khen một người bên cạnh, thật lòng và cụ thể.'];
+  const SR={on:false,leg:0,t:0,legs:[],stops:[],wait:false,gift:null,puffs:[],done:[],lights:[]};
+  const giftBar=document.createElement('div');giftBar.className='sn-gift';giftBar.hidden=true;giftBar.innerHTML='<div class="sn-gq">Chọn một lời chúc để thả vào ống khói</div>'+WISHES.map((w,i)=>'<button type="button" data-w="'+i+'">'+w[0]+' '+w[1]+'</button>').join('')+'<button type="button" data-w="skip" class="sn-skip">Bỏ qua nhà này ›</button>';box.append(giftBar);
+  giftBar.addEventListener('pointerdown',e=>e.stopPropagation());
+  const _gp=new THREE.Vector3(),_gq=new THREE.Vector3();
+  const santaStart=()=>{const order=CHIMNEYS.slice().sort((a,b)=>Math.atan2(a.z-TREE.z,a.x-TREE.x)-Math.atan2(b.z-TREE.z,b.x-TREE.x));
+    const park=new THREE.Vector3(SP.x,H(SP.x,SP.z)+.02,SP.z),pts=[park];for(const c of order){const dx=c.x-TREE.x,dz=c.z-TREE.z,l=Math.hypot(dx,dz)||1;pts.push(new THREE.Vector3(c.x+dx/l*3.6,c.y+1.1,c.z+dz/l*3.6))}pts.push(park.clone());
+    SR.stops=order;SR.legs=[];for(let i=0;i+1<pts.length;i++){const a=pts[i],b=pts[i+1],d=a.distanceTo(b),hi=Math.max(a.y,b.y)+Math.min(14,4+d*.18);const a2=a.clone().lerp(b,.22).setY(hi),b2=a.clone().lerp(b,.78).setY(hi);
+      const cv=new THREE.CatmullRomCurve3([a,i===0?a.clone().add(new THREE.Vector3(0,3,-6)):a.clone().setY(a.y+1.5),a2,b2,b.clone().setY(b.y+1.5),b],false,'centripetal');SR.legs.push({cv,len:cv.getLength()})}
+    SR.on=true;SR.leg=0;SR.t=0;SR.wait=false;SR.done=[];P.mode='santa';P.ride=0;setSit(true);me.visible=true;
+    caption('🎅 Ho ho, lên xe nào! Tuần lộc sẽ đưa cháu qua 5 nhà trong làng. Tới mỗi ống khói, chọn một lời chúc để thả vào.',7000)};
+  const santaEnd=(early)=>{SR.on=false;SR.wait=false;giftBar.hidden=true;santaG.position.set(SP.x,H(SP.x,SP.z),SP.z);santaG.rotation.set(0,SP.ry,0);
+    if(!early){const task=REAL[(Math.random()*REAL.length)|0];caption('🎅 Cảm ơn cháu đã trao Yên cho '+SR.done.length+' nhà. Món quà của ta cho cháu: '+task,12000);
+      if(window.__xuyenJournal)window.__xuyenJournal('Chuyến xe trao Yên: đã thả '+(SR.done.length?SR.done.join(', '):'những lời chúc')+'. Mang Yên về đời thực: '+task,'🎅 Chuyến xe trao Yên')}};
+  const santaDrop=i=>{if(!SR.wait||SR.gift)return;const c=SR.stops[SR.leg-1];if(i==='skip'){giftBar.hidden=true;SR.wait=false;caption('🎅 Nhà này để lần sau vậy.',2500);return}
+    const w=WISHES[i],m=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.5),new THREE.MeshLambertMaterial({color:['#b8322c','#2f5b48','#d6b04a','#3d6fb0','#c46a8a'][i]}));m.position.copy(santaG.position).setY(santaG.position.y+1.9);sc.add(m);
+    SR.gift={m,a:m.position.clone(),b:new THREE.Vector3(c.x,c.y-.2,c.z),t:0,w:w[1],c};giftBar.hidden=true};
+  giftBar.addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)santaDrop(b.dataset.w==='skip'?'skip':+b.dataset.w)});
+  const santaTick=dt=>{if(!SR.on)return;
+    if(SR.gift){const g=SR.gift;g.t=Math.min(1,g.t+dt/1.1);g.m.position.lerpVectors(g.a,g.b,g.t);g.m.position.y+=Math.sin(g.t*Math.PI)*2.2;g.m.rotation.set(g.t*6,g.t*4,0);
+      if(g.t>=1){sc.remove(g.m);g.m.geometry.dispose();for(let k=0;k<7;k++){const p=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:'#f4f6fa',transparent:true,opacity:.8,fog:false}));p.position.set(g.c.x+(Math.random()-.5)*.4,g.c.y+.3,g.c.z+(Math.random()-.5)*.4);p.userData={v:.9+Math.random()*.8,dx:(Math.random()-.5)*.5,life:0};sc.add(p);SR.puffs.push(p)}
+        const l=new THREE.PointLight('#ffc27a',0,16,1.6);l.position.set(g.c.x,g.c.y-3,g.c.z);sc.add(l);SR.lights.push({l,t:0});SR.done.push(g.w);caption('🎅 '+SANTA_SAY[(SR.leg-1)%SANTA_SAY.length]+'  ('+g.w+')',4500);SR.gift=null;SR.wait=false}}
+    for(let i=SR.puffs.length-1;i>=0;i--){const p=SR.puffs[i],u=p.userData;u.life+=dt;p.position.y+=u.v*dt;p.position.x+=u.dx*dt;p.scale.setScalar(1+u.life*1.6);p.material.opacity=Math.max(0,.8-u.life*.45);if(u.life>1.8){sc.remove(p);p.geometry.dispose();p.material.dispose();SR.puffs.splice(i,1)}}
+    for(const o of SR.lights)if(o.t<1){o.t=Math.min(1,o.t+dt*.6);o.l.intensity=o.t*14}
+    if(SR.wait)return;const L0=SR.legs[SR.leg];if(!L0){santaEnd(false);stand(true);return}
+    SR.t=Math.min(1,SR.t+dt*Math.min(9,2+SR.t*30)/L0.len*(SR.t>.9?.6:1));const p=L0.cv.getPointAt(SR.t),q=L0.cv.getPointAt(Math.min(1,SR.t+.01));santaG.position.copy(p);
+    const hd=Math.atan2(q.x-p.x,q.z-p.z);if(Math.hypot(q.x-p.x,q.z-p.z)>.01){let d=hd-santaG.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));santaG.rotation.y+=d*Math.min(1,dt*4)}santaG.rotation.x=-Math.max(-.35,Math.min(.35,(q.y-p.y)*3));
+    if(SR.t>=1){SR.leg++;SR.t=0;if(SR.leg<=SR.stops.length){SR.wait=true;giftBar.hidden=false;const c=SR.stops[SR.leg-1],ang=Math.atan2(c.x-santaG.position.x,c.z-santaG.position.z);santaG.rotation.set(0,ang-Math.PI/2,0);caption('🎅 Tới nhà thứ '+SR.leg+'. Chọn một lời chúc, hoặc chạm vào ống khói để thả.',5000)}}};
+  window.__santa=()=>({on:SR.on,leg:SR.leg,wait:SR.wait,done:SR.done.slice(),stops:SR.stops.length});window.__santaDrop=i=>santaDrop(i);window.__santaFast=()=>{for(const l of SR.legs)l.len=Math.min(l.len,6)};
   // nhà gỗ mở (chuồng, chòi nghỉ, xưởng): cột, vách sau, mái dốc phủ tuyết, dây đèn
   function openShed(x,z,ry,w,d,h,o){o=o||{};const y=H(x,z),col=o.col||'#98745a';S.at(x,y,z,ry);L.at(x,y,z,ry);
     S.b('#7a756e',0,.08,0,w+.4,.16,d+.4);S.b(col,0,h/2,-d/2+.15,w,h,.3);for(const sx of [-1,1])S.b(col,sx*(w/2-.15),h/2,0,.3,h,d);
@@ -697,17 +743,11 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       // dây đèn viền đầu hồi (chỉ sáng khi Giáng sinh)
       for(const sd of [-1,1])stringLights(L,sd*(w/2+.9),b0+h-.3,d/2+.95,0,b0+h+rh-.05,d/2+.95,12,0);
       S.reset();L.reset();block(x,z,7.5);for(const sd of [-1,1])block(x,z+sd*7.5,2.4)}
-    // xe tuần lộc của ông già Noel: chờ ở cổng tây, nơi xuất phát chuyến phát quà
-    {const x=FX-FRX-6,z=FZ+5,y=H(x,z),ry=Math.PI;S.at(x,y,z,ry);L.at(x,y,z,ry);
-      for(const sx of [-.85,.85]){S.b('#d6b04a',sx,.12,0,.12,.1,3.6);S.add(G.cyl12,'#d6b04a',MX(sx,.45,1.85,.42,.08,.42,0,0,Math.PI/2))}for(const sz of [-1,0,1])for(const sx of [-.85,.85])S.b('#d6b04a',sx,.35,sz,.08,.45,.08);
-      S.b('#a8262b',0,.95,-.3,1.9,.9,2.6);S.b('#a8262b',0,1.55,-1.4,1.9,1.3,.5);S.add(G.cyl12,'#a8262b',MX(0,1.1,1.05,.95,.3,.95,0,0,Math.PI/2));S.b('#d6b04a',0,1.42,-.3,1.95,.08,2.65);S.b('#2f5b48',0,1.45,-.8,1.6,.12,1);
-      S.add(G.sph,'#7a4a2e',MX(0,1.95,-1.05,.7,.65,.6));S.b('#b8322c',.55,1.7,-.2,.5,.5,.5,.3);S.b('#2f5b48',-.5,1.65,0,.45,.4,.45,-.2);S.b('#e0b04a',.1,1.6,.35,.4,.35,.4,.5);
-      S.b('#5e4330',0,.7,2.6,.08,.08,2,0,0,0);S.reset();L.reset();block(x,z,2);
-      for(const [lx,lz] of [[-.6,3.6],[.6,3.6],[-.6,5.6],[.6,5.6]]){const wx=x-lx,wz=z-lz;deer(wx,wz,ry,'stand')}}
+    block(FX-FRX-6,FZ+5,0);/* xe tuần lộc của ông già Noel: xem Chuyến xe trao Yên */
     block(FX,FZ,11.5);block(FX-7,FZ,10.5);block(FX+7,FZ,10.5)}
   {
     // 3 Khu nghỉ ngắm cảnh: chòi gỗ nhỏ bên trái và một góc ghế
-    openShed(140,68,0,4.4,3.2,2.4);for(const [bx,bz,br] of [[153,70,.3],[156,72,1.1]]){const by=H(bx,bz);S.b('#c99d70',bx,by+.45,bz,1.8,.1,.5,br);S.b('#a8805c',bx,by+.22,bz,1.6,.44,.12,br)}
+    for(const [bx,bz,br] of [[153,70,.3],[156,72,1.1]]){const by=H(bx,bz);S.b('#c99d70',bx,by+.45,bz,1.8,.1,.5,br);S.b('#a8805c',bx,by+.22,bz,1.6,.44,.12,br)}
     // cổng biển gỗ "Trang Trại Tuần Lộc" có gạc, mái nhỏ phủ tuyết; bảng thông tin gỗ cạnh cổng
     {const x=124.5,z=96,y=H(x,z);S.at(x,y,z,-Math.PI/2);for(const sx of [-1.3,1.3])S.b('#b8906a',sx,1.6,0,.25,3.2,.25);S.b('#c99d70',0,2.3,0,2.4,1,.16);S.b('#8a6a4a',0,3.3,0,3.2,.14,.9,0,0,0);S.b(SNOW,0,3.45,0,3.3,.2,1);
       for(const sx of [-1,1]){S.add(G.cyl,'#f1eee5',MX(sx*.3,3.05,.12,.04,.5,.04,0,0,-sx*.5));S.add(G.cyl,'#f1eee5',MX(sx*.48,3.2,.12,.03,.3,.03,0,0,sx*.4))}S.reset();
@@ -821,15 +861,16 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   cv.addEventListener('wheel',e=>{e.preventDefault();const dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);setZoom(camZoom*Math.exp(Math.max(-.18,Math.min(.18,dy*(e.ctrlKey?.006:.0012)))))},{passive:false});
   const keys=new Set();const onKey=e=>{const k={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'}[e.key.toLowerCase()];if(e.key==='Escape'&&e.type==='keydown'){if(!mapEl.hidden)mapEl.hidden=true;else if(P.mode!=='walk')stand();return}if(!k)return;e.preventDefault();if(e.type==='keydown'){keys.add(k);P.dest=null}else keys.delete(k)};
   document.addEventListener('keydown',onKey);document.addEventListener('keyup',onKey);
-  function tap(cx,cy){if(P.mode!=='walk'&&P.mode!=='sled')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
+  function tap(cx,cy){if(P.mode==='santa'){if(SR.wait&&!SR.gift){const c=SR.stops[SR.leg-1],r=cv.getBoundingClientRect(),p=new THREE.Vector3(c.x,c.y,c.z).project(cam),sx=r.left+(p.x+1)/2*r.width,sy=r.top+(1-p.y)/2*r.height;if(Math.hypot(sx-cx,sy-cy)<110)santaDrop((Math.random()*WISHES.length)|0)}return}if(P.mode!=='walk'&&P.mode!=='sled')return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),cam);
     if(P.mode==='sled'){const h=ray.intersectObjects([groundMesh],false)[0];if(h&&lakeE(h.point.x,h.point.z)>=1&&Math.hypot(h.point.x-LAKE.x,h.point.z-LAKE.z)<90)sledLand(h.point.x,h.point.z);else caption('Bấm vào bờ hồ để ghé bờ nhé.',2500);return}
     const hit=ray.intersectObjects([ice,groundMesh],false)[0];if(!hit)return;let x=hit.point.x,z=hit.point.z;
     const st=STATIONS.find(s=>Math.hypot(s.x-x,s.z-z)<4.5);if(st){x=st.x;z=st.z}
-    if(Math.hypot(x,z)>220){caption('Phía xa là núi tuyết, mình dạo quanh làng thôi nhé');return}P.dest={x,z}}
+    if(Math.hypot(x,z)>220){caption('Phía xa là núi tuyết, mình dạo quanh làng thôi nhé');return}P.dest={x,z};if(Math.hypot(x-P.x,z-P.z)>.5)P.camAim=Math.atan2(x-P.x,z-P.z)}
   // Va chạm khi đi: nhà, công trình (colliders), thân cây (lưới TG 8 m), xe trượt và đàn husky đang đứng hay chạy. Không đi xuyên, không đè lên nhau.
   const hitC=(x,z)=>{for(const c of colliders)if(Math.hypot(x-c[0],z-c[1])<c[2])return c;const gx=(x/8)|0,gz=(z/8)|0;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=TG[(gx+i)+','+(gz+j)];if(a)for(const c of a)if(Math.hypot(x-c[0],z-c[1])<c[2])return c}
     for(const o of sleds)if(o!==mySled){const c=[o.g.position.x,o.g.position.z,o.len*.55];if(Math.hypot(x-c[0],z-c[1])<c[2])return c}
-    if(P.mode!=='husky'){const c=[huskyG.position.x,huskyG.position.z,2.6];if(Math.hypot(x-c[0],z-c[1])<c[2])return c}return null};
+    if(P.mode!=='husky'){const c=[huskyG.position.x,huskyG.position.z,2.6];if(Math.hypot(x-c[0],z-c[1])<c[2])return c}
+    if(P.mode!=='santa')for(const k of [0,4.6]){const c=[santaG.position.x+Math.sin(santaG.rotation.y)*k,santaG.position.z+Math.cos(santaG.rotation.y)*k,k?1.6:2.1];if(Math.hypot(x-c[0],z-c[1])<c[2])return c}return null};
   const blocked=(x,z)=>!!hitC(x,z);
 
   let first=true;
@@ -837,6 +878,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   let near=null;
   function act(){const s=near;if(!s)return;P.dest=null;
     if(s.id==='aurora'){P.mode='aurora';P.ride=0;caption('✨ Nằm yên trong lều kính, nhìn bầu trời và mặt hồ. Thở theo vòng sáng: hít vào khi nó lớn, thở ra khi nó nhỏ.',9000);breathEl.hidden=false;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false)}
+    else if(s.id==='gift'){santaStart()}
     else if(s.id==='husky'){P.mode='husky';P.ride=0;caption('🐕 Đàn husky chạy chậm một vòng rừng thông. Vuốt để nhìn quanh.',6000)}
     else if(s.id==='sled'){const o=sleds.filter(q=>q.st==='park').sort((a,b)=>Math.hypot(a.g.position.x-P.x,a.g.position.z-P.z)-Math.hypot(b.g.position.x-P.x,b.g.position.z-P.z))[0];if(!o){caption('🛷 Cả 3 xe đang chạy, đợi một chút xe về bến nhé.',4000);return}mySled=o;sledStart(o,'me');P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe chạy vòng sát bờ hồ. Muốn lên bờ thì bấm vào bờ chỗ bạn thích.',6000)}
     else if(s.id==='sit'){setSit(true);P.mode='sit';{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
@@ -845,9 +887,9 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='deer'){caption('🦌 Tuần lộc ăn rêu địa y. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='wheel'){P.mode='wheel';P.ride=0;setSit(true);caption('🎡 Vòng quay lên rất chậm. Từ trên cao nhìn cả làng tuyết và bầu trời.',7000)}
-    actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=['husky','sled','carousel','wheel'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
-  function stand(){if(P.mode==='sled'&&mySled){const o=mySled;if(o.st==='park'||o.st==='merge'&&o.to===SDOCK[o.k].m&&Math.hypot(o.g.position.x-SDOCK[o.k].p[0],o.g.position.z-SDOCK[o.k].p[1])<1.5){o.st='park';o.rider=null;mySled=null}else{const [x,z]=sAt(o.s+12);sledLand(...lakeShore(sAt(o.s+12)[3],3));return}}const m=P.mode;P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
-    setSit(false);const st=id=>{const q=STATIONS.find(s=>s.id===id);return [q.x,q.z]},back={aurora:st('aurora'),husky:st('husky'),sled:st('sled'),carousel:st('carousel'),wheel:st('wheel'),sit:P.sitAt&&P.sitAt.z<-50?st('sit'):st('fire')}[m];if(back){P.x=back[0];P.z=back[1]}P.sitAt=null;
+    actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=['husky','sled','carousel','wheel','santa'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
+  function stand(fin){if(P.mode==='santa'&&SR.on&&!fin)santaEnd(true);if(P.mode==='sled'&&mySled){const o=mySled;if(o.st==='park'||o.st==='merge'&&o.to===SDOCK[o.k].m&&Math.hypot(o.g.position.x-SDOCK[o.k].p[0],o.g.position.z-SDOCK[o.k].p[1])<1.5){o.st='park';o.rider=null;mySled=null}else{const [x,z]=sAt(o.s+12);sledLand(...lakeShore(sAt(o.s+12)[3],3));return}}const m=P.mode;P.mode='walk';breathEl.hidden=true;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);me.rotation.set(0,me.rotation.y,0);stopBtn.hidden=true;
+    setSit(false);const st=id=>{const q=STATIONS.find(s=>s.id===id);return [q.x,q.z]},back={santa:st('gift'),aurora:st('aurora'),husky:st('husky'),sled:st('sled'),carousel:st('carousel'),wheel:st('wheel'),sit:P.sitAt&&P.sitAt.z<-50?st('sit'):st('fire')}[m];if(back){P.x=back[0];P.z=back[1]}P.sitAt=null;
     if(m==='aurora')caption('Mang Yên về đời thực: tối nay, trước khi ngủ, thử ngước nhìn bầu trời một phút.',7000)}
   actBtn.onclick=act;stopBtn.onclick=stand;
 
@@ -874,7 +916,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     // Hoạt động: chia theo "Hôm nay, bạn cần gì?"; hoạt động đã có thì tới nơi và bắt đầu luôn, hoạt động đang dựng thì đưa tới nơi và báo sắp mở
     const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn',null,[RH.x+3,RH.z+10]],['stars','🌌','Nằm tuyết ngắm sao',null,[24,92]]]],
       ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng',null,[ARCH.x-3,ARCH.z+4]],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
-      ['💝 Kết nối',[['gift','🎁','Tặng quà cùng ông già Noel',null,[FARM.x-24,FARM.z+1]],['tree','🎄','Trang trí cây thông, treo lời chúc',null,[TREE.x,TREE.z+15]],['snowman','⛄','Đắp người tuyết',null,[SNOWMAN.x+1,SNOWMAN.z+5]],['deer','🦌','Cho tuần lộc ăn','deer']]]];
+      ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['tree','🎄','Trang trí cây thông, treo lời chúc',null,[TREE.x,TREE.z+15]],['snowman','⛄','Đắp người tuyết',null,[SNOWMAN.x+1,SNOWMAN.z+5]],['deer','🦌','Cho tuần lộc ăn','deer']]]];
     const goAct=(st,pos,label)=>{close();if(P.mode!=='walk')stand();let x,z;if(st){const s=STATIONS.find(o=>o.id===st);x=s.x;z=s.z}else[x,z]=pos;
       for(let k=0;k<12&&blocked(x,z);k++){x+=Math.cos(k)*1.2;z+=Math.sin(k)*1.2}P.x=x;P.z=z;P.dest=null;first=true;
       if(st){near=STATIONS.find(o=>o.id===st);setTimeout(()=>{near=STATIONS.find(o=>o.id===st);act()},350)}else caption(label+' · hoạt động này đang được dựng, sắp mở. Bạn cứ dạo quanh đây nhé.',6000)};
@@ -926,18 +968,20 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     // đàn husky và xe trượt chạy vòng (kể cả khi không ngồi trên xe)
     const hu=P.mode==='husky'?(P.ride+=dt*.03):0,[hx,hz,hr]=along(HR,false,1-Math.abs(1-2*hu));huskyG.position.set(hx,H(hx,hz),hz);huskyG.rotation.y=hu>.5?hr+Math.PI:hr;
     dogs.forEach((d,i)=>{d.position.y=P.mode==='husky'?Math.abs(Math.sin(t*9+i))*.08:0});
-    sledTick(dt);
+    sledTick(dt);santaTick(dt);
     carousel.rotation.y=t*.18;for(const h of horses)h.position.y=1.7+Math.sin(t*1.6+h.userData.ph)*.35;wheel.rotation.z=-t*.08;for(const g of gondolas){const a=g.userData.a;g.position.set(Math.cos(a)*WR,Math.sin(a)*WR,0);g.rotation.z=t*.08}if(fireFl){fireFl.scale.set(1+Math.sin(t*13)*.08,1+Math.sin(t*7.3)*.18,1+Math.cos(t*11)*.08);fireLight.intensity=12+Math.sin(t*9)*2+Math.sin(t*23)*1.2}
     if(P.mode==='walk'){let mvx=0,mvz=0;if(keys.size){const f=(keys.has('f')?1:0)-(keys.has('b')?1:0),s=(keys.has('r')?1:0)-(keys.has('l')?1:0),sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);mvx=-sy*f+cy*s;mvz=-cy*f-sy*s}
       else if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.15)P.dest=null;else{mvx=dx/d;mvz=dz/d}}
       if(mvx||mvz){const l=Math.hypot(mvx,mvz),spd=(P.dest&&Math.hypot(P.dest.x-P.x,P.dest.z-P.z)>30?6:2.6)*dt;mvx/=l;mvz/=l;let nx=P.x+mvx*spd,nz=P.z+mvz*spd;
         const c0=hitC(nx,nz),esc=c0&&Math.hypot(P.x-c0[0],P.z-c0[1])<c0[2]&&Math.hypot(nx-c0[0],nz-c0[1])>Math.hypot(P.x-c0[0],P.z-c0[1]);/* đang kẹt trong vật cản thì cho bước ra */
         if(c0&&!esc){const c=c0;const ox=P.x-c[0],oz=P.z-c[1],ol=Math.hypot(ox,oz)||1,tx=-oz/ol,tz=ox/ol,sg=Math.sign(tx*mvx+tz*mvz)||1;nx=P.x+tx*sg*spd;nz=P.z+tz*sg*spd;if(blocked(nx,nz)){nx=P.x;nz=P.z;P.dest=null}}
-        if(Math.hypot(nx,nz)<230){P.x=nx;P.z=nz}P.a=Math.atan2(mvx,mvz);if(P.dest||keys.has('f'))follow(P.a,dt,1.8);/* camera sau lưng nhân vật khi đi, như kayak và bơi ở Vịnh Yên */me.position.y=groundY(P.x,P.z)+Math.abs(Math.sin(t*8))*.04}else me.position.y=groundY(P.x,P.z);
+        if(Math.hypot(nx,nz)<230){P.x=nx;P.z=nz}P.a=Math.atan2(mvx,mvz);/* camera không tự xoay theo lúc đi; chỉ đặt lại một lần về sau lưng khi bấm điểm đến mới (P.camAim), vẫn trượt theo để giữ nhân vật giữa, 1/3 dưới */me.position.y=groundY(P.x,P.z)+Math.abs(Math.sin(t*8))*.04}else me.position.y=groundY(P.x,P.z);
       me.position.x=P.x;me.position.z=P.z;let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);
+      if(P.camAim!=null){follow(P.camAim,dt,3);let d=P.camAim+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<.03||pts.size)P.camAim=null}
       near=null;for(const s of STATIONS)if(Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near;if(near)actBtn.textContent=near.label;
       tgt.set(P.x,me.position.y+1.5,P.z)}
     else if(P.mode==='husky'){me.position.copy(huskyG.position).add(_v.set(0,.35,-.1).applyAxisAngle(_v2.set(0,1,0),huskyG.rotation.y));me.rotation.set(0,huskyG.rotation.y,0);follow(huskyG.rotation.y,dt);if(P.ride>=1)stand();tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
+    else if(P.mode==='santa'){me.position.copy(santaG.position).add(_v.set(.45,1.05,-.2).applyEuler(santaG.rotation));me.rotation.set(santaG.rotation.x,santaG.rotation.y,0);if(!SR.wait)follow(santaG.rotation.y,dt);else{const c=SR.stops[SR.leg-1];if(c)follow(Math.atan2(c.x-me.position.x,c.z-me.position.z),dt,4)}tgt.set(me.position.x,me.position.y+1.4,me.position.z);if(SR.wait){const c=SR.stops[SR.leg-1];if(c)tgt.set(c.x*.75+me.position.x*.25,c.y+.4,c.z*.75+me.position.z*.25)}P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='sled'&&mySled){const g=mySled.g;me.position.copy(g.position).add(_v.set(0,.5,mySled.seatZ).applyAxisAngle(_v2.set(0,1,0),g.rotation.y));me.rotation.set(0,g.rotation.y,0);follow(g.rotation.y,dt);tgt.set(me.position.x,me.position.y+1.4,me.position.z);P.x=me.position.x;P.z=me.position.z}
     else if(P.mode==='carousel'){P.ride+=dt;const a=-carousel.rotation.y;const h0=horses[1];me.position.set(CAR.x+Math.cos(a+h0.userData.q-.26)*h0.userData.r,carousel.position.y+h0.position.y+.1,CAR.z+Math.sin(a+h0.userData.q-.26)*h0.userData.r);me.rotation.set(0,-a+Math.PI,0);tgt.set(CAR.x,carousel.position.y+2,CAR.z);if(P.ride>50)stand()}
     else if(P.mode==='wheel'){P.ride+=dt;const a=gondolas[0].userData.a+wheel.rotation.z;me.position.set(WHEEL.x+Math.cos(a)*WR,wheel.position.y+Math.sin(a)*WR-1.05,WHEEL.z);me.rotation.set(0,0,0);tgt.set(me.position.x,me.position.y+1.2,me.position.z);follow(0,dt);if(P.ride>78)stand()}
