@@ -1070,7 +1070,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   // Free-walk demo: first-person camera on navigable ground; lake and temple are bounded.
   // Tốc độ đi bộ chung (m/giây): Rừng Yên, Đảo Yên dùng cùng một giá trị
   const WALK_SPEED=3.2;let walkDt=0;/* thời gian thật giữa hai khung hình cho việc đi bộ: máy chậm (ít khung hình) vẫn đi đúng tốc độ */
-  let walking=false,walkYaw=Math.PI,viewYaw=Math.PI,walkPitch=0,tapTarget=null;let camAim=null;/* 28/11: cùng nguyên tắc với Xứ Yên: camera không tự xoay theo lúc đi; chỉ đặt lại một lần về sau lưng khi bấm điểm đến mới (camAim), vẫn trượt theo để giữ nhân vật giữa, 1/3 dưới */const walkRoute=[];const walkingKeys=new Set();
+  let walking=false,walkYaw=Math.PI,viewYaw=Math.PI,walkPitch=0,tapTarget=null;let camAim=null;/* 28/11: camera không xoay ra sau lưng khi đi hay khi bấm điểm đến mới, chỉ trượt theo để giữ nhân vật giữa, 1/3 dưới (cả ba bản đồ) */const walkRoute=[];const walkingKeys=new Set();
   const onlineAvatars=new Map();
   // Local avatar is a separate scene object, never confused with remote peers.
   const me=new THREE.Group();const meTorso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.8,4,8),mat('#687b48'));meTorso.position.y=1.05;me.add(meTorso);
@@ -1161,7 +1161,6 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
       const saved=mePosition.clone();for(const [ax,az] of anchors.sort((a,b)=>Math.hypot(a[0]-saved.x,a[1]-saved.z)-Math.hypot(b[0]-saved.x,b[1]-saved.z))){if(!walkable(ax,az))continue;mePosition.set(ax,0,az);path=findWalkPath(x,z);if(path){mePosition.copy(saved);if(clearWalk([saved.x,saved.z],[ax,az]))path.unshift([ax,az]);else{mePosition.set(ax,0,az);}break;}mePosition.copy(saved);}}
     if(!path){document.getElementById('zenHint').textContent='Chưa tìm được lối đi đến bờ hồ.';return false;}
     walkRoute.length=0;walkRoute.push(...path);tapTarget=null;walkDetourFor=null;
-    camAim=Math.hypot(x-mePosition.x,z-mePosition.z)>1?Math.atan2(x-mePosition.x,z-mePosition.z):null;
     document.getElementById('zenHint').textContent='🚶 Đang di chuyển đến điểm bạn chọn…';return true;
   }
 
@@ -1354,7 +1353,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.anyenCachedText=cachedText;
   /* Trang lite: tải trước song song phần cần cho nơi vừa chọn (xếp sò/đá: mã vịnh + dữ liệu; vào nhà: mã phòng) trong lúc dựng 3D */
   if(window.anyenLite){if(window.anyenPendingBay||window.__liteWant==='bay'){loadBayModule().catch(()=>{});cachedText('data/world-halong_bay.json?v=1f1c8525').catch(()=>{})}}
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=47456e6b').then(code=>{eval(code+'\n//# sourceURL=bay3d.js');if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=aea6911c').then(code=>{eval(code+'\n//# sourceURL=bay3d.js');if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP&&!window.anyenLite)loadBayModule().catch(()=>{});/* lite: không tải sẵn Vịnh Yên */if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
