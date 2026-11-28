@@ -1139,8 +1139,6 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const roof=(yb,half,rise,len,col)=>{const a=Math.atan2(rise,half),Lr=Math.hypot(half,rise);for(const sd of [-1,1]){S.b(col,sd*half/2,yb+rise/2,z0,Lr,.26,len,0,0,-sd*a);S.b(SNOW,sd*(half/2-.06),yb+rise/2+.26,z0,Lr+.05,.32,len+.15,0,0,-sd*a)}S.b(SNOW,0,yb+rise+.2,z0,.6,.3,len+.15)};
     S.add(G.prism,oak,MX(0,y0+h,z0,w,1.9,d));roof(y0+h-.15,w/2+1.1,2.3,d+1.8,'#a8805c');
     S.b(oak,0,y0+h+2.1,z0,5.6,1.3,d-1.4);S.add(G.prism,oak,MX(0,y0+h+2.75,z0,5.6,1.2,d-1.4));roof(y0+h+2.6,3.4,1.45,d,'#a8805c');
-    {const gx=0,gy=y0+h+3.2,gz=z0+(d-1.4)/2+.06;for(const a of [-.95,-.48,0,.48,.95])L.add(G.sph,'#ffd98a',MX(gx+Math.sin(a)*.22,gy+Math.cos(a)*.22,gz,.09,.32,.03,0,0,-a));L.b('#ffd98a',gx,gy-.12,gz,.7,.05,.03)}
-    stringLights(L,-w/2-1,y0+h-.2,z0+d/2+.9,w/2+1,y0+h-.2,z0+d/2+.9,20,0);
     S.add(G.cyl12,'#7a3a28',MX(0,.86,4.4,.45,.12,.45));/* toạ cụ trên thềm đá, nhìn vào chánh điện */
     // Tượng Phật ngoài trời: cùng mẫu tượng Phật trên đồi Rừng Yên (kiết già, thiền định ấn), màu trắng, trên bệ đá tự nhiên bên phải chánh điện
     {const bx=10.5,bz=1.5;for(const [rx,rz,rr,ry] of [[0,0,1.9,.7],[-1.2,.8,1.1,.5],[1.3,.6,1.2,.55],[.4,-1,1.3,.6],[-.9,-.7,1,.45]])S.add(G.sphLo,rx%2?'#8f8a84':'#a29d96',MX(bx+rx,ry,bz+rz,rr,ry+.35,rr));S.add(G.sphLo,SNOW,MX(bx,1.1,bz,1.6,.3,1.5));S.add(G.cyl12,'#a29d96',MX(bx,1.2,bz,1.5,.3,1.5))}
@@ -1198,24 +1196,33 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   {const a=tw(0,7.2),b=STAIR,len=Math.hypot(a[0]-b.x,a[1]-b.z),ang=Math.atan2(a[0]-b.x,a[1]-b.z),ux=(a[0]-b.x)/len,uz=(a[1]-b.z)/len,PV=['#9aa2ac','#a9b0b9','#8f98a3','#b4bbc4','#a3abb5'],W=3.4,R=.62;
     for(let r=0;r*R<=len;r++){const cx=b.x+ux*r*R,cz=b.z+uz*r*R,yc=H(cx,cz);S.b('#e6ebf2',cx,yc+.04,cz,W+.2,.08,R+.02,ang);const off=r%2?R/2:0;
       for(let c=-W/2+R/2+off;c<=W/2-R/3;c+=R){const px=cx+Math.cos(ang)*c,pz=cz-Math.sin(ang)*c,py=H(px,pz),k=(r*7+Math.round(c*10))%PV.length;S.b(PV[(k+PV.length)%PV.length],px,py+.1,pz,Math.min(R-.07,W/2-c+R/2-.07),.1,R-.07,ang+((r+k)%3-1)*.03)}}}
-  // 28/11 (đổi theo người dùng): bỏ đèn đá đứng dưới đất; chỉ gắn đèn nhỏ trang trí: hai mép lối đá lên chùa, viền mái và góc tường chánh điện, quanh bệ tượng Phật. Chỉ sáng ở cảnh đêm (nút Giáng sinh), vàng dịu, không lấn cực quang
-  {const bl=(x,y,z,i,s)=>{const t0=XL.T;XL.T=LA.T;XL.add(G.sphLo,i%3?'#ffd896':'#fff0d0',MX(x,y,z,s||.06));XL.T=t0};/* 28/11 (người dùng dặn ban ngày tắt hết đèn): đèn chùa chỉ sáng ở cảnh đêm, khi bật Giáng sinh */
-    // hai mép lối đá
-    {const a=tw(0,7.2),b=STAIR,len=Math.hypot(a[0]-b.x,a[1]-b.z),ux=(a[0]-b.x)/len,uz=(a[1]-b.z)/len;let i=0;
-      for(let t=.4;t<len;t+=1.4,i++){const cx=b.x+ux*t,cz=b.z+uz*t;for(const sd of [-1,1]){const px=cx-uz*1.82*sd,pz=cz+ux*1.82*sd;bl(px,H(px,pz)+.12,pz,i)}}}
-    const y=H(TP.x,TP.z),z0=-1.5,w=11,d=8,h=3.4,y0=.7;LA.at(TP.x,y,TP.z,TRY);
-    const line=(x0,y1,za,x1,y2,zb,step,s)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,y2-y1,zb-za)/step));for(let k=0;k<=n;k++){const t=k/n;bl(x0+(x1-x0)*t,y1+(y2-y1)*t,za+(zb-za)*t,k,s)}};
-    // mái dưới: hai đường rìa đầu hồi trước và sau, hai mép mái dọc hai hông
-    {const ex=w/2+1.1,ey=y0+h-.32,top=ey+2.3,ez=z0+(d+1.8)/2+.06;for(const zz of [ez,z0*2-ez])for(const sd of [-1,1])line(sd*ex,ey,zz,0,top,zz,.45);for(const sd of [-1,1])line(sd*(ex+.04),ey,z0-(d+1.8)/2,sd*(ex+.04),ey,z0+(d+1.8)/2,.45)}
-    // mái trên: rìa đầu hồi phía trước
-    {const ex=3.4,ey=y0+h+2.45,ez=z0+d/2+.06;for(const sd of [-1,1])line(sd*ex,ey,ez,0,ey+1.45,ez,.4)}
-    // tường: bốn góc chánh điện và dải dưới mái phía trước
-    for(const sx of [-1,1])for(const sz of [-1,1])line(sx*(w/2+.1),y0+.15,z0+sz*(d/2+.1),sx*(w/2+.1),y0+h-.1,z0+sz*(d/2+.1),.4);
-    line(-w/2,y0+h-.12,z0+d/2+.1,w/2,y0+h-.12,z0+d/2+.1,.45);
-    // quanh tượng Phật: một vòng trên mép bệ đá tròn, một vòng sát chân bệ đá tự nhiên
-    {const bx=10.5,bz=1.5;for(let k=0;k<32;k++){const a=k/32*Math.PI*2;bl(bx+Math.cos(a)*1.68,1.56,bz+Math.sin(a)*1.68,k,.055)}/* viền chân đài sen */
-      LA.reset();for(let k=0;k<36;k++){const a=k/36*Math.PI*2,r=2.9+.15*Math.sin(k*1.3),c=tw(bx+Math.cos(a)*r,bz+Math.sin(a)*r);bl(c[0],H(c[0],c[1])+.1,c[1],k)}}/* vòng sát chân bệ đá */
-    LA.reset()}
+  // 28/11 vẽ lại đèn chùa theo mẫu người dùng gửi: ấm, tinh tế, trang nghiêm, không đèn nháy. Dải đèn vàng ấm liền mảnh dọc mép hai tầng mái,
+  // hoa sen vàng kem trên đầu hồi tầng trên, đèn hắt nhỏ gắn tường hai bên cửa và hắt chân cột, dải đèn dưới mỗi bậc thềm, hai vòng hào quang sau đầu tượng Phật,
+  // đài sen viền vàng, vài bụi cây phủ tuyết quanh bệ. Tất cả vào XL nên ban ngày tắt, chỉ sáng ở cảnh đêm (nút Giáng sinh).
+  {const y=H(TP.x,TP.z),z0=-1.5,w=11,d=8,h=3.4,y0=.7,T0=MX(TP.x,y,TP.z,1,1,1,0,TRY,0),GL='#ffc760',GL2='#ffe2a0';
+    const strip=(x0,y1,za,x1,y2,zb,th,col)=>{const dx=x1-x0,dy=y2-y1,dz=zb-za,l=Math.hypot(dx,dy,dz);XL.add(G.box,col||GL,MX((x0+x1)/2,(y1+y2)/2,(za+zb)/2,th||.07,th||.07,l,-Math.asin(dy/l),Math.atan2(dx,dz),0))};/* dải đèn liền */
+    XL.T=T0;
+    // mái dưới: mép đầu hồi trước và sau, mép mái hai hông
+    {const ex=w/2+1.1,ey=y0+h-.36,top=ey+2.3,ez=z0+(d+1.8)/2+.04;for(const zz of [ez,z0*2-ez])for(const sd of [-1,1])strip(sd*ex,ey,zz,0,top,zz);for(const sd of [-1,1])strip(sd*(ex+.03),ey,z0-(d+1.8)/2,sd*(ex+.03),ey,z0+(d+1.8)/2)}
+    // mái trên: mép đầu hồi trước và sau, mép hai hông
+    {const ex=3.45,ey=y0+h+2.42,ez=z0+d/2+.04;for(const zz of [ez,z0*2-ez])for(const sd of [-1,1])strip(sd*ex,ey,zz,0,ey+1.45,zz);for(const sd of [-1,1])strip(sd*(ex+.03),ey,z0-d/2,sd*(ex+.03),ey,z0+d/2)}
+    // dải đèn hắt dưới mái trước, sát đỉnh tường
+    strip(-w/2,y0+h-.1,z0+d/2+.12,w/2,y0+h-.1,z0+d/2+.12,.05,GL2);
+    // hoa sen vàng kem trên đầu hồi tầng trên
+    {const gx=0,gy=y0+h+3.05,gz=z0+(d-1.4)/2+.1;for(const [a,s] of [[0,1],[-.5,.92],[.5,.92],[-1,.78],[1,.78],[-1.45,.6],[1.45,.6]]){S.add(G.sph,'#e9d6a6',MX(gx+Math.sin(a)*.34*s,gy+Math.cos(a)*.34*s,gz-.02,.13*s,.42*s,.04,0,0,-a));XL.add(G.sph,'#ffe7b0',MX(gx+Math.sin(a)*.34*s,gy+Math.cos(a)*.34*s,gz+.02,.11*s,.38*s,.03,0,0,-a))}
+      S.b('#e9d6a6',gx,gy-.2,gz-.02,1.1,.07,.04);XL.b(GL2,gx,gy-.2,gz+.02,1.05,.05,.03)}
+    // đèn hắt nhỏ gắn tường hai bên cửa, đèn hắt chân cột
+    for(const sx of [-1,1])for(const x of [2.9,4.6]){const zz=z0+d/2+.1;S.b('#3c2c20',sx*x,y0+2.25,zz,.18,.34,.14);XL.b(GL2,sx*x,y0+2.25,zz+.08,.1,.24,.02);XL.add(G.cone12,'#b98444',MX(sx*x,y0+2.68,zz+.04,.08,.45,.02));XL.add(G.cone12,'#b98444',MX(sx*x,y0+1.82,zz+.04,.08,.45,.02,Math.PI,0,0))}
+    for(const sx of [-1,1])for(const x of [2.55,3.75,4.95]){const zz=z0+d/2+.14;XL.b(GL,sx*x,y0+.08,zz,.16,.08,.1);XL.add(G.cone12,'#a8763c',MX(sx*x,y0+.5,zz,.07,.8,.02))}
+    // dải đèn dưới mép mỗi bậc thềm
+    for(let i=0;i<4;i++){const zf=z0+d/2+3.2-i*.45+.5,yt=.2+i*.17;strip(-3.45,yt-.05,zf+.02,3.45,yt-.05,zf+.02,.05,GL2)}
+    strip(-6.9,.72,z0+.8+6.27,6.9,.72,z0+.8+6.27,.05,GL);/* mép nền đá trước */
+    XL.reset()}
+  // tượng Phật: hai vòng hào quang sáng sau đầu, đài sen viền vàng; bụi cây phủ tuyết quanh bệ
+  {const y=H(TP.x,TP.z),c=tw(10.5,1.5),TB=MX(c[0],y+1.36,c[1],1.45,1.45,1.45,0,TRY,0);XL.T=TB;
+    XL.add(new THREE.TorusGeometry(.98,.03,6,64).toNonIndexed(),'#ffd27a',MX(0,2.52,-.44,1));XL.add(new THREE.TorusGeometry(1.22,.026,6,72).toNonIndexed(),'#ffc760',MX(0,2.52,-.46,1));
+    XL.add(new THREE.TorusGeometry(1.24,.03,6,72).rotateX(Math.PI/2).toNonIndexed(),'#ffc760',MX(0,.36,0,1));XL.add(new THREE.TorusGeometry(1.12,.025,6,64).rotateX(Math.PI/2).toNonIndexed(),'#ffe2a0',MX(0,.02,0,1));XL.reset();
+    for(let k=0;k<6;k++){const a=-.6+k*.35+(k>2?2.1:0),r=2.7+(k%2)*.35,p=tw(10.5+Math.sin(a)*r,1.5+Math.cos(a)*r),py=H(p[0],p[1]),s=.38+(k%3)*.1;S.add(G.ico,'#2d5544',MX(p[0],py+s*.8,p[1],s,s*.9,s,0,k,0));S.add(G.ico,SNOW,MX(p[0],py+s*1.25,p[1],s*.8,s*.45,s*.8,0,k+.4,0))}}
   {const s=STATIONS.find(s=>s.id==='sit'),c=tw(0,5.8);s.x=c[0];s.z=c[1];const b=STATIONS.find(s=>s.id==='bell'),d=tw(10.5,5.6);b.x=d[0];b.z=d[1]}
 
   // ---------- trồng thông: dày ở rừng tây và dải sau lều kính, thưa quanh làng ----------
