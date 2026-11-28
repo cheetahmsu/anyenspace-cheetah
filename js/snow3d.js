@@ -193,25 +193,33 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1,0)),f.x),mix(h2(i+vec2(0,1)),h2(i+vec2(1,1)),f.x),f.y);}
     float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<3;i++){v+=a*n2(p);p=p*2.1+vec2(3.1,1.7);a*=.5;}return v;}
-    /* 28/11 vẽ lại cực quang theo ảnh mẫu: mỗi dải là một tấm rèm đứng thật (giao tia nhìn với mặt rèm), chân rèm sắc hồng, lõi xanh lục sáng,
-       tia dọc rõ, phía trên ngả xanh ngọc rồi tím nhạt dần; có rèm ở phía bắc, ngang đỉnh đầu, phía đông, tây và nam nên nhìn đâu cũng thấy */
-    vec3 curtain(vec3 d,float z0,float A,float k,float ph,float yb,float yt,float sd,float gain){float hx=d.x,hz=d.z;if(hz*z0<=0.||abs(hz)<.03)return vec3(0.);
-      float u=z0/hz;for(int i=0;i<4;i++){float s=u*hx;u=(z0+A*sin(k*s+ph+time*.05)+A*.45*sin(k*2.3*s-ph*1.7-time*.04))/hz;}if(u<=0.||u>45.)return vec3(0.);float s0=u*hx,res=abs(u*hz-(z0+A*sin(k*s0+ph+time*.05)+A*.45*sin(k*2.3*s0-ph*1.7-time*.04)));if(res>.25)return vec3(0.);/* chưa hội tụ (nhìn xiên dọc rèm): bỏ, tránh vệt răng cưa */
-      float y=u*d.y,v=(y-yb)/(yt-yb),s=u*hx;if(v<-.25||v>1.)return vec3(0.);
-      float ray=n2(vec2(s*5.5+time*.35,sd));ray=.12+1.6*ray*ray*ray;ray*=.55+.9*smoothstep(.25,.75,n2(vec2(s*.35-time*.03,sd+4.)));/* tia dọc sắc, mảng sáng tối dọc rèm */
-      float prof=v<0.?exp(v*22.)*.1:smoothstep(0.,.035,v)*pow(1.-v,1.6)*(1.+1.2*exp(-v*14.));/* chân rèm sắc, sáng nhất ngay trên chân, nhạt dần lên cao; quầng mờ dưới chân */
-      vec3 col=v<0.?vec3(.15,1.,.45):mix(vec3(1.,.3,.6),vec3(.15,1.,.45),smoothstep(.0,.06,v));col=mix(col,vec3(.25,.95,.55),smoothstep(.3,.55,v));col=mix(col,vec3(.62,.36,1.),smoothstep(.5,.9,v));
-      col=mix(col,vec3(1.,.4,.7),.55*smoothstep(.62,.85,n2(vec2(s*.25+sd,time*.02)))*smoothstep(.35,.8,v));/* mảng hồng tím từng lúc */
-      return col*prof*mix(1.,ray,exp(-u*.03))*gain*exp(-u*.035)*smoothstep(40.,22.,u)*smoothstep(.25,.05,res)*smoothstep(.06,.3,abs(hz)/max(length(vec2(hx,hz)),.001));}/* xa thì tia mịn lại để không lấp lánh răng cưa */
-    vec3 aurora(vec3 d){if(d.y<.01)return vec3(0.);vec3 c=vec3(0.);
-      c+=curtain(d,-4.,1.1,.55,0.,1.,3.2,1.,1.25);/* rèm lớn phía bắc */
-      c+=curtain(d,-9.,2.,.3,1.3,1.,3.4,7.,.9);/* rèm thấp sát núi phía bắc */
-      c+=curtain(d,-.7,.6,.9,2.,1.,3.,13.,.85);/* rèm vắt qua đỉnh đầu */
-      c+=curtain(d.zyx,5.5,1.3,.45,4.,1.,3.,19.,.8);/* rèm phía đông */
-      c+=curtain(d.zyx,-7.,1.6,.4,5.,1.,3.,23.,.6);/* rèm phía tây */
-      c+=curtain(d,7.5,1.8,.35,3.,1.,3.,29.,.55);/* rèm phía nam */
-      c*=smoothstep(.01,.08,d.y)*boost*1.15;return c/(1.+c*.3);}
-    vec3 skyCol(vec3 d){float y=d.y;vec3 c=mix(vec3(.3,.42,.6),vec3(.1,.19,.36),smoothstep(0.,.3,y));c=mix(c,vec3(.035,.07,.18),smoothstep(.3,.95,y));c*=mix(1.,.32,night);/* bản Giáng sinh: trời tối */
+    /* 28/11 (tối): cực quang phủ kín vòm trời. Mỗi dải là tấm rèm đứng thật trong không gian, dò tia nhìn qua nhiều lớp độ cao
+       (chiếu lên mặt phẳng ngang ở từng độ cao) nên ở đâu, nhìn hướng nào, kể cả ngửa thẳng lên đỉnh đầu, cũng thấy rèm sáng có tia dọc.
+       Chân rèm viền hồng, lõi xanh lục, lên cao ngả xanh ngọc rồi tím. Lớp xa đường chân trời mờ dần để không răng cưa. */
+    float band(vec2 q,float c,float A,float k,float ph,float w,float sd,out float al){al=q.x;
+      float e=q.y-(c+A*sin(k*q.x+ph+time*.06)+A*.5*sin(k*2.7*q.x-ph*1.3-time*.045));e=abs(e);if(e>w*2.6)return 0.;
+      float ray=n2(vec2(q.x*2.6+time*.4,sd));ray=.08+1.9*ray*ray*ray;ray*=.45+.9*smoothstep(.2,.8,n2(vec2(q.x*.07-time*.05,sd+4.)));
+      return exp(-e*e/(w*w))*ray;}
+    float bandRep(vec2 q,float sp,float A,float k,float w,float sd){float c=A*sin(k*q.x+time*.05+sd)+A*.5*sin(k*2.3*q.x-time*.04);float y=q.y-c,id=floor(y/sp+.5),e=abs(y-id*sp);if(e>w*2.6)return 0.;
+      float ray=n2(vec2(q.x*2.4+time*.35,sd+id*5.7));ray=.08+1.9*ray*ray*ray;ray*=.4+.9*smoothstep(.25,.8,n2(vec2(q.x*.06-time*.05,id*3.1+sd)));return exp(-e*e/(w*w))*ray;}/* dải lặp đều khắp trời: hướng nào cũng có rèm */
+    vec3 aurora(vec3 d){if(d.y<.012)return vec3(0.);vec3 c=vec3(0.);const int N=${AUR_STEPS};
+      float jit=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))))*.8;vec2 wp=d.xz/(d.y+.08)*16.;vec2 warp=vec2(fbm(wp*.03+time*.01),fbm(wp*.03+7.3))*7.-3.5;
+      for(int i=0;i<N;i++){float v=(float(i)+jit)/float(N),h=12.+v*14.;vec2 p=d.xz*(h/d.y),pw=p+warp*(.6+v*.4);float dist=length(p);if(dist>130.)break;
+        float a0,a1,a2,a3,a4;
+        float b=band(pw,-6.,4.5,.07,0.,1.1,1.,a0)*1.2;/* dải lớn vắt qua đỉnh đầu, lệch bắc */
+        b+=band(pw,-30.,7.,.045,1.7,1.6,7.,a1)+band(pw,-52.,9.,.035,2.6,2.,11.,a1)*.8;/* hai dải phía bắc, dải xa sát núi *//* dải bắc rộng */
+        b+=band(vec2(pw.x*.7-pw.y*.71,pw.x*.71+pw.y*.7),13.,5.5,.06,3.1,1.2,13.,a2)*.9;/* dải chéo đông nam */
+        b+=band(vec2(pw.y,-pw.x),-20.,6.,.05,4.6,1.4,19.,a3)*.8;/* dải phía tây */
+        b+=band(vec2(pw.y,pw.x),24.,6.,.05,2.2,1.4,23.,a4)*.7;/* dải phía đông */
+        b+=band(vec2(pw.x*.87+pw.y*.5,-pw.x*.5+pw.y*.87),7.,3.5,.08,5.3,1.1,29.,a0)*.85;/* dải mảnh chéo ngang đỉnh trời, lệch nam */
+        b+=bandRep(vec2(pw.x*.94+pw.y*.34,-pw.x*.34+pw.y*.94),24.,5.,.05,1.4,37.)*.6;/* rèm lặp mờ hơn phủ khắp vòm trời */
+        if(b<.002)continue;
+        float prof=smoothstep(0.,.05,v)*pow(1.-v,.9)*(1.+1.6*exp(-v*9.));
+        vec3 col=mix(vec3(1.,.25,.6),vec3(.12,1.,.45),smoothstep(.02,.17,v));col=mix(col,vec3(.15,.95,.78),smoothstep(.32,.55,v));col=mix(col,vec3(.62,.32,1.),smoothstep(.5,.85,v));
+        col=mix(col,vec3(1.,.38,.75),.5*smoothstep(.6,.85,n2(pw*.04+time*.02))*smoothstep(.3,.8,v));/* mảng hồng tím từng lúc */
+        c+=col*b*prof*smoothstep(130.,55.,dist);}
+      c*=3.2/float(N)*smoothstep(.012,.1,d.y)*boost;return c/(1.+c*.35);}
+    vec3 skyCol(vec3 d){float y=d.y;vec3 c=mix(vec3(.3,.42,.6),vec3(.07,.13,.28),smoothstep(0.,.28,y));c=mix(c,vec3(.012,.025,.075),smoothstep(.28,.9,y));/* 28/11: đỉnh trời xanh đêm thẫm cho cực quang nổi */c*=mix(1.,.32,night);/* bản Giáng sinh: trời tối */
       float south=max(0.,d.z);c+=vec3(.22,.12,.2)*pow(south,2.)*exp(-max(y,0.)*9.)*.5;
       vec2 g=floor(d.xz/(abs(d.y)+.35)*260.);float st=step(.9965,h2(g))*smoothstep(.04,.3,y);c+=vec3(.9,.95,1.)*st*(.55+.45*sin(time*2.+h2(g+3.)*40.));
       c+=aurora(d);return c;}`;
@@ -690,7 +698,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       S.b('#9a7a5a',mx,y+.75,mz,ln,.1,.1,ry);S.b('#9a7a5a',mx,y+.4,mz,ln,.08,.08,ry);S.b('#7a5a40',x0,y+.5,z0,.14,1,.14);for(const t of [.25,.75])bulb(x0+(x1-x0)*t,y+.83,z0+(z1-z0)*t)}}
   // ---------- 1 Rừng Kính: lều kính vòm dọc bờ bắc Hồ Băng ----------
   // lều kính vòm trắc địa (khung tam giác) trên sàn gỗ sát bờ hồ, bên trong đèn vàng ấm, bậc thềm, ghế gỗ phủ tuyết (theo ảnh mẫu 27/11)
-  const glassMat=new THREE.MeshPhongMaterial({color:'#cfe2ff',specular:'#ffffff',shininess:120,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
+  const glassMat=new THREE.MeshPhongMaterial({color:'#4a6588',specular:'#ffffff',shininess:120,transparent:true,opacity:.1,/* 28/11: kính trong hơn, không phủ màu xám lên trời đêm */depthWrite:false,side:THREE.DoubleSide});
   const glowMat=new THREE.MeshBasicMaterial({color:'#ffb866',transparent:true,opacity:.22,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,fog:false});
   // 3 lều ngắm cực quang theo bộ thiết kế Rừng Kính: vòm kính khung tối, vách sau gỗ sồi, sàn gỗ, nội thất ấm (Lều Rừng Thông · Lều Đồi Tuyết · Lều Bờ Hồ)
   const DR=4,RIB='#33383d',geo=new THREE.SphereGeometry(DR,28,12,0,Math.PI*2,0,Math.PI/2).toNonIndexed();
@@ -699,7 +707,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   IGLOOS.forEach(([x,z],idx)=>{const y=H(x,z)+.5,r=DR,ry=Math.atan2(LAKE.x-x,LAKE.z-z);S.at(x,y,z,ry);L.at(x,y,z,ry);
     // Lều Kính Tròn (tấm mới): vòm kính trọn vẹn, khung mảnh tối chia múi, vòng nhỏ ở đỉnh, sàn gỗ tròn sáng màu, bậc thềm rộng; bên trong tối giản
     S.add(G.cyl12,'#8d8a85',MX(0,-.55,0,r+1.5,.5,r+1.5));S.add(G.cyl12,OAK,MX(0,-.2,0,r+1.3,.5,r+1.3));S.add(G.cyl12,'#d8b48a',MX(0,.04,0,r+1.25,.04,r+1.25));
-    for(let k=0;k<6;k++)S.add(ribM,RIB,MX(0,.06,0,1,1,1,0,k*Math.PI/6,0));for(const [ry2,rg] of ribR)S.add(rg,RIB,MX(0,.06+ry2,0,1));S.add(G.cyl12,'#5c6066',MX(0,r+.02,0,.55,.12,.55));/* khung, vòng đỉnh */
+    for(let k=0;k<6;k++)S.add(ribM,RIB,MX(0,.06,0,1,1,1,0,k*Math.PI/6,0));for(const [ry2,rg] of ribR)S.add(rg,RIB,MX(0,.06+ry2,0,1));S.add(G.cyl12,'#5c6066',MX(0,r+.02,0,.28,.08,.28));/* khung, vòng đỉnh nhỏ để nằm ngửa vẫn thấy trời đỉnh đầu */
     S.add(G.cyl12,'#e9e2d6',MX(0,.08,-.3,2.1,.04,2.1));/* thảm tròn */
     S.b('#b8906a',0,.4,-1.3,2.6,.35,2.2);S.b(IVORY,0,.68,-1.3,2.4,.25,2.0);S.b(IVORY,-.6,.88,-2.2,.8,.22,.4);S.b(IVORY,.6,.88,-2.2,.8,.22,.4);S.b('#d5c7ad',0,.83,-.6,2.45,.06,.7);S.b('#b8906a',0,1.1,-2.45,2.7,1.3,.15);/* giường lớn */
     for(const sx of [-1.75,1.75]){S.add(G.cyl12,OAK,MX(sx,.35,-2.1,.3,.6,.3));LA.add(G.sph,'#ffcf86',MX(sx,.85,-2.1,.15))}/* bàn nhỏ, đèn bàn */
@@ -715,7 +723,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     block(x,z,r+1.5)});
   for(let k=0;k<3;k++){const [ax,az]=IGLOOS[k],[bx,bz]=IGLOOS[(k+1)%3],mx=(ax+bx)/2,mz=(az+bz)/2,[ox,oz]=toLake([mx,mz],-3);/* cụm thông dày giữa các lều: riêng tư, không nhìn thẳng sang nhau */
     for(let j=0;j<7;j++){const a=j*2.4+k,rr=1+j*.7,px=ox+Math.cos(a)*rr,pz=oz+Math.sin(a)*rr;if(lakeE(px,pz)>1.12&&IGLOOS.every(([ix,iz])=>Math.hypot(px-ix,pz-iz)>DR+3.2)&&!homeClear(px,pz))pine(T,px,pz,5+((j*3+k)%4)*1.5)}}
-  {const gm=glassB.mesh(glassMat);gm.renderOrder=2;sc.add(gm);const gl=glowB.mesh(glowMat);gl.renderOrder=1;sc.add(gl)}
+  {const gm=glassB.mesh(glassMat);gm.renderOrder=2;sc.add(gm);const gl=glowB.mesh(glowMat);gl.renderOrder=1;sc.add(gl);var domeGlow=gl}
   for(const [x,z] of IGLOOS)warm(x,H(x,z)+2.5,z,10,30);
   // ---------- tuyến đường phát sáng: husky vàng cam, xe trượt xanh lam, trượt tuyết hồng ----------
   const glow=(pts,col,w,yf,closed)=>{const P=closed?[...pts,pts[0]]:pts;for(let i=0;i+1<P.length;i++){const [x0,z0]=P[i],[x1,z1]=P[i+1],ln=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ceil(ln/2)),ry=Math.atan2(-(z1-z0),x1-x0);
@@ -1476,9 +1484,9 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const igSet=k=>{if(GI.k===k||P.mode==='kota'||P.mode==='aurora')return;if(GI.g)sc.remove(GI.g);GI=mkGI(k);const q=STATIONS.find(o=>o.id==='aurora'),[sx,sz]=toLake(IGLOOS[k],7.4);q.x=sx;q.z=sz};/* 28/11: cả ba lều kính đều chạm vào được, chọn lều vừa chạm */
   const AUR={on:false,fov:0,zoom:1,lift:1,pos:new THREE.Vector3()};
   const WV={fov:50,zoom:1,lift:1};function auroraStart(o2){const R=GI,o=R.w(0,-1.05);AUR.on=true;AUR.fov=cam.fov;AUR.zoom=camZoom;AUR.lift=camLift;AUR.back=o2&&o2.back;if(o2)AUR.pos.set(...o2.pos);else AUR.pos.set(R.x+o[0],R.y+1.25,R.z+o[1]);
-    P.mode='aurora';P.ride=0;P.dest=null;P.yaw=o2?o2.yaw:R.ry;near=null;actBtn.hidden=true;camLift=1.15;camZoom=1.6;camZoomS=1.6;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false);
+    domeGlow.visible=false;/* nằm trong lều: tắt quầng vàng phủ trong vòm để trời đêm thẫm */P.mode='aurora';P.ride=0;P.dest=null;P.yaw=o2?o2.yaw:R.ry;near=null;actBtn.hidden=true;camLift=1.15;camZoom=1.6;camZoomS=1.6;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false);
     stopBtn.hidden=false;stopBtn.textContent=o2?'↩ Đứng dậy':'↩ Ngồi dậy';caption((o2?o2.msg:'✨ Nằm ngắm cực quang')+' · kéo ngang để nhìn quanh, kéo dọc để ngước lên hay nhìn xuống hồ, chụm hai ngón hoặc lăn chuột để phóng to',9000)}
-  function auroraEnd(){AUR.on=false;cam.fov=AUR.fov;cam.updateProjectionMatrix();camZoom=AUR.zoom;camZoomS=camZoom;camLift=AUR.lift;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);
+  function auroraEnd(){AUR.on=false;domeGlow.visible=true;cam.fov=AUR.fov;cam.updateProjectionMatrix();camZoom=AUR.zoom;camZoomS=camZoom;camLift=AUR.lift;U.boost.value=1;me.visible=true;labels.forEach(l=>l.visible=true);
     if(AUR.back){const [bx,bz,ba]=AUR.back;AUR.back=null;P.mode='walk';P.x=bx;P.z=bz;P.a=ba+Math.PI;P.yaw=ba;first=true;stopBtn.hidden=true;caption('Mang Yên về đời thực: tối nay, trước khi ngủ, thử ngước nhìn bầu trời một phút.',7000);return}
     const R=GI,s=R.seats[0];RM=R;P.mode='kota';R.sit=-1;R.seatTo=-1;P.x=R.x+s.ax;P.z=R.z+s.az;P.a=R.ry;P.yaw=R.ry+Math.PI;first=true;stopBtn.hidden=false;stopBtn.textContent='🚪 Ra cửa';
     caption('Mang Yên về đời thực: tối nay, trước khi ngủ, thử ngước nhìn bầu trời một phút.',7000)}
@@ -1742,5 +1750,5 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     snowCleanup.forEach(f=>{try{f()}catch(e){}});box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
   // Chụp thử: __snowCam([x,y,z],[tx,ty,tz]) đặt camera cố định, __snowCam(null) để trả lại; __snowGo('leukinh') tới một khu; __snowAct('aurora') mở hoạt động
   window.__snowPos=(x,z,yaw)=>{P.x=x;P.z=z;P.dest=null;if(yaw!=null)P.yaw=yaw;first=true};window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__sleds=()=>sleds.map(o=>[o.st,o.rider,+o.s.toFixed(1),+o.v.toFixed(1)]);window.__sledLand=(x,z)=>sledLand(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
-  window.__snowBuildT=x=>{if(myMan)myMan.t=x};window.__snowBuildPick=k=>buildPick(k);window.__snowFree=(x,z,r)=>colliders.filter(c=>c!==TGH.c&&Math.hypot(x-c[0],z-c[1])<r+c[2]).length;window.__lakeShore=(a,o)=>lakeShore(a,o);window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
+  window.__snowBuildT=x=>{if(myMan)myMan.t=x};window.__snowBuildPick=k=>buildPick(k);window.__snowFree=(x,z,r)=>colliders.filter(c=>c!==TGH.c&&Math.hypot(x-c[0],z-c[1])<r+c[2]).length;window.__lakeShore=(a,o)=>lakeShore(a,o);window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};window.__snowStand=()=>{if(P.mode!=='walk')stand()};window.__snowBed=()=>{window.__snowAct('aurora');auroraStart()};window.__snowLook=(v,yaw)=>{camLift=v;if(yaw!=null)P.yaw=yaw};
   const api={close};window.__snowOpen=api;return api}
