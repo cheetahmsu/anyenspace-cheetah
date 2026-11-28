@@ -1015,6 +1015,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     if(window.__xuyenJournal)window.__xuyenJournal('Mình đã thả "'+letPick+'"'+(txt?' ('+txt+')':'')+' vào lửa và để nó cháy thành tro.','🔥 Buông bỏ bên lửa');
     setTimeout(()=>caption('🔥 Nhìn nó cháy thành tro. Hít vào hơi ấm, thở ra thật dài. Bạn không cần mang nó theo nữa.',8000),1700)}
   // Cho tuần lộc ăn: nắm rêu địa y trên tay, đàn tuần lộc gần đó cúi xuống ăn (chỉ là gợi ý nhẹ), đếm số lần trên máy
+  const deerFed={n:0,t:0};/* không đếm hiển thị; cho ăn quá 3 lần trong 10 phút thì tuần lộc báo đã no */
   const moss=new THREE.Mesh(gSph,lam('#b9c29a'));moss.scale.set(.16,.09,.16);moss.visible=false;sc.add(moss);
   const PROX=[],proxM=new THREE.MeshBasicMaterial({visible:false});
 
@@ -1029,7 +1030,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='cocoa'){setSit(true);P.mode='sit';P.sitAt={x:s.x,z:s.z,y:H(s.x,s.z)+.5,a:s.a,cup:1};P.yaw=s.a;first=true;cup.visible=true;caption('☕ Hai tay ôm ly cacao nóng. Hít mùi thơm, thở ra làn hơi ấm. Uống từng ngụm nhỏ.',8000)}
     else if(s.id==='stars'){P.mode='stars';P.ride=0;caption('🌌 Nằm ngửa trên tuyết, nhìn lên bầu trời. Đếm mười hơi thở chậm, mỗi hơi thở một ngôi sao.',9000);breathEl.hidden=false}
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
-    else if(s.id==='deer'){P.a=Math.atan2(FARM.x-P.x,FARM.z-P.z);P.yaw=P.a+Math.PI-.5;first=true;let n=1;try{n=+(localStorage.getItem('xuyen-deer')||0)+1;localStorage.setItem('xuyen-deer',n)}catch(e){}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption('🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Lần thứ '+n+' bạn cho tuần lộc ăn. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
+    else if(s.id==='deer'){P.a=Math.atan2(FARM.x-P.x,FARM.z-P.z);P.yaw=P.a+Math.PI-.5;first=true;const now=performance.now();if(now-deerFed.t>600000)deerFed.n=0;deerFed.t=now;deerFed.n++;if(deerFed.n>3){caption('🦌 Tuần lộc no rồi, chúng nằm xuống nhai lại thong thả. Để chúng nghỉ, lát nữa ghé lại nhé.',7000);return}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption(deerFed.n===3?'🦌 Tuần lộc ăn nắm rêu cuối cùng rồi thở ra một làn hơi ấm. Chúng gần no rồi.':'🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='snowman'){const m=snowmanBuild();P.mode='build';P.x=m.me[0];P.z=m.me[1];P.a=Math.atan2(m.sp.x-P.x,m.sp.z-P.z);P.yaw=m.yaw;P.camAim=null;first=true;near=null}
     else if(s.id==='tree'){wishOpen();P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;first=true;return}
