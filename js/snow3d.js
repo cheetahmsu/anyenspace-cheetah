@@ -38,7 +38,7 @@ const HR=[[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50],[40,-58],[66,-56],[80
 const HUSKY={x:10,z:-50,rx:1,rz:1};
 const along=(pts,closed,u)=>{const P=closed?[...pts,pts[0]]:pts;let tot=0;const L=[];for(let i=0;i+1<P.length;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l}
   let d=((u%1)+1)%1*tot;if(!closed&&u>=1)d=tot;for(let i=0;i<L.length;i++){if(d<=L[i]||i===L.length-1){const t=Math.min(1,d/L[i]),a=P[i],b=P[i+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=L[i]}};
-const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-46,z:85},FIRE2={x:-63,z:71};
+const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-62,z:106},FIRE2={x:-63,z:71};
 const SNOWMAN={x:-40,z:74},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
@@ -48,7 +48,7 @@ const VH=[[0,37,9,19.8,4.4,'#c99d70','main'],[-58,29,8,7,3.8,'#b8906a','shop'],[
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
-const PATHS=[[[14,98],[17,80],[12.5,71]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
+const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-46,86],[-57,99]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
 const STATIONS=[
   {id:'aurora',x:48,z:-49.6,label:'✨ Vào lều kính ngắm cực quang'},
   {id:'husky',x:12.5,z:-19,label:'🐕 Lên xe husky dạo rừng'},
@@ -460,7 +460,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       if(kind==='b'){S.b('#a07a56',bx,.45,bz,1.9,.1,.5,br);S.b(SNOW,bx,.53,bz,1.8,.05,.45,br);S.b('#a07a56',bx,.8,bz-.0,1.9,.5,.08,br)}
       else{S.b('#a07a56',bx,.78,bz,1.9,.08,.9,br);for(const sd of [-.75,.75])S.b('#a07a56',bx+Math.cos(br)*0+Math.sin(br)*sd,.42,bz+Math.cos(br)*sd,1.9,.07,.3,br);S.b(SNOW,bx,.84,bz,1.8,.04,.8,br)}}/* ghế băng, bàn dã ngoại */
     S.reset();L.reset();block(X,Z,R0+.7);warm(X,y+2.5,Z,10,20)}
-  kota(-58,97,3,'#a8805c');{const fx=FIRE2.x,fz=FIRE2.z,y=H(fx,fz);const fire=new THREE.Group();const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,1,7),new THREE.MeshBasicMaterial({color:'#ffae4a',fog:false}));fl.position.y=.6;fire.add(fl);
+  kota(-46,94,3,'#a8805c');{const fx=FIRE2.x,fz=FIRE2.z,y=H(fx,fz);const fire=new THREE.Group();const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,1,7),new THREE.MeshBasicMaterial({color:'#ffae4a',fog:false}));fl.position.y=.6;fire.add(fl);
     for(let i=0;i<8;i++){const a=i/8*6.28;S.add(G.sph,'#5e5a56',MX(fx+Math.cos(a)*1,y+.1,fz+Math.sin(a)*1,.2,.15,.2))}fire.position.set(fx,y,fz);sc.add(fire);block(fx,fz,1.3);var fireFl=fl;var fireLight=warm(fx,y+1.2,fz,14,14);
     for(const a of [0.6,1.57,2.6,3.6,4.6,5.6])S.b('#7a5a3e',fx+Math.cos(a)*2.6,y+.35,fz+Math.sin(a)*2.6,1.4,.3,.4,-a+Math.PI/2)}
   for(const [sx,sz,k] of [[...archW(3.6,1.6),1],[SNOWMAN.x,SNOWMAN.z,2.4]]){const y=H(sx,sz);S.add(G.sph,SNOW,MX(sx,y+.7*k,sz,.9*k));S.add(G.sph,SNOW,MX(sx,y+1.85*k,sz,.62*k));S.add(G.sph,SNOW,MX(sx,y+2.7*k,sz,.42*k));S.add(G.cone,'#e07a3a',MX(sx,y+2.7*k,sz+.5*k,.07*k,.35*k,.07*k,Math.PI/2,0,0));S.b('#8c2f2a',sx,y+2.3*k,sz,.9*k,.16*k,.9*k);S.add(G.cyl,'#2b2622',MX(sx,y+3.15*k,sz,.3*k,.4*k,.3*k));block(sx,sz,k)}
