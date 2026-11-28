@@ -388,6 +388,27 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     if(v.k==='cafe')for(const k of [-1.8,1.8]){const bx=v.x+cs*k+sn*(v.d/2+3.2),bz=v.z-sn*k+cs*(v.d/2+3.2),by=H(bx,bz);S.add(G.cyl12,'#a07a56',MX(bx,by+.45,bz,.5,.06,.5));S.b('#a07a56',bx,by+.22,bz,.1,.45,.1);S.b('#c5a36f',bx,by+1.6,bz,1.4,.06,1.4)}}
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2+.13;/* ghế gỗ quanh gốc cây thông */
     if(i%3===1){const bx=TREE.x+Math.cos(a+.26)*11,bz=TREE.z+Math.sin(a+.26)*11,by=H(bx,bz),br=-a-.26+Math.PI/2;S.b('#a07a56',bx,by+.45,bz,1.8,.1,.5,br);S.b(SNOW,bx,by+.53,bz,1.7,.05,.45,br);S.b('#a07a56',bx,by+.8,bz,1.8,.5,.08,br)}}
+  // ---------- Gian hàng Bạn đồng hành (Giáng sinh 2026): 6 quầy gỗ nửa vòng cung phía bắc cây thông, quay mặt về cây ----------
+  // Đối diện chỗ đứng treo điều ước (phía nam) nên góc nhìn trọn cây không bị che. Quầy gỗ sồi sáng, mái vải kem phủ tuyết, viền champagne,
+  // dây đèn vàng ấm (chỉ bật ở bản Giáng sinh), biển gỗ khắc tên nhà tài trợ. Gian chưa có nhà tài trợ: biển trơn, quầy phủ tuyết.
+  const BOOTHS=[];{const R=15,N=6,a0=Math.PI+.45,a1=2*Math.PI-.45,CAN='#efe6d2',TRIM='#d6b878',WOOD='#c9a274',WOODD='#8a6a4a',TOP='#e8d8b8';
+    let demo=[];try{if(new URLSearchParams(location.search).has('gian-mau'))demo=['Trà An Nhiên','Gốm Bát Tràng','Hương Trầm Yên','Len Ấm Mùa Đông','Sách & Thiền','Bánh Gừng Nhà Làm']}catch(e){}
+    const plaque=t=>{const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle='#5e4430';g.fillRect(0,0,512,128);g.strokeStyle='rgba(214,184,120,.85)';g.lineWidth=5;g.strokeRect(10,10,492,108);g.textAlign='center';g.textBaseline='middle';g.fillStyle='#f3e6c6';g.font=t?'600 52px Georgia,serif':'44px Georgia,serif';g.fillText(t||'✧',256,66,460);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return tx};
+    for(let k=0;k<N;k++){const a=a0+(a1-a0)*k/(N-1),x=TREE.x+Math.cos(a)*R,z=TREE.z+Math.sin(a)*R,y=H(x,z),ry=Math.atan2(-Math.cos(a),-Math.sin(a)),name=demo[k]||'';
+      S.at(x,y,z,ry);L.at(x,y,z,ry);XS.at(x,y,z,ry);
+      S.b('#b4a58e',0,.08,0,3.4,.16,2.4);/* sàn gỗ thấp */
+      S.b(WOOD,0,.58,.75,3.0,1.0,.42);S.b(TOP,0,1.12,.82,3.2,.08,.6);S.b(TRIM,0,1.07,1.13,3.2,.04,.03);/* quầy trước, mặt quầy, viền champagne */
+      S.b('#b8906a',0,1.35,-.98,3.0,2.5,.1);/* vách sau */for(const sx of [-1,1])S.b('#c19a70',sx*1.48,1.2,-.1,.06,2.2,1.7);/* hai vách hông thấp */
+      for(const sx of [-1.5,1.5])for(const sz of [-1,1.05])S.b(WOODD,sx,1.35,sz,.11,2.7,.11);/* bốn cột */
+      S.add(G.prism,CAN,MX(0,2.68,.02,2.9,.85,3.75,0,Math.PI/2,0));S.add(G.prism,SNOW,MX(0,3.13,.02,1.25,.42,3.8,0,Math.PI/2,0));/* mái vải kem, tuyết trên mái */
+      S.b(TRIM,0,2.62,1.47,3.75,.05,.04);for(let i=0;i<9;i++)S.add(G.cyl,i%2?CAN:'#e3d6bd',MX(-1.6+i*.4,2.52,1.45,.2,.2,.03,Math.PI/2,0,0));/* diềm vải lượn dưới mép mái */
+      S.b(WOODD,0,2.22,1.12,1.9,.46,.06);/* biển gỗ treo */
+      if(!name)S.b(SNOW,0,1.18,.82,3.0,.05,.52);/* gian trống: mặt quầy phủ tuyết */
+      else{XS.b('#9e2b2b',-.9,1.33,.8,.34,.34,.34,.3);XS.b(TRIM,-.9,1.33,.8,.35,.35,.06,.3);XS.b('#efe6d2',-.45,1.28,.75,.26,.24,.26,-.2);XS.add(G.cone12,'#2e5a48',MX(1.05,1.5,.8,.22,.65,.22));XS.add(G.cone12,SNOW,MX(1.05,1.66,.8,.16,.3,.16))}/* vài món nhỏ trên quầy */
+      stringLights(L,-1.75,2.6,1.5,1.75,2.6,1.5,12,.12);
+      S.reset();L.reset();XS.reset();blockBox(x,z,ry,1.75,1.25);
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.45),new THREE.MeshBasicMaterial({map:plaque(name),fog:true}));m.position.set(x+Math.sin(ry)*1.16,y+2.22,z+Math.cos(ry)*1.16);m.rotation.y=ry;sc.add(m);
+      BOOTHS.push({k,x,z,ry,name,sign:m,front:[x+Math.sin(ry)*3.2,z+Math.cos(ry)*3.2]})}}
   {const x=TREE.x+5.5,z=TREE.z+23,y=H(x,z);S.b('#8a6a4a',x,y+1.7,z,.16,3.4,.16);/* cột biển chỉ đường */
     [['Quảng Trường',.4],['Chợ Mùa Đông',2.6],['Café',-.9],['Cửa Hàng',2.0],['Rừng Kính',-.3]].forEach(([n,a],i)=>{S.b('#b8906a',x+Math.cos(a)*.7,y+3-i*.45,z-Math.sin(a)*.7,1.5,.32,.08,a)});S.b(SNOW,x,y+3.45,z,.25,.1,.25)}
   for(const v of VH)warmH(v.x+Math.sin(v.ry)*6,4,v.z+Math.cos(v.ry)*6,10,18);
