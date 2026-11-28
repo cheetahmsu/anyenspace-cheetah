@@ -948,7 +948,11 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const mitt=(g,col,y,r)=>{const m=mat(col);for(const sx of [-1,1])add(g,SPH,m,sx*(r||.36),y||.98,.18,.09,.1,.09)};
     const mk=(id,o)=>{const up=new THREE.Group(),low=new THREE.Group();up.visible=low.visible=false;me.add(up,low);WEAR.st[id]=Object.assign({up,low,main:[]},o);return WEAR.st[id]};
     // Thiền phục: giữ áo, mũ len; khăn quàng len dày hơn, có đuôi khăn tua rua buông trước ngực
-    {const s=mk('robe',{base:true,body:c=>c,lap:c=>c});const m=mat('#8c2f2a');s.scarf=m;add(s.up,TOR(.24,.09),m,0,1.6,0,1,1,1,Math.PI/2);const t=add(s.up,BX,m,.12,1.36,.27,.15,.42,.06,.12,0,.08);for(let i=0;i<4;i++)add(s.up,BX,mat('#efe6d6'),.09+i*.025,1.13,.29,.012,.06,.012);add(s.up,BX,mat('#efe6d6'),.12,1.45,.305,.15,.03,.005,.12,0,.08)}
+    {const s=mk('robe',{base:true,body:c=>c,lap:c=>c});const m=mat('#8c2f2a'),cr=mat('#efe6d6');s.scarf=m;
+      add(s.up,TOR(.29,.13),m,0,1.6,0,1,1,1.15,Math.PI/2);for(let i=0;i<16;i++){const a=i/16*Math.PI*2;add(s.up,BX,mat('#7a2824'),Math.sin(a)*.41,1.6,Math.cos(a)*.41,.02,.12,.01,0,a,0)}/* cổ khăn len to, gân đan */
+      // hai mảng khăn buông dài: mảng trước ngực xuống gần gối, mảng sau vắt qua vai; sọc kem, tua rua cuối khăn
+      const pan=(x,z,h,ry,rx)=>{const q=new THREE.Group();q.position.set(x,1.52,z);q.rotation.set(rx,ry,0);add(q,BX,m,0,-h/2,0,.24,h,.07);for(const f of [.22,.3])add(q,BX,cr,0,-h*(1-f)+.02,.037,.24,.035,.005);for(let i=0;i<6;i++)add(q,BX,cr,-.1+i*.04,-h-.05,0,.016,.1,.016);s.up.add(q)};
+      pan(.13,.4,.82,0,-.1);pan(-.1,-.38,.6,Math.PI,-.12)}
     // Ấm Áp Yên: áo choàng ngắn viền lông trắng có hoa tuyết, nơ và hai quả bông; váy len kem; mũ nồi lông trắng; găng; bốt nâu cổ lông
     {const s=mk('amap',{body:()=>'#efe6d6',lap:()=>'#efe6d6'}),mc=mat('#b8322c',{side:THREE.DoubleSide}),fur=mat(FUR),wt=mat('#ffffff');s.main.push([mc,0]);
       add(s.up,new THREE.Mesh(lathe([[.62,.95],[.52,1.2],[.41,1.45],[.33,1.62]],28)).geometry,mc,0,0,0,1,1,1);add(s.up,TOR(.6,.065),fur,0,.95,0,1,1,1,Math.PI/2);add(s.up,TOR(.3,.085),fur,0,1.62,0,1,1,1,Math.PI/2);
