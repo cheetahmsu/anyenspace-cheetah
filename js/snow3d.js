@@ -460,19 +460,24 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // ---------- 7 đảo nhỏ trồng thông giữa hồ, cầu gỗ cong nối bờ ----------
   // Đảo ngắm cực quang (tấm 07 mới): viền đá phủ tuyết, vài cây thông phía sau, sân tròn, ghế băng cong thấp, bậc thềm, kính thiên văn đồng
   {const X=ISLE.x,Z=ISLE.z,y=H(X,Z),fa=Math.atan2(-.3,-.95);/* hướng ra cầu */
-    for(let k=0;k<30;k++){const a=k/30*6.283,r=ISLE.r*(1.02+.12*Math.sin(k*2.7)),sz=.45+.25*((k*7)%5)/5;S.add(G.sphLo,k%3?'#8f8a84':'#a29d96',MX(X+Math.cos(a)*r,ICE_Y+.15,Z+Math.sin(a)*r,sz*1.3,sz*.7,sz));S.add(G.sphLo,SNOW,MX(X+Math.cos(a)*r,ICE_Y+.15+sz*.45,Z+Math.sin(a)*r,sz*1.05,sz*.3,sz*.8))}
+    for(let k=0;k<30;k++){const a=k/30*6.283,r=ISLE.r*(1.02+.12*Math.sin(k*2.7)),sz=.45+.25*((k*7)%5)/5;S.add(G.sphLo,k%3?'#b6b2ab':'#c4c0b9',MX(X+Math.cos(a)*r,ICE_Y+.15,Z+Math.sin(a)*r,sz*1.3,sz*.7,sz));S.add(G.sphLo,SNOW,MX(X+Math.cos(a)*r,ICE_Y+.15+sz*.45,Z+Math.sin(a)*r,sz*1.05,sz*.3,sz*.8))}
     for(const [a,r,h] of [[fa+Math.PI-.5,ISLE.r*.72,6.5],[fa+Math.PI+.15,ISLE.r*.78,8],[fa+Math.PI+.75,ISLE.r*.7,5]])pine(T,X+Math.cos(a)*r,Z+Math.sin(a)*r,h);
-    const cx=X+Math.cos(fa)*1.2,cz=Z+Math.sin(fa)*1.2;S.add(G.cyl12,'#9a958e',MX(cx,y+.35,cz,3.4,.7,3.4));S.add(G.cyl12,SNOW,MX(cx,y+.72,cz,3.25,.06,3.25));
-    for(let i=0;i<3;i++){const r=3.6+i*.55;S.b('#a8a39b',cx+Math.cos(fa)*r,y+.55-i*.2,cz+Math.sin(fa)*r,.6,.2,2.2,-fa)}
-    for(let i=0;i<9;i++){const a=fa+Math.PI-1.1+i*2.2/8,r=2.6;S.b('#98745a',cx+Math.cos(a)*r,y+1.05,cz+Math.sin(a)*r,.55,.12,1.05,-a);S.b('#9a958e',cx+Math.cos(a)*r,y+.88,cz+Math.sin(a)*r,.45,.3,.9,-a)}
+    const cx=X+Math.cos(fa)*1.2,cz=Z+Math.sin(fa)*1.2;S.add(G.cyl12,'#c9c5be',MX(cx,y+.35,cz,3.4,.7,3.4));S.add(G.cyl12,SNOW,MX(cx,y+.72,cz,3.25,.06,3.25));
+    for(let i=0;i<3;i++){const r=3.6+i*.55;S.b('#cbc7c0',cx+Math.cos(fa)*r,y+.55-i*.2,cz+Math.sin(fa)*r,.6,.2,2.2,-fa)}
+    for(let i=0;i<9;i++){const a=fa+Math.PI-1.1+i*2.2/8,r=2.6;S.b('#d4d0c9',cx+Math.cos(a)*r,y+1.05,cz+Math.sin(a)*r,.55,.12,1.05,-a);S.b('#c4c0b9',cx+Math.cos(a)*r,y+.88,cz+Math.sin(a)*r,.45,.3,.9,-a)}
     {const tx=cx+Math.cos(fa+.9)*2,tz=cz+Math.sin(fa+.9)*2;S.add(G.cyl,'#5c5550',MX(tx,y+1.3,tz,.08,1.2,.08));S.add(G.cyl12,'#b08a4a',MX(tx,y+2.05,tz,.13,1.3,.13,0,0,1.1));S.add(G.cyl12,'#c5a36f',MX(tx-.45,y+2.3,tz,.17,.25,.17,0,0,1.1))}
     block(X,Z,ISLE.r)}
   for(let k=0;k<3;k++){const a=k*2.1+.5;lantern(ISLE.x+Math.cos(a)*ISLE.r*.95,ISLE.z+Math.sin(a)*ISLE.r*.95,1.3)}
   {let dx=-.95,dz=-.3;const l=Math.hypot(dx,dz);dx/=l;dz/=l;const ax=ISLE.x+dx*ISLE.r*1.05,az=ISLE.z+dz*ISLE.r*1.05;let len=2;while(len<60&&lakeE(ax+dx*len,az+dz*len)<1.08)len+=.5;
     const ry=Math.atan2(-dz,dx),n=Math.ceil(len/1.05);let sc=len*.8,bd=1e9;for(let q=0;q<=len;q+=.25){const x=ax+dx*q,z=az+dz*q;for(const w of SLOOP){const d=Math.hypot(w[0]-x,w[1]-z);if(d<bd){bd=d;sc=q}}}/* chỗ tuyến xe trượt chạy dưới cầu: cầu vồng cao lên để xe lọt qua */
-    for(let i=0;i<n;i++){const t=(i+.5)/n,x=ax+dx*len*t,z=az+dz*len*t,y=ICE_Y+.45+Math.sin(Math.PI*t)*1.1+2.3*Math.exp(-Math.pow((len*t-sc)/6,2));S.b('#c99d70',x,y,z,1.0,.16,2.6,ry);S.b(IVORY,x,y+.09,z,.6,.02,2.3,ry);
-      for(const sd of [-1.25,1.25]){S.b('#d8b48a',x+Math.sin(ry)*sd,y+.95,z+Math.cos(ry)*sd,1.06,.1,.12,ry);S.b('#d8b48a',x+Math.sin(ry)*sd,y+.55,z+Math.cos(ry)*sd,1.06,.06,.06,ry);if(i%3===0)S.b('#b8906a',x+Math.sin(ry)*sd,y+.5,z+Math.cos(ry)*sd,.18,1.1,.18)}
-      }}
+    // Cầu theo ảnh 16: mặt cầu và lan can gỗ sồi sáng, trụ lan can vuông có tuyết trên đầu, dầm vòm và mố trụ đá xám nhạt trơn, ít chi tiết.
+    const yAt=q=>ICE_Y+.45+Math.sin(Math.PI*q/len)*1.1+2.3*Math.exp(-Math.pow((q-sc)/6,2)),STN='#c9c5be',STN2='#b8b4ad',DECK='#dcc29a',RAIL='#d2b384';
+    for(let i=0;i<n;i++){const t=(i+.5)/n,q=len*t,x=ax+dx*q,z=az+dz*q,y=yAt(q),y2=yAt(Math.min(len,q+len/n)),y1=yAt(Math.max(0,q-len/n)),pit=Math.atan2(y2-y1,2*len/n);
+      S.add(G.box,STN,MX(x,y-.32,z,len/n+.04,.5,2.5,0,ry,pit));S.add(G.box,DECK,MX(x,y,z,len/n+.02,.14,2.8,0,ry,pit));S.add(G.box,SNOW,MX(x,y+.08,z,len/n*.95,.03,1.9,0,ry,pit));
+      for(const sd of [-1.3,1.3]){const rx=x+Math.sin(ry)*sd,rz=z+Math.cos(ry)*sd;S.add(G.box,RAIL,MX(rx,y+.95,rz,len/n+.02,.12,.14,0,ry,pit));S.add(G.box,RAIL,MX(rx,y+.5,rz,len/n+.02,.09,.09,0,ry,pit));
+        if(i%2===0){S.b(RAIL,rx,y+.55,rz,.2,1.1,.2,ry);S.b(SNOW,rx,y+1.13,rz,.24,.08,.24,ry)}}}
+    for(const q of [0,len,Math.max(1,sc-4.2),Math.min(len-1,sc+4.2)]){const x=ax+dx*q,z=az+dz*q,y=yAt(q);S.b(STN2,x,(ICE_Y+y-.5)/2,z,1.4,y-.5-ICE_Y,2.7,ry);S.b(SNOW,x,ICE_Y+.06,z,1.6,.1,2.9,ry)}/* mố và trụ đá trơn */
+  }
   // ---------- 9 Đỉnh Tuyết Yên: nhà nghỉ trên đỉnh, cáp treo, cờ, dốc trượt ----------
   // Nhà ngắm cảnh mái tam giác (tấm 09): nhà chữ A, mặt trước kính tam giác lớn khung gỗ sồi sáng, một mái lợp kính, nền đá tự nhiên, sàn hiên lan can mảnh
   {const x=SKI.x,z=SKI.z-8,y=H(x,z),w=8.5,d=9,h=8,a=Math.atan2(h,w/2),Lr=Math.hypot(w/2,h);S.at(x,y,z,0);L.at(x,y,z,0);
