@@ -928,10 +928,65 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const coat=new THREE.Mesh(new THREE.CylinderGeometry(.36,.48,.9,12),new THREE.MeshLambertMaterial({color:col}));coat.position.y=.72;me.add(coat);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),new THREE.MeshLambertMaterial({color:'#e7c9a8'}));head.position.y=1.85;me.add(head);
     const hat=new THREE.Mesh(new THREE.SphereGeometry(.27,14,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshLambertMaterial({color:'#efe6d6'}));hat.position.y=1.9;me.add(hat);const pom=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),hat.material);pom.position.y=2.2;me.add(pom);
-    const scarf=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,6,16),new THREE.MeshLambertMaterial({color:'#8c2f2a'}));scarf.rotation.x=Math.PI/2;scarf.position.y=1.6;me.add(scarf);var meParts={body,coat,hat,scarf};me.scale.setScalar(.85);
+    const scarf=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,6,16),new THREE.MeshLambertMaterial({color:'#8c2f2a'}));scarf.rotation.x=Math.PI/2;scarf.position.y=1.6;me.add(scarf);var meParts={body,coat,hat,scarf,pom};me.scale.setScalar(.85);
     const lap=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),coat.material);lap.scale.set(.5,.16,.42);lap.position.set(0,.16,.12);lap.visible=false;me.add(lap);
-    var setSit=on=>{const k=on?-.55:0;body.position.y=1.05+k*.8;body.scale.y=on?.7:1;coat.visible=!on;lap.visible=on;head.position.y=1.85+k;hat.position.y=1.9+k;pom.position.y=2.2+k;scarf.position.y=1.6+k}}
+    var setSit=on=>{const k=on?-.55:0;body.position.y=1.05+k*.8;body.scale.y=on?.7:1;coat.visible=!on;lap.visible=on;head.position.y=1.85+k;hat.position.y=1.9+k;pom.position.y=2.2+k;scarf.position.y=1.6+k;if(WEAR.cur)wearSit(on,k);else coat.visible=!on}}
   sc.add(me);
+  // ---------- Trang phục mùa đông Xứ Yên (28/11, theo bộ sưu tập người dùng gửi): Thiền phục quàng khăn ấm và 4 bộ mùa đông;
+  // mỗi bộ chọn 1 trong 6 màu chung của An Yên (Vàng, Xanh, Kem, Tím, Rêu, Hồng), màu tô vào phần chính (áo choàng, váy, áo khoác), viền lông và phụ kiện giữ màu riêng.
+  // Mỗi bộ chia phần trên (hạ xuống theo đầu khi ngồi) và phần dưới (ẩn khi ngồi, thay bằng vạt áo phủ đùi) ----------
+  const WEAR_COLORS=[['Vàng','#d9b67d'],['Xanh','#90b7a5'],['Kem','#f0e5d4'],['Tím','#b5a1c7'],['Rêu','#687b48'],['Hồng','#e8a1b4']];
+  const WEAR_STYLES=[['robe','🧘','Thiền phục','quàng khăn ấm'],['amap','🧣','Ấm Áp Yên','áo choàng viền lông, váy len'],['bangtuyet','❄️','Băng Tuyết Yên','váy dài hoa tuyết, choàng voan'],['dungkhi','🛡','Dũng Khí Yên','áo choàng, áo khoác đai da'],['khampha','🎒','Khám Phá Yên','áo khoác bông, mũ len, ba lô']];
+  const WEAR={cur:null,st:{},mats:[]};
+  function wearBuild(){const FUR='#f4f1ea',BOOT='#7a5234',mixW=(c,k)=>'#'+new THREE.Color(c).lerp(new THREE.Color('#ffffff'),k).getHexString(),dk=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString();
+    const mat=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})),lathe=(pts,seg,p0,pl)=>new THREE.LatheGeometry(pts.map(([r,y])=>new THREE.Vector2(r,y)),seg||24,p0||0,pl||Math.PI*2);
+    const add=(g,geo,m,x,y,z,sx,sy,sz,rx,ry,rz)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx||0,ry||0,rz||0);g.add(o);return o};
+    const SPH=new THREE.SphereGeometry(1,12,8),CYL=new THREE.CylinderGeometry(1,1,1,12),BX=new THREE.BoxGeometry(1,1,1),TOR=(r,t)=>new THREE.TorusGeometry(r,t,8,24);
+    // hoa tuyết nhỏ trên vải: ba nét trắng chéo nhau, áp lên mặt cong theo góc a, bán kính r
+    const flake=(g,r,y,a,s,m)=>{const q=new THREE.Group();q.position.set(Math.sin(a)*r,y,Math.cos(a)*r);q.rotation.y=a;for(let i=0;i<3;i++){const b=new THREE.Mesh(BX,m);b.scale.set(s,s*.16,.01);b.rotation.z=i*Math.PI/3;q.add(b)}g.add(q)};
+    const legs=(g,col,fur)=>{const ml=mat(col),mb=mat(BOOT),mf=mat(FUR);for(const sx of [-.14,.14]){add(g,CYL,ml,sx,.38,0,.11,.5,.11);add(g,CYL,mb,sx,.15,.02,.125,.3,.125);add(g,BX,mb,sx,.04,.08,.2,.08,.3);if(fur)add(g,TOR(.13,.05),mf,sx,.31,.02,1,1,1,Math.PI/2)}};
+    const mitt=(g,col,y,r)=>{const m=mat(col);for(const sx of [-1,1])add(g,SPH,m,sx*(r||.36),y||.98,.18,.09,.1,.09)};
+    const mk=(id,o)=>{const up=new THREE.Group(),low=new THREE.Group();up.visible=low.visible=false;me.add(up,low);WEAR.st[id]=Object.assign({up,low,main:[]},o);return WEAR.st[id]};
+    // Thiền phục: giữ áo, mũ len; khăn quàng len dày hơn, có đuôi khăn tua rua buông trước ngực
+    {const s=mk('robe',{base:true,body:c=>c,lap:c=>c});const m=mat('#8c2f2a');s.scarf=m;add(s.up,TOR(.24,.09),m,0,1.6,0,1,1,1,Math.PI/2);const t=add(s.up,BX,m,.12,1.36,.27,.15,.42,.06,.12,0,.08);for(let i=0;i<4;i++)add(s.up,BX,mat('#efe6d6'),.09+i*.025,1.13,.29,.012,.06,.012);add(s.up,BX,mat('#efe6d6'),.12,1.45,.305,.15,.03,.005,.12,0,.08)}
+    // Ấm Áp Yên: áo choàng ngắn viền lông trắng có hoa tuyết, nơ và hai quả bông; váy len kem; mũ nồi lông trắng; găng; bốt nâu cổ lông
+    {const s=mk('amap',{body:()=>'#efe6d6',lap:()=>'#efe6d6'}),mc=mat('#b8322c',{side:THREE.DoubleSide}),fur=mat(FUR),wt=mat('#ffffff');s.main.push([mc,0]);
+      add(s.up,new THREE.Mesh(lathe([[.62,.95],[.52,1.2],[.41,1.45],[.33,1.62]],28)).geometry,mc,0,0,0,1,1,1);add(s.up,TOR(.6,.065),fur,0,.95,0,1,1,1,Math.PI/2);add(s.up,TOR(.3,.085),fur,0,1.62,0,1,1,1,Math.PI/2);
+      for(const [a,y,r] of [[.6,1.12,.56],[-.7,1.2,.53],[2.2,1.1,.57],[3.1,1.25,.5],[-2.3,1.08,.58],[1.4,1.32,.47],[-1.5,1.3,.48]])flake(s.up,r+.012,y,a,.1,wt);
+      const bow=mat('#a8262a');s.bow=bow;add(s.up,SPH,bow,-.08,1.56,.39,.08,.055,.03,0,0,.4);add(s.up,SPH,bow,.08,1.56,.39,.08,.055,.03,0,0,-.4);add(s.up,SPH,bow,0,1.56,.41,.035,.035,.03);for(const sx of [-1,1])add(s.up,BX,bow,sx*.05,1.47,.43,.04,.14,.01,-.3,0,sx*.3);
+      for(const sx of [-1,1]){add(s.up,CYL,wt,sx*.07,1.4,.47,.006,.16,.006);add(s.up,SPH,fur,sx*.07,1.3,.51,.06,.06,.06)}
+      add(s.up,SPH,fur,0,2.03,0,.33,.15,.33,0,0,.12);add(s.up,SPH,fur,.05,2.13,-.02,.1,.08,.1);mitt(s.up,'#a8262a',.86,.4);
+      const kn=mat('#efe6d6');add(s.low,new THREE.Mesh(lathe([[.44,.42],[.4,.7],[.35,.98]],24)).geometry,kn,0,0,0,1,1,1);for(let i=0;i<14;i++){const a=i/14*Math.PI*2;add(s.low,BX,mat('#dcd2bf'),Math.sin(a)*.415,.56,Math.cos(a)*.415,.015,.28,.01,0,a,0)}
+      legs(s.low,'#efe6d6',true);for(const sx of [-.14,.14])add(s.low,SPH,mat(BOOT),sx+.06,.3,.12,.04,.03,.02)}
+    // Băng Tuyết Yên: váy dài xoè có hoa tuyết, áo choàng voan trong mờ phía sau, cổ lông trắng, trâm hoa tuyết, tóc búi thấp, găng sáng màu
+    {const s=mk('bangtuyet',{body:c=>mixW(c,.3),lap:c=>mixW(c,.3)}),mg=mat('#9cc6e8',{side:THREE.DoubleSide}),mv=mat('#cfe6f7',{transparent:true,opacity:.5,side:THREE.DoubleSide,depthWrite:false}),fur=mat(FUR),wt=mat('#ffffff'),ice=mat('#dff2ff');
+      s.main.push([mg,.3],[mv,.55]);add(s.up,new THREE.Mesh(lathe([[.76,.04],[.58,.6],[.42,1.2],[.32,1.6]],28,1.15,Math.PI*2-2.3)).geometry,mv,0,0,0,1,1,1);
+      add(s.up,TOR(.29,.07),fur,0,1.61,0,1,1,1,Math.PI/2);flake(s.up,.36,1.55,0,.09,ice);
+      const hair=mat('#efe0b8');add(s.up,new THREE.SphereGeometry(.27,14,8,0,Math.PI*2,0,Math.PI*.55),hair,0,1.86,-.02,1,1,1,-.25,0,0);add(s.up,SPH,hair,0,1.78,-.25,.12,.12,.11);flake(s.up,.24,2.0,.7,.09,ice);
+      mitt(s.up,'#e8f3fb');
+      add(s.low,new THREE.Mesh(lathe([[.68,.02],[.56,.3],[.43,.65],[.32,1.0]],32)).geometry,mg,0,0,0,1,1,1);
+      for(const [a,y,r] of [[0,.35,.56],[.9,.2,.62],[-.9,.25,.6],[.45,.62,.45],[-.45,.6,.45],[2.0,.3,.58],[-2.0,.4,.55],[3.1,.25,.6],[0,.75,.4]])flake(s.low,r+.01,y,a,a===0&&y<.4?.2:.11,wt)}
+    // Dũng Khí Yên: áo choàng dài mở trước có hoa tuyết, cổ lông kem dày, khoá sao vàng; áo khoác xám thắt đai da; quần sẫm; bốt nâu cổ lông; găng nâu; tóc nâu
+    {const s=mk('dungkhi',{body:()=>'#4a4f5c',lap:()=>'#3a4256'}),mc=mat('#34406a',{side:THREE.DoubleSide}),fur=mat('#efe6d6'),wt=mat('#ffffff'),gold=mat('#d9b56a');s.main.push([mc,0]);
+      add(s.up,new THREE.Mesh(lathe([[.66,.5],[.53,.9],[.42,1.3],[.34,1.6]],28,.6,Math.PI*2-1.2)).geometry,mc,0,0,0,1,1,1);add(s.up,TOR(.3,.1),fur,0,1.6,0,1,1,1,Math.PI/2);
+      for(const [a,y,r] of [[1.3,1.0,.5],[1.9,.7,.6],[2.6,1.1,.49],[3.14,.75,.59],[-2.6,1.05,.5],[-1.9,.72,.6],[-1.3,1.15,.47]])flake(s.up,r+.012,y,a,.1,wt);
+      {const q=new THREE.Group();q.position.set(0,1.5,.36);for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.OctahedronGeometry(.05),gold);b.scale.set(.35,1,.3);b.rotation.z=i*Math.PI/4;q.add(b)}s.up.add(q)}
+      add(s.up,new THREE.SphereGeometry(.265,14,8,0,Math.PI*2,0,Math.PI*.5),mat('#6b4a32'),0,1.88,-.02,1,1,1,-.2,0,0);mitt(s.up,'#4f3a2a');
+      add(s.low,new THREE.Mesh(lathe([[.4,.6],[.36,.92]],20)).geometry,mat('#4a4f5c'),0,0,0,1,1,1);add(s.low,TOR(.355,.035),mat('#6b4a2c'),0,.9,0,1,1,1,Math.PI/2);add(s.low,BX,gold,0,.9,.37,.09,.07,.02);
+      legs(s.low,'#3a4256',true)}
+    // Khám Phá Yên: áo khoác bông có cúc sừng và túi, mũ len có quả bông và hoa tuyết, khăn len xanh, ba lô nâu có cuộn chăn, quần túi hộp, bốt nâu
+    {const s=mk('khampha',{body:c=>c,lap:()=>'#3e4a5e'}),mc=mat('#f0e5d4',{side:THREE.DoubleSide}),mc2=mat('#e0d3bd'),br=mat('#7a5234'),navy=mat('#4a5a86'),blue=mat('#5f73a8'),wt=mat('#ffffff');s.main.push([mc,0],[mc2,-.1]);
+      add(s.low,new THREE.Mesh(lathe([[.44,.55],[.39,.9],[.36,1.2]],24)).geometry,mc,0,0,0,1,1,1);for(const sx of [-1,1])add(s.low,BX,mc2,sx*.2,.72,.39,.16,.15,.03);
+      for(const y of [1.0,1.18,1.36])add(s.up,BX,br,0,y,.355,.1,.03,.03);add(s.up,TOR(.3,.06),mc2,0,1.58,0,1,1,1,Math.PI/2);
+      add(s.up,TOR(.24,.09),blue,0,1.63,0,1,1,1,Math.PI/2);add(s.up,BX,blue,-.13,1.4,.27,.14,.38,.06,.1,0,-.06);
+      add(s.up,new THREE.SphereGeometry(.275,14,8,0,Math.PI*2,0,Math.PI/2),navy,0,1.9,0,1,1.05,1);add(s.up,TOR(.265,.05),blue,0,1.93,0,1,1,1,Math.PI/2);add(s.up,SPH,wt,0,2.22,0,.09,.09,.09);flake(s.up,.27,2.04,0,.1,wt);
+      add(s.up,BX,br,0,1.15,-.42,.42,.5,.2);add(s.up,BX,mat('#6b4628'),0,1.05,-.53,.3,.2,.04);add(s.up,CYL,mat('#9a7a56'),0,1.46,-.42,.1,.5,.1,0,0,Math.PI/2);for(const sx of [-1,1])add(s.up,BX,mat('#5e3e28'),sx*.16,1.2,-.3,.04,.5,.03);
+      mitt(s.up,'#4a5a86');legs(s.low,'#3e4a5e',false);for(const sx of [-1,1])add(s.low,BX,mat('#334056'),sx*.25,.4,0,.04,.14,.12)}}
+  function wearApply(style,color){if(!WEAR.st.robe)wearBuild();const s=WEAR.st[style]||WEAR.st.robe,P2=meParts;WEAR.cur=s;for(const k in WEAR.st){const q=WEAR.st[k];q.up.visible=q===s;q.low.visible=q===s&&!WEAR.sit}
+    P2.body.material.color.set(s.body(color));P2.coat.material.color.set(s.lap(color));const base=!!s.base;P2.coat.visible=base&&!WEAR.sit;P2.hat.visible=base;P2.pom.visible=base;P2.scarf.visible=false;
+    for(const [m,k] of s.main){const c=new THREE.Color(color);if(k>0)c.lerp(new THREE.Color('#ffffff'),k);else if(k<0)c.multiplyScalar(1+k);m.color.copy(c)}}
+  function wearSit(on,k){WEAR.sit=on;const s=WEAR.cur;if(!s)return;s.up.position.y=k;s.low.visible=!on;if(!s.base)meParts.coat.visible=false}
+
   const P={x:0,z:104,a:Math.PI,dest:null,mode:'walk',ride:0,yaw:0,pitch:.2,dist:9,camT:new THREE.Vector3(),sitAt:null};
   me.position.set(P.x,groundY(P.x,P.z),P.z);
 
@@ -1233,12 +1288,12 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       for(let k=0;k<12&&blocked(x,z);k++){x+=Math.cos(k)*1.2;z+=Math.sin(k)*1.2}P.x=x;P.z=z;P.dest=null;first=true;
       if(st){near=STATIONS.find(o=>o.id===st);setTimeout(()=>{near=STATIONS.find(o=>o.id===st);act()},350)}else caption(label+' · hoạt động này đang được dựng, sắp mở. Bạn cứ dạo quanh đây nhé.',6000)};
     const renderAct=()=>head('Hôm nay, bạn cần gì?')+ACTS.map(([g,list],gi)=>'<div class="sn-gr">'+g+'</div><div class="sn-grid">'+list.map((a,ai)=>'<button type="button" data-ac="'+gi+','+ai+'"><span>'+a[1]+'</span>'+a[2]+(a[3]?'':'<em>sắp mở</em>')+'</button>').join('')+'</div>').join('');
-    // Trang phục: áo khoác, mũ len, khăn quàng; lưu trên máy
-    const OUT_KEY='xuyen-outfit',COATS=['#687b48','#8c2f2a','#2f4f6f','#c8a96a','#efe6d6','#5a4a6e','#3a3f46'],HATS=['#efe6d6','#b8322c','#2f5b48','#d6b878','#6f8fb0','#3a3f46'],SCARF=['#8c2f2a','#efe6d6','#2f5b48','#d6b878','#6f8fb0','#c46a8a'];
-    let outfit={coat:prof.color||'#687b48',hat:'#efe6d6',scarf:'#8c2f2a'};try{Object.assign(outfit,JSON.parse(localStorage.getItem(OUT_KEY)||'{}'))}catch(e){}
-    const applyOutfit=()=>{meParts.body.material.color.set(outfit.coat);meParts.coat.material.color.set(outfit.coat);meParts.hat.material.color.set(outfit.hat);meParts.scarf.material.color.set(outfit.scarf);try{localStorage.setItem(OUT_KEY,JSON.stringify(outfit))}catch(e){}};applyOutfit();
-    const sw=(k,cols,t)=>'<div class="sn-gr">'+t+'</div><div class="sn-sw">'+cols.map(c=>'<button type="button" data-ot="'+k+'" data-c="'+c+'" style="background:'+c+'"'+(outfit[k]===c?' class="on"':'')+' aria-label="'+t+' '+c+'"></button>').join('')+'</div>';
-    const renderOut=()=>head('🧥 Trang phục mùa đông')+sw('coat',COATS,'Áo khoác')+sw('hat',HATS,'Mũ len')+sw('scarf',SCARF,'Khăn quàng')+'<p class="sn-note">Trang phục lưu trên máy này, chỉ dùng trong Xứ Yên.</p>';
+    // Trang phục mùa đông: chọn kiểu (Thiền phục và 4 bộ mùa đông) và 1 trong 6 màu chung; lưu trên máy
+    const OUT_KEY='xuyen-outfit';
+    let outfit={style:'robe',color:WEAR_COLORS.some(c=>c[1]===prof.color)?prof.color:'#687b48'};try{const o=JSON.parse(localStorage.getItem(OUT_KEY)||'{}');if(WEAR_STYLES.some(w=>w[0]===o.style))outfit.style=o.style;if(WEAR_COLORS.some(c=>c[1]===o.color))outfit.color=o.color}catch(e){}
+    const applyOutfit=()=>{wearApply(outfit.style,outfit.color);try{localStorage.setItem(OUT_KEY,JSON.stringify({style:outfit.style,color:outfit.color,hat:'#efe6d6',scarf:outfit.color}))}catch(e){}};applyOutfit();
+    const renderOut=()=>head('🧥 Trang phục mùa đông')+'<div class="sn-gr">Kiểu trang phục</div><div class="sn-grid">'+WEAR_STYLES.map(([id,ic,n,d])=>'<button type="button" data-ot="style" data-c="'+id+'"'+(outfit.style===id?' class="on"':'')+'><span>'+ic+'</span>'+n+'<em>'+d+'</em></button>').join('')+'</div>'+
+      '<div class="sn-gr">Màu sắc</div><div class="sn-sw">'+WEAR_COLORS.map(([n,c])=>'<button type="button" data-ot="color" data-c="'+c+'" style="background:'+c+'"'+(outfit.color===c?' class="on"':'')+' aria-label="Màu '+n+'" title="'+n+'"></button>').join('')+'</div><p class="sn-note">Trang phục lưu trên máy này, chỉ dùng trong Xứ Yên.</p>';
     // Âm nhạc: hộp nhạc tổng hợp ngay trong trình duyệt (giai điệu dân gian, đã hết bản quyền), không dùng bản thu của ai
     const MUS_KEY='xuyen-music';let music='off';try{music=localStorage.getItem(MUS_KEY)||'off'}catch(e){}
     const N={C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196,A3:220,B3:246.94,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99};
