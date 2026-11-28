@@ -1079,7 +1079,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     KI.kettle=new THREE.Group();{const k=KI.kettle;const b=new THREE.Mesh(gSph,lam('#2f3338'));b.scale.set(.17,.14,.17);k.add(b);const sp=new THREE.Mesh(gCyl,b.material);sp.scale.set(.03,.16,.03);sp.position.set(.17,.04,0);sp.rotation.z=-1;k.add(sp);const hd=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,5,12,Math.PI),b.material);hd.position.y=.1;k.add(hd)}KI.kettle.position.set(.3,1.47,.25);g.add(KI.kettle);
     KI.light=new THREE.PointLight('#ffb060',22,12,1.4);KI.light.position.set(0,1.6,0);g.add(KI.light);{const l2=new THREE.PointLight('#ffd9a8',5,9,1.6);l2.position.set(0,3.2,0);g.add(l2)}
     sc.add(g);KI.g=g}
-  function roomEnter(R){R.build();RM=R;P.mode='kota';R.sit=-1;R.seatTo=-1;P.dest=null;P.x=R.x+R.ent[0];P.z=R.z+R.ent[1];P.a=R.ent[2];P.yaw=R.ent[2]+Math.PI;first=true;snow.visible=false;me.visible=true;R.g.visible=true;caption(R.msg,8000)}
+  function roomEnter(R){R.build();RM=R;P.mode='kota';R.sit=-1;R.seatTo=-1;P.dest=null;P.x=R.x+R.ent[0];P.z=R.z+R.ent[1];P.a=R.ent[2];P.yaw=R.yaw!=null?R.yaw:R.ent[2]+Math.PI;first=true;snow.visible=false;me.visible=true;R.g.visible=true;caption(R.msg,8000)}
   const kotaEnter=()=>roomEnter(KI);
   function kotaExit(){RM.sit=-1;setSit(false);snow.visible=true;RM.exit();first=true;if(typeof camZoom!=='undefined'&&camZoom<1.3)setZoom(1.3)}/* ra cửa: đứng trước cửa quay lưng về nhà, camera phía đối diện nhìn ngược về nhà */
   function kotaTick(dt,t){const R=RM;if(R.fl)R.fl.forEach((f,i)=>{f.scale.y=f.userData.h*(1+Math.sin(t*(9+i*3)+i)*.18)});if(R.light)R.light.intensity=R.li*(1+Math.sin(t*8)*.11+Math.sin(t*21)*.055);
@@ -1125,7 +1125,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // bàn ăn gỗ với 6 ghế song (6 chỗ ngồi), thảm sọc đỏ trắng, đèn thả trên bàn, góc bếp nhỏ, ghế băng dưới cửa sổ nhìn ra hồ, ghế bành đọc sách ----------
   const HI={x:470,y:-80,z:420,g:null,floor:null,seats:[],fl:null,light:null,kettle:null,sit:-1,seatTo:-1,camY:2.25,li:7,hx:TGH.W/2-.15,hz:TGH.D/2-.15,tb:[-.4,0],st:[-2.95,-.5],
     msg:'🏡 Nhà Mái Cỏ Riêng · chạm sàn để đi, chạm ghế quanh bàn để ngồi · 🚪 Ra cửa để ra ngoài',sitMsg:'🏡 Ngồi bên bàn gỗ. Lửa lò sưởi tí tách, ngoài cửa sổ hồ băng lặng yên.'};
-  HI.ent=[HI.hx-.95,1.2,-Math.PI/2];HI.kp=[HI.st[0]+.05,1.3,HI.st[1]+.2];HI.build=()=>homeBuild();
+  HI.ent=[HI.hx-1.5,1.2,-Math.PI/2];HI.yaw=Math.PI/2+.6;/* camera chếch về góc phòng cạnh cửa cho rộng tầm nhìn */HI.kp=[HI.st[0]+.05,1.3,HI.st[1]+.2];HI.build=()=>homeBuild();
   HI.clamp=(lx,lz)=>{lx=Math.max(-HI.hx+.4,Math.min(HI.hx-.4,lx));lz=Math.max(-HI.hz+.4,Math.min(HI.hz-.7,lz));if(lz<-.15&&lx>HI.hx-1.0)lx=HI.hx-1.0;
     const ox=lx-HI.tb[0],oz=lz-HI.tb[1],tx=1.5,tz=1.2;if(Math.abs(ox)<tx&&Math.abs(oz)<tz){if(tx-Math.abs(ox)<tz-Math.abs(oz))lx=HI.tb[0]+(ox<0?-tx:tx);else lz=HI.tb[1]+(oz<0?-tz:tz)}
     const sx=lx-HI.st[0],sz=lz-HI.st[1],sr=Math.hypot(sx,sz);if(sr<1.1){lx=HI.st[0]+sx/(sr||1)*1.1;lz=HI.st[1]+sz/(sr||1)*1.1}
