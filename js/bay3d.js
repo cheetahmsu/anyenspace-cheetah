@@ -1319,8 +1319,6 @@
     {const K=walkingKeys;if(K.size&&I.then!=='board'&&I.then!=='house'){I.path.length=0;I.then=null;if(K.has('turnleft'))I.yaw+=1.9*dt;if(K.has('turnright'))I.yaw-=1.9*dt;const mv=K.has('forward')?1:K.has('back')?-.6:0;
       if(mv){const sp=WALK_SPEED*mv*walkDt,nx=I.x+Math.sin(I.yaw)*sp,nz=I.z+Math.cos(I.yaw)*sp;const ok=(a,b)=>tdWalkable(a,b)||tdOnGaz(a,b);if(ok(nx,nz)){I.x=nx;I.z=nz}else if(ok(nx,I.z))I.x=nx;else if(ok(I.x,nz))I.z=nz;I.moving=true;I.t+=dt}else I.moving=false;
       if(I.x>TD_H.x0+1.2&&Math.abs(I.z)<2.4)I.then='house';return}}
-    /* 28/11: cùng nguyên tắc với Rừng Yên, Xứ Yên: camera không tự xoay theo người lúc đi; chỉ đặt lại một lần về sau lưng khi bấm điểm đến mới */
-    if(I.path.length&&I.path!==I.aimRef){I.aimRef=I.path;const q=I.path[I.path.length-1],dx=q[0]-I.x,dz=q[1]-I.z;if(Math.hypot(dx,dz)>1&&I.then!=='gazview')viewYaw=Math.atan2(dx,dz)+tdRy()-(I.cam0||0)}
     let left=WALK_SPEED*walkDt;/* cùng tốc độ đi bộ với Rừng Yên, không nhân theo tốc độ tàu */
     while(left>0&&I.path.length){const [tx,tz]=I.path[0],dx=tx-I.x,dz=tz-I.z,d=Math.hypot(dx,dz);if(d<=left){I.x=tx;I.z=tz;left-=d;I.path.shift();continue}
       I.x+=dx/d*left;I.z+=dz/d*left;left=0;const want=Math.atan2(dx,dz);I.yaw+=Math.atan2(Math.sin(want-I.yaw),Math.cos(want-I.yaw))*Math.min(1,dt*6)}
