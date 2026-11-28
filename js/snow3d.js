@@ -38,7 +38,7 @@ const HR=[[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50],[40,-58],[66,-56],[80
 const HUSKY={x:10,z:-50,rx:1,rz:1};
 const along=(pts,closed,u)=>{const P=closed?[...pts,pts[0]]:pts;let tot=0;const L=[];for(let i=0;i+1<P.length;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l}
   let d=((u%1)+1)%1*tot;if(!closed&&u>=1)d=tot;for(let i=0;i<L.length;i++){if(d<=L[i]||i===L.length-1){const t=Math.min(1,d/L[i]),a=P[i],b=P[i+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=L[i]}};
-const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-62,z:106},FIRE2={x:-63,z:71};
+const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-41,z:97},FIRE2={x:-63,z:71};
 const SNOWMAN={x:-40,z:74},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
@@ -48,7 +48,7 @@ const VH=[[0,37,9,19.8,4.4,'#c99d70','main'],[-58,29,8,7,3.8,'#b8906a','shop'],[
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
-const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-46,86],[-57,99]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
+const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-35,84],[-34,91]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
 const STATIONS=[
   {id:'aurora',x:48,z:-49.6,label:'✨ Vào lều kính ngắm cực quang'},
   {id:'husky',x:12.5,z:-19,label:'🐕 Lên xe husky dạo rừng'},
@@ -468,7 +468,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       if(kind==='b'){S.b('#a07a56',bx,.45,bz,1.9,.1,.5,br);S.b(SNOW,bx,.53,bz,1.8,.05,.45,br);S.b('#a07a56',bx,.8,bz-.0,1.9,.5,.08,br)}
       else{S.b('#a07a56',bx,.78,bz,1.9,.08,.9,br);for(const sd of [-.75,.75])S.b('#a07a56',bx+Math.cos(br)*0+Math.sin(br)*sd,.42,bz+Math.cos(br)*sd,1.9,.07,.3,br);S.b(SNOW,bx,.84,bz,1.8,.04,.8,br)}}/* ghế băng, bàn dã ngoại */
     S.reset();L.reset();block(X,Z,R0+.7);warm(X,y+2.5,Z,10,20)}
-  kota(-46,94,3,'#a8805c');{const fx=FIRE2.x,fz=FIRE2.z,y=H(fx,fz);const fire=new THREE.Group();const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,1,7),new THREE.MeshBasicMaterial({color:'#ffae4a',fog:false}));fl.position.y=.6;fire.add(fl);
+  kota(-66,98,3,'#a8805c');{const fx=FIRE2.x,fz=FIRE2.z,y=H(fx,fz);const fire=new THREE.Group();const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,1,7),new THREE.MeshBasicMaterial({color:'#ffae4a',fog:false}));fl.position.y=.6;fire.add(fl);
     for(let i=0;i<8;i++){const a=i/8*6.28;S.add(G.sph,'#5e5a56',MX(fx+Math.cos(a)*1,y+.1,fz+Math.sin(a)*1,.2,.15,.2))}fire.position.set(fx,y,fz);sc.add(fire);block(fx,fz,1.3);var fireFl=fl;var fireLight=warm(fx,y+1.2,fz,14,14);
     for(const a of [0.6,1.57,2.6,3.6,4.6,5.6])S.b('#7a5a3e',fx+Math.cos(a)*2.6,y+.35,fz+Math.sin(a)*2.6,1.4,.3,.4,-a+Math.PI/2)}
   for(const [sx,sz,k] of [[...archW(3.6,1.6),1],[SNOWMAN.x,SNOWMAN.z,2.4]]){const y=H(sx,sz);S.add(G.sph,SNOW,MX(sx,y+.7*k,sz,.9*k));S.add(G.sph,SNOW,MX(sx,y+1.85*k,sz,.62*k));S.add(G.sph,SNOW,MX(sx,y+2.7*k,sz,.42*k));S.add(G.cone,'#e07a3a',MX(sx,y+2.7*k,sz+.5*k,.07*k,.35*k,.07*k,Math.PI/2,0,0));S.b('#8c2f2a',sx,y+2.3*k,sz,.9*k,.16*k,.9*k);S.add(G.cyl,'#2b2622',MX(sx,y+3.15*k,sz,.3*k,.4*k,.3*k));block(sx,sz,k)}
@@ -688,27 +688,46 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       plane(tex(640,260,(g)=>{g.fillStyle='#5e4128';g.beginPath();g.moveTo(20,110);g.lineTo(230,110);g.quadraticCurveTo(320,-10,410,110);g.lineTo(620,110);g.lineTo(620,250);g.lineTo(20,250);g.closePath();g.fill();g.strokeStyle='#d9b77e';g.lineWidth=6;g.stroke();
         huskyHead(g,320,72,34);g.fillStyle='#f6efe2';g.textAlign='center';g.font='700 58px Georgia,serif';g.fillText('TRẠI HUSKY',320,182,560);g.font='italic 30px Georgia,serif';g.fillStyle='#e8d6b4';g.fillText('Husky Camp',320,228)}),5.2,2.1,0,b0+h-.15,d/2+.2,ry);
       // ghế băng gỗ trước cửa
-      for(const sx of [-2.2,2.2]){S.b('#a07a56',sx,.45,d/2+1.5,1.8,.1,.5);S.b(SNOW,sx,.53,d/2+1.5,1.7,.05,.45);S.b('#a07a56',sx,.8,d/2+1.3,1.8,.5,.08);for(const ex of [-.75,.75])S.b('#7a5a40',sx+ex,.22,d/2+1.5,.1,.44,.4)}
+      for(const sx of [-3.6,3.6]){S.b('#a07a56',sx,.45,d/2+1.5,1.8,.1,.5);S.b(SNOW,sx,.53,d/2+1.5,1.7,.05,.45);S.b('#a07a56',sx,.8,d/2+1.3,1.8,.5,.08);for(const ex of [-.75,.75])S.b('#7a5a40',sx+ex,.22,d/2+1.5,.1,.44,.4)}
+      // mái hiên trước cửa trên hai cột gỗ, bậc đá
+      for(const sx of [-1.7,1.7]){S.b('#8a5f3a',sx,b0+1.25,d/2+1.9,.24,2.5,.24);S.b('#8a5f3a',sx*.7,b0+2.3,d/2+1.4,.12,.12,1.1,-.6,0,0)}S.b('#5e4330',0,b0+2.62,d/2+1.1,4.3,.16,2.5,.12,0,0);S.b(SNOW,0,b0+2.76,d/2+1.1,4.4,.16,2.6,.12,0,0);S.b('#8c96a2',0,.15,d/2+.9,3,.3,1.4);
+      XS.T=S.T;XS.add(WREATH,'#2f5b48',MX(0,b0+h+rh*.42,d/2+.2,1.15,1.15,1));XS.add(G.sphLo,'#a5302a',MX(0,b0+h+rh*.42-.48,d/2+.26,.12));XS.reset();/* vòng nguyệt quế chỉ khi bật Giáng sinh */
       stringLights(L,-(w/2+.9),b0+h-.3,d/2+.95,0,b0+h+rh-.05,d/2+.95,12,0);stringLights(L,0,b0+h+rh-.05,d/2+.95,w/2+.9,b0+h-.3,d/2+.95,12,0);
       S.reset();L.reset();block(x,z,6.6)}
-    // dãy chuồng mở khung gỗ, lưới, nối với nhà bằng hành lang mái thấp
-    openShed(-2,-8,Math.PI/2,9,4.4,2.6,{stalls:true});
-    {const x=-2,z=-13.6,y=H(x,z);S.at(x,y,z,Math.PI/2);for(const sx of [-1.4,1.4])for(const sz of [-1,1])S.b('#8a6a4a',sx,1.1,sz,.18,2.2,.18);S.b('#5e4330',0,2.3,0,3.4,.2,2.6);S.b(SNOW,0,2.46,0,3.5,.18,2.7);S.b('#b4bbc4',0,.06,0,3,.12,2.2);stringLights(L,-1.7,2.18,1.35,1.7,2.18,1.35,6,.05);S.reset();block(x,z,1.6)}/* hành lang mái thấp */
     // bãi tròn rào gỗ hai thanh (đường husky đi qua hai cửa rào)
     fence(16,-22,7,30,[1.66,4.25]);for(let i=0;i<60;i++){const a=i/60*6.28;if([1.66,4.25].some(g=>Math.abs(Math.atan2(Math.sin(a-g),Math.cos(a-g)))<.34))continue;block(16+Math.cos(a)*7,-22+Math.sin(a)*7,.55)}/* rào không đi xuyên, vào qua hai cửa */
     // 5 husky xám trắng đeo đai: ngồi, nằm, đứng
-    const DG2=(x,z,r,pose,hc)=>{const y=H(x,z),sit=pose==='sit',lie=pose==='lie';S.at(x,y,z,r);const g='#7d838c',w='#f1f1ee',by=lie?.3:sit?.42:.5,hy=lie?.45:sit?.95:.72;
+    const DG2=(x,z,r,pose,hc,yo)=>{const y=H(x,z)+(yo||0),sit=pose==='sit',lie=pose==='lie';S.at(x,y,z,r);const g='#7d838c',w='#f1f1ee',by=lie?.3:sit?.42:.5,hy=lie?.45:sit?.95:.72;
       S.add(G.sph,g,MX(0,by,sit?-.05:0,.2,sit?.26:.2,sit?.3:.42,sit?-.6:0,0,0));S.add(G.sph,w,MX(0,by-.06,.05,.16,.15,sit?.24:.35,sit?-.6:0,0,0));S.add(G.sph,g,MX(0,hy,sit?.2:.42,.15,.14,.17));S.add(G.sph,w,MX(0,hy-.06,sit?.34:.56,.08,.07,.1));
       for(const sx of [-1,1]){S.add(G.cone,g,MX(sx*.07,hy+.17,sit?.18:.4,.04,.12,.04));if(!lie)for(const sz of sit?[.18]:[-.25,.25])S.add(G.cyl,w,MX(sx*.09,.2,sz,.04,.4,.04))}
-      S.add(G.sph,g,MX(0,by+.12,sit?-.32:-.45,.06,.06,.18,-.9,0,0));S.b(hc,0,by+.02,sit?.1:.18,.42,.42*.95,.08);S.b(hc,0,by+.2,sit?-.05:-.02,.08,.04,.4);S.reset();if(!lie)block(x,z,.5)};
+      S.add(G.sph,g,MX(0,by+.12,sit?-.32:-.45,.06,.06,.18,-.9,0,0));S.b(hc,0,by+.02,sit?.1:.18,.42,.42*.95,.08);S.b(hc,0,by+.2,sit?-.05:-.02,.08,.04,.4);S.reset();if(!lie&&!yo)block(x,z,.5)};
     for(const [x,z,r,p,c] of [[11.5,-25,1.2,'sit','#2f5fa8'],[13,-27.2,.4,'lie','#b8322c'],[20.5,-17.6,3.6,'stand','#2f5fa8'],[21.2,-25.4,4.4,'lie','#b8322c'],[19.4,-27.6,5.2,'sit','#2f5fa8']])DG2(x,z,r,p,c);
+    // Chuồng Chó Husky (theo ảnh mẫu): nhà riêng kế bên nhà trại, lùi về trước; mặt trước mở ba khoang vòm khung gỗ, rào thấp, mỗi khoang một husky; huy hiệu dấu chân trên đầu hồi; bệ đá; biển gỗ trên cột; lối lát đá xám
+    {const x=1.2,z=-8.6,y=H(x,z),ry=Math.PI/2,W=8.4,D=4.4,b0=.3,h=2.7,a=.46,rh=Math.tan(a)*(W/2+.7),Lr=(W/2+.9)/Math.cos(a),WD='#b07a4c',TB='#8a5a34';S.at(x,y,z,ry);
+      S.b('#8c96a2',0,b0/2,0,W+.5,b0+.1,D+.5);for(let k=0;k<9;k++)S.b(k%2?'#7f8994':'#9aa3ad',-W/2-.2+k*(W+.4)/8,b0*.5,D/2+.27,.9,b0*.8,.04);S.b('#d9bd82',0,b0+.03,.1,W-.3,.05,D-.4);/* bệ đá, rơm lót */
+      S.b(WD,0,b0+h/2,-D/2+.1,W,h,.2);for(const sx of [-1,1])S.b(WD,sx*(W/2-.1),b0+h/2,0,.2,h,D);for(let k=0;k<7;k++)S.b('#9a6a40',-W/2+.6+k*(W-1.2)/6,b0+h/2,-D/2+.22,.06,h,.04);/* vách sau ván dọc */
+      S.add(G.prism,WD,MX(0,b0+h,0,W,rh-.25,D));for(const sd of [-1,1]){S.b('#5e4330',sd*(W/4+.2),b0+h+rh/2-.18,0,Lr,.22,D+1.4,0,0,-sd*a);S.b(SNOW,sd*(W/4+.2)-sd*.08,b0+h+rh/2+.08,0,Lr,.32,D+1.5,0,0,-sd*a)}
+      for(let i=0;i<4;i++){const px=-W/2+i*W/3;S.b(TB,px,b0+h/2,D/2-.15,.3,h,.3);if(i>0&&i<3)S.b(TB,px,b0+h/2,0,.12,h,D-.3)}/* cột trước, vách ngăn khoang */
+      S.b(TB,0,b0+h-.05,D/2-.15,W+.3,.26,.32);/* xà đầu */
+      for(let i=0;i<3;i++){const cx=-W/3+i*W/3,bw=W/3;for(const sd of [-1,1]){S.b(TB,cx+sd*(bw/2-.42),b0+h-.5,D/2-.12,.95,.18,.2,0,0,sd*.75);S.b(TB,cx+sd*(bw/2-.95),b0+h-.24,D/2-.12,.5,.16,.2,0,0,sd*.3)}/* vòm khung gỗ */
+        for(const hy of [.3,.68])S.b('#c08d5a',cx,b0+hy,D/2-.08,bw-.4,.08,.07);for(let k=0;k<6;k++)S.b('#c08d5a',cx-bw/2+.4+k*(bw-.8)/5,b0+.38,D/2-.08,.06,.7,.06)}/* rào thấp */
+      S.b('#6e4a30',0,b0+h+.18,D/2+.05,W*.82,.16,.14);S.b('#6e4a30',0,b0+h+rh*.42,D/2+.05,.16,rh*.62,.14);for(const sd of [-1,1])S.b('#6e4a30',sd*W*.2,b0+h+rh*.36,D/2+.05,.13,rh*.64,.13,0,0,-sd*(a+.5));/* kèo đầu hồi */
+      plane(tex(200,200,g=>{g.fillStyle='#6b4a2c';g.beginPath();g.arc(100,100,96,0,7);g.fill();g.strokeStyle='#d9b77e';g.lineWidth=8;g.stroke();g.fillStyle='#f3e6c8';g.beginPath();g.ellipse(100,122,34,28,0,0,7);g.fill();for(const [px,py,r] of [[58,82,13],[82,60,14],[118,60,14],[142,82,13]]){g.beginPath();g.ellipse(px,py,r,r*1.25,0,0,7);g.fill()}}),1.25,1.25,0,b0+h+rh*.46,D/2+.14,ry);/* huy hiệu dấu chân */
+      S.reset();for(const k of [-1,0,1])block(...[x,z-k*2.8],2.2);
+      // ba husky trong ba khoang
+      for(const [k,p,c] of [[-1,'lie','#2f5fa8'],[0,'sit','#b8322c'],[1,'lie','#2f5fa8']]){const lz=k*W/3;DG2(x+.4,z-lz,Math.PI/2+(k?k*.25:0),p,c,b0+.05)}
+      // biển gỗ "Chuồng Chó Husky" trên cột, phía trước bên trái
+      {const sx=x+2.4,sz=z+5.3,sy=H(sx,sz);S.b('#7a5a40',sx,sy+1.3,sz,.22,2.6,.22);S.b('#7a5a40',sx,sy+2.5,sz-.7,.18,.18,1.6);S.b(SNOW,sx,sy+2.62,sz-.7,.24,.08,1.65);S.b('#5e4128',sx,sy+1.6,sz-.95,.08,.9,1.6);S.b(SNOW,sx,sy+2.08,sz-.95,.14,.08,1.65);block(sx,sz,.4);
+        const m=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.82),new THREE.MeshLambertMaterial({map:tex(360,200,g=>{g.fillStyle='#5e4128';g.fillRect(0,0,360,200);g.strokeStyle='#d9b77e';g.lineWidth=6;g.strokeRect(8,8,344,184);g.strokeStyle='#f3e6c8';g.lineWidth=4;g.beginPath();g.moveTo(130,78);g.lineTo(165,40);g.lineTo(185,60);g.lineTo(205,36);g.lineTo(240,78);g.stroke();g.fillStyle='#f6efe2';g.textAlign='center';g.font='600 40px Georgia,serif';g.fillText('Chuồng Chó Husky',180,135,330)})}));m.position.set(sx+.05,sy+1.6,sz-.95);m.rotation.y=Math.PI/2;sc.add(m)}
+      // lối lát đá xám nhỏ từ lối vào trại tới trước chuồng
+      {const PV=['#9aa2ac','#a9b0b9','#8f98a3','#b4bbc4'];for(let i=0;i<5;i++)for(let j=-3;j<=3;j++){const px=x+D/2+.8+i*.62,pz=z+j*.62+(i%2?.31:0),py=H(px,pz);S.b('#e6ebf2',px,py+.03,pz,.64,.06,.64);S.b(PV[(i*3+j+9)%4],px,py+.08,pz,.55,.08,.55,0,(i+j)%3*.04,0)}}}
     // xe trượt gỗ mộc chờ trong bãi
     {const x=21.5,z=-21.5,y=H(x,z);S.at(x,y,z,.3);S.b('#c99d70',0,.35,-.2,.9,.1,1.9);S.b('#8f949a',0,.55,-.4,.8,.25,1);S.b('#c99d70',0,.8,-.95,.86,.6,.1);for(const sx of [-.45,.45]){S.b('#b8906a',sx,.04,-.2,.06,.06,2.4);S.b('#b8906a',sx,.6,-1.05,.06,1.1,.06);S.add(G.cyl,'#b8906a',MX(sx,.25,1.05,.05,.5,.05,.6,0,0))}S.reset();block(x,z,1.1)}
     // cổng gỗ mái tuyết, huy hiệu đầu husky; lối vào có cọc gỗ nối dây thừng hai bên (chỉ đoạn lối vào trại)
     {const x=7,z=-4,ry=Math.atan2(5-x,-15-z),y=H(x,z);S.at(x,y,z,ry);for(const sx of [-1.5,1.5])S.b('#8a6a4a',sx,1.6,0,.3,3.2,.3);S.b('#8a6a4a',0,3.1,0,3.6,.22,.3);S.add(G.prism,'#5e4330',MX(0,3.2,0,4.2,.9,1.3));S.b(SNOW,-1.05,3.62,0,2.3,.14,1.4,0,0,.42);S.b(SNOW,1.05,3.62,0,2.3,.14,1.4,0,0,-.42);
       for(const s of [1,-1])plane(tex(160,160,g=>{g.fillStyle='#5e4128';g.beginPath();g.arc(80,80,76,0,7);g.fill();g.strokeStyle='#d9b77e';g.lineWidth=6;g.stroke();huskyHead(g,80,92,34)}),1,1,0,3.45,s*.17,ry+(s<0?Math.PI:0));
       S.reset();block(...[x+Math.cos(ry)*1.5,z-Math.sin(ry)*1.5],.4);block(...[x-Math.cos(ry)*1.5,z+Math.sin(ry)*1.5],.4);
-      const ex=5,ez=-15,ln=Math.hypot(ex-x,ez-z),ux=(ex-x)/ln,uz=(ez-z)/ln,n=Math.floor(ln/2.2);for(const sd of [-1,1]){let prev=null;for(let k=0;k<=n;k++){const t=k/n*.82+.06,px=x+(ex-x)*t-uz*1.6*sd,pz=z+(ez-z)*t+ux*1.6*sd,py=H(px,pz);S.b('#8a6a4a',px,py+.45,pz,.16,.9,.16);S.b(SNOW,px,py+.93,pz,.2,.06,.2);
+      const ex=5,ez=-15,ln=Math.hypot(ex-x,ez-z),ux=(ex-x)/ln,uz=(ez-z)/ln,n=Math.floor(ln/2.2);for(const sd of [-1,1]){let prev=null;for(let k=0;k<=n;k++){const t=k/n*.82+.06,px=x+(ex-x)*t-uz*1.6*sd,pz=z+(ez-z)*t+ux*1.6*sd,py=H(px,pz);if(px<6.6&&Math.abs(pz+8.6)<3.4){prev=null;continue}/* chừa lối vào Chuồng Chó */S.b('#8a6a4a',px,py+.45,pz,.16,.9,.16);S.b(SNOW,px,py+.93,pz,.2,.06,.2);
         if(prev){const mx=(px+prev[0])/2,mz=(pz+prev[1])/2,l2=Math.hypot(px-prev[0],pz-prev[1]),an=Math.atan2(px-prev[0],pz-prev[1]);for(const [f,dy] of [[.25,-.1],[.5,-.16],[.75,-.1]])S.add(G.cyl,'#d8c8a4',MX(prev[0]+(px-prev[0])*f,py+.78+dy,prev[1]+(pz-prev[1])*f,.025,l2/3+.12,.025,Math.PI/2,an,0))}prev=[px,pz]}}}
     /* đường husky không rào; bản Giáng sinh có đèn nhỏ hai bên */for(const t of HTRAILS)for(let i=0;i+1<t.length;i++){const [ax,az]=t[i],[bx,bz]=t[i+1],ln=Math.hypot(bx-ax,bz-az),ux=(bx-ax)/ln,uz=(bz-az)/ln,n=Math.max(1,Math.round(ln/3.2));for(let k=0;k<n;k++){const q=(k+.5)/n,x=ax+(bx-ax)*q,z=az+(bz-az)*q;for(const sd of [-1,1]){const px=x-uz*2.4*sd,pz=z+ux*2.4*sd;if(Math.hypot(px-16,pz+22)>7.6)bulb(px,H(px,pz)+.12,pz)}}}}
   // ---------- 06 Trang Trại Tuần Lộc (vẽ lại theo ảnh mẫu 28/11): nhà gỗ đầu hồi kính, biển tuần lộc trắng, chân tường đá, hai cánh mái thấp; bãi bầu dục rào gỗ hai thanh; tuần lộc đeo đai đỏ; xe tuần lộc ông già Noel chờ xuất phát ----------
@@ -839,7 +858,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const segD=(x,z,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));return Math.hypot(x-ax-dx*t,z-az-dz*t)};
   const stTop=tw(0,7.2);
   const keep=(x,z)=>{if(lakeE(x,z)<1.12)return false;
-    if(Math.hypot(x-FARM.x,z-FARM.z)<FARM.r+6)return false;if(Math.hypot(x-TREE.x,z-TREE.z)<46||Math.hypot(x-FUN.x,z-FUN.z)<24||Math.hypot(x-RH.x,z-RH.z)<18||Math.hypot(x-16,z+22)<13||Math.hypot(x-6,z+9)<7||Math.hypot(x-FIRE2.x,z-FIRE2.z)<6||Math.hypot(x-STAGE.x,z-STAGE.z)<11||Math.hypot(x-WHEEL.x,z-WHEEL.z)<15||Math.hypot(x-CAR.x,z-CAR.z)<10||Math.hypot(x-FARM.x-25,z-FARM.z)<14||Math.hypot(x-FARM.x+23,z-FARM.z-3)<7)return false;if(Math.hypot(x-TP.x,z-TP.z)<15)return false;if(segD(x,z,STAIR.x,STAIR.z,stTop[0],stTop[1])<5)return false;
+    if(Math.hypot(x-FARM.x,z-FARM.z)<FARM.r+6)return false;if(Math.hypot(x-TREE.x,z-TREE.z)<46||Math.hypot(x-FUN.x,z-FUN.z)<24||Math.hypot(x-RH.x,z-RH.z)<18||Math.hypot(x-16,z+22)<13||Math.hypot(x-6,z+9)<7||Math.hypot(x-FIRE2.x,z-FIRE2.z)<6||Math.hypot(x-STAGE.x,z-STAGE.z)<13||segD(x,z,STAGE.x,STAGE.z,RINK.x,RINK.z)<9||Math.hypot(x+66,z-98)<5||Math.hypot(x-WHEEL.x,z-WHEEL.z)<15||Math.hypot(x-CAR.x,z-CAR.z)<10||Math.hypot(x-FARM.x-25,z-FARM.z)<14||Math.hypot(x-FARM.x+23,z-FARM.z-3)<7)return false;if(Math.hypot(x-TP.x,z-TP.z)<15)return false;if(segD(x,z,STAIR.x,STAIR.z,stTop[0],stTop[1])<5)return false;
     for(const [ix,iz] of IGLOOS){const [lx,lz]=toLake([ix,iz],16);if(Math.hypot(x-ix,z-iz)<8.5||segD(x,z,ix,iz,lx,lz)<4.5)return false}if(Math.abs(x)<9&&z>80&&z<104)return false;
     for(const p of PATHS)for(let i=0;i+1<p.length;i++)if(segD(x,z,...p[i],...p[i+1])<4)return false;
     for(const c of colliders)if(Math.hypot(x-c[0],z-c[1])<c[2]+1.5)return false;for(const q of PEAKS)if(Math.hypot(x-q.x,z-q.z)<q.R*1.25)return false;/* không trồng cây trên vách đá */for(const t of HTRAILS)for(let i=0;i+1<t.length;i++)if(segD(x,z,...t[i],...t[i+1])<4)return false;for(const r of SKIRUNS)for(let i=0;i+1<r.length;i++)if(segD(x,z,...r[i],...r[i+1])<7)return false;if(segD(x,z,...LIFT[0],...LIFT[1])<4||Math.hypot(x-SKI.x,z-SKI.z+2)<12)return false;if(Math.abs(x-SKI.x)<30&&z>SKI.z-4&&z<SKI.z+62&&rnd()<.85)return false;if(segD(x,z,PIER[0][0],PIER[0][1],PIER[0][0]-8,PIER[0][1])<4)return false;if(Math.hypot((x-RINK.x)/(RINK.rx+6),(z-RINK.z)/(RINK.rz+6))<1)return false;for(let i=0;i+1<HUSKY_TRAIL.length;i++)if(segD(x,z,...HUSKY_TRAIL[i],...HUSKY_TRAIL[i+1])<4)return false;
