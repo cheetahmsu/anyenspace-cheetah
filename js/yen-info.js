@@ -8,7 +8,7 @@
     forest:{t:'Rừng Yên',p:'Rừng thông yên tĩnh với Hồ Sen, Chánh điện trên đồi, sáu ngôi nhà ngũ quan và Tư Gia.',g:['Chạm mặt đất để đi tới','Chạm ngôi nhà, tọa cụ, thuyền hay hồ để bắt đầu']},
     bay:{t:'Vịnh Yên',p:'Du thuyền chậm rãi giữa những đảo đá. Ghé Đảo Yên để dạo bãi cát, nhặt vỏ sò, xếp đá.',g:['Chạm mặt nước thoáng để tàu đi tới','Chạm Đảo Yên hay danh thắng để ghé thăm']},
     island:{t:'Đảo Yên',p:'Hòn đảo nhỏ có Nhà Thiền, nhà nghỉ, chòi ngắm cảnh và bãi cát.',g:['Chạm bãi cát để đi tới','Chạm nhà, chòi, vỏ sò hay đá để bắt đầu']},
-    snow:{t:'Xứ Yên',p:'Làng tuyết mùa Giáng sinh: hồ băng, vòng đu quay, trang trại tuần lộc và husky.',g:['Chạm mặt tuyết để đi tới','Chạm xe, ngôi nhà hay đồ vật để bắt đầu']}
+    snow:{t:'Xứ Yên',p:'Làng tuyết mùa Giáng sinh: hồ băng, vòng đu quay, trang trại tuần lộc và husky.',g:['Chạm mặt tuyết để đi tới','Chạm xe, ngôi nhà hay đồ vật để bắt đầu','Chạm cây thông lớn để treo lời chúc, bãi tuyết để đắp người tuyết, sân băng để trượt','Ngồi bên đống lửa để viết và thả điều muốn buông, vào Nhà Ấm tròn uống ly ấm']}
   };
   const VIEW=['Kéo để nhìn quanh','Chụm hai ngón hoặc lăn chuột để phóng to, thu nhỏ','Chạm đúp để lại gần hoặc ra xa'];
   const FIRST_MS=4000,IDLE_MS=15000,HINT_MS=6000;/* lần đầu tới nơi mới: nhắc sau 4 giây; những lần sau: chỉ nhắc khi 15 giây chưa chạm gì; dòng nhắc tự tắt sau 6 giây */

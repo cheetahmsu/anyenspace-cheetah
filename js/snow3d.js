@@ -1016,6 +1016,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     setTimeout(()=>caption('🔥 Nhìn nó cháy thành tro. Hít vào hơi ấm, thở ra thật dài. Bạn không cần mang nó theo nữa.',8000),1700)}
   // Cho tuần lộc ăn: nắm rêu địa y trên tay, đàn tuần lộc gần đó cúi xuống ăn (chỉ là gợi ý nhẹ), đếm số lần trên máy
   const moss=new THREE.Mesh(gSph,lam('#b9c29a'));moss.scale.set(.16,.09,.16);moss.visible=false;sc.add(moss);
+  const PROX=[],proxM=new THREE.MeshBasicMaterial({visible:false});
 
   for(const [id,x,z,r,h,y0] of [['tree',TREE.x,TREE.z,6.5,27,1],['snowman',SNOWMAN.x,SNOWMAN.z,4.6,8,0],['wheel',WHEEL.x,WHEEL.z+3,WR,WY+WR,0],['carousel',CAR.x,CAR.z,6.4,8,0],['fire',25,77,1.6,2.4,0],['bell',...tw(10.5,1.5),2.6,6,1],['cocoa',RH.x,RH.z,8.6,9,0]]){const m=new THREE.Mesh(gCyl,proxM);m.scale.set(r,h,r);m.position.set(x,H(x,z)+y0+h/2,z);m.userData.st=id;sc.add(m);PROX.push(m)}
   function act(){const s=near;if(!s)return;P.dest=null;
@@ -1024,11 +1025,11 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='husky'){P.mode='husky';P.ride=0;caption('🐕 Đàn husky chạy chậm một vòng rừng thông. Vuốt để nhìn quanh.',6000)}
     else if(s.id==='sled'){const o=sleds.filter(q=>q.st==='park').sort((a,b)=>Math.hypot(a.g.position.x-P.x,a.g.position.z-P.z)-Math.hypot(b.g.position.x-P.x,b.g.position.z-P.z))[0];if(!o){caption('🛷 Cả 3 xe đang chạy, đợi một chút xe về bến nhé.',4000);return}mySled=o;sledStart(o,'me');P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe chạy vòng sát bờ hồ. Muốn lên bờ thì bấm vào bờ chỗ bạn thích.',6000)}
     else if(s.id==='sit'){setSit(true);P.mode='sit';setIncense(true);{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
-    else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:25,z:79.1,y:H(25,79.1)+.5,a:Math.PI};P.yaw=0;first=true;caption('🔥 Hơ tay bên lửa. Nếu muốn, viết ra một điều bạn muốn buông và thả vào lửa.',7000);setTimeout(()=>{if(P.mode==='sit'&&P.sitAt&&P.sitAt.z>70)letOpen()},1200)}
+    else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:25,z:79.1,y:H(25,79.1)+.5,a:Math.PI};P.yaw=.75;first=true;caption('🔥 Hơ tay bên lửa. Nếu muốn, viết ra một điều bạn muốn buông và thả vào lửa.',7000);setTimeout(()=>{if(P.mode==='sit'&&P.sitAt&&P.sitAt.z>70)letOpen()},1200)}
     else if(s.id==='cocoa'){setSit(true);P.mode='sit';P.sitAt={x:s.x,z:s.z,y:H(s.x,s.z)+.5,a:s.a,cup:1};P.yaw=s.a;first=true;cup.visible=true;caption('☕ Hai tay ôm ly cacao nóng. Hít mùi thơm, thở ra làn hơi ấm. Uống từng ngụm nhỏ.',8000)}
     else if(s.id==='stars'){P.mode='stars';P.ride=0;caption('🌌 Nằm ngửa trên tuyết, nhìn lên bầu trời. Đếm mười hơi thở chậm, mỗi hơi thở một ngôi sao.',9000);breathEl.hidden=false}
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
-    else if(s.id==='deer'){let n=1;try{n=+(localStorage.getItem('xuyen-deer')||0)+1;localStorage.setItem('xuyen-deer',n)}catch(e){}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption('🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Lần thứ '+n+' bạn cho tuần lộc ăn. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
+    else if(s.id==='deer'){P.a=Math.atan2(FARM.x-P.x,FARM.z-P.z);P.yaw=P.a+Math.PI-.5;first=true;let n=1;try{n=+(localStorage.getItem('xuyen-deer')||0)+1;localStorage.setItem('xuyen-deer',n)}catch(e){}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption('🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Lần thứ '+n+' bạn cho tuần lộc ăn. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='snowman'){const m=snowmanBuild();P.mode='build';P.x=m.me[0];P.z=m.me[1];P.a=Math.atan2(m.sp.x-P.x,m.sp.z-P.z);P.yaw=m.yaw;P.camAim=null;first=true;near=null}
     else if(s.id==='tree'){wishOpen();P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;first=true;return}
