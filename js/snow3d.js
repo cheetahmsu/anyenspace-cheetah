@@ -1017,20 +1017,24 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   {const a=tw(0,7.2),b=STAIR,len=Math.hypot(a[0]-b.x,a[1]-b.z),ang=Math.atan2(a[0]-b.x,a[1]-b.z),ux=(a[0]-b.x)/len,uz=(a[1]-b.z)/len,PV=['#9aa2ac','#a9b0b9','#8f98a3','#b4bbc4','#a3abb5'],W=3.4,R=.62;
     for(let r=0;r*R<=len;r++){const cx=b.x+ux*r*R,cz=b.z+uz*r*R,yc=H(cx,cz);S.b('#e6ebf2',cx,yc+.04,cz,W+.2,.08,R+.02,ang);const off=r%2?R/2:0;
       for(let c=-W/2+R/2+off;c<=W/2-R/3;c+=R){const px=cx+Math.cos(ang)*c,pz=cz-Math.sin(ang)*c,py=H(px,pz),k=(r*7+Math.round(c*10))%PV.length;S.b(PV[(k+PV.length)%PV.length],px,py+.1,pz,Math.min(R-.07,W/2-c+R/2-.07),.1,R-.07,ang+((r+k)%3-1)*.03)}}}
-  // 28/11: đèn đá thấp kiểu sân chùa (người dùng yêu cầu): hai bên lối đá lên chùa, quanh thềm chánh điện, vòng quanh tượng Phật. Đèn cao chưa tới thắt lưng, ánh vàng dịu, luôn sáng (không thuộc nút Giáng sinh), không lấn cực quang
-  {const stoneLamp=(x,z,ry,k)=>{const y=H(x,z);S.at(x,y,z,ry,k);LA.at(x,y,z,ry,k);
-      S.b('#9ca4ae',0,.08,0,.52,.16,.52);S.add(G.cyl,'#a9b0b9',MX(0,.36,0,.11,.42,.11));S.b('#9ca4ae',0,.6,0,.42,.08,.42);
-      for(const [px,pz] of [[-.16,-.16],[.16,-.16],[-.16,.16],[.16,.16]])S.b('#a9b0b9',px,.77,pz,.07,.26,.07);LA.b('#ffc98a',0,.77,0,.24,.24,.24);
-      S.add(G.pyr4,'#8f98a3',MX(0,.98,0,.4,.2,.4));S.add(G.pyr4,SNOW,MX(0,1.01,0,.34,.17,.34));S.add(G.sphLo,'#a9b0b9',MX(0,1.12,0,.06,.08,.06));
-      S.reset();LA.reset();block(x,z,.35*k)};
-    // hai bên lối đá, cách mép đá 0,6 m, mỗi 4,5 m một cặp
-    {const a=tw(0,7.2),b=STAIR,len=Math.hypot(a[0]-b.x,a[1]-b.z),ux=(a[0]-b.x)/len,uz=(a[1]-b.z)/len,ang=Math.atan2(ux,uz);
-      for(let t=1.2;t<len-.5;t+=4.5){const cx=b.x+ux*t,cz=b.z+uz*t;for(const sd of [-1,1])stoneLamp(cx-uz*2.35*sd,cz+ux*2.35*sd,ang,1)}}
-    // quanh thềm chánh điện: hai bên bậc thềm, bốn góc nền đá, giữa hai hông
-    for(const [lx,lz] of [[-2.9,7.3],[2.9,7.3],[-7.7,5.7],[7.0,6.4],[-7.7,-7.6],[7.7,-7.6],[-7.9,-1],[0,-7.9]]){const c=tw(lx,lz);stoneLamp(c[0],c[1],TRY,1.1)}
-    // vòng quanh tượng Phật, chừa khoảng trống phía trước để chắp tay chiêm bái
-    for(const deg of [38,95,145,215,265,322]){const q=deg*Math.PI/180,c=tw(10.5+Math.sin(q)*3.7,1.5+Math.cos(q)*3.7);stoneLamp(c[0],c[1],TRY+q,.9)}
-    if(!LOW){const c=tw(10.5,3.6);warm(c[0],H(c[0],c[1])+2.4,c[1],2.5,9)}}/* một đèn ấm nhỏ hắt lên tượng; điện thoại bỏ qua cho nhẹ */
+  // 28/11 (đổi theo người dùng): bỏ đèn đá đứng dưới đất; chỉ gắn đèn nhỏ trang trí: hai mép lối đá lên chùa, viền mái và góc tường chánh điện, quanh bệ tượng Phật. Luôn sáng, vàng dịu, không lấn cực quang
+  {const bl=(x,y,z,i,s)=>LA.add(G.sphLo,i%3?'#ffd896':'#fff0d0',MX(x,y,z,s||.06));
+    // hai mép lối đá
+    {const a=tw(0,7.2),b=STAIR,len=Math.hypot(a[0]-b.x,a[1]-b.z),ux=(a[0]-b.x)/len,uz=(a[1]-b.z)/len;let i=0;
+      for(let t=.4;t<len;t+=1.4,i++){const cx=b.x+ux*t,cz=b.z+uz*t;for(const sd of [-1,1]){const px=cx-uz*1.82*sd,pz=cz+ux*1.82*sd;bl(px,H(px,pz)+.12,pz,i)}}}
+    const y=H(TP.x,TP.z),z0=-1.5,w=11,d=8,h=3.4,y0=.7;LA.at(TP.x,y,TP.z,TRY);
+    const line=(x0,y1,za,x1,y2,zb,step,s)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,y2-y1,zb-za)/step));for(let k=0;k<=n;k++){const t=k/n;bl(x0+(x1-x0)*t,y1+(y2-y1)*t,za+(zb-za)*t,k,s)}};
+    // mái dưới: hai đường rìa đầu hồi trước và sau, hai mép mái dọc hai hông
+    {const ex=w/2+1.1,ey=y0+h-.32,top=ey+2.3,ez=z0+(d+1.8)/2+.06;for(const zz of [ez,z0*2-ez])for(const sd of [-1,1])line(sd*ex,ey,zz,0,top,zz,.45);for(const sd of [-1,1])line(sd*(ex+.04),ey,z0-(d+1.8)/2,sd*(ex+.04),ey,z0+(d+1.8)/2,.45)}
+    // mái trên: rìa đầu hồi phía trước
+    {const ex=3.4,ey=y0+h+2.45,ez=z0+d/2+.06;for(const sd of [-1,1])line(sd*ex,ey,ez,0,ey+1.45,ez,.4)}
+    // tường: bốn góc chánh điện và dải dưới mái phía trước
+    for(const sx of [-1,1])for(const sz of [-1,1])line(sx*(w/2+.1),y0+.15,z0+sz*(d/2+.1),sx*(w/2+.1),y0+h-.1,z0+sz*(d/2+.1),.4);
+    line(-w/2,y0+h-.12,z0+d/2+.1,w/2,y0+h-.12,z0+d/2+.1,.45);
+    // quanh tượng Phật: một vòng trên mép bệ đá tròn, một vòng sát chân bệ đá tự nhiên
+    {const bx=10.5,bz=1.5;for(let k=0;k<32;k++){const a=k/32*Math.PI*2;bl(bx+Math.cos(a)*1.68,1.56,bz+Math.sin(a)*1.68,k,.055)}/* viền chân đài sen */
+      LA.reset();for(let k=0;k<36;k++){const a=k/36*Math.PI*2,r=2.9+.15*Math.sin(k*1.3),c=tw(bx+Math.cos(a)*r,bz+Math.sin(a)*r);bl(c[0],H(c[0],c[1])+.1,c[1],k)}}/* vòng sát chân bệ đá */
+    LA.reset()}
   {const s=STATIONS.find(s=>s.id==='sit'),c=tw(0,5.8);s.x=c[0];s.z=c[1];const b=STATIONS.find(s=>s.id==='bell'),d=tw(10.5,5.6);b.x=d[0];b.z=d[1]}
 
   // ---------- trồng thông: dày ở rừng tây và dải sau lều kính, thưa quanh làng ----------
