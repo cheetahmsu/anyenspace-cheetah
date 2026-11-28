@@ -38,8 +38,8 @@ const HR=[[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50],[40,-58],[66,-56],[80
 const HUSKY={x:10,z:-50,rx:1,rz:1};
 const along=(pts,closed,u)=>{const P=closed?[...pts,pts[0]]:pts;let tot=0;const L=[];for(let i=0;i+1<P.length;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l}
   let d=((u%1)+1)%1*tot;if(!closed&&u>=1)d=tot;for(let i=0;i<L.length;i++){if(d<=L[i]||i===L.length-1){const t=Math.min(1,d/L[i]),a=P[i],b=P[i+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=L[i]}};
-const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-41,z:97},FIRE2={x:-63,z:71};
-const SNOWMAN={x:-40,z:74},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
+const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-40,z:114},FIRE2={x:-44,z:50};
+const SNOWMAN={x:-31,z:73},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
 // [góc (0 = bắc, dương = đông), bán kính, rộng, sâu, cao, màu, loại]
@@ -48,7 +48,7 @@ const VH=[[0,37,9,19.8,4.4,'#c99d70','main'],[-58,29,8,7,3.8,'#b8906a','shop'],[
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
-const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-35,84],[-34,91]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
+const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-37,92],[-38,107]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
 const STATIONS=[
   {id:'aurora',x:48,z:-49.6,label:'✨ Vào lều kính ngắm cực quang'},
   {id:'husky',x:12.5,z:-19,label:'🐕 Lên xe husky dạo rừng'},
@@ -59,7 +59,7 @@ const STATIONS=[
   {id:'deer',x:122.6,z:86,label:'🦌 Cho tuần lộc ăn rêu'},
   {id:'carousel',x:-25,z:58.6,label:'🎠 Ngồi vòng ngựa gỗ'},
   {id:'wheel',x:-48,z:43.4,label:'🎡 Lên vòng quay ngắm làng'},
-  {id:'snowman',x:-39,z:79,label:'⛄ Đắp người tuyết'},
+  {id:'snowman',x:-30,z:78,label:'⛄ Đắp người tuyết'},
   {id:'tree',x:10,z:66.5,label:'🎄 Treo lời chúc lên cây thông'},
   {id:'skate',x:-3,z:71.6,label:'⛸ Xỏ giày trượt băng'}];
 {const q=STATIONS.find(o=>o.id==='skate'),GA=Math.atan2(ARCH.z-RINK.z,ARCH.x-RINK.x);q.x=RINK.x+Math.cos(GA)*(RINK.rx+1.6);q.z=RINK.z+Math.sin(GA)*(RINK.rz+1.6)}
@@ -948,7 +948,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // ---------- đợt 3: đắp người tuyết, treo lời chúc lên cây thông, trượt băng ----------
   const lam=c=>new THREE.MeshLambertMaterial({color:c}),gSph=new THREE.SphereGeometry(1,18,12),gCone=new THREE.ConeGeometry(1,1,10),gCyl=new THREE.CylinderGeometry(1,1,1,14);
   // Người tuyết tự đắp: tối đa 4 chỗ phía tây bãi tuyết, đắp chỗ thứ 5 thì thay người tuyết cũ nhất
-  const BUILD=[[-46.2,74.4],[-45.4,79.4],[-45.4,69.4],[-42.6,84]].map(([x,z])=>({x,z,g:null,c:null}));let buildK=0,myMan=null;
+  const BUILD=[[-6.2,.4],[-5.4,5.4],[-5.4,-4.6],[-2.6,10]].map(([x,z])=>({x:SNOWMAN.x+x,z:SNOWMAN.z+z,g:null,c:null}));let buildK=0,myMan=null;
   function snowmanBuild(){const sp=BUILD[buildK%BUILD.length];buildK++;if(sp.g){sc.remove(sp.g);const i=colliders.indexOf(sp.c);if(i>=0)colliders.splice(i,1)}
     const g=new THREE.Group(),y=H(sp.x,sp.z),sn=lam('#f4f7fb'),dark=lam('#2b2622');g.position.set(sp.x,y,sp.z);g.rotation.y=Math.atan2(TREE.x-sp.x,TREE.z-sp.z)+.4;
     const ball=(r,h)=>{const m=new THREE.Mesh(gSph,sn);m.userData={r,h};m.scale.setScalar(.001);m.position.y=h;g.add(m);return m};
