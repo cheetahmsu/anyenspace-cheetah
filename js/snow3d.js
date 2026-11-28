@@ -177,8 +177,9 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const S=new Batch(),L=new Batch(),LA=new Batch(),T=new Batch(),XS=new Batch(),XL=new Batch();/* L: cửa sổ, đèn nhà, chỉ sáng ở bản Giáng sinh · LA: luôn sáng (chùa, đèn đá, lửa, lều) *//* XS, XL: trang trí Giáng sinh, chỉ hiện ở phiên bản Giáng sinh */
   {const _xa=XL.add.bind(XL),_sc=new THREE.Vector3(),_wc=new THREE.Color('#ffb030'),_bc=new THREE.Color();XL.add=function(geo,col,m){if(geo===G.sphLo||geo===G.ico){_sc.setFromMatrixScale(m);if(_sc.x<.16){m=m.clone().scale(_sc.set(1.25,1.25,1.25));col=_bc.set(col).lerp(_wc,.5).getHex()}}return _xa(geo,col,m)}}/* 28/11: bóng đèn trang trí to hơn chút (người dùng dặn tăng độ sáng), sau đó ngả vàng óng ấm kiểu đèn Giáng sinh (người dùng dặn tăng màu vàng) */
   const LIT=()=>true;const I4=new THREE.Matrix4(),bulb=(x,y,z,c)=>{const t0=XL.T;XL.T=I4;XL.add(G.sphLo,c||'#ffd896',MX(x,y,z,.075));XL.T=t0};
+  const stripLine=(a,b,th,col)=>{const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz);if(l<.01)return;XL.add(G.box,col||'#ffc35a',MX((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,th||.1,th||.1,l+(th||.1),-Math.asin(dy/l),Math.atan2(dx,dz),0))};/* 28/11 theo mẫu toàn khu: dải đèn vàng ấm liền mảnh thay dây bóng chấm (chỉ sáng ở cảnh đêm) */
   for(const p of PATHS)for(let i=0;i+1<p.length;i++){const [ax,az]=p[i],[bx,bz]=p[i+1],ln=Math.hypot(bx-ax,bz-az);if(ln<.01)continue;const ux=(bx-ax)/ln,uz=(bz-az)/ln,n=Math.max(1,Math.round(ln/3));
-    for(let k=0;k<n;k++){const t=(k+.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;for(const sd of [-1,1]){const px=x-uz*1.75*sd,pz=z+ux*1.75*sd;bulb(px,H(px,pz)+.12,pz,k%3?'#ffd896':'#fff0d0')}}}/* đèn nhỏ dọc hai mép đường đi *//* nguyên tắc toàn bản đồ: không cột đèn, chỉ đèn nhỏ gắn trên đường, hàng rào, kiến trúc, và chỉ bật ở bản Giáng sinh */const _lv=new THREE.Vector3();{const _la=L.add.bind(L);L.add=function(geo,col,m){if(geo===G.sphLo||geo===G.sph||col==='#ffd08a'){const t0=XL.T;XL.T=this.T;XL.add(geo,col,m);XL.T=t0;return this}return _la(geo,col,m)}}/* bóng đèn trang trí chỉ bật cùng nút Giáng sinh *//* S: vật thể thường · L: đèn, cửa sổ sáng · T: cây thông */
+    {const t0=XL.T;XL.T=I4;for(let k=0;k<n;k++)for(const sd of [-1,1]){const q=t=>{const x=ax+(bx-ax)*t-uz*1.75*sd,z=az+(bz-az)*t+ux*1.75*sd;return [x,H(x,z)+.07,z]};stripLine(q(k/n),q((k+1)/n),.06)}XL.T=t0}}/* dải sáng mảnh dọc hai mép đường đi *//* nguyên tắc toàn bản đồ: không cột đèn, chỉ đèn nhỏ gắn trên đường, hàng rào, kiến trúc, và chỉ bật ở bản Giáng sinh */const _lv=new THREE.Vector3();{const _la=L.add.bind(L);L.add=function(geo,col,m){if(geo===G.sphLo||geo===G.sph||col==='#ffd08a'){const t0=XL.T;XL.T=this.T;XL.add(geo,col,m);XL.T=t0;return this}return _la(geo,col,m)}}/* bóng đèn trang trí chỉ bật cùng nút Giáng sinh *//* S: vật thể thường · L: đèn, cửa sổ sáng · T: cây thông */
   const colliders=[],TG={};const block=(x,z,r)=>colliders.push([x,z,r]);/* vật cản hình hộp theo đúng mặt bằng nhà (vòng tròn cũ để hở góc nhà, đi xuyên vách được) */const blockBox=(x,z,ry,hw,hd,lx,lz)=>{const cs=Math.cos(ry),sn=Math.sin(ry);lx=lx||0;lz=lz||0;colliders.push([x+cs*lx+sn*lz,z-sn*lx+cs*lz,Math.hypot(hw,hd),cs,sn,hw,hd])};
 
   // ---------- bầu trời đêm xanh thẫm và cực quang (theo ảnh chụp cực quang thật: dải lục toả tia, viền tím hồng) ----------
@@ -312,15 +313,15 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   function stringLights(B,x0,y0,z0,x1,y1,z1,n,sag,r){for(let i=0;i<=n;i++){const t=i/n;_lv.set(x0+(x1-x0)*t,y0,z0+(z1-z0)*t).applyMatrix4(B.T);if(!LIT(_lv.x,_lv.z))continue;B.add(G.sphLo,i%4?'#ffd27a':'#ffe8b8',MX(x0+(x1-x0)*t,y0+(y1-y0)*t-Math.sin(t*Math.PI)*(sag||0),z0+(z1-z0)*t,r||.07))}}/* r: cỡ bóng, mặc định .07 */
   // 28/11 viền đèn kín mái mọi ngôi nhà (người dùng dặn): mái hai dốc, sống dọc trục z cục bộ; e nửa bề rộng mép mái ở cao ye, sống ở cao yr, từ z0 tới z1.
   // Hai mép mái, bốn cạnh đầu hồi và sống mái. Bóng đèn vào XL nên chỉ sáng khi bật Giáng sinh; máy yếu thưa bóng hơn.
-  function roofLine(T,e,ye,yr,z0,z1){XL.T=T;const st=LOW?.62:.44,ln=(a,b,sag)=>{const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])/st));for(let i=0;i<=n;i++){const t=i/n;XL.add(G.ico,i%5===0?'#fff3d6':i%2?'#ffd98e':'#ffc870',MX(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-Math.sin(t*Math.PI)*(sag||0),a[2]+(b[2]-a[2])*t,.075))}};
+  function roofLine(T,e,ye,yr,z0,z1){XL.T=T;const ln=(a,b)=>stripLine(a,b,.11);
     for(const sx of [-1,1])ln([sx*e,ye,z0],[sx*e,ye,z1],.06);for(const z of [z0,z1])for(const sx of [-1,1])ln([sx*e,ye,z],[0,yr,z]);ln([0,yr,z0],[0,yr,z1]);XL.reset()}
   // 28/11 viền đèn tường mọi ngôi nhà (người dùng dặn): bốn cạnh góc dựng đứng, vòng chân tường và vòng đỉnh tường; khối tường tâm (cx,cz), nửa rộng hw, nửa sâu hd, từ cao y0 tới y1.
-  function wallLine(T,cx,cz,hw,hd,y0,y1,o){o=o||{};XL.T=T;const st=LOW?.62:.44,ln=(a,b)=>{const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])/st));for(let i=0;i<=n;i++){const t=i/n;XL.add(G.ico,i%5===0?'#fff3d6':i%2?'#ffd98e':'#ffc870',MX(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t,.075))}};
+  function wallLine(){/* 28/11 theo mẫu toàn khu: bỏ viền tường, chỉ giữ dải đèn mép mái */}function wallLineOld(T,cx,cz,hw,hd,y0,y1,o){o=o||{};XL.T=T;const st=LOW?.62:.44,ln=(a,b)=>{const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])/st));for(let i=0;i<=n;i++){const t=i/n;XL.add(G.ico,i%5===0?'#fff3d6':i%2?'#ffd98e':'#ffc870',MX(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t,.075))}};
     const P=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([sx,sz])=>[cx+sx*(hw+.06),cz+sz*(hd+.06)]);for(let i=0;i<4;i++){const a=P[i],b=P[(i+1)%4];if(o.skip&&o.skip.includes(i))continue;ln([a[0],y0,a[1]],[b[0],y0,b[1]]);if(!o.noTop)ln([a[0],y1,a[1]],[b[0],y1,b[1]])}for(const a of P)ln([a[0],y0,a[1]],[a[0],y1,a[1]]);XL.reset()}
   // ---------- Cổng Xứ Yên ----------
   {const GX=14,GZ=98,y=H(GX,GZ);S.at(GX,y,GZ,0);L.at(GX,y,GZ,0);for(const sx of [-1,1]){S.b('#8a6a4a',sx*3.4,2,0,.5,4,.5);S.b('#9a7a5a',sx*3.4,.2,0,.8,.4,.8);L.b('#ffcc7a',sx*3.4,3.4,.3,.3,.4,.06)}
     S.b('#4a3426',0,4.3,0,8.4,.5,.7);S.add(G.prism,'#4a3426',MX(0,4.55,0,9.4,1.9,1.6));S.b(SNOW,-2.4,5.55,0,5.3,.3,1.9,0,0,.38);S.b(SNOW,2.4,5.55,0,5.3,.3,1.9,0,0,-.38);
-    stringLights(L,-4.6,4.5,.95,0,6.35,.95,10,0);stringLights(L,0,6.35,.95,4.6,4.5,.95,10,0);S.reset();L.reset();block(GX-3.4,GZ,.6);block(GX+3.4,GZ,.6);
+    XL.T=S.T;stripLine([-4.6,4.5,.95],[0,6.35,.95]);stripLine([0,6.35,.95],[4.6,4.5,.95]);XL.reset();S.reset();L.reset();block(GX-3.4,GZ,.6);block(GX+3.4,GZ,.6);
     const sg=signTex('XỨ YÊN','Arctic Wonderland'),m=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.27),new THREE.MeshBasicMaterial({map:sg,transparent:true}));m.position.set(GX,y+3.45,GZ+.4);sc.add(m);const m2=m.clone();m2.rotation.y=Math.PI;m2.position.z=GZ-.4;sc.add(m2);
     for(const [lx,lz] of [[12,108],[17,108],[13.5,90],[19,90],[15,84],[20,84]])lantern(lx,lz)}
   // ---------- 2 Làng Lapland quanh cây thông lớn ----------
@@ -343,7 +344,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     for(let i=0;i<tiers-1;i++){const t=i/tiers,r=rad(t),ty=base+t*(h-3.2)+.5,n=Math.max(4,Math.round(r*2.2));
       for(let k=0;k<n;k++){const q=k/n*Math.PI*2+i*.6+hs(i*31+k)*.3,rr=sR(ty)+.12,c=['#9e2b2b','#c8a24e','#efe6d2','#9e2b2b','#c8a24e'][(i+k)%5];XS.add(G.sph,c,MX(X+Math.cos(q)*rr,ty,Z+Math.sin(q)*rr,.3+hs(k+i*7)*.12))}}
     for(let i=0;i<460;i++){const t=i/460,q=t*Math.PI*2*13+1.3,hy=base+.2+t*(h-3.4),r=sR(hy)+.12;XL.add(G.sphLo,i%9===0?'#ff9a86':i%4?'#ffd18a':'#fff1d0',MX(X+Math.cos(q)*r,hy,Z+Math.sin(q)*r,.12))}
-    block(X,Z,8.8);warmH(X,y+6,Z+9,34,40);
+    block(X,Z,8.8);{const t0=XL.T;XL.T=I4;XL.add(new THREE.TorusGeometry(8.75,.08,6,96).rotateX(Math.PI/2).toNonIndexed(),'#ffc35a',MX(X,y+.58,Z,1));XL.T=t0}/* vòng sáng quanh bệ cây thông */warmH(X,y+6,Z+9,34,40);
     for(let i=0;i<12;i++){const q=i/12*6.28+.2,rr=9.3+hs(i)*.6,sz=.6+hs(i+40)*.5;XS.b(['#9e2b2b','#efe6d2','#c8a24e','#2f5a4a'][i%4],X+Math.cos(q)*rr,y+sz/2,Z+Math.sin(q)*rr,sz,sz,sz,q);XS.b('#d6b878',X+Math.cos(q)*rr,y+sz/2,Z+Math.sin(q)*rr,sz+.02,sz+.02,.1,q)}}
   // Làng Lapland: các nhà theo VH, cửa quay về cây thông và hồ băng, lối lát đá từ cửa ra vòng quảng trường
   // Kiến trúc nhà Làng Lapland (ảnh tham khảo 12): gỗ súc nâu ấm trên chân đá, mái dốc phủ tuyết dày, hiên cột gỗ tròn, khung cửa sổ đỏ trầm.
@@ -360,7 +361,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   // quấn xoắn quanh cột hiên. Không cột đèn; bóng đèn (XL) và trang trí lễ (XS) chỉ hiện khi bật Giáng sinh, cửa sổ (L) tắt lúc thường.
   function mainHall(v){const y=H(v.x,v.z);S.at(v.x,y,v.z,v.ry);L.at(v.x,y,v.z,v.ry);XL.T=S.T;XS.T=S.T;
     const K=LOW?1.4:1,BW='#ffd98e',BC='#fff3d6',BG='#ffc46a',PINE='#2d5544';
-    const ln=(x0,y0,z0,x1,y1,z1,st,sag)=>{const n=Math.max(1,Math.round(Math.hypot(x1-x0,y1-y0,z1-z0)/((st||.42)*K)));for(let i=0;i<=n;i++){const t=i/n;XL.add(G.ico,i%6===0?BC:i%3?BW:BG,MX(x0+(x1-x0)*t,y0+(y1-y0)*t-Math.sin(t*Math.PI)*(sag||0),z0+(z1-z0)*t,.075))}};/* chuỗi bóng đèn nhỏ */
+    const ln=(x0,y0,z0,x1,y1,z1)=>stripLine([x0,y0,z0],[x1,y1,z1],.1);/* dải đèn liền */
     const box4=(x,y,z,w,h)=>{ln(x-w/2,y-h/2,z,x+w/2,y-h/2,z,.3);ln(x-w/2,y+h/2,z,x+w/2,y+h/2,z,.3);ln(x-w/2,y-h/2,z,x-w/2,y+h/2,z,.3);ln(x+w/2,y-h/2,z,x+w/2,y+h/2,z,.3)};/* viền đèn quanh cửa sổ */
     const winF=(x,y,z,w,h)=>{win(x,y,z,0,w,h);S.b('#7a2e26',x-w/2-.32,y,z+.02,.3,h+.2,.08);S.b('#7a2e26',x+w/2+.32,y,z+.02,.3,h+.2,.08);/* cánh chớp gỗ đỏ trầm */
       S.b(FRAME,x,y-h/2-.2,z+.16,w+.5,.22,.34);S.b(SNOW,x,y-h/2-.07,z+.18,w+.46,.06,.3);XS.b(PINE,x,y-h/2-.02,z+.2,w+.3,.16,.22);for(const sx of [-1,0,1])XS.add(G.sphLo,'#b8322c',MX(x+sx*w*.33,y-h/2+.08,z+.26,.07));box4(x,y,z+.1,w+.36,h+.36)};/* bậu hoa có lá thông, quả đỏ */
@@ -752,7 +753,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     S.add(new THREE.CylinderGeometry(1.45,1.45,.3,8).toNonIndexed(),'#2f5a4a',MX(0,6.9,0,1));for(let i=0;i<8;i++){const a=i/8*Math.PI*2,px=Math.sin(a+Math.PI/8)*1.34,pz=Math.cos(a+Math.PI/8)*1.34;L.b('#ffe2a8',px,7.65,pz,.9,1.1,.05,a+Math.PI/8);S.add(G.cyl,'#2f5a4a',MX(Math.sin(a)*1.45,7.65,Math.cos(a)*1.45,.07,1.3,.07))}/* lầu kính bát giác */
     S.add(new THREE.CylinderGeometry(.01,1.95,.9,8).toNonIndexed(),SNOW,MX(0,8.7,0,1));S.add(new THREE.CylinderGeometry(.01,1.1,4.6,8).toNonIndexed(),'#3aa996',MX(0,10.9,0,1));S.add(G.sph,'#d6b878',MX(0,13.3,0,.16));S.add(G.cyl,'#d6b878',MX(0,13.8,0,.03,.9,.03));/* chóp xanh ngọc */
     XL.add(G.sph,'#bff5e8',MX(0,13.3,0,.24));
-    for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2;stringLights(L,Math.sin(a0)*(R0+1.5),4.55,Math.cos(a0)*(R0+1.5),Math.sin(a1)*(R0+1.5),4.55,Math.cos(a1)*(R0+1.5),6,.12)}/* dây đèn viền mái, chỉ bản Giáng sinh */
+    for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2;XL.T=L.T;stripLine([Math.sin(a0)*(R0+1.5),4.55,Math.cos(a0)*(R0+1.5)],[Math.sin(a1)*(R0+1.5),4.55,Math.cos(a1)*(R0+1.5)]);XL.reset()}/* dây đèn viền mái, chỉ bản Giáng sinh */
     S.b('#3b2a20',0,1.95,R0*Math.cos(Math.PI/N)+.1,1.6,2.4,.12);for(let k=0;k<3;k++)S.b('#a9b0b9',0,.62-k*.2,R0+.7+k*.45,2.6,.2,.45);/* cửa chính quay về vòng xoay ngựa gỗ */
     for(const [a,r,kind] of [[.6,12,'b'],[-.6,12,'b'],[1.9,12.5,'t'],[2.5,13,'t'],[-2.2,12.5,'t']]){const bx=Math.sin(a)*r,bz=Math.cos(a)*r,br=a+Math.PI;
       if(kind==='b'){S.b('#a07a56',bx,.45,bz,1.9,.1,.5,br);S.b(SNOW,bx,.53,bz,1.8,.05,.45,br);S.b('#a07a56',bx,.8,bz-.0,1.9,.5,.08,br)}
@@ -1111,7 +1112,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
         const p=new THREE.Vector3(0,b0+h-.25,d/2+.2).applyMatrix4(S.T);m.position.copy(p);m.rotation.y=ry;sc.add(m)}
       // hai cánh mái thấp hai bên, ô cửa sáng
       for(const sd of [-1,1]){const cx=sd*(w/2+1.6);S.b('#8c96a2',cx,b0/2,.6,3.4,b0+.1,d-2.6);S.b('#bf915f',cx,b0+1.2,.6,3.2,2.4,d-3);L.b('#ffd9a0',cx,b0+1.3,d/2-.88,1.6,1.1,.05);S.b('#7a5434',cx,b0+1.3,d/2-.84,1.7,.08,.05);
-        S.b('#5e4330',cx+sd*.15,b0+2.75,.6,3.9,.2,d-1.8,0,0,-sd*.32);S.b(SNOW,cx+sd*.1,b0+2.95,.6,3.9,.26,d-1.7,0,0,-sd*.32);stringLights(L,cx-1.9,b0+2.4,d/2-.6,cx+1.9,b0+2.4,d/2-.6,8,.08)}
+        S.b('#5e4330',cx+sd*.15,b0+2.75,.6,3.9,.2,d-1.8,0,0,-sd*.32);S.b(SNOW,cx+sd*.1,b0+2.95,.6,3.9,.26,d-1.7,0,0,-sd*.32);XL.T=L.T;stripLine([cx-1.9,b0+2.4,d/2-.6],[cx+1.9,b0+2.4,d/2-.6]);XL.reset()}
       // dây đèn viền đầu hồi (chỉ sáng khi Giáng sinh)
       wallLine(S.T,0,0,w/2,d/2,b0+.03,b0+h-.08);
       roofLine(S.T,w/2+.75,b0+h-.2,b0+h+rh+.1,-(d/2+.95),d/2+.95);
