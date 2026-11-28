@@ -71,7 +71,7 @@
       if(now-(sentT[a]||0)>150){sentT[a]=now;sh.send({k:'cg',a})}}
     const sh=roomShare('chuong_gio',{msg:(m,name)=>{if(m.k==='cg')act(String(m.a),name)},people:(S,grew)=>{render()}});
     let sess=null;
-    function render(){const n=sh.joined?sh.n:0;rmPanel.innerHTML='<p>Âm thanh là một cửa vào tĩnh lặng. Lắng nghe một tiếng chuông từ lúc ngân đến khi tắt hẳn.'+(n>=2?' · 🔔 '+n+' người cùng nghe chuông trong nhà':'')+'</p><div class="rm-row"><button data-cg="bowl0">🥣 Chuông trầm</button><button data-cg="bowl1">🥣 Chuông vừa</button><button data-cg="bowl2">🥣 Chuông thanh</button><button data-cg="gong">🔔 Chiêng</button><button data-cg="wind">🎐 Gió thổi</button></div><div class="rm-row"><button class="rm-gold" data-cg="sess">'+(sess?'⏹ Dừng thiền âm thanh · '+sess.left+'s':'🧘 Thiền âm thanh 3 phút')+'</button></div>'}
+    function render(){const n=sh.joined?sh.n:0;rmPanel.innerHTML='<p>Âm thanh là một cửa vào tĩnh lặng. Lắng nghe một tiếng chuông từ lúc ngân đến khi tắt hẳn.'+(n>=2?' · 🔔 '+n+' người cùng nghe chuông trong nhà':'')+'</p><div class="rm-row"><button class="rm-gold" data-cg="sess">'+(sess?'⏹ Dừng thiền âm thanh · '+sess.left+'s':'🧘 Thiền âm thanh 3 phút')+'</button></div>'}
     render();rmPanel.onclick=e=>{const a=e.target.closest('[data-cg]')?.dataset.cg;if(!a)return;
       if(a!=='sess'){act(a);return}
       if(sess){clearInterval(sess.id);sess=null;rmHint('Đã dừng buổi thiền âm thanh');render();return}sess={left:180,id:0};strike(98,9,.18,[[1,1],[1.48,.5],[2.3,.3]]);rmHint('Ngồi thẳng, thả lỏng vai · Mỗi tiếng chuông là một lần trở về hơi thở');
