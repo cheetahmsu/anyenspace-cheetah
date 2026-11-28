@@ -10,7 +10,7 @@ def sub(f, path):
     if n != s: open(fp, "w", encoding="utf-8").write(n); print(f, "->", path, h(path))
 sub("js/bay3d.js", "data/world-halong_bay.json")
 for p in ["js/bay3d.js", "js/rooms3d.js"]: sub("js/world3d.js", p)
-for p in ["js/world3d.js", "js/snow3d.js", "js/forest-sound.js", "space-chat.js", "lich-nhac.js", "css/langyen.css"]: sub("index.html", p)
+for p in ["js/world3d.js", "js/snow3d.js", "js/forest-sound.js", "js/yen-info.js", "space-chat.js", "lich-nhac.js", "css/langyen.css"]: sub("index.html", p)
 
 # Mã bản dựng chung: băm index.html (bỏ chính dòng mã) rồi ghi vào index.html và version.json
 fp = os.path.join(ROOT, "index.html"); s = open(fp, encoding="utf-8").read()
