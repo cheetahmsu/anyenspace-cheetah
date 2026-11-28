@@ -1353,7 +1353,7 @@ window.addEventListener('anyen-coin',e=>{if(!e.detail?.remote&&!isNearWishLake()
   window.anyenCachedText=cachedText;
   /* Trang lite: tải trước song song phần cần cho nơi vừa chọn (xếp sò/đá: mã vịnh + dữ liệu; vào nhà: mã phòng) trong lúc dựng 3D */
   if(window.anyenLite){if(window.anyenPendingBay||window.__liteWant==='bay'){loadBayModule().catch(()=>{});cachedText('data/world-halong_bay.json?v=1f1c8525').catch(()=>{})}}
-  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=aea6911c').then(code=>{eval(code+'\n//# sourceURL=bay3d.js');if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
+  function loadBayModule(){if(bayModuleP)return bayModuleP;bayModuleP=cachedText('js/bay3d.js?v=c62f1c43').then(code=>{eval(code+'\n//# sourceURL=bay3d.js');if(!bayModuleReady)throw Error('bay module')}).catch(e=>{bayModuleP=null;throw e});return bayModuleP}
   window.anyenLoadBay=loadBayModule;
   {const pre=()=>{if(!bayModuleP&&!window.anyenLite)loadBayModule().catch(()=>{});/* lite: không tải sẵn Vịnh Yên */if(!roomsP)loadRoomsModule().catch(()=>{})};const idle=window.requestIdleCallback||(f=>setTimeout(f,1));
    const later=()=>setTimeout(()=>idle(pre,{timeout:8000}),6000);if(document.body.classList.contains('immersive'))later();else window.addEventListener('anyen-3d-enter',later,{once:true});
