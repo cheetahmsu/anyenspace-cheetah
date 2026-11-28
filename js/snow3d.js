@@ -64,7 +64,7 @@ const STATIONS=[
   {id:'carousel',x:-25,z:58.6,label:'🎠 Ngồi vòng ngựa gỗ'},
   {id:'wheel',x:-48,z:43.4,label:'🎡 Lên vòng quay ngắm làng'},
   {id:'snowman',x:-46,z:89,label:'⛄ Đắp người tuyết'},
-  {id:'tree',x:10,z:66.5,label:'🎄 Treo lời chúc lên cây thông'},
+  {id:'tree',x:10,z:66.5,label:'🎄 Treo điều ước lên cây thông'},
   {id:'skate',x:-3,z:71.6,label:'⛸ Xỏ giày trượt băng'},
   {id:'kota',x:0,z:0,label:'🔥 Vào chòi lửa'},
   {id:'home',x:0,z:0,label:'🏡 Vào Nhà Mái Cỏ Riêng'},
@@ -94,7 +94,7 @@ export function openSnow(THREE,opts){opts=opts||{};
 #snowBox button{border:1px solid #d6b87888;border-radius:999px;background:#0e1f33cc;color:#f5e8cc;padding:8px 13px;font-size:14px;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 #snowBox .sn-cap{position:absolute;left:50%;top:calc(56px + env(safe-area-inset-top));transform:translateX(-50%);max-width:min(560px,92vw);text-align:center;padding:8px 14px;border-radius:14px;background:#0b1424d9;text-shadow:0 1px 2px #0008;line-height:1.4;opacity:0;transition:opacity .8s;pointer-events:none;font-size:14px}
 #snowBox .sn-cap.on{opacity:1}
-#snowBox .sn-wish{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(420px,92vw);padding:14px;border-radius:16px;background:#0b1424e6;border:1px solid #c8a96a55;color:#f3ead8;z-index:6;font-size:14px}#snowBox .sn-wish b{display:block;margin-bottom:8px}#snowBox .sn-wish .bp{margin:0 0 10px;line-height:1.45;opacity:.9}#snowBox .sn-wish .wr{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}#snowBox .sn-wish .wr button{padding:7px 10px;border-radius:12px;border:1px solid #ffffff33;background:#ffffff14;color:inherit;font-size:14px}#snowBox .sn-wish .wr button.on{background:#c8a96a;color:#13202c;border-color:#c8a96a}#snowBox .sn-wish input{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:10px;border:1px solid #ffffff33;background:#ffffff10;color:inherit;font-size:14px;margin-bottom:8px}#snowBox .sn-wish .rw{display:flex;gap:8px;justify-content:flex-end}#snowBox .sn-wish .rw button{padding:8px 14px;border-radius:12px;border:1px solid #ffffff33;background:none;color:inherit}#snowBox .sn-wish .rw .go{background:#c8a96a;color:#13202c;border-color:#c8a96a;font-weight:600}
+#snowBox .sn-wish{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(420px,92vw);padding:14px;border-radius:16px;background:#0b1424e6;border:1px solid #c8a96a55;color:#f3ead8;z-index:6;font-size:14px}#snowBox .sn-wish.tv{bottom:calc(12px + env(safe-area-inset-bottom));padding:12px}@media (max-width:520px){#snowBox .sn-wish.tv .wr{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#snowBox .sn-wish.tv .wr button{flex:none}}#snowBox .sn-wish b{display:block;margin-bottom:8px}#snowBox .sn-wish .bp{margin:0 0 10px;line-height:1.45;opacity:.9}#snowBox .sn-wish .wr{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}#snowBox .sn-wish .wr button{padding:7px 10px;border-radius:12px;border:1px solid #ffffff33;background:#ffffff14;color:inherit;font-size:14px}#snowBox .sn-wish .wr button.on{background:#c8a96a;color:#13202c;border-color:#c8a96a}#snowBox .sn-wish input{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:10px;border:1px solid #ffffff33;background:#ffffff10;color:inherit;font-size:14px;margin-bottom:8px}#snowBox .sn-wish .rw{display:flex;gap:8px;justify-content:flex-end}#snowBox .sn-wish .rw button{padding:8px 14px;border-radius:12px;border:1px solid #ffffff33;background:none;color:inherit}#snowBox .sn-wish .rw .go{background:#c8a96a;color:#13202c;border-color:#c8a96a;font-weight:600}
 #snowBox .sn-bottom{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 12px;pointer-events:none}
 #snowBox .sn-bottom button{pointer-events:auto;padding:11px 18px;font-size:15px}#snowBox .sn-act{background:#c8a96a;color:#13202c;font-weight:600;border-color:#c8a96a}
 #snowBox [hidden]{display:none!important}
@@ -1124,7 +1124,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   let first=true;
   // ---------- hoạt động ----------
   let near=null;
-  // ---------- đợt 3: đắp người tuyết, treo lời chúc lên cây thông, trượt băng ----------
+  // ---------- đợt 3: đắp người tuyết, treo điều ước lên cây thông, trượt băng ----------
   const lam=c=>new THREE.MeshLambertMaterial({color:c}),gSph=new THREE.SphereGeometry(1,18,12),gCone=new THREE.ConeGeometry(1,1,10),gCyl=new THREE.CylinderGeometry(1,1,1,14);
   // Người tuyết tự đắp: tối đa 4 chỗ phía tây bãi tuyết, đắp chỗ thứ 5 thì thay người tuyết cũ nhất
   const BUILD=[[-6.2,.4],[-1.2,6.6],[-5.4,-4.6],[-2.6,10]].map(([x,z])=>({x:SNOWMAN.x+x,z:SNOWMAN.z+z,g:null,c:null}));let buildK=0,myMan=null;
@@ -1176,20 +1176,20 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
       else{const cy=f.o.userData.cy;f.o.position.set(f.from.x*(1-e),(f.from.y-cy)*(1-e)+arc*.6,f.from.z*(1-e))}}
     m.fly=m.fly.filter(f=>f.t<1);
     if(m.fin!=null){const f0=m.fin;m.fin+=dt;if(m.fin>.8&&m.fin<2.2){const q=(m.fin-.8)/1.4;m.g.scale.set(1,1+Math.sin(q*Math.PI*3)*.06*(1-q),1)}else m.g.scale.set(1,1,1);if(f0<=1.2&&m.fin>1.2)buildDoneOpen()}}
-  // Lời chúc trên cây thông: quả châu sáng treo trên tán, lưu trên máy, ghi vào Nhật ký
-  const TW_KEY='xuyen-tree-wishes',TWC={'Bình an':'#cfe4ff','Ấm áp':'#ffb36b','Niềm vui':'#ffe07a','Ngủ ngon':'#c7b8ff','Vững vàng':'#9fe0b8'},orn=[];
+  // Điều ước trên cây thông: điều ước cho chính mình, mỗi điều ước là một quả châu sáng treo trên tán, lưu trên máy, ghi vào Nhật ký
+  const TW_KEY='xuyen-tree-wishes',TWC={'Bình an':'#cfe4ff','Khỏe mạnh':'#9fe0b8','Nhẹ lòng':'#ffe07a','Ngủ ngon':'#c7b8ff','Thương mình hơn':'#ffb3c1'},TWC_OLD={'Ấm áp':'#ffb36b','Niềm vui':'#ffe07a','Vững vàng':'#9fe0b8'},orn=[];
   const treeRad=t=>7.6*Math.pow(1-t,.92)+.25;
   function hangWish(w,i){const t=.1+((i*37)%55)/100,a=Math.PI/2+(((i*53)%100)/100-.5)*2.4,r=treeRad(t)*.84+.1,y=H(TREE.x,TREE.z)+1.6+t*26-1.1,x=TREE.x+Math.cos(a)*r,z=TREE.z+Math.sin(a)*r;
-    const b=new THREE.Mesh(gSph,new THREE.MeshBasicMaterial({color:TWC[w.w]||'#ffe07a'}));b.scale.setScalar(.38);b.position.set(x,y,z);const cap=new THREE.Mesh(gCyl,lam('#c8a96a'));cap.scale.set(.09,.1,.09);cap.position.set(x,y+.32,z);sc.add(b,cap);orn.push(b,cap);return b}
+    const b=new THREE.Mesh(gSph,new THREE.MeshBasicMaterial({color:TWC[w.w]||TWC_OLD[w.w]||'#ffe07a'}));b.scale.setScalar(.38);b.position.set(x,y,z);const cap=new THREE.Mesh(gCyl,lam('#c8a96a'));cap.scale.set(.09,.1,.09);cap.position.set(x,y+.32,z);sc.add(b,cap);orn.push(b,cap);return b}
   const readTW=()=>{try{const v=JSON.parse(localStorage.getItem(TW_KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}};readTW().slice(-30).forEach((w,i)=>hangWish(w,i));
   const wishEl=document.createElement('div');wishEl.className='sn-wish';wishEl.hidden=true;box.appendChild(wishEl);wishEl.addEventListener('pointerdown',e=>e.stopPropagation());wishEl.addEventListener('keydown',e=>e.stopPropagation());
-  let wishPick='Bình an';
-  function wishOpen(){wishPick='Bình an';wishEl.innerHTML='<b>🎄 Bạn muốn treo lời chúc gì lên cây?</b><div class="wr">'+Object.keys(TWC).map(k=>'<button type="button" data-w="'+k+'"'+(k===wishPick?' class="on"':'')+'>'+k+'</button>').join('')+'</div><input maxlength="80" placeholder="Viết thêm vài chữ cho ai đó (không bắt buộc)"><div class="rw"><button type="button" data-x>Thôi</button><button type="button" class="go" data-go>Treo lên cây</button></div>';wishEl.hidden=false}
+  let wishPick='Bình an',treeView=false,treeHold=0;const TREE_SPOT=[TREE.x-1.5,TREE.z+11];
+  function wishOpen(){wishPick='Bình an';wishEl.classList.remove('tv');wishEl.innerHTML='<b>🎄 Hôm nay, bạn ước gì cho mình?</b><div class="wr">'+Object.keys(TWC).map(k=>'<button type="button" data-w="'+k+'"'+(k===wishPick?' class="on"':'')+'>'+k+'</button>').join('')+'</div><input maxlength="80" placeholder="Viết điều ước bằng lời của bạn (không bắt buộc)"><div class="rw"><button type="button" data-x>Thôi</button><button type="button" class="go" data-go>Treo điều ước</button></div>';wishEl.hidden=false}
   wishEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lt){letPick=b.dataset.lt;wishEl.querySelectorAll('[data-lt]').forEach(o=>o.classList.toggle('on',o===b));return}if(b.dataset.burn!=null){const txt=wishEl.querySelector('input').value.trim().slice(0,80);wishEl.hidden=true;letBurn(txt);return}if(b.dataset.w){wishPick=b.dataset.w;wishEl.querySelectorAll('[data-w]').forEach(o=>o.classList.toggle('on',o===b));return}
     if(b.dataset.x!=null){wishEl.hidden=true;return}if(b.dataset.bdone!=null){buildDone();return}
     if(b.dataset.go!=null){const txt=wishEl.querySelector('input').value.trim().slice(0,80),list=readTW(),w={w:wishPick,txt,at:Date.now()};list.push(w);try{localStorage.setItem(TW_KEY,JSON.stringify(list.slice(-60)))}catch(err){}
-      const o=hangWish(w,list.length-1);wishEl.hidden=true;o.scale.setScalar(.01);const t0=performance.now(),pop=()=>{const k=Math.min(1,(performance.now()-t0)/700);o.scale.setScalar(.38*(1+Math.sin(k*Math.PI)*.5)*k||.01);if(k<1)requestAnimationFrame(pop)};pop();
-      if(window.__xuyenJournal)window.__xuyenJournal(wishPick+(txt?': '+txt:''),'🎄 Lời chúc trên cây thông');caption('🎄 Quả châu "'+wishPick+'" đã sáng trên cây. Lời chúc cũng được ghi vào Nhật ký.',6000)}});
+      const o=hangWish(w,list.length-1);wishEl.hidden=true;treeHold=performance.now()+4000;o.scale.setScalar(.01);const t0=performance.now(),pop=()=>{const k=Math.min(1,(performance.now()-t0)/700);o.scale.setScalar(.38*(1+Math.sin(k*Math.PI)*.5)*k||.01);if(k<1)requestAnimationFrame(pop)};pop();
+      if(window.__xuyenJournal)window.__xuyenJournal(wishPick+(txt?': '+txt:''),'🎄 Điều ước trên cây thông');caption('🎄 Điều ước "'+wishPick+'" đã sáng trên cây và được ghi vào Nhật ký. Hôm nay, làm một việc nhỏ cho điều ước ấy nhé.',7000)}});
   // Trượt băng: chạm mặt băng để lướt tới, có quán tính, không ra khỏi sân
   const SK={vx:0,vz:0};
   function skateTick(dt,t){let ax=0,az=0;if(keys.size){const f=(keys.has('f')?1:0)-(keys.has('b')?1:0),s2=(keys.has('r')?1:0)-(keys.has('l')?1:0),sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);ax=-sy*f+cy*s2;az=-cy*f-sy*s2}
@@ -1423,7 +1423,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='kota'){kotaEnter()}
     else if(s.id==='home'){roomEnter(HI)}
     else if(s.id==='snowman'){const m=snowmanBuild();P.mode='build';P.x=m.me[0];P.z=m.me[1];P.a=Math.atan2(m.sp.x-P.x,m.sp.z-P.z);P.yaw=m.yaw;P.camAim=null;first=true;near=null}
-    else if(s.id==='tree'){wishOpen();P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;first=true;return}
+    else if(s.id==='tree'){P.dest=null;P.x=TREE_SPOT[0];P.z=TREE_SPOT[1];P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;P.camAim=null;treeView=true;actBtn.hidden=true;wishOpen();wishEl.classList.add('tv');return}/* treo điều ước: đứng ở góc trước cây, camera lùi xa nhìn trọn cây từ gốc tới ngôi sao */
     else if(s.id==='skate'){P.mode='skate';SK.vx=SK.vz=0;const GA=Math.atan2(s.z-RINK.z,s.x-RINK.x);P.x=RINK.x+Math.cos(GA)*(RINK.rx-2);P.z=RINK.z+Math.sin(GA)*(RINK.rz-2);P.yaw=Math.atan2(Math.cos(GA),Math.sin(GA));P.a=P.yaw+Math.PI;first=true;caption('⛸ Chạm vào mặt băng để lướt tới. Lướt dài, thở dài, để cơ thể tự cân bằng.',7000)}
     else if(s.id==='wheel'){P.mode='wheel';P.ride=0;setSit(true);WV.fov=cam.fov;WV.zoom=camZoom;WV.lift=camLift;P.yaw=.55;camLift=1.1;camZoom=1.6;camZoomS=1.6;me.visible=false;caption('🎡 Vòng quay lên rất chậm. Kéo ngang để quay nhìn mọi hướng, kéo dọc để ngước lên hay nhìn xuống làng, chụm hai ngón hoặc lăn chuột để phóng to',9000)}
     actBtn.hidden=true;stopBtn.hidden=false;stopBtn.textContent=P.mode==='kota'?'🚪 Ra cửa':P.mode==='stars'?'↩ Ngồi dậy':P.mode==='skate'?'⛸ Rời sân băng':P.mode==='build'?'↩ Dừng đắp':['husky','sled','carousel','wheel','santa'].includes(P.mode)?'⏹ Xuống xe':'↩ Đứng dậy'}
@@ -1468,9 +1468,9 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const close=()=>{sheet.hidden=true;cur=null;rail.querySelectorAll('button').forEach(b=>b.classList.remove('on'))};
     const head=t=>'<div class="sn-sh"><b>'+t+'</b><button type="button" data-rl="x">✕</button></div>';
     // Hoạt động: chia theo "Hôm nay, bạn cần gì?"; hoạt động đã có thì tới nơi và bắt đầu luôn, hoạt động đang dựng thì đưa tới nơi và báo sắp mở
-    const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn','cocoa'],['stars','🌌','Nằm tuyết ngắm sao','stars'],['home','🏡','Về Nhà Mái Cỏ Riêng','home']]],
+    const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn','cocoa'],['stars','🌌','Nằm tuyết ngắm sao','stars'],['tree','🎄','Treo điều ước lên cây thông','tree'],['home','🏡','Về Nhà Mái Cỏ Riêng','home']]],
       ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng','skate'],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
-      ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['tree','🎄','Trang trí cây thông, treo lời chúc','tree'],['snowman','⛄','Đắp người tuyết','snowman'],['deer','🦌','Cho tuần lộc ăn','deer']]]];
+      ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['snowman','⛄','Đắp người tuyết','snowman'],['deer','🦌','Cho tuần lộc ăn','deer']]]];
     const goAct=(st,pos,label)=>{close();if(P.mode!=='walk')stand();let x,z;if(st){const s=STATIONS.find(o=>o.id===st);x=s.x;z=s.z}else[x,z]=pos;
       for(let k=0;k<12&&blocked(x,z);k++){x+=Math.cos(k)*1.2;z+=Math.sin(k)*1.2}P.x=x;P.z=z;P.dest=null;first=true;
       if(st){near=STATIONS.find(o=>o.id===st);setTimeout(()=>{near=STATIONS.find(o=>o.id===st);act()},350)}else caption(label+' · hoạt động này đang được dựng, sắp mở. Bạn cứ dạo quanh đây nhé.',6000)};
@@ -1532,7 +1532,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
         if(P.autoAct==='isle'&&P.dest){P.stk=Math.hypot(nx-P.x,nz-P.z)<spd*.35?(P.stk||0)+dt:0;if(P.stk>.7){P.stk=0;P.dest=null;P.autoAct=null;near=STATIONS.find(o=>o.id==='isle');act()}}/* bị gốc thông chắn quanh ụ đá: đứng khựng một lúc thì ngồi luôn */if(P.mode==='walk'&&Math.hypot(nx,nz)<230){P.x=nx;P.z=nz}P.a=Math.atan2(mvx,mvz);/* camera không tự xoay theo lúc đi; chỉ đặt lại một lần về sau lưng khi bấm điểm đến mới (P.camAim), vẫn trượt theo để giữ nhân vật giữa, 1/3 dưới */me.position.y=groundY(P.x,P.z)+Math.abs(Math.sin(t*8))*.04}else me.position.y=groundY(P.x,P.z);
       me.position.x=P.x;me.position.z=P.z;let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);
       if(P.camAim!=null){follow(P.camAim,dt,3);let d=P.camAim+Math.PI-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<.03||pts.size)P.camAim=null}
-      near=null;for(const s of STATIONS)if(!s.tapOnly&&Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near;if(near)actBtn.textContent=near.label;
+      near=null;for(const s of STATIONS)if(!s.tapOnly&&Math.hypot(s.x-P.x,s.z-P.z)<4.2){near=s;break}actBtn.hidden=!near||treeView;if(near)actBtn.textContent=near.label;
       if(P.autoAct==='deerfeed'&&P.dest&&DEERS[FEED.tgt]&&Math.hypot(DEERS[FEED.tgt].x-P.x,DEERS[FEED.tgt].z-P.z)<7)P.dest=null;
       if(P.autoAct&&!P.dest){const id=P.autoAct;P.autoAct=null;if(id==='deerfeed'){const d=DEERS[FEED.tgt];if(d&&FEED.hold&&Math.hypot(d.x-P.x,d.z-P.z)<9)feedGive(FEED.tgt);else if(FEED.hold)caption('🦌 Chú này ở xa rào quá, chạm một chú gần hơn nhé.',3500)}else if(id==='sledpick'){const so=sledPick;if(so&&so.st==='park'&&!so.rider&&Math.hypot(so.g.position.x-P.x,so.g.position.z-P.z)<4.5)sledBoard(so)}else{const so=STATIONS.find(o=>o.id===id);if(so&&so.tapOnly&&Math.hypot(so.x-P.x,so.z-P.z)<1.5){near=so;act()}else if(near&&near.id===id)act()}}/* đã bấm vào đồ vật: tới nơi là bắt đầu luôn */
       tgt.set(P.x,me.position.y+1.5,P.z)}
@@ -1549,7 +1549,9 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(P.mode==='sit'){const s=P.sitAt;if(s.cup){cup.position.set(s.x+Math.sin(s.a)*.32,s.y+.62,s.z+Math.cos(s.a)*.32);cup.rotation.y=s.a}follow(s.a,dt);me.position.set(s.x,s.y,s.z);me.rotation.set(0,s.a,0);tgt.set(s.x,me.position.y+1.2,s.z)}
     // camera
     {const rf=P.mode==='husky'||P.mode==='santa'||P.mode==='sled'&&!!mySled;if(farBtn.hidden===rf)farBtn.hidden=!rf;if(!rf&&farView){farView=false;farBtn.textContent='🔭 Ngắm xe từ xa'}}
+    if(treeView&&(wishEl.hidden&&performance.now()>treeHold||P.mode!=='walk'||P.dest||keys.size)){treeView=false;wishEl.hidden=true;wishEl.classList.remove('tv')}
     U.fadeR.value=0;if(camFix){cam.position.set(...camFix[0]);cam.lookAt(...camFix[1])}
+    else if(treeView){const gy=H(TREE.x,TREE.z);cpos.set(TREE.x-3,gy+21,TREE.z+60);cam.position.lerp(cpos,1-Math.exp(-dt*2.2));cam.lookAt(TREE.x,gy+6.5,TREE.z);U.meP.value.set(P.x,me.position.y+1.4,P.z);U.fadeR.value=0}/* treo điều ước: nhìn trọn cây thông, bảng điều ước nằm thấp phía dưới */
     else if(P.mode==='kota'){const R=RM;camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const d=Math.min(3.4,3.0*camZoomS);const [cx,cz]=R.camClamp(tgt.x+Math.sin(P.yaw)*d-R.x,tgt.z+Math.cos(P.yaw)*d-R.z);cpos.set(R.x+cx,R.y+R.camY,R.z+cz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*8));cam.lookAt(R.x*.35+tgt.x*.65,R.y+1.05,R.z*.35+tgt.z*.65);U.fadeR.value=0}
     else if(P.mode==='stars'){const s2=STATIONS.find(o=>o.id==='stars'),y=groundY(s2.x,s2.z)+.6;cam.position.set(s2.x,y,s2.z-.2);cam.lookAt(s2.x+Math.sin(P.ride*.04)*6,y+12,s2.z-9+Math.cos(P.ride*.05)*2)}
     else if(P.mode==='build'&&myMan){const m=myMan,k=Math.max(1,Math.pow(.75/cam.aspect,.7)),D=9.5*k,lx=m.sp.x+m.dx*2.2,lz=m.sp.z+m.dz*2.2,gy=H(m.sp.x,m.sp.z);cpos.set(m.sp.x+m.dx*D,gy+4.2*k,m.sp.z+m.dz*D);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*4));cam.lookAt(lx,gy+1.1,lz);U.meP.value.set(m.sp.x,gy+1.4,m.sp.z);U.fadeR.value=3.2}/* đắp người tuyết: nhìn từ phía bãi trống, thấy người tuyết phía sau và đồ bày trên tuyết phía trước để chạm chọn */
