@@ -74,11 +74,12 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 
 <div class="view" id="v-main">
 <h1>Quản trị tài khoản</h1>
-<p class="sub">Duyệt nhà trị liệu, quản lý thành viên và quản trị viên. Bạn không xem được nhật ký hay dữ liệu riêng của ai.</p>
+<p class="sub">Duyệt nhà trị liệu, nhà tài trợ, quản lý thành viên và quản trị viên. Bạn không xem được nhật ký hay dữ liệu riêng của ai.</p>
 <div class="tabs" role="tablist">
 <button class="on" data-t="pending" role="tab">Chờ duyệt</button>
 <button data-t="therapists" role="tab">Nhà trị liệu</button>
 <button data-t="members" role="tab">Thành viên</button>
+<button data-t="sponsors" role="tab">Nhà tài trợ</button>
 <button data-t="admins" role="tab">Admin</button>
 <button data-t="log" role="tab">Nhật ký</button>
 </div>
@@ -89,6 +90,12 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 <label class="f" style="margin-top:0">Cấp quyền admin cho email<input type="email" id="newAdmin" placeholder="email@vidu.com"></label>
 <button class="btn" type="submit">Thêm admin</button>
 <p class="note">Người đó cần đăng ký và xác thực email này thì quyền mới có hiệu lực.</p>
+</form>
+<form class="card" id="addSponsor" hidden novalidate>
+<label class="f" style="margin-top:0">Cấp quyền nhà tài trợ cho email đã đăng ký<input type="email" id="spEmail" placeholder="email@vidu.com"></label>
+<label class="f">Tên đơn vị hoặc thương hiệu<input type="text" id="spOrgName" maxlength="80"></label>
+<button class="btn" type="submit">Cấp quyền nhà tài trợ</button>
+<p class="note">Admin và nhà trị liệu cũng có thể là nhà tài trợ. Link mời nhà tài trợ tự đăng ký: <a id="spLink" href="account.html?nha-tai-tro"></a></p>
 </form>
 </div>
 </div>
@@ -136,15 +143,39 @@ function card(p){
  }else a.appendChild(el('span','em','Tài khoản quản trị, không thể thay đổi tại đây.'));
  d.appendChild(a);return d;
 }
+var SS={pending:'Chờ duyệt nhà tài trợ',approved:'Nhà tài trợ',rejected:'Chưa được duyệt',suspended:'Tạm khoá nhà tài trợ'};
+function sponsorCard(p){
+ var d=el('div','row'),id=p.user_id,st=p.status;
+ d.appendChild(el('h3','',p.org_name));
+ d.appendChild(el('div','em',(p.display_name?p.display_name+' · ':'')+(p.email||'')));
+ var b=el('div');b.appendChild(el('span','bd'+(st==='approved'?' g':st==='pending'?'':' r'),SS[st]||st));
+ if(p.is_admin_email)b.appendChild(el('span','bd g','Admin'));if(p.therapist_status==='approved')b.appendChild(el('span','bd g','Nhà trị liệu'));d.appendChild(b);
+ if(p.website){var w=el('p');var a0=el('a','',p.website);a0.href=p.website;a0.target='_blank';a0.rel='noopener noreferrer';w.appendChild(a0);d.appendChild(w)}
+ if(p.contact)d.appendChild(el('p','','Liên hệ: '+p.contact));
+ if(p.intro)d.appendChild(el('p','',p.intro));
+ if(p.status_reason)d.appendChild(el('p','','Ghi chú: '+p.status_reason));
+ d.appendChild(el('div','em','Đăng ký: '+fmt(p.created_at)));
+ var a=el('div','acts');
+ function set(s2,ok,q){return function(){var r=null;if(q){r=ask(q);if(r===null)return}act(function(){return rpc('anyen_admin_set_sponsor_status',{p_user:id,p_status:s2,p_reason:r||null})},ok)}}
+ if(st!=='approved')a.appendChild(btn(st==='suspended'?'Mở lại':'Duyệt nhà tài trợ','pri',set('approved','Đã duyệt.')));
+ if(st==='pending')a.appendChild(btn('Từ chối','dan',set('rejected','Đã từ chối.','Lý do từ chối (người đó sẽ thấy):')));
+ if(st==='approved')a.appendChild(btn('Tạm khoá','dan',set('suspended','Đã tạm khoá.','Lý do tạm khoá:')));
+ d.appendChild(a);return d;
+}
 function emptyMsg(t){$('#list').appendChild(el('div','empty',t))}
 async function load(){
- var L=$('#list');L.textContent='';$('#addAdmin').hidden=cur!=='admins';$('#searchRow').hidden=!(cur==='members'||cur==='therapists');
+ var L=$('#list');L.textContent='';$('#addAdmin').hidden=cur!=='admins';$('#addSponsor').hidden=cur!=='sponsors';$('#searchRow').hidden=!(cur==='members'||cur==='therapists');
  try{
   if(cur==='admins'){
    var ad=await rpc('anyen_admin_list_admins');
    ad.forEach(function(a){var d=el('div','row');d.appendChild(el('h3','',a.email));d.appendChild(el('span','bd'+(a.is_root?' g':''),a.is_root?'Admin gốc (không thể gỡ)':'Admin'));
     if(!a.is_root){var ac=el('div','acts');ac.appendChild(btn('Gỡ quyền admin','dan',function(){if(!confirm('Gỡ quyền admin của '+a.email+'?'))return;act(function(){return rpc('anyen_admin_remove_admin',{p_email:a.email})},'Đã gỡ.')}));d.appendChild(ac)}
     L.appendChild(d)});return;
+  }
+  if(cur==='sponsors'){
+   var sp=await rpc('anyen_admin_list_sponsors',{p_filter:'all'});
+   if(!sp.length)return emptyMsg('Chưa có nhà tài trợ nào.');
+   sp.forEach(function(p){L.appendChild(sponsorCard(p))});return;
   }
   if(cur==='log'){
    var lg=await rpc('anyen_admin_list_log',{p_limit:80});
@@ -161,6 +192,8 @@ async function load(){
 $$('.tabs button').forEach(function(b){b.onclick=function(){$$('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});cur=b.dataset.t;msg();load()}});
 $('#qBtn').onclick=load;$('#q').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();load()}};
 $('#addAdmin').onsubmit=function(e){e.preventDefault();var v=$('#newAdmin').value.trim();if(!v)return;act(function(){return rpc('anyen_admin_add_admin',{p_email:v}).then(function(){$('#newAdmin').value=''})},'Đã thêm admin.')};
+$('#addSponsor').onsubmit=function(e){e.preventDefault();var v=$('#spEmail').value.trim(),o=$('#spOrgName').value.trim();if(!v||!o)return msg('err','Hãy nhập email và tên đơn vị.');act(function(){return rpc('anyen_admin_grant_sponsor',{p_email:v,p_org:o}).then(function(){$('#spEmail').value='';$('#spOrgName').value=''})},'Đã cấp quyền nhà tài trợ.')};
+(function(){var u=new URL('account.html?nha-tai-tro',location.href).href;$('#spLink').textContent=u;$('#spLink').href=u})();
 (async function(){
  var create=window.supabase&&window.supabase.createClient;
  if(!cfg.supabaseUrl||!cfg.publishableKey||!create){$('#denyText').textContent='Chưa cấu hình kết nối.';show('deny');return}
