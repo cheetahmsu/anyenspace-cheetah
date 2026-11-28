@@ -29,8 +29,8 @@ input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn.ghost{background:transparent;color:var(--ivory);border:1px solid rgba(216,181,117,.6);font-weight:500;margin-top:12px}
 .link{background:none;border:0;padding:0;min-height:44px;color:var(--gold);cursor:pointer;text-decoration:underline;font-size:14px}
-.kinds{display:flex;gap:10px;margin-top:6px}
-.kind{flex:1;min-width:0;cursor:pointer}
+.kinds{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.kind{flex:1 1 140px;min-width:0;cursor:pointer}
 .kind input{position:absolute;opacity:0}
 .kind span{display:block;height:100%;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(4,32,27,.6)}
 .kind b{display:block;font-size:15px}.kind small{display:block;margin-top:4px;color:var(--mut2);font-size:12.5px;line-height:1.4}
@@ -73,6 +73,7 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 <div class="kinds">
 <label class="kind"><input type="radio" name="kind" value="member" checked><span><b>Thành viên</b><small>Nhật ký riêng, cá nhân hóa các hoạt động trong làng</small></span></label>
 <label class="kind"><input type="radio" name="kind" value="therapist"><span><b>Nhà trị liệu</b><small>Đồng hành 1:1 với khách và thành viên khi họ đồng ý</small></span></label>
+<label class="kind"><input type="radio" name="kind" value="sponsor"><span><b>Nhà tài trợ</b><small>Đồng hành cùng Làng Yên, gửi quà tặng tới người chơi</small></span></label>
 </div>
 <label class="f">Tên hiển thị<input type="text" id="sName" maxlength="40" autocomplete="nickname" required></label>
 <label class="f">Email<input type="email" id="sEmail" autocomplete="email" required></label>
@@ -146,6 +147,19 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 <p class="sub" id="pStatusText"></p>
 <button class="btn" id="applyBtn" type="button" hidden>Đăng ký làm nhà trị liệu</button>
 </div>
+<form class="card" id="pSponsor" novalidate>
+<span class="badge" id="spBadge" hidden></span>
+<h2 style="font-size:20px;margin-top:6px" id="spTitle">Đồng hành cùng Làng Yên</h2>
+<p class="sub" id="spText"></p>
+<div id="spFields">
+<label class="f">Tên đơn vị hoặc thương hiệu<input type="text" id="spOrg" maxlength="80" autocomplete="organization"></label>
+<label class="f">Trang web (không bắt buộc)<input type="text" id="spWeb" maxlength="300" inputmode="url" placeholder="https://"></label>
+<label class="f">Người liên hệ, số điện thoại (không bắt buộc)<input type="text" id="spContact" maxlength="200"></label>
+<label class="f">Giới thiệu ngắn (không bắt buộc)<textarea id="spIntro" maxlength="1200" placeholder="Đôi dòng về đơn vị và món quà bạn muốn gửi tới người chơi."></textarea></label>
+</div>
+<div class="msg" id="spMsg" role="alert"></div>
+<button class="btn" type="submit" id="spBtn">Đăng ký làm nhà tài trợ</button>
+</form>
 <div class="card" id="pSoon">
 <h2 style="font-size:20px" id="pSoonTitle"></h2>
 <ul class="soon" id="pSoonList"></ul>
@@ -169,7 +183,7 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 <h1>Bạn đang là khách</h1>
 <p class="sub">Bạn có thể vào làng ngay. Muốn có nhật ký riêng và cá nhân hóa, hãy đăng ký làm thành viên.</p>
 <a class="btn" href="index.html">Vào làng</a>
-<button class="btn ghost" id="guestToSignup" type="button">Đăng ký thành viên hoặc nhà trị liệu</button>
+<button class="btn ghost" id="guestToSignup" type="button">Đăng ký thành viên, nhà trị liệu hoặc nhà tài trợ</button>
 </div>
 
 <div class="view" id="v-nocfg"><h1>Chưa kết nối được</h1><p class="sub">Thiếu cấu hình Supabase hoặc thư viện chưa tải. Tải lại trang, hoặc quay về Làng Yên.</p><a class="btn" href="index.html">🏠 Trang chính</a></div>
@@ -183,6 +197,7 @@ ul.soon{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
 var $=function(s){return document.querySelector(s)};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
 var cfg=window.ANYEN_CONFIG||{};
+var SP_KEY='anyen-sponsor-intent',SP_URL=/[?&](sponsor|nha-tai-tro)(=|&|$)/.test(location.search);if(SP_URL){try{localStorage.setItem(SP_KEY,'1')}catch(_){}}
 var client=null,pending={email:'',kind:'signup'},cooldown=0,cdTimer=null,recovering=false;
 
 function show(id){$$('.view').forEach(function(v){v.classList.toggle('on',v.id==='v-'+id)});window.scrollTo(0,0)}
@@ -214,7 +229,7 @@ $('#guestToSignup').onclick=function(){show('auth');tab('signup')};
 
 /* ---- Đăng ký ---- */
 $('#f-signup').addEventListener('submit',async function(e){e.preventDefault();
- var kind=$('input[name=kind]:checked').value,name=$('#sName').value.trim(),email=$('#sEmail').value.trim().toLowerCase(),pass=$('#sPass').value;
+ var kind=$('input[name=kind]:checked').value;try{if(kind==='sponsor')localStorage.setItem(SP_KEY,'1')}catch(_){}var name=$('#sName').value.trim(),email=$('#sEmail').value.trim().toLowerCase(),pass=$('#sPass').value;
  if(!name)return msg('#sMsg','err','Hãy nhập tên hiển thị.');
  if(!okEmail(email))return msg('#sMsg','err','Email chưa hợp lệ.');
  if(pass.length<8)return msg('#sMsg','err','Mật khẩu cần ít nhất 8 ký tự.');
@@ -305,6 +320,7 @@ async function loadProfile(fromAuth){
  var items=(th&&ts==='approved')?['Giới thiệu cơ bản tự gửi tới khách khi bắt đầu trò chuyện','Trò chuyện 1:1, mỗi lúc chỉ với một người','Chọn toà nhà bạn làm chủ (do quản trị viên duyệt)','Mời vào không gian kiến trúc, chỉ khi người kia đồng ý']:['Nhật ký riêng lưu theo tài khoản','Cá nhân hóa trang phục, không gian xuất phát, nhịp thở, âm thanh'];
  var ul=$('#pSoonList');ul.textContent='';items.forEach(function(t){var li=document.createElement('li');li.textContent=t;ul.appendChild(li)});
  msg('#pMsg');show('profile');
+ loadSponsor();
 }
 $('#f-profile').addEventListener('submit',async function(e){e.preventDefault();
  var name=$('#pName').value.trim();if(!name)return msg('#pMsg','err','Tên hiển thị không được trống.');
@@ -317,6 +333,31 @@ $('#f-pass').addEventListener('submit',async function(e){e.preventDefault();
  try{var r=await client.auth.updateUser({password:p});if(r.error)throw r.error;$('#cPass').value='';msg('#cMsg','ok','Đã đổi mật khẩu.')}catch(err){msg('#cMsg','err',vi(err))}
 });
 $('#applyBtn').onclick=async function(){busy(this,true);try{var r=await client.rpc('anyen_apply_therapist');if(r.error)throw r.error;await loadProfile()}catch(err){msg('#pMsg','err',vi(err))}finally{busy(this,false)}};
+/* ---- Nhà tài trợ: vai trò cộng thêm, thành viên, nhà trị liệu hay admin đều đăng ký được ---- */
+var sponsor=null,SPS={pending:['CHỜ DUYỆT NHÀ TÀI TRỢ','Cảm ơn bạn','Làng Yên đã nhận thông tin và sẽ liên hệ qua email để cùng bàn món quà. Bạn vẫn sửa được thông tin bên dưới.','Cập nhật thông tin'],approved:['NHÀ TÀI TRỢ','Bạn đồng hành của Làng Yên','Cảm ơn bạn đã đồng hành. Sắp có: kho quà và e-voucher, xem người chơi tham gia hoạt động của bạn, báo cáo tổng kết qua email.','Lưu thông tin'],rejected:['NHÀ TÀI TRỢ · CHƯA DUYỆT','Đơn nhà tài trợ chưa được duyệt','','Gửi lại đăng ký'],suspended:['NHÀ TÀI TRỢ · TẠM KHOÁ','Quyền nhà tài trợ đang tạm khoá','','']};
+async function loadSponsor(){
+ var f=$('#pSponsor');if(!profile||profile.role==='guest'){f.hidden=true;return}
+ try{var r=await client.rpc('anyen_get_my_sponsor');sponsor=r.error?null:r.data}catch(_){sponsor=null}
+ var want=false;try{want=localStorage.getItem(SP_KEY)==='1'}catch(_){}
+ var st=sponsor&&sponsor.status,c=SPS[st];
+ $('#spBadge').hidden=!c;if(c)$('#spBadge').textContent=c[0];
+ $('#spTitle').textContent=c?c[1]:'Đồng hành cùng Làng Yên';
+ $('#spText').textContent=c?(c[2]||((sponsor.status_reason?'Lý do: '+sponsor.status_reason+'. ':'')+(st==='suspended'?'Hãy liên hệ quản trị viên để biết thêm.':'Bạn có thể cập nhật thông tin và gửi lại.'))):'Đơn vị hoặc cá nhân muốn gửi quà tặng, e-voucher tới người chơi Làng Yên có thể đăng ký tại đây. Làng Yên sẽ liên hệ qua email trước khi duyệt.';
+ $('#spOrg').value=(sponsor&&sponsor.org_name)||'';$('#spWeb').value=(sponsor&&sponsor.website)||'';$('#spContact').value=(sponsor&&sponsor.contact)||'';$('#spIntro').value=(sponsor&&sponsor.intro)||'';
+ $('#spFields').hidden=st==='suspended';$('#spBtn').hidden=st==='suspended'||profile.member_status==='restricted';$('#spBtn').textContent=c?(c[3]||'Lưu'):'Đăng ký làm nhà tài trợ';
+ /* chưa đăng ký: thu gọn, bấm nút mới mở ô nhập; vào từ link nhà tài trợ thì mở sẵn */
+ var open=!!sponsor||want;$('#spFields').hidden=$('#spFields').hidden||!open;f.dataset.open=open?'1':'';
+ f.hidden=false;msg('#spMsg');
+ if(want&&!sponsor)setTimeout(function(){f.scrollIntoView({behavior:'smooth',block:'start'})},200);
+}
+$('#pSponsor').addEventListener('submit',async function(e){e.preventDefault();
+ var f=this;if(!f.dataset.open){f.dataset.open='1';$('#spFields').hidden=false;$('#spBtn').textContent='Gửi đăng ký';$('#spOrg').focus();return}
+ var org=$('#spOrg').value.trim();if(!org)return msg('#spMsg','err','Hãy nhập tên đơn vị hoặc thương hiệu.');
+ var was=sponsor&&sponsor.status;busy($('#spBtn'),true);
+ try{var r=await client.rpc('anyen_apply_sponsor',{p_org:org,p_website:$('#spWeb').value,p_contact:$('#spContact').value,p_intro:$('#spIntro').value});if(r.error)throw r.error;
+  try{localStorage.removeItem(SP_KEY)}catch(_){}await loadSponsor();msg('#spMsg','ok',was&&was!=='rejected'?'Đã lưu.':'Đã gửi đăng ký. Làng Yên sẽ liên hệ với bạn qua email.')}
+ catch(err){msg('#spMsg','err',/check constraint|anyen_sponsors_web/.test(err.message||'')?'Trang web chưa hợp lệ.':vi(err))}finally{busy($('#spBtn'),false)}
+});
 $('#logout').onclick=async function(){try{await client.auth.signOut()}catch(_){}profile=null;show('auth');tab('login')};
 
 /* ---- Khởi động ---- */
@@ -328,7 +369,7 @@ $('#logout').onclick=async function(){try{await client.auth.signOut()}catch(_){}
  if(/[?&]logout=1/.test(location.search)){try{await client.auth.signOut()}catch(_){}location.replace(NEXT||'index.html');return}
  if(/type=recovery/.test(location.hash+location.search)){recovering=true;$('#rCodeRow').hidden=true;show('reset');return}
  try{await loadProfile()}catch(e){show('auth')}
- var h=location.hash.replace('#','');if(h==='signup')tab('signup');
+ var h=location.hash.replace('#','');if(h==='signup'||SP_URL)tab('signup');if(SP_URL){var k=$('input[name=kind][value=sponsor]');if(k)k.checked=true;if($('#v-guestin').classList.contains('on'))show('auth')}
 })();
 window.__acct={tab:tab};
 })();
