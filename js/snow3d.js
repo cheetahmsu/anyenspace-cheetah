@@ -55,7 +55,7 @@ const STATIONS=[
   {id:'sled',x:0,z:0,label:'🛷 Lái xe trượt trên hồ băng'},
   {id:'sit',x:0,z:-94.2,label:'🪷 Ngồi thiền trước Phật'},
   {id:'bell',x:9,z:-94,label:'🪷 Chiêm bái tượng Phật'},
-  {id:'fire',x:-44,z:85.4,label:'🔥 Ngồi sưởi bên bếp lửa'},
+  {id:'fire',x:22.6,z:76.6,label:'🔥 Ngồi sưởi bên bếp lửa'},
   {id:'deer',x:122.6,z:86,label:'🦌 Cho tuần lộc ăn rêu'},
   {id:'carousel',x:-22,z:69.6,label:'🎠 Ngồi vòng ngựa gỗ'},
   {id:'wheel',x:-36,z:56.4,label:'🎡 Lên vòng quay ngắm làng'}];
@@ -90,9 +90,22 @@ export function openSnow(THREE,opts){opts=opts||{};
 #snowBox .sn-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}#snowBox .sn-list button{border-radius:12px;text-align:left;font-size:13px;padding:8px 10px}
 body.snow-open .shell,body.snow-open .scene{visibility:hidden}
 #snowBox .sn-top button.on{background:rgba(197,163,111,.34)!important;border-color:#c5a36f!important;color:#fff3d6!important}
+#snowBox .sn-rail{position:absolute;right:calc(10px + env(safe-area-inset-right));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:3}
+#snowBox .sn-rail button{width:58px;padding:7px 2px 6px;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1}#snowBox .sn-rail span{font-size:22px}#snowBox .sn-rail small{font-size:10px;opacity:.9;white-space:nowrap}
+#snowBox .sn-rail button.on{background:rgba(197,163,111,.38);border-color:#c5a36f}
+#snowBox .sn-sheet{position:absolute;right:calc(78px + env(safe-area-inset-right));top:50%;transform:translateY(-50%);width:min(360px,calc(100vw - 100px));max-height:min(78vh,620px);overflow:auto;background:#0b1424ee;border:1px solid #d6b87866;border-radius:18px;padding:12px 14px;z-index:3;box-shadow:0 18px 50px #0008;touch-action:pan-y;user-select:text;-webkit-user-select:text}
+#snowBox .sn-sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}#snowBox .sn-sh b{color:#f1e2bf;font-size:16px}#snowBox .sn-sh button{padding:5px 10px}
+#snowBox .sn-gr{font-size:13px;color:#d6b878;margin:10px 0 6px;font-weight:600}#snowBox .sn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}#snowBox .sn-grid.one{grid-template-columns:1fr}
+#snowBox .sn-grid button{border-radius:12px;text-align:left;font-size:13px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}#snowBox .sn-grid button span{font-size:20px}#snowBox .sn-grid button em{font-size:10px;font-style:normal;color:#9fb3c8}#snowBox .sn-grid button.on{background:rgba(197,163,111,.34);border-color:#c5a36f}
+#snowBox .sn-sw{display:flex;flex-wrap:wrap;gap:8px}#snowBox .sn-sw button{width:36px;height:36px;padding:0;border-radius:50%;border:2px solid #ffffff44}#snowBox .sn-sw button.on{border:3px solid #f2c75c;box-shadow:0 0 0 2px #0b1424}
+#snowBox .sn-note{font-size:12px;opacity:.75;margin:10px 0 2px}#snowBox .sn-ta{width:100%;min-height:76px;box-sizing:border-box;border-radius:12px;border:1px solid #d6b87866;background:#0e1f33;color:#f5e8cc;padding:8px;font:14px/1.4 system-ui,sans-serif;resize:vertical}
+#snowBox .sn-row{display:flex;justify-content:flex-end;margin:6px 0 4px}#snowBox .sn-gold{background:#c8a96a;color:#13202c;border-color:#c8a96a;font-weight:600}
+#snowBox .sn-sheet article{border-top:1px solid #d6b87833;padding:8px 2px}#snowBox .sn-sheet article b{display:block;font-size:13px;color:#f1e2bf}#snowBox .sn-sheet article small{font-size:11px;opacity:.7}#snowBox .sn-sheet article p{margin:4px 0 0;font-size:14px}
+@media(max-width:520px){#snowBox .sn-rail{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));transform:none}#snowBox .sn-rail button{width:52px}#snowBox .sn-sheet{left:10px;right:72px;width:auto;top:auto;bottom:calc(84px + env(safe-area-inset-bottom));transform:none;max-height:62vh}}
 @media(max-width:520px){#snowBox .sn-top strong{display:none}#snowBox .sn-lb{display:none}#snowBox .sn-top button{padding:7px 10px;font-size:13px;white-space:nowrap}}`;
   document.head.appendChild(css);document.body.appendChild(box);document.body.classList.add('snow-open');
   const cv=box.querySelector('#snowCanvas'),capEl=box.querySelector('.sn-cap'),actBtn=box.querySelector('.sn-act'),stopBtn=box.querySelector('.sn-stop'),breathEl=box.querySelector('.sn-breath'),mapEl=box.querySelector('.sn-map');
+  const snowCleanup=[];
   let capT=0;const caption=(t,ms)=>{capEl.textContent=t;capEl.classList.add('on');clearTimeout(capT);capT=setTimeout(()=>capEl.classList.remove('on'),ms||5000)};
 
   // ---------- renderer, cảnh ----------
@@ -709,7 +722,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const coat=new THREE.Mesh(new THREE.CylinderGeometry(.36,.48,.9,12),new THREE.MeshLambertMaterial({color:col}));coat.position.y=.72;me.add(coat);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),new THREE.MeshLambertMaterial({color:'#e7c9a8'}));head.position.y=1.85;me.add(head);
     const hat=new THREE.Mesh(new THREE.SphereGeometry(.27,14,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshLambertMaterial({color:'#efe6d6'}));hat.position.y=1.9;me.add(hat);const pom=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),hat.material);pom.position.y=2.2;me.add(pom);
-    const scarf=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,6,16),new THREE.MeshLambertMaterial({color:'#8c2f2a'}));scarf.rotation.x=Math.PI/2;scarf.position.y=1.6;me.add(scarf);me.scale.setScalar(.85);
+    const scarf=new THREE.Mesh(new THREE.TorusGeometry(.22,.07,6,16),new THREE.MeshLambertMaterial({color:'#8c2f2a'}));scarf.rotation.x=Math.PI/2;scarf.position.y=1.6;me.add(scarf);var meParts={body,coat,hat,scarf};me.scale.setScalar(.85);
     const lap=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),coat.material);lap.scale.set(.5,.16,.42);lap.position.set(0,.16,.12);lap.visible=false;me.add(lap);
     var setSit=on=>{const k=on?-.55:0;body.position.y=1.05+k*.8;body.scale.y=on?.7:1;coat.visible=!on;lap.visible=on;head.position.y=1.85+k;hat.position.y=1.9+k;pom.position.y=2.2+k;scarf.position.y=1.6+k}}
   sc.add(me);
@@ -764,7 +777,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='husky'){P.mode='husky';P.ride=0;caption('🐕 Đàn husky chạy chậm một vòng rừng thông. Vuốt để nhìn quanh.',6000)}
     else if(s.id==='sled'){const o=sleds.filter(q=>q.st==='park').sort((a,b)=>Math.hypot(a.g.position.x-P.x,a.g.position.z-P.z)-Math.hypot(b.g.position.x-P.x,b.g.position.z-P.z))[0];if(!o){caption('🛷 Cả 3 xe đang chạy, đợi một chút xe về bến nhé.',4000);return}mySled=o;sledStart(o,'me');P.mode='sled';P.ride=0;setSit(true);caption('🛷 Xe chạy vòng sát bờ hồ. Muốn lên bờ thì bấm vào bờ chỗ bạn thích.',6000)}
     else if(s.id==='sit'){setSit(true);P.mode='sit';{const c=tw(0,4.4);P.sitAt={x:c[0],z:c[1],y:H(TP.x,TP.z)+.92,a:TRY+Math.PI}}caption('🪷 Ngồi yên trước Phật. Mỗi hơi thở ra, thả lỏng đôi vai.',8000);breathEl.hidden=false;bell()}
-    else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:-44,z:84.6,y:H(-44,82)+.5,a:Math.PI};caption('🔥 Hơ tay bên lửa. Ấm áp là điều nhỏ mà thật.',7000)}
+    else if(s.id==='fire'){setSit(true);P.mode='sit';P.sitAt={x:22.6,z:76.1,y:H(22.6,76.1)+.5,a:Math.PI};caption('🔥 Hơ tay bên lửa. Ấm áp là điều nhỏ mà thật.',7000)}
     else if(s.id==='bell'){bell();caption('🪷 Chắp tay trước tượng Phật giữa rừng thông tuyết. Một tiếng chuông nhỏ, rồi lắng nghe sự tĩnh lặng.',7000);return}
     else if(s.id==='deer'){caption('🦌 Tuần lộc ăn rêu địa y. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
@@ -790,6 +803,55 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const goZone=zn=>{if(P.mode!=='walk')stand();P.x=zn.x;P.z=zn.z;P.dest=null;P.yaw=Math.atan2(zn.cam[0],zn.cam[1])+Math.PI;P.a=P.yaw+Math.PI;mapEl.hidden=true;first=true;caption(zn.icon+' '+(zn.n?zn.n+' · ':'')+zn.name+' · '+zn.note,6500)};
   box.querySelector('.sn-list').innerHTML=ZONES.map((z,i)=>'<button type="button" data-z="'+i+'">'+z.icon+' '+(z.n?z.n+' · ':'')+z.name+'</button>').join('');
   box.querySelector('.sn-list').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(b)goZone(ZONES[+b.dataset.z])});
+  // ---------- hàng nút đứng bên phải: Hoạt động · Trang phục · Âm nhạc · Nhật ký ----------
+  {const rail=document.createElement('div');rail.className='sn-rail';rail.innerHTML=[['act','🧭','Hoạt động'],['outfit','🧥','Trang phục'],['music','🎵','Âm nhạc'],['journal','📔','Nhật ký']].map(([k,i,t])=>'<button type="button" data-rl="'+k+'" aria-label="'+t+'"><span>'+i+'</span><small>'+t+'</small></button>').join('');
+    const sheet=document.createElement('div');sheet.className='sn-sheet';sheet.hidden=true;box.append(rail,sheet);let cur=null;
+    const close=()=>{sheet.hidden=true;cur=null;rail.querySelectorAll('button').forEach(b=>b.classList.remove('on'))};
+    const head=t=>'<div class="sn-sh"><b>'+t+'</b><button type="button" data-rl="x">✕</button></div>';
+    // Hoạt động: chia theo "Hôm nay, bạn cần gì?"; hoạt động đã có thì tới nơi và bắt đầu luôn, hoạt động đang dựng thì đưa tới nơi và báo sắp mở
+    const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn',null,[RH.x+3,RH.z+10]],['stars','🌌','Nằm tuyết ngắm sao',null,[24,92]]]],
+      ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng',null,[ARCH.x-3,ARCH.z+4]],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
+      ['💝 Kết nối',[['gift','🎁','Tặng quà cùng ông già Noel',null,[FARM.x-24,FARM.z+1]],['tree','🎄','Trang trí cây thông, treo lời chúc',null,[TREE.x,TREE.z+15]],['snowman','⛄','Đắp người tuyết',null,[SNOWMAN.x+1,SNOWMAN.z+5]],['deer','🦌','Cho tuần lộc ăn','deer']]]];
+    const goAct=(st,pos,label)=>{close();if(P.mode!=='walk')stand();let x,z;if(st){const s=STATIONS.find(o=>o.id===st);x=s.x;z=s.z}else[x,z]=pos;
+      for(let k=0;k<12&&blocked(x,z);k++){x+=Math.cos(k)*1.2;z+=Math.sin(k)*1.2}P.x=x;P.z=z;P.dest=null;first=true;
+      if(st){near=STATIONS.find(o=>o.id===st);setTimeout(()=>{near=STATIONS.find(o=>o.id===st);act()},350)}else caption(label+' · hoạt động này đang được dựng, sắp mở. Bạn cứ dạo quanh đây nhé.',6000)};
+    const renderAct=()=>head('Hôm nay, bạn cần gì?')+ACTS.map(([g,list],gi)=>'<div class="sn-gr">'+g+'</div><div class="sn-grid">'+list.map((a,ai)=>'<button type="button" data-ac="'+gi+','+ai+'"><span>'+a[1]+'</span>'+a[2]+(a[3]?'':'<em>sắp mở</em>')+'</button>').join('')+'</div>').join('');
+    // Trang phục: áo khoác, mũ len, khăn quàng; lưu trên máy
+    const OUT_KEY='xuyen-outfit',COATS=['#687b48','#8c2f2a','#2f4f6f','#c8a96a','#efe6d6','#5a4a6e','#3a3f46'],HATS=['#efe6d6','#b8322c','#2f5b48','#d6b878','#6f8fb0','#3a3f46'],SCARF=['#8c2f2a','#efe6d6','#2f5b48','#d6b878','#6f8fb0','#c46a8a'];
+    let outfit={coat:prof.color||'#687b48',hat:'#efe6d6',scarf:'#8c2f2a'};try{Object.assign(outfit,JSON.parse(localStorage.getItem(OUT_KEY)||'{}'))}catch(e){}
+    const applyOutfit=()=>{meParts.body.material.color.set(outfit.coat);meParts.coat.material.color.set(outfit.coat);meParts.hat.material.color.set(outfit.hat);meParts.scarf.material.color.set(outfit.scarf);try{localStorage.setItem(OUT_KEY,JSON.stringify(outfit))}catch(e){}};applyOutfit();
+    const sw=(k,cols,t)=>'<div class="sn-gr">'+t+'</div><div class="sn-sw">'+cols.map(c=>'<button type="button" data-ot="'+k+'" data-c="'+c+'" style="background:'+c+'"'+(outfit[k]===c?' class="on"':'')+' aria-label="'+t+' '+c+'"></button>').join('')+'</div>';
+    const renderOut=()=>head('🧥 Trang phục mùa đông')+sw('coat',COATS,'Áo khoác')+sw('hat',HATS,'Mũ len')+sw('scarf',SCARF,'Khăn quàng')+'<p class="sn-note">Trang phục lưu trên máy này, chỉ dùng trong Xứ Yên.</p>';
+    // Âm nhạc: hộp nhạc tổng hợp ngay trong trình duyệt (giai điệu dân gian, đã hết bản quyền), không dùng bản thu của ai
+    const MUS_KEY='xuyen-music';let music='off';try{music=localStorage.getItem(MUS_KEY)||'off'}catch(e){}
+    const N={C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196,A3:220,B3:246.94,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99};
+    const SONGS={
+      jingle:{name:'Jingle Bells · vui',beat:.3,gap:1.2,mel:'E4 1 E4 1 E4 2 E4 1 E4 1 E4 2 E4 1 G4 1 C4 1.5 D4 .5 E4 4 F4 1 F4 1 F4 1.5 F4 .5 F4 1 E4 1 E4 1 E4 .5 E4 .5 E4 1 D4 1 D4 1 E4 1 D4 2 G4 2 E4 1 E4 1 E4 2 E4 1 E4 1 E4 2 E4 1 G4 1 C4 1.5 D4 .5 E4 4 F4 1 F4 1 F4 1.5 F4 .5 F4 1 E4 1 E4 1 E4 .5 E4 .5 G4 1 G4 1 F4 1 D4 1 C4 4',bass:'C3 4 C3 4 C3 4 C3 4 F3 4 C3 4 G3 4 G3 4 C3 4 C3 4 C3 4 C3 4 F3 4 C3 4 G3 4 C3 4',soft:0},
+      silent:{name:'Silent Night · sâu lắng',beat:.3,gap:2.4,mel:'G4 3 A4 1 G4 2 E4 6 G4 3 A4 1 G4 2 E4 6 D5 4 D5 2 B4 6 C5 4 C5 2 G4 6 A4 4 A4 2 C5 3 B4 1 A4 2 G4 3 A4 1 G4 2 E4 6 A4 4 A4 2 C5 3 B4 1 A4 2 G4 3 A4 1 G4 2 E4 6 D5 4 D5 2 F5 3 D5 1 B4 2 C5 6 E5 6 C5 3 G4 1 E4 2 G4 3 F4 1 D4 2 C4 12',bass:'C3 12 C3 12 G3 12 C3 12 F3 12 C3 12 F3 12 C3 12 G3 12 C3 12 C3 6 G3 6 C3 12',soft:1}};
+    const parse=s=>{const a=s.trim().split(/\s+/),r=[];for(let i=0;i<a.length;i+=2)r.push([N[a[i]],+a[i+1]]);return r};
+    let mus=null;const stopMusic=()=>{if(mus){clearInterval(mus.iv);try{mus.g.gain.setTargetAtTime(0,ac.currentTime,.3);const g=mus.g;setTimeout(()=>g.disconnect(),1500)}catch(e){}mus=null}};
+    const tone=(g,f,t,d,soft,vol)=>{for(const [m,a] of soft?[[1,1],[2,.18]]:[[1,1],[2,.32],[3.01,.12]]){const o=ac.createOscillator(),e=ac.createGain();o.type=soft&&m===1?'triangle':'sine';o.frequency.value=f*m;e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(vol*a,t+(soft?.06:.008));e.gain.exponentialRampToValueAtTime(.0004,t+Math.max(d,soft?1.6:1.1));o.connect(e).connect(g);o.start(t);o.stop(t+Math.max(d,1.8)+.1)}};
+    const playMusic=id=>{stopMusic();if(id==='off')return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){return}
+      const S0=SONGS[id],mel=parse(S0.mel),bas=parse(S0.bass),g=ac.createGain();g.gain.value=.5;g.connect(ac.destination);const len=mel.reduce((s,n)=>s+n[1],0)*S0.beat+S0.gap;
+      const evs=[];{let t=0;for(const [f,b] of mel){evs.push([t,f,b*S0.beat,0,.11]);t+=b*S0.beat}t=0;for(const [f,b] of bas){evs.push([t,f,b*S0.beat,1,.05]);t+=b*S0.beat}}evs.sort((a,b)=>a[0]-b[0]);
+      const m={g,t0:ac.currentTime+.15,i:0,loop:0};m.iv=setInterval(()=>{const now=ac.currentTime;while(true){const e=evs[m.i];const at=m.t0+m.loop*len+e[0];if(at>now+.6)break;if(at>now-.05)tone(g,e[1],at,e[2],S0.soft||e[3],e[4]);m.i++;if(m.i>=evs.length){m.i=0;m.loop++}}},150);mus=m};
+    const setMusic=id=>{music=id;try{localStorage.setItem(MUS_KEY,id)}catch(e){}playMusic(id)};
+    if(music!=='off'){const kick=()=>{playMusic(music);box.removeEventListener('pointerdown',kick)};box.addEventListener('pointerdown',kick)}
+    const renderMus=()=>head('🎵 Âm nhạc')+'<div class="sn-grid one">'+[['jingle','🔔',SONGS.jingle.name],['silent','🕯',SONGS.silent.name],['off','🔇','Im lặng']].map(([k,i,t])=>'<button type="button" data-mu="'+k+'"'+(music===k?' class="on"':'')+'><span>'+i+'</span>'+t+'</button>').join('')+'</div><p class="sn-note">Giai điệu Giáng sinh dân gian đã hết bản quyền, phát bằng tiếng hộp nhạc tổng hợp ngay trên máy.</p>';
+    // Nhật ký: dùng chung Nhật ký An Yên (lưu trên máy)
+    const JK='anyen_wish_journal_v1',readJ=()=>{try{const v=JSON.parse(localStorage.getItem(JK)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}};
+    const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const renderJ=()=>{const j=readJ().slice(-40).reverse();return head('📔 Nhật ký An Yên')+'<textarea class="sn-ta" maxlength="400" placeholder="Hôm nay ở Xứ Yên, bạn thấy gì, nghĩ gì?"></textarea><div class="sn-row"><button type="button" data-jn="save" class="sn-gold">✍ Ghi vào nhật ký</button></div>'+(j.length?j.map(e=>'<article><b>'+esc(e.title||('🪷 '+e.lake))+'</b><small>'+new Date(e.at).toLocaleString('vi-VN')+'</small><p>'+esc(e.quote)+'</p></article>').join(''):'<p class="sn-note">Chưa có dòng nào. Viết dòng đầu tiên nhé.</p>')+'<p class="sn-note">Lưu riêng trên máy này, chung với Nhật ký An Yên của Làng Yên.</p>'};
+    window.__xuyenJournal=(quote,title)=>{const e={lake:'Xứ Yên',quote:String(quote).slice(0,400),at:Date.now(),title:(title||'❄ Xứ Yên').slice(0,40)};window.dispatchEvent(new CustomEvent('anyen-journal-add',{detail:e}));setTimeout(()=>{const j=readJ();if(!j.some(x=>x.at===e.at&&x.quote===e.quote)){j.push(e);try{localStorage.setItem(JK,JSON.stringify(j.slice(-500)))}catch(err){}}if(cur==='journal')open('journal',1)},60)};
+    const open=(k,force)=>{if(cur===k&&!force){close();return}cur=k;rail.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.rl===k));sheet.innerHTML=k==='act'?renderAct():k==='outfit'?renderOut():k==='music'?renderMus():renderJ();sheet.hidden=false;mapEl.hidden=true};
+    rail.addEventListener('click',e=>{const b=e.target.closest('[data-rl]');if(b)open(b.dataset.rl)});
+    sheet.addEventListener('pointerdown',e=>e.stopPropagation());sheet.addEventListener('keydown',e=>e.stopPropagation());
+    sheet.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;if(t.dataset.rl==='x'){close();return}
+      if(t.dataset.ac){const [gi,ai]=t.dataset.ac.split(',').map(Number),a=ACTS[gi][1][ai];goAct(a[3],a[4],a[1]+' '+a[2]);return}
+      if(t.dataset.ot){outfit[t.dataset.ot]=t.dataset.c;applyOutfit();open('outfit',1);return}
+      if(t.dataset.mu){setMusic(t.dataset.mu);open('music',1);return}
+      if(t.dataset.jn==='save'){const ta=sheet.querySelector('.sn-ta'),v=ta&&ta.value.trim();if(!v)return;window.__xuyenJournal(v);caption('📔 Đã ghi vào Nhật ký An Yên.',3000)}});
+    window.__snowRail=k=>k?open(k,1):close();snowCleanup.push(()=>stopMusic())}
   mc.addEventListener('click',e=>{const r=mc.getBoundingClientRect(),u=(e.clientX-r.left)/r.width*MS,v=(e.clientY-r.top)/r.height*MS;let best=null,bd=40;for(const z of ZONES){const [a,b]=toM(z.x,z.z),d=Math.hypot(a-u,b-v);if(d<bd){bd=d;best=z}}if(best)goZone(best)});
   box.addEventListener('click',e=>{const a=e.target.closest('[data-sn]')?.dataset.sn;if(a==='xmas'||a==='snow'){FX[a]=!FX[a];applyFx()}else if(a==='map'){drawMap();mapEl.hidden=false}else if(a==='mapx')mapEl.hidden=true;else if(a==='home')close()});
   mapEl.addEventListener('click',e=>{if(e.target===mapEl)mapEl.hidden=true});
@@ -834,7 +896,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
 
   function close(){if(!run)return;run=false;removeEventListener('resize',resize);document.removeEventListener('keydown',onKey);document.removeEventListener('keyup',onKey);
     sc.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=o.material;if(m.map)m.map.dispose();m.dispose()}});R.dispose();try{R.forceContextLoss()}catch(e){}
-    box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
+    snowCleanup.forEach(f=>{try{f()}catch(e){}});box.remove();css.remove();document.body.classList.remove('snow-open');window.__snowOpen=null;window.__snowCam=null;window.__snowGo=null;if(opts.onClose)opts.onClose()}
   // Chụp thử: __snowCam([x,y,z],[tx,ty,tz]) đặt camera cố định, __snowCam(null) để trả lại; __snowGo('leukinh') tới một khu; __snowAct('aurora') mở hoạt động
   window.__snowPos=(x,z,yaw)=>{P.x=x;P.z=z;P.dest=null;if(yaw!=null)P.yaw=yaw;first=true};window.__snowCam=(p,q)=>{camFix=p?[p,q]:null};window.__snowFog=d=>{sc.fog.density=d};window.__snowH=(x,z)=>groundY(x,z);window.__sleds=()=>sleds.map(o=>[o.st,o.rider,+o.s.toFixed(1),+o.v.toFixed(1)]);window.__sledLand=(x,z)=>sledLand(x,z);window.__snowMe=()=>{const p=me.position.clone().setY(groundY(P.x,P.z)+1.05).project(cam);return {x:+((p.x+1)/2).toFixed(3),y:+((1-p.y)/2).toFixed(3),mode:P.mode,yaw:+P.yaw.toFixed(2),a:+P.a.toFixed(2),zoom:camZoom,lift:camLift}};window.__snowProject=v=>{const p=new THREE.Vector3(...v).project(cam);return [(p.x+1)/2,(1-p.y)/2]};window.__snowExp=e=>{R.toneMappingExposure=e};window.__snowFov=f=>{cam.fov=f;cam.updateProjectionMatrix();cam.fov0=f};window.__snowGo=id=>{const z=ZONES.find(z=>z.id===id);if(z)goZone(z)};
   window.__snowAct=id=>{const s=STATIONS.find(s=>s.id===id);if(s){if(P.mode!=='walk')stand();P.x=s.x;P.z=s.z;near=s;act()}};window.__snowMap=()=>{drawMap();mapEl.hidden=false};
