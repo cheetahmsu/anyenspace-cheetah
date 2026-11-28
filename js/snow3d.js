@@ -388,13 +388,13 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     if(v.k==='cafe')for(const k of [-1.8,1.8]){const bx=v.x+cs*k+sn*(v.d/2+3.2),bz=v.z-sn*k+cs*(v.d/2+3.2),by=H(bx,bz);S.add(G.cyl12,'#a07a56',MX(bx,by+.45,bz,.5,.06,.5));S.b('#a07a56',bx,by+.22,bz,.1,.45,.1);S.b('#c5a36f',bx,by+1.6,bz,1.4,.06,1.4)}}
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2+.13;/* ghế gỗ quanh gốc cây thông */
     if(i%3===1){const bx=TREE.x+Math.cos(a+.26)*11,bz=TREE.z+Math.sin(a+.26)*11,by=H(bx,bz),br=-a-.26+Math.PI/2;S.b('#a07a56',bx,by+.45,bz,1.8,.1,.5,br);S.b(SNOW,bx,by+.53,bz,1.7,.05,.45,br);S.b('#a07a56',bx,by+.8,bz,1.8,.5,.08,br)}}
-  // ---------- Gian hàng Bạn đồng hành (Giáng sinh 2026): 6 quầy gỗ nửa vòng cung phía bắc cây thông, quay mặt về cây ----------
-  // Đối diện chỗ đứng treo điều ước (phía nam) nên góc nhìn trọn cây không bị che. Quầy gỗ sồi sáng, mái vải kem phủ tuyết, viền champagne,
+  // ---------- Gian hàng Bạn đồng hành (Giáng sinh 2026): 6 quầy gỗ hai bên người tuyết lớn, mỗi bên 3 gian (người dùng chọn 28/11) ----------
+  // Xếp chữ V trên vòng bán kính 14 m quanh người tuyết, mở về phía sân băng; chừa trống mặt trước người tuyết và các chỗ đắp người tuyết. Quầy gỗ sồi sáng, mái vải kem phủ tuyết, viền champagne,
   // dây đèn vàng ấm (chỉ bật ở bản Giáng sinh), biển gỗ khắc tên nhà tài trợ. Gian chưa có nhà tài trợ: biển trơn, quầy phủ tuyết.
-  const BOOTHS=[];{const R=15,N=6,a0=Math.PI+.45,a1=2*Math.PI-.45,CAN='#efe6d2',TRIM='#d6b878',WOOD='#c9a274',WOODD='#8a6a4a',TOP='#e8d8b8';
+  const BOOTHS=[];{const R=14,AS=[-1.22,-1.75,-2.27,1.22,1.75,2.27]/* bắc: 3 gian, nam: 3 gian */,FX=SNOWMAN.x+9,FZ=SNOWMAN.z,CAN='#efe6d2',TRIM='#d6b878',WOOD='#c9a274',WOODD='#8a6a4a',TOP='#e8d8b8';
     let demo=[];try{if(new URLSearchParams(location.search).has('gian-mau'))demo=['Trà An Nhiên','Gốm Bát Tràng','Hương Trầm Yên','Len Ấm Mùa Đông','Sách & Thiền','Bánh Gừng Nhà Làm']}catch(e){}
     const plaque=t=>{const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.fillStyle='#5e4430';g.fillRect(0,0,512,128);g.strokeStyle='rgba(214,184,120,.85)';g.lineWidth=5;g.strokeRect(10,10,492,108);g.textAlign='center';g.textBaseline='middle';g.fillStyle='#f3e6c6';g.font=t?'600 52px Georgia,serif':'44px Georgia,serif';g.fillText(t||'✧',256,66,460);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return tx};
-    for(let k=0;k<N;k++){const a=a0+(a1-a0)*k/(N-1),x=TREE.x+Math.cos(a)*R,z=TREE.z+Math.sin(a)*R,y=H(x,z),ry=Math.atan2(-Math.cos(a),-Math.sin(a)),name=demo[k]||'';
+    for(let k=0;k<AS.length;k++){const a=AS[k],x=SNOWMAN.x+Math.cos(a)*R,z=SNOWMAN.z+Math.sin(a)*R,y=H(x,z),ry=Math.atan2(FX-x,FZ-z),name=demo[k]||'';
       S.at(x,y,z,ry);L.at(x,y,z,ry);XS.at(x,y,z,ry);
       S.b('#b4a58e',0,.08,0,3.4,.16,2.4);/* sàn gỗ thấp */
       S.b(WOOD,0,.58,.75,3.0,1.0,.42);S.b(TOP,0,1.12,.82,3.2,.08,.6);S.b(TRIM,0,1.07,1.13,3.2,.04,.03);/* quầy trước, mặt quầy, viền champagne */
