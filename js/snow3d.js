@@ -15,7 +15,7 @@ const ZONES=[
   {id:'rung',n:'5',name:'Rừng Thông & Husky',icon:'🐕',x:12,z:-4,cam:[0,-1],note:'Xe chó kéo dạo giữa rừng tuyết.'},
   {id:'vuichoi',n:'3',name:'Khu Vui Chơi Giáng Sinh',icon:'🎠',x:-34,z:70,ml:[-40,24],cam:[.5,-1],note:'Vòng quay, ngựa gỗ, hoạt động Noel.'},
   {id:'truotbang',n:'4',name:'Hồ Trượt Băng',icon:'⛸️',x:-12,z:104,cam:[0,-1],note:'Sân băng nhỏ trước làng, trượt chậm cùng gia đình.'},
-  {id:'tuanloc',n:'6',name:'Trang Trại Tuần Lộc',icon:'🦌',x:112,z:90,cam:[1,0],note:'Gặp tuần lộc, cho ăn, tìm hiểu văn hoá Sámi.'},
+  {id:'tuanloc',n:'6',name:'Trang Trại Tuần Lộc',icon:'🦌',x:92,z:118,cam:[1,0],note:'Gặp tuần lộc, cho ăn, tìm hiểu văn hoá Sámi.'},
   {id:'hobang',n:'7',name:'Hồ Băng Lớn',icon:'❄️',x:30,z:14,ml:[60,24],cam:[1,-.1],note:'Xe trượt lướt chậm trên mặt hồ soi bóng cực quang.'},
   {id:'dinh',n:'9',name:'Đỉnh Tuyết Yên',icon:'⛷️',x:100,z:-36,cam:[0,-1],note:'Khu trượt tuyết trên núi, ngắm toàn cảnh Xứ Yên.'},
   {id:'chua',n:'8',name:'Chùa Tuyết Yên',icon:'🪷',x:-46,z:-76,cam:[-.6,-1],note:'Chánh điện gỗ sồi và tượng Phật ngoài trời giữa núi tuyết.'}];
@@ -38,8 +38,9 @@ const HR=[[16,-20],[12.4,-28.6],[10,-34],[18,-42],[10,-50],[40,-58],[66,-56],[80
 const HUSKY={x:10,z:-50,rx:1,rz:1};
 const along=(pts,closed,u)=>{const P=closed?[...pts,pts[0]]:pts;let tot=0;const L=[];for(let i=0;i+1<P.length;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l}
   let d=((u%1)+1)%1*tot;if(!closed&&u>=1)d=tot;for(let i=0;i<L.length;i++){if(d<=L[i]||i===L.length-1){const t=Math.min(1,d/L[i]),a=P[i],b=P[i+1];return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1])]}d-=L[i]}};
-const FARM={x:142,z:88,r:14},TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-40,z:114},FIRE2={x:-44,z:50};
-const TG_SPOTS=[{a:2.0,n:'Bờ nam',note:'nhìn qua hồ về phía bắc: lều kính, rừng thông và cực quang'},{a:-1.9,n:'Bờ tây bắc',note:'gần làng và cầu gỗ, nhìn qua hồ về phía đông nam'},{a:0.65,n:'Bờ đông',note:'cuối hồ, yên tĩnh nhất, nhìn dọc cả mặt hồ về phía làng và núi'}];/* 3 chỗ đề xuất cho Tư Gia, chờ chọn */
+const FARM={x:122,z:116,r:14}/* 28/11: dời trang trại tuần lộc xuống phía nam, xa bờ hồ cho thoáng (cũ: 142,88) */,TREE={x:10,z:56},FUN={x:-30,z:56},RH={x:-64,z:55},CAR={x:-25,z:51},WHEEL={x:-48,z:37},STAGE={x:-40,z:114},FIRE2={x:-44,z:50};
+const HOME=(()=>{const [x,z]=lakeShore(.65,9);const ry=Math.atan2(-46-x,-76-z),c=Math.cos(ry),sn=Math.sin(ry),dw=(lx,lz)=>[x+lx*c+lz*sn,z-lx*sn+lz*c];return {x,z,ry,d:dw(3.6,1.2),o:dw(19,1.2)}})();
+const homeClear=(x,z)=>{if(Math.hypot(x-HOME.x,z-HOME.z)<15)return true;const [ax,az]=HOME.d,[bx,bz]=HOME.o,dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));return Math.hypot(x-ax-dx*t,z-az-dz*t)<6};/* chừa sân trước cửa nhà và tầm camera khi ra cửa *//* Nhà Mái Cỏ Riêng (Tư Gia): bờ đông Hồ Băng Lớn, hiên nhà nhìn qua hồ về đồi chùa tượng Phật (người dùng chọn 28/11) */
 const KOTA={x:-52.5,z:-74,R:4.1},SNOWMAN={x:-52,z:86},ARCH={x:-1,z:69,ry:-.7},archW=(lx,lz)=>[ARCH.x+Math.cos(ARCH.ry)*lx+Math.sin(ARCH.ry)*lz,ARCH.z-Math.sin(ARCH.ry)*lx+Math.cos(ARCH.ry)*lz];/* cổng đỏ Giáng sinh */
 // Làng Lapland xếp lại theo tấm 10: nhà quây vòng cung phía bắc và đông cây thông lớn, quay mặt về cây thông và hồ trượt băng;
 // vòng trong bán kính 22 m, vòng ngoài 38 m đặt đúng khe giữa hai nhà vòng trong để có đường đi thẳng từ quảng trường ra.
@@ -49,7 +50,7 @@ const VH=[[0,37,9,19.8,4.4,'#c99d70','main'],[-58,29,8,7,3.8,'#b8906a','shop'],[
 const CHIMNEYS=[];/* miệng ống khói 5 nhà trên tuyến xe trao Yên */
 const VRING=19,VPATH=[Array.from({length:49},(_,i)=>[TREE.x+Math.cos(i/48*Math.PI*2)*VRING,TREE.z+Math.sin(i/48*Math.PI*2)*VRING]),
   ...VH.map(v=>{const dx=Math.sin(v.ry)*(v.d/2+.6),dz=Math.cos(v.ry)*(v.d/2+.6);return [[v.x+dx,v.z+dz],[TREE.x+Math.sin(v.a)*VRING,TREE.z-Math.cos(v.a)*VRING]]})];
-const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-37,92],[-38,107]],[[-4,62],[-16,66]],...VPATH,[[46,86],[84,94],[124,94]],[[124,94],[124,78],[134,70],[152,70],[160,80]],[[124,94],[130,104],[148,106],[160,98]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
+const PATHS=[[[14,98],[17,80],[12.5,71]],[[-36,72],[-37,92],[-38,107]],[[-4,62],[-16,66]],...VPATH,[[46,86],[78,96],[104,122]],[[104,122],[104,106],[114,98],[132,98],[140,108]],[[104,122],[110,132],[128,134],[140,126]],[[12,-4],[6,-12],[2,-24],[-4,-34]],[[30,-20],[38,-26]],Array.from({length:73},(_,i)=>lakeShore(i/72*Math.PI*2,4.5))],HUSKY_TRAIL=[];
 const STATIONS=[
   {id:'aurora',x:48,z:-49.6,label:'✨ Vào lều kính ngắm cực quang'},
   {id:'husky',x:12.5,z:-19,label:'🐕 Lên xe husky dạo rừng'},
@@ -57,16 +58,18 @@ const STATIONS=[
   {id:'sit',x:0,z:-94.2,label:'🪷 Ngồi thiền trước Phật'},
   {id:'bell',x:9,z:-94,label:'🪷 Chiêm bái tượng Phật'},
   {id:'fire',x:25,z:79.6,label:'🔥 Ngồi sưởi bên bếp lửa'},
-  {id:'deer',x:122.6,z:86,label:'🦌 Cho tuần lộc ăn rêu'},
+  {id:'deer',x:102.6,z:114,label:'🦌 Cho tuần lộc ăn rêu'},
   {id:'carousel',x:-25,z:58.6,label:'🎠 Ngồi vòng ngựa gỗ'},
   {id:'wheel',x:-48,z:43.4,label:'🎡 Lên vòng quay ngắm làng'},
   {id:'snowman',x:-46,z:89,label:'⛄ Đắp người tuyết'},
   {id:'tree',x:10,z:66.5,label:'🎄 Treo lời chúc lên cây thông'},
   {id:'skate',x:-3,z:71.6,label:'⛸ Xỏ giày trượt băng'},
   {id:'kota',x:0,z:0,label:'🔥 Vào chòi lửa'},
+  {id:'home',x:0,z:0,label:'🏡 Vào Nhà Mái Cỏ Riêng'},
   {id:'cocoa',x:-53.8,z:54,label:'☕ Ngồi uống ly ấm'},
   {id:'stars',x:24,z:93,label:'🌌 Nằm trên tuyết ngắm sao'}];
 {const q=STATIONS.find(o=>o.id==='kota');KOTA.ry=Math.atan2(STAIR.x-KOTA.x,STAIR.z-KOTA.z);KOTA.door=[KOTA.x+Math.sin(KOTA.ry)*(KOTA.R+1.4),KOTA.z+Math.cos(KOTA.ry)*(KOTA.R+1.4)];q.x=KOTA.door[0];q.z=KOTA.door[1]}
+{const q=STATIONS.find(o=>o.id==='home'),c=Math.cos(HOME.ry),sn=Math.sin(HOME.ry),lx=3.6+1.5,lz=1.2;q.x=HOME.x+lx*c+lz*sn;q.z=HOME.z-lx*sn+lz*c}/* trước bậc cửa mặt bên */
 {const q=STATIONS.find(o=>o.id==='cocoa'),a=Math.atan2(CAR.x-RH.x,CAR.z-RH.z);q.x=RH.x+Math.sin(a)*10.4;q.z=RH.z+Math.cos(a)*10.4;q.a=a}
 {const q=STATIONS.find(o=>o.id==='skate'),GA=Math.atan2(ARCH.z-RINK.z,ARCH.x-RINK.x);q.x=RINK.x+Math.cos(GA)*(RINK.rx+1.6);q.z=RINK.z+Math.sin(GA)*(RINK.rz+1.6)}
 {const q=STATIONS.find(o=>o.id==='aurora'),[x,z]=toLake(IGLOOS[1],7.4);q.x=x;q.z=z}
@@ -528,10 +531,10 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     glassB.T=MX(x,y+.06,z,1);glassB.add(geo,'#ffffff',new THREE.Matrix4());glowB.T=MX(x,y+.06,z,1);glowB.add(geo,'#ffffff',MX(0,0,0,.96));
     if(idx===1){const [lx,lz]=toLake([x,z],1);const dx=lx-x,dz=lz-z;for(let k=0;k<12;k++){const sx=x+dx*(r+2.6+k*.85),sz=z+dz*(r+2.6+k*.85),sy=H(sx,sz);S.b('#9aa2ac',sx,sy+.12,sz,2.2,.3,1,Math.atan2(-dz,dx)+Math.PI/2);if(k%3===1){lantern(sx+dz*1.6,sz-dx*1.6,1.1);lantern(sx-dz*1.6,sz+dx*1.6,1.1)}}}/* bậc đá xuống đồi */
     for(let k=0;k<4;k++){const a=k*1.6+x,mx=x+Math.cos(a)*(r+3.2),mz=z+Math.sin(a)*(r+3.2);S.add(G.sph,SNOW,MX(mx,H(mx,mz)+.1,mz,1+k*.2,.5,.9))}
-    {const la=Math.atan2(LAKE.z-z,LAKE.x-x),N=idx===0?11:idx===1?6:4;for(let k=0;k<N;k++){const a=la+Math.PI*.42+k*(Math.PI*1.16/(N-1)),rr=r+4.5+((k*7)%4)*1.6,px=x+Math.cos(a)*rr,pz=z+Math.sin(a)*rr;pine(T,px,pz,6+((k*5)%4)*1.6)}}/* thông ôm sau lều */
+    {const la=Math.atan2(LAKE.z-z,LAKE.x-x),N=idx===0?11:idx===1?6:4;for(let k=0;k<N;k++){const a=la+Math.PI*.42+k*(Math.PI*1.16/(N-1)),rr=r+4.5+((k*7)%4)*1.6,px=x+Math.cos(a)*rr,pz=z+Math.sin(a)*rr;if(!homeClear(px,pz))pine(T,px,pz,6+((k*5)%4)*1.6)}}/* thông ôm sau lều */
     block(x,z,r+1.5)});
   for(let k=0;k<3;k++){const [ax,az]=IGLOOS[k],[bx,bz]=IGLOOS[(k+1)%3],mx=(ax+bx)/2,mz=(az+bz)/2,[ox,oz]=toLake([mx,mz],-3);/* cụm thông dày giữa các lều: riêng tư, không nhìn thẳng sang nhau */
-    for(let j=0;j<7;j++){const a=j*2.4+k,rr=1+j*.7,px=ox+Math.cos(a)*rr,pz=oz+Math.sin(a)*rr;if(lakeE(px,pz)>1.12&&IGLOOS.every(([ix,iz])=>Math.hypot(px-ix,pz-iz)>DR+3.2))pine(T,px,pz,5+((j*3+k)%4)*1.5)}}
+    for(let j=0;j<7;j++){const a=j*2.4+k,rr=1+j*.7,px=ox+Math.cos(a)*rr,pz=oz+Math.sin(a)*rr;if(lakeE(px,pz)>1.12&&IGLOOS.every(([ix,iz])=>Math.hypot(px-ix,pz-iz)>DR+3.2)&&!homeClear(px,pz))pine(T,px,pz,5+((j*3+k)%4)*1.5)}}
   {const gm=glassB.mesh(glassMat);gm.renderOrder=2;sc.add(gm);const gl=glowB.mesh(glowMat);gl.renderOrder=1;sc.add(gl)}
   for(const [x,z] of IGLOOS)warm(x,H(x,z)+2.5,z,10,30);
   // ---------- tuyến đường phát sáng: husky vàng cam, xe trượt xanh lam, trượt tuyết hồng ----------
@@ -775,7 +778,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
         const ax=sx*.1,ay=hy+.2,az=hz+.05;B.add(G.cyl,an,MX(ax+sx*.14,ay+.3,az-.08,.03,.75,.03,-.35,0,-sx*.45));B.add(G.cyl,an,MX(ax+sx*.4,ay+.68,az-.25,.025,.55,.025,-.75,0,-sx*.2));
         B.add(G.cyl,an,MX(ax+sx*.24,ay+.6,az+.12,.022,.36,.022,.55,0,-sx*.3));B.add(G.cyl,an,MX(ax+sx*.5,ay+.9,az-.05,.02,.3,.02,.2,0,-sx*.6))}
       B.add(WREATH,'#b8322c',MX(0,1.03,.28,.95,.92,.45));B.b('#b8322c',0,1.42,.05,.12,.06,.62);B.add(G.sphLo,'#e0b04a',MX(0,.66,.36,.08));B.reset();if(!lie)block(x,z,.9)};
-    for(const [x,z,r,m] of [[132,84,.6,'stand'],[137,93,2.3,'graze'],[141,86,4.2,'lie'],[146,82,1.2,'stand'],[150,91,5.4,'graze'],[136,80,2.9,'stand'],[153,86,.2,'lie'],[145,95,3.3,'graze'],[129,91,1.7,'stand']])deer(x,z,r,m);
+    for(const [x0,z0,r,m] of [[132,84,.6,'stand'],[137,93,2.3,'graze'],[141,86,4.2,'lie'],[146,82,1.2,'stand'],[150,91,5.4,'graze'],[136,80,2.9,'stand'],[153,86,.2,'lie'],[145,95,3.3,'graze'],[129,91,1.7,'stand']])deer(x0-142+FARM.x,z0-88+FARM.z,r,m);
     // nhà trang trại: phía đông bãi, mặt nhìn về bãi tuần lộc
     {const x=FX+FRX+8.5,z=FZ,y=H(x,z),ry=-Math.PI/2,w=12,d=9,h=3.4,a=.62,b0=.6,rh=Math.tan(a)*(w/2+.9),Lr=(w/2+1)/Math.cos(a);S.at(x,y,z,ry);L.at(x,y,z,ry);
       S.b('#8c96a2',0,b0/2,0,w+.3,b0+.1,d+.3);S.b('#bf915f',0,b0+h/2,0,w,h,d);for(let k=0;k<6;k++)S.b('#a97e52',0,b0+.3+k*.6,d/2+.02,w+.04,.06,.04);/* chân tường đá, vách gỗ ghép */
@@ -886,7 +889,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const segD=(x,z,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));return Math.hypot(x-ax-dx*t,z-az-dz*t)};
   const stTop=tw(0,7.2);
   const keep=(x,z)=>{if(lakeE(x,z)<1.12)return false;
-    if(Math.hypot(x-FARM.x,z-FARM.z)<FARM.r+6)return false;if(Math.hypot(x-TREE.x,z-TREE.z)<46||Math.hypot(x-FUN.x,z-FUN.z)<24||Math.hypot(x-RH.x,z-RH.z)<18||Math.hypot(x-16,z+22)<13||Math.hypot(x-6,z+9)<7||Math.hypot(x-FIRE2.x,z-FIRE2.z)<6||Math.hypot(x-STAGE.x,z-STAGE.z)<13||segD(x,z,STAGE.x,STAGE.z,RINK.x,RINK.z)<9||Math.hypot(x-KOTA.x,z-KOTA.z)<8||Math.hypot(x-SNOWMAN.x,z-SNOWMAN.z)<7||TG_SPOTS.some(q=>{const [hx,hz]=lakeShore(q.a,9);return Math.hypot(x-hx,z-hz)<15})||Math.hypot(x-WHEEL.x,z-WHEEL.z)<15||Math.hypot(x-CAR.x,z-CAR.z)<10||Math.hypot(x-FARM.x-25,z-FARM.z)<14||Math.hypot(x-FARM.x+23,z-FARM.z-3)<7)return false;if(Math.hypot(x-TP.x,z-TP.z)<15)return false;if(segD(x,z,STAIR.x,STAIR.z,stTop[0],stTop[1])<5)return false;
+    if(Math.hypot(x-FARM.x,z-FARM.z)<FARM.r+6)return false;if(Math.hypot(x-TREE.x,z-TREE.z)<46||Math.hypot(x-FUN.x,z-FUN.z)<24||Math.hypot(x-RH.x,z-RH.z)<18||Math.hypot(x-16,z+22)<13||Math.hypot(x-6,z+9)<7||Math.hypot(x-FIRE2.x,z-FIRE2.z)<6||Math.hypot(x-STAGE.x,z-STAGE.z)<13||segD(x,z,STAGE.x,STAGE.z,RINK.x,RINK.z)<9||Math.hypot(x-KOTA.x,z-KOTA.z)<8||Math.hypot(x-SNOWMAN.x,z-SNOWMAN.z)<7||homeClear(x,z)||Math.hypot(x-WHEEL.x,z-WHEEL.z)<15||Math.hypot(x-CAR.x,z-CAR.z)<10||Math.hypot(x-FARM.x-25,z-FARM.z)<14||Math.hypot(x-FARM.x+23,z-FARM.z-3)<7)return false;if(Math.hypot(x-TP.x,z-TP.z)<15)return false;if(segD(x,z,STAIR.x,STAIR.z,stTop[0],stTop[1])<5)return false;
     for(const [ix,iz] of IGLOOS){const [lx,lz]=toLake([ix,iz],16);if(Math.hypot(x-ix,z-iz)<8.5||segD(x,z,ix,iz,lx,lz)<4.5)return false}if(Math.abs(x)<9&&z>80&&z<104)return false;
     for(const p of PATHS)for(let i=0;i+1<p.length;i++)if(segD(x,z,...p[i],...p[i+1])<4)return false;
     for(const c of colliders)if(Math.hypot(x-c[0],z-c[1])<c[2]+1.5)return false;for(const q of PEAKS)if(Math.hypot(x-q.x,z-q.z)<q.R*1.25)return false;/* không trồng cây trên vách đá */for(const t of HTRAILS)for(let i=0;i+1<t.length;i++)if(segD(x,z,...t[i],...t[i+1])<4)return false;for(const r of SKIRUNS)for(let i=0;i+1<r.length;i++)if(segD(x,z,...r[i],...r[i+1])<7)return false;if(segD(x,z,...LIFT[0],...LIFT[1])<4||Math.hypot(x-SKI.x,z-SKI.z+2)<12)return false;if(Math.abs(x-SKI.x)<30&&z>SKI.z-4&&z<SKI.z+62&&rnd()<.85)return false;if(segD(x,z,PIER[0][0],PIER[0][1],PIER[0][0]-8,PIER[0][1])<4)return false;if(Math.hypot((x-RINK.x)/(RINK.rx+6),(z-RINK.z)/(RINK.rz+6))<1)return false;for(let i=0;i+1<HUSKY_TRAIL.length;i++)if(segD(x,z,...HUSKY_TRAIL[i],...HUSKY_TRAIL[i+1])<4)return false;
@@ -900,7 +903,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const labels=[];
   function signTex(t1,t2){const c=document.createElement('canvas');c.width=512;c.height=180;const g=c.getContext('2d');g.fillStyle='rgba(14,22,36,.72)';g.beginPath();if(g.roundRect)g.roundRect(8,8,496,164,40);else g.rect(8,8,496,164);g.fill();g.strokeStyle='rgba(214,184,120,.7)';g.lineWidth=3;g.stroke();
     g.textAlign='center';g.fillStyle='#f1e2bf';g.font='600 50px Georgia,serif';g.fillText(t1,256,90,470);g.fillStyle='#cfd8e6';g.font='28px system-ui,sans-serif';g.fillText(t2,256,138,470);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;return tx}
-  for(const zn of ZONES){if(zn.id==='don')continue;const p={rungkinh:[...IGLOOS[1],8],lang:[-6,30,9],hobang:[LAKE.x,LAKE.z,4],rung:[12,-40,6],vuichoi:[-30,64,7],tuanloc:[142,76,5],dinh:[SKI.x,SKI.z-2,12],chua:[...tw(0,0),12]}[zn.id];if(!p)continue;
+  for(const zn of ZONES){if(zn.id==='don')continue;const p={rungkinh:[...IGLOOS[1],8],lang:[-6,30,9],hobang:[LAKE.x,LAKE.z,4],rung:[12,-40,6],vuichoi:[-30,64,7],tuanloc:[FARM.x,FARM.z-12,5],dinh:[SKI.x,SKI.z-2,12],chua:[...tw(0,0),12]}[zn.id];if(!p)continue;
     const s=new THREE.Sprite(new THREE.SpriteMaterial({map:signTex(zn.name.toUpperCase(),zn.note.split('.')[0].slice(0,40)),transparent:true,fog:false,depthWrite:false}));s.scale.set(4.6,1.6,1);labels.push(s);s.position.set(p[0],H(p[0],p[1])+p[2],p[1]);sc.add(s)}
 
   // ---------- tuyết rơi ----------
@@ -1048,7 +1051,13 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
   const moss=new THREE.Mesh(gSph,lam('#b9c29a'));moss.scale.set(.16,.09,.16);moss.visible=false;sc.add(moss);
   // ---------- Bên trong chòi lửa (lều kota): dựng khi vào lần đầu, đặt riêng dưới mặt đất; bếp nướng giữa nhà có chụp khói và ống khói lên đỉnh mái,
   // ghế băng quanh vách phủ da tuần lộc, 6 chỗ ngồi quây quanh lửa, ấm trà trên vỉ nướng, kệ chén, ô cửa mái nhìn lên trời; ánh sáng chỉ từ lửa và cửa sổ ----------
-  const KI={x:420,y:-80,z:420,g:null,floor:null,seats:[],fl:null,light:null,kettle:null,sit:-1,seatTo:-1},KA=KOTA.R*Math.cos(Math.PI/8);
+  const KI={x:420,y:-80,z:420,g:null,floor:null,seats:[],fl:null,light:null,kettle:null,sit:-1,seatTo:-1,camY:2.75,li:22,kp:[.45,1.6,.25],ent:[0,0,Math.PI],
+    msg:'🔥 Chòi lửa · chạm sàn để đi, chạm ghế da tuần lộc để ngồi quây quanh bếp lửa · 🚪 Ra cửa để ra ngoài',sitMsg:'🔥 Ngồi quây quanh bếp lửa. Nghe củi tí tách, ấm trà reo khẽ.'},KA=KOTA.R*Math.cos(Math.PI/8);
+  let RM=KI;/* phòng đang ở trong: chòi lửa hoặc Nhà Mái Cỏ Riêng; cả hai dùng chung chế độ 'kota' (trong nhà) */
+  KI.ent[1]=KA-1.1;KI.build=()=>kotaBuild();
+  KI.clamp=(lx,lz)=>{let r=Math.hypot(lx,lz);const mx=KA-.95;if(r>mx){lx*=mx/r;lz*=mx/r;r=mx}if(r<1.75){const k=1.75/(r||1);lx*=k;lz*=k}return [lx,lz]};
+  KI.camClamp=(cx,cz)=>{const rr=Math.hypot(cx,cz),mx=KA-.35;return rr>mx?[cx/rr*mx,cz/rr*mx]:[cx,cz]};
+  KI.exit=()=>{const dx=Math.sin(KOTA.ry),dz=Math.cos(KOTA.ry);P.x=KOTA.x+dx*(KA+1.6);P.z=KOTA.z+dz*(KA+1.6);P.a=KOTA.ry;P.yaw=KOTA.ry};
   function kotaBuild(){if(KI.g)return;const g=new THREE.Group();g.position.set(KI.x,KI.y,KI.z);const M=(geo,c,x,y,z,sx,sy,sz,rx,ry,rz,basic)=>{const m=new THREE.Mesh(geo,basic?new THREE.MeshBasicMaterial({color:c,fog:false}):lam(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx||0,ry||0,rz||0);g.add(m);return m},box=new THREE.BoxGeometry(1,1,1),oct=new THREE.CylinderGeometry(1,1,1,8),R=KOTA.R,a=KA,L8=2*R*Math.sin(Math.PI/8);
     KI.floor=M(oct,'#b98a5a',0,0,0,R,.1,R,0,Math.PI/8,0);for(let i=-4;i<=4;i++)M(box,'#a8784c',i*.8,.052,0,.03,.01,2*a-.2);/* sàn ván */
     for(let k=0;k<8;k++){const f=k*Math.PI/4;for(let i=0;i<9;i++)M(gCyl,['#a87a4e','#9a6c44','#b3845a'][(i+k)%3],Math.sin(f)*(a-.08),.2+i*.235,Math.cos(f)*(a-.08),.13,L8+.1,.13,0,f,Math.PI/2)}/* vách gỗ khúc */
@@ -1058,28 +1067,28 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     {const f=Math.PI,rr=R*.55,h=2.15+3.3*(1-.55/1);const m=M(box,'#8fe6cf',Math.sin(f)*rr,h,Math.cos(f)*rr,.9,.7,.02,0,0,0,1);m.rotation.set(-Math.atan2(R,3.3),f,0,'YXZ')}/* ô cửa mái nhìn lên trời cực quang */
     // ghế băng quanh vách (trừ mặt cửa), da tuần lộc trên 6 chỗ ngồi
     for(let k=1;k<8;k++){const f=k*Math.PI/4,r=a-.42;M(box,'#8a5e3a',Math.sin(f)*r,.42,Math.cos(f)*r,L8+.05,.08,.62,0,f,0);M(box,'#6e4a30',Math.sin(f)*r,.2,Math.cos(f)*r,L8-.2,.4,.5,0,f,0)}
-    KI.seats=[1,2,3,5,6,7].map(k=>{const f=k*Math.PI/4,r=a-.44,x=Math.sin(f)*r,z=Math.cos(f)*r;M(gSph,k%2?'#e9e2d4':'#8a6a4c',x,.5,z,.42,.07,.32,0,f,0);M(gSph,k%2?'#d8cfbe':'#6e5238',x*.96,.52,z*.96,.18,.05,.12,0,f,0);const hit=M(box,'#000',x,.6,z,1,1.2,.9,0,f,0);hit.material.visible=false;hit.userData.seat=1;return {x,z,a:f+Math.PI,hit}});
+    KI.seats=[1,2,3,5,6,7].map(k=>{const f=k*Math.PI/4,r=a-.44,x=Math.sin(f)*r,z=Math.cos(f)*r;M(gSph,k%2?'#e9e2d4':'#8a6a4c',x,.5,z,.42,.07,.32,0,f,0);M(gSph,k%2?'#d8cfbe':'#6e5238',x*.96,.52,z*.96,.18,.05,.12,0,f,0);const hit=M(box,'#000',x,.6,z,1,1.2,.9,0,f,0);hit.material.visible=false;hit.userData.seat=1;const rr=Math.hypot(x,z);return {x,z,px:x*.94,pz:z*.94,ax:x*(rr-.75)/rr,az:z*(rr-.75)/rr,a:f+Math.PI,hit}});
     // kệ chén ở mặt sau, chăn len gấp
     {const f=Math.PI,r=a-.12;M(box,'#7a5032',Math.sin(f)*r,1.5,Math.cos(f)*r,1.2,.06,.28,0,f,0);for(let i=0;i<5;i++)M(gCyl,['#efe6d6','#c46a4a','#6f8fb0','#efe6d6','#d6b878'][i],Math.sin(f)*r+(i-2)*.2,1.6,Math.cos(f)*r,.06,.12,.06);M(box,'#b8322c',-2.2,.55,-.6,.5,.12,.4,0,.6,0);M(box,'#efe6d6',-2.2,.66,-.6,.48,.08,.38,0,.6,0)}
     // bếp nướng giữa nhà: bàn tám cạnh bằng gỗ ôm lò đá, vỉ nướng, chụp khói đen và ống khói lên đỉnh mái
     M(oct,'#7a5a40',0,.36,0,1.25,.72,1.25,0,Math.PI/8,0);M(oct,'#9a7450',0,.74,0,1.32,.06,1.32,0,Math.PI/8,0);M(gCyl,'#5e5a56',0,.78,0,.72,.08,.72);for(let i=0;i<9;i++){const t=i/9*6.28;M(gSph,'#4e4a46',Math.cos(t)*.6,.84,Math.sin(t)*.6,.14,.1,.14)}
-    for(let i=0;i<3;i++)M(gCyl,'#5a3a22',(i-1)*.18,.88,0,.07,.6,.07,Math.PI/2,i*.8,0);KI.fl=[0,1,2].map(i=>M(gCone,i?'#ffcf5a':'#ff8a3a',(i-1)*.12,1.1,(i%2)*.08,.16-i*.03,.5-i*.08,.16-i*.03,0,0,0,1));for(let i=-3;i<=3;i++)M(box,'#222326',i*.12,1.32,0,.02,.02,1.1);
+    for(let i=0;i<3;i++)M(gCyl,'#5a3a22',(i-1)*.18,.88,0,.07,.6,.07,Math.PI/2,i*.8,0);KI.fl=[0,1,2].map(i=>{const m=M(gCone,i?'#ffcf5a':'#ff8a3a',(i-1)*.12,1.1,(i%2)*.08,.16-i*.03,.5-i*.08,.16-i*.03,0,0,0,1);m.userData.h=.5-i*.08;return m});for(let i=-3;i<=3;i++)M(box,'#222326',i*.12,1.32,0,.02,.02,1.1);
     M(gCone,'#222326',0,2.35,0,.95,.55,.95);M(gCyl,'#222326',0,3.75,0,.15,2.3,.15);
     KI.kettle=new THREE.Group();{const k=KI.kettle;const b=new THREE.Mesh(gSph,lam('#2f3338'));b.scale.set(.17,.14,.17);k.add(b);const sp=new THREE.Mesh(gCyl,b.material);sp.scale.set(.03,.16,.03);sp.position.set(.17,.04,0);sp.rotation.z=-1;k.add(sp);const hd=new THREE.Mesh(new THREE.TorusGeometry(.12,.012,5,12,Math.PI),b.material);hd.position.y=.1;k.add(hd)}KI.kettle.position.set(.3,1.47,.25);g.add(KI.kettle);
     KI.light=new THREE.PointLight('#ffb060',22,12,1.4);KI.light.position.set(0,1.6,0);g.add(KI.light);{const l2=new THREE.PointLight('#ffd9a8',5,9,1.6);l2.position.set(0,3.2,0);g.add(l2)}
     sc.add(g);KI.g=g}
-  function kotaEnter(){kotaBuild();P.mode='kota';KI.sit=-1;KI.seatTo=-1;P.dest=null;P.x=KI.x;P.z=KI.z+KA-1.1;P.a=Math.PI;P.yaw=0;first=true;snow.visible=false;me.visible=true;KI.g.visible=true;
-    caption('🔥 Chòi lửa · chạm sàn để đi, chạm ghế da tuần lộc để ngồi quây quanh bếp lửa · 🚪 Ra cửa để ra ngoài',8000)}
-  function kotaExit(){KI.sit=-1;setSit(false);snow.visible=true;const dx=Math.sin(KOTA.ry),dz=Math.cos(KOTA.ry);P.x=KOTA.x+dx*(KA+1.6);P.z=KOTA.z+dz*(KA+1.6);P.a=KOTA.ry;P.yaw=KOTA.ry;first=true;if(typeof camZoom!=='undefined'&&camZoom<1.3)setZoom(1.3)}/* ra cửa: đứng trước cửa quay lưng về nhà, camera phía đối diện nhìn ngược về lều */
-  function kotaTick(dt,t){if(KI.fl)KI.fl.forEach((f,i)=>{f.scale.y=(.5-i*.08)*(1+Math.sin(t*(9+i*3)+i)*.18)});if(KI.light)KI.light.intensity=22+Math.sin(t*8)*2.5+Math.sin(t*21)*1.2;
-    if(KI.kettle&&Math.random()<dt*4)puff(KI.x+.45,KI.y+1.6,KI.z+.25,{r:.04,vy:.35,life:1.8,g:1.6});
-    if(KI.sit>=0){const s=KI.seats[KI.sit];me.position.set(KI.x+s.x*.94,KI.y+.12,KI.z+s.z*.94);me.rotation.set(0,s.a,0);tgt.set(me.position.x,me.position.y+1.2,me.position.z);return}
-    if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.12){P.dest=null;if(KI.seatTo>=0){KI.sit=KI.seatTo;KI.seatTo=-1;setSit(true);caption('🔥 Ngồi quây quanh bếp lửa. Nghe củi tí tách, ấm trà reo khẽ.',6000)}}else{const sp=Math.min(d,2.2*dt);let nx=P.x+dx/d*sp,nz=P.z+dz/d*sp;const rx=nx-KI.x,rz=nz-KI.z,rr=Math.hypot(rx,rz);if(rr<1.75){nx=KI.x+rx/rr*1.75;nz=KI.z+rz/rr*1.75}P.x=nx;P.z=nz;P.a=Math.atan2(dx,dz)}}
-    me.position.set(P.x,KI.y+.05+(P.dest?Math.abs(Math.sin(t*8))*.04:0),P.z);let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);tgt.set(P.x,me.position.y+1.4,P.z)}
-  function kotaTap(){const h=ray.intersectObjects([...KI.seats.map(s=>s.hit),KI.floor],false)[0];if(!h)return;const si=KI.seats.findIndex(s=>s.hit===h.object);
-    if(KI.sit>=0){KI.sit=-1;setSit(false);const s=KI.seats.find((q,i)=>i===si);}
-    if(si>=0){const s=KI.seats[si],r=Math.hypot(s.x,s.z),fx=s.x*(r-.75)/r,fz=s.z*(r-.75)/r;P.dest={x:KI.x+fx,z:KI.z+fz};KI.seatTo=si;return}
-    let lx=h.point.x-KI.x,lz=h.point.z-KI.z,lr=Math.hypot(lx,lz);const mx=KA-.95;if(lr>mx){lx*=mx/lr;lz*=mx/lr}if(Math.hypot(lx,lz)<1.75){const k=1.75/(Math.hypot(lx,lz)||1);lx*=k;lz*=k}P.dest={x:KI.x+lx,z:KI.z+lz};KI.seatTo=-1}
+  function roomEnter(R){R.build();RM=R;P.mode='kota';R.sit=-1;R.seatTo=-1;P.dest=null;P.x=R.x+R.ent[0];P.z=R.z+R.ent[1];P.a=R.ent[2];P.yaw=R.ent[2]+Math.PI;first=true;snow.visible=false;me.visible=true;R.g.visible=true;caption(R.msg,8000)}
+  const kotaEnter=()=>roomEnter(KI);
+  function kotaExit(){RM.sit=-1;setSit(false);snow.visible=true;RM.exit();first=true;if(typeof camZoom!=='undefined'&&camZoom<1.3)setZoom(1.3)}/* ra cửa: đứng trước cửa quay lưng về nhà, camera phía đối diện nhìn ngược về nhà */
+  function kotaTick(dt,t){const R=RM;if(R.fl)R.fl.forEach((f,i)=>{f.scale.y=f.userData.h*(1+Math.sin(t*(9+i*3)+i)*.18)});if(R.light)R.light.intensity=R.li*(1+Math.sin(t*8)*.11+Math.sin(t*21)*.055);
+    if(R.kettle&&Math.random()<dt*4)puff(R.x+R.kp[0],R.y+R.kp[1],R.z+R.kp[2],{r:.04,vy:.35,life:1.8,g:1.6});
+    if(R.sit>=0){const s=R.seats[R.sit];me.position.set(R.x+s.px,R.y+.12,R.z+s.pz);me.rotation.set(0,s.a,0);tgt.set(me.position.x,me.position.y+1.2,me.position.z);return}
+    if(P.dest){const dx=P.dest.x-P.x,dz=P.dest.z-P.z,d=Math.hypot(dx,dz);if(d<.12){P.dest=null;if(R.seatTo>=0){R.sit=R.seatTo;R.seatTo=-1;setSit(true);caption(R.sitMsg,6000)}}else{const sp=Math.min(d,2.2*dt);const [lx,lz]=R.clamp(P.x+dx/d*sp-R.x,P.z+dz/d*sp-R.z);P.x=R.x+lx;P.z=R.z+lz;P.a=Math.atan2(dx,dz)}}
+    me.position.set(P.x,R.y+.05+(P.dest?Math.abs(Math.sin(t*8))*.04:0),P.z);let da=P.a-me.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));me.rotation.y+=da*Math.min(1,dt*10);tgt.set(P.x,me.position.y+1.4,P.z)}
+  function kotaTap(){const R=RM,h=ray.intersectObjects([...R.seats.map(s=>s.hit),R.floor],false)[0];if(!h)return;const si=R.seats.findIndex(s=>s.hit===h.object);
+    if(R.sit>=0){R.sit=-1;setSit(false)}
+    if(si>=0){const s=R.seats[si];P.dest={x:R.x+s.ax,z:R.z+s.az};R.seatTo=si;return}
+    const [lx,lz]=R.clamp(h.point.x-R.x,h.point.z-R.z);P.dest={x:R.x+lx,z:R.z+lz};R.seatTo=-1}
   // ---------- Tư Gia Xứ Yên: nhà gỗ đỏ viền trắng mái cỏ kiểu nhà chài Bắc Âu (rorbu) trên bờ Hồ Băng Lớn ----------
   // ván dọc sơn đỏ, nẹp góc và khung cửa trắng, cửa sổ bốn ô, mái dốc hai mái lợp cỏ (mùa đông phủ tuyết, mép cỏ lộ ra), đầu hồi quay ra hồ, móng đá, hiên gỗ nhỏ có lan can nhìn ra hồ, thuyền gỗ kéo lên bờ
   const TGH={g:null,c:null,i:0,x:0,z:0,ry:0,W:7.2,D:5.2};
@@ -1104,14 +1113,72 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     // thuyền gỗ kéo lên bờ cạnh nhà
     {const q=new THREE.Group();q.position.set(-W/2-2.2,.25,D/2+1.2);q.rotation.y=.35;const hull=new THREE.Mesh(new THREE.SphereGeometry(1,12,6,0,Math.PI*2,Math.PI/2,Math.PI/2),lam('#efe6d6'));hull.scale.set(.75,.5,2.1);hull.rotation.x=Math.PI;hull.position.y=.5;q.add(hull);const rim=new THREE.Mesh(bx,lam('#2f5f8a'));rim.scale.set(1.5,.08,4.1);rim.position.y=.52;q.add(rim);const sn=new THREE.Mesh(gSph,lam(SNOW));sn.scale.set(.62,.12,1.7);sn.position.y=.5;q.add(sn);g.add(q)}
     TGH.light=new THREE.PointLight('#ffc27a',2.5,8,1.6);TGH.light.position.set(0,b0+1.4,D/2+1.2);g.add(TGH.light);
-    {const c=document.createElement('canvas');c.width=256;c.height=96;const g2=c.getContext('2d');g2.fillStyle='#f2efe8';g2.fillRect(0,0,256,96);g2.strokeStyle='#a3262a';g2.lineWidth=5;g2.strokeRect(5,5,246,86);g2.fillStyle='#7a1c20';g2.font='600 46px Georgia,serif';g2.textAlign='center';g2.fillText('Tư Gia',128,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(.95,.36),new THREE.MeshLambertMaterial({map:t}));m.position.set(W/2+.06,b0+2.35,1.2);m.rotation.y=Math.PI/2;g.add(m)}
+    {const c=document.createElement('canvas');c.width=256;c.height=96;const g2=c.getContext('2d');g2.fillStyle='#f2efe8';g2.fillRect(0,0,256,96);g2.strokeStyle='#a3262a';g2.lineWidth=5;g2.strokeRect(5,5,246,86);g2.fillStyle='#7a1c20';g2.font='600 30px Georgia,serif';g2.textAlign='center';g2.fillText('Nhà Mái Cỏ Riêng',128,60,236);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.49),new THREE.MeshLambertMaterial({map:t}));m.position.set(W/2+.06,b0+1.75,-.2);m.rotation.y=Math.PI/2;g.add(m)}
     sc.add(g);TGH.g=g}
-  function tgPlace(i){if(!TGH.g)tgBuild();const sp=TG_SPOTS[i]||TG_SPOTS[0];const [x,z]=lakeShore(sp.a,9);TGH.i=i;TGH.x=x;TGH.z=z;TGH.ry=Math.atan2(LAKE.x-x,LAKE.z-z);TGH.g.position.set(x,H(x,z)-.1,z);TGH.g.rotation.y=TGH.ry;
-    if(TGH.c){const k=colliders.indexOf(TGH.c);if(k>=0)colliders.splice(k,1)}TGH.c=[x,z,4.4];colliders.push(TGH.c)}
-  window.__tugiaAt=i=>{tgPlace(i);const ux=Math.sin(TGH.ry),uz=Math.cos(TGH.ry),px=Math.cos(TGH.ry),pz=-Math.sin(TGH.ry);return {house:[TGH.x,TGH.z],cam:[TGH.x+ux*24+px*8,H(TGH.x,TGH.z)+7,TGH.z+uz*24+pz*8],see:[TGH.x-ux*3,H(TGH.x,TGH.z)+2.5,TGH.z-uz*3],view:[TGH.x+ux*4.2,H(TGH.x,TGH.z)+2.2,TGH.z+uz*4.2]}};
+  // đặt nhà cố định ở bờ đông, hiên quay ra hồ hướng về đồi chùa; va chạm thân nhà
+  tgBuild();TGH.x=HOME.x;TGH.z=HOME.z;TGH.ry=HOME.ry;TGH.g.position.set(HOME.x,H(HOME.x,HOME.z)-.1,HOME.z);TGH.g.rotation.y=HOME.ry;TGH.c=[HOME.x,HOME.z,4.4];colliders.push(TGH.c);
+  window.__homeView=()=>{const ux=Math.sin(TGH.ry),uz=Math.cos(TGH.ry),px=Math.cos(TGH.ry),pz=-Math.sin(TGH.ry),y=H(TGH.x,TGH.z);return {house:[TGH.x,TGH.z],cam:[TGH.x+ux*20+px*9,y+7,TGH.z+uz*20+pz*9],see:[TGH.x,y+2.5,TGH.z],door:[TGH.x+px*9-ux*2,y+3,TGH.z+pz*9-uz*2]}};
+  // ---------- Bên trong Nhà Mái Cỏ Riêng: một gian ấm kiểu nhà gỗ Thuỵ Điển, dựng khi vào lần đầu, đặt riêng dưới mặt đất như chòi lửa.
+  // Vách ván dọc sơn trắng ngà, sàn ván thông rộng, trần dốc theo mái có xà ngang; lò sưởi gang có lửa sau ô kính, ấm nước trên nóc lò;
+  // bàn ăn gỗ với 6 ghế song (6 chỗ ngồi), thảm sọc đỏ trắng, đèn thả trên bàn, góc bếp nhỏ, ghế băng dưới cửa sổ nhìn ra hồ, ghế bành đọc sách ----------
+  const HI={x:470,y:-80,z:420,g:null,floor:null,seats:[],fl:null,light:null,kettle:null,sit:-1,seatTo:-1,camY:2.25,li:7,hx:TGH.W/2-.15,hz:TGH.D/2-.15,tb:[-.4,0],st:[-2.95,-.5],
+    msg:'🏡 Nhà Mái Cỏ Riêng · chạm sàn để đi, chạm ghế quanh bàn để ngồi · 🚪 Ra cửa để ra ngoài',sitMsg:'🏡 Ngồi bên bàn gỗ. Lửa lò sưởi tí tách, ngoài cửa sổ hồ băng lặng yên.'};
+  HI.ent=[HI.hx-.95,1.2,-Math.PI/2];HI.kp=[HI.st[0]+.05,1.3,HI.st[1]+.2];HI.build=()=>homeBuild();
+  HI.clamp=(lx,lz)=>{lx=Math.max(-HI.hx+.4,Math.min(HI.hx-.4,lx));lz=Math.max(-HI.hz+.4,Math.min(HI.hz-.7,lz));if(lz<-.15&&lx>HI.hx-1.0)lx=HI.hx-1.0;
+    const ox=lx-HI.tb[0],oz=lz-HI.tb[1],tx=1.5,tz=1.2;if(Math.abs(ox)<tx&&Math.abs(oz)<tz){if(tx-Math.abs(ox)<tz-Math.abs(oz))lx=HI.tb[0]+(ox<0?-tx:tx);else lz=HI.tb[1]+(oz<0?-tz:tz)}
+    const sx=lx-HI.st[0],sz=lz-HI.st[1],sr=Math.hypot(sx,sz);if(sr<1.1){lx=HI.st[0]+sx/(sr||1)*1.1;lz=HI.st[1]+sz/(sr||1)*1.1}
+    const ax=lx+2.55,az=lz-1.75,ar=Math.hypot(ax,az);if(ar<.95){lx=-2.55+ax/(ar||1)*.95;lz=1.75+az/(ar||1)*.95}return [lx,lz]};
+  HI.camClamp=(cx,cz)=>[Math.max(-HI.hx+.25,Math.min(HI.hx-.25,cx)),Math.max(-HI.hz+.25,Math.min(HI.hz-.25,cz))];
+  HI.exit=()=>{const c=Math.cos(HOME.ry),sn=Math.sin(HOME.ry),lx=TGH.W/2+1.9,lz=1.2;P.x=HOME.x+lx*c+lz*sn;P.z=HOME.z-lx*sn+lz*c;P.a=Math.atan2(c,-sn);P.yaw=P.a};/* đứng cách bậc cửa 1 m, quay lưng về nhà */
+  function homeBuild(){if(HI.g)return;const g=new THREE.Group();g.position.set(HI.x,HI.y,HI.z);const M=(geo,c,x,y,z,sx,sy,sz,rx,ry,rz,basic)=>{const m=new THREE.Mesh(geo,basic?new THREE.MeshBasicMaterial({color:c,fog:false}):lam(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.set(rx||0,ry||0,rz||0);g.add(m);return m},
+      box=new THREE.BoxGeometry(1,1,1),W=HI.hx*2,D=HI.hz*2,h=2.6,rt=Math.atan(1.0),rh=Math.tan(rt)*W/2,WALL='#eee6d8',WD='#dcd2c2',WH='#f6f2ea',WOOD='#b88a56';
+    // sàn ván thông rộng, vách ván dọc sơn trắng ngà, chân tường gỗ
+    HI.floor=M(box,'#c9a06a',0,-.05,0,W,.1,D);for(let i=1;i<9;i++)M(box,'#b08656',0,.002,-D/2+i*D/9,W,.006,.025);
+    for(const sz of [-1,1]){M(box,WALL,0,h/2,sz*D/2,W,h,.08);for(let i=1;i<20;i++)M(box,WD,-W/2+i*W/20,h/2,sz*(D/2-.045),.02,h,.01);M(box,'#a8865c',0,.08,sz*(D/2-.05),W,.16,.03)}
+    for(const sx of [-1,1]){M(box,WALL,sx*W/2,h/2,0,.08,h,D);for(let i=1;i<14;i++)M(box,WD,sx*(W/2-.045),h/2,-D/2+i*D/14,.01,h,.02);M(box,'#a8865c',sx*(W/2-.05),.08,0,.03,.16,D)}
+    // đầu hồi trong, trần dốc ván gỗ sáng theo mái, xà ngang và xà nóc
+    for(const sz of [-1,1]){const tri=new THREE.Shape();tri.moveTo(-W/2,0);tri.lineTo(W/2,0);tri.lineTo(0,rh);tri.closePath();const m=new THREE.Mesh(new THREE.ShapeGeometry(tri),lam(WALL));m.position.set(0,h,sz*(D/2-.04));if(sz>0)m.rotation.y=Math.PI;g.add(m)}
+    {const Lr=(W/2+.1)/Math.cos(rt);for(const sd of [-1,1]){M(box,'#d8bf94',sd*W/4,h+rh/2,0,Lr,.06,D,0,0,-sd*rt);for(let i=0;i<5;i++)M(box,'#a8804e',sd*W/4,h+rh/2-.07,-D/2+.25+i*(D-.5)/4,Lr,.1,.12,0,0,-sd*rt)}}
+    for(let i=1;i<=3;i++)M(box,'#a8804e',0,h+.8,-D/2+i*D/4,W-1.5,.16,.14);M(box,'#a8804e',0,h+rh-.14,0,.18,.18,D);
+    // cửa sổ bốn ô khung trắng, ngoài trời đêm tuyết xanh nhạt; cùng chỗ với cửa sổ ngoài nhà
+    const win=(x,y,z,ry,w=.85,hh=1.0)=>{const q=new THREE.Group();q.position.set(x,y,z);q.rotation.y=ry;const a=(c,xx,yy,zz,sx,sy,sz,basic)=>{const m=new THREE.Mesh(box,basic?new THREE.MeshBasicMaterial({color:c,fog:false}):lam(c));m.position.set(xx,yy,zz);m.scale.set(sx,sy,sz);q.add(m)};
+      a('#8fbcd6',0,0,0,w,hh,.02,1);for(const s2 of [-1,1]){a(WH,0,s2*(hh/2+.05),.03,w+.2,.1,.06);a(WH,s2*(w/2+.05),0,.03,.1,hh+.2,.06)}a(WH,0,0,.03,.05,hh,.04);a(WH,0,0,.03,w,.05,.04);a(WH,0,-hh/2-.1,.1,w+.3,.05,.2);
+      for(const s2 of [-1,1])a('#c8423a',s2*(w/2+.2),.05,.07,.18,hh+.25,.03);g.add(q)};/* rèm vải đỏ hai bên */
+    win(-1.5,1.45,D/2-.05,Math.PI);win(1.5,1.45,D/2-.05,Math.PI);win(0,h+.95,D/2-.05,Math.PI,.6,.75);win(-1.4,1.45,-D/2+.05,0);win(W/2-.05,1.55,-1.4,-Math.PI/2);win(-W/2+.05,1.45,.75,Math.PI/2);win(-W/2+.05,1.45,-1.75,Math.PI/2);
+    // cửa ra vào gỗ trắng ở vách phải, móc áo treo khăn đỏ và mũ len
+    M(box,WH,W/2-.05,1.05,1.2,.06,2.1,1.0);M(box,'#e3ddd2',W/2-.09,1.05,1.2,.02,1.8,.76);M(gSph,'#c9a24a',W/2-.12,1.0,.85,.04,.04,.04);M(box,'#ffcf8a',W/2-.1,2.2,1.2,.02,.1,.7,0,0,0,1);
+    M(box,'#9a7048',W/2-.06,1.62,2.0,.04,.08,.6);M(box,'#b8322c',W/2-.1,1.3,1.9,.04,.6,.16);M(gSph,'#3d6fb0',W/2-.14,1.55,2.15,.12,.1,.12);
+    // lò sưởi gang ở vách trái: tấm đá lót, ô kính thấy lửa, ống khói lên mái, ấm nước, giỏ củi
+    {const [sx0,sz0]=HI.st;M(box,'#9a9792',sx0+.15,.03,sz0,1.1,.06,1.3);M(box,'#26282b',sx0,.55,sz0,.62,.8,.7);M(box,'#2e3034',sx0,.98,sz0,.7,.08,.78);M(box,'#26282b',sx0,.1,sz0,.5,.2,.55);
+      M(box,'#ff7a2a',sx0+.2,.5,sz0,.01,.36,.44,0,0,0,1);for(const s2 of [-1,1]){M(box,'#16171a',sx0+.32,.5,sz0+s2*.24,.03,.46,.05);M(box,'#16171a',sx0+.32,.5+s2*.21,sz0,.03,.05,.5)}
+      HI.fl=[0,1,2].map(i=>{const hh=.26-i*.05,m=M(gCone,i?'#ffcf5a':'#ff8a3a',sx0+.26,.33+hh/2,sz0+(i-1)*.11,.08-i*.012,hh,.08-i*.012,0,0,0,1);m.userData.h=hh;return m});
+      M(gCyl,'#26282b',sx0,2.15,sz0,.08,2.3,.08);
+      HI.kettle=new THREE.Group();{const k=HI.kettle,mt=lam('#3a3f46'),b=new THREE.Mesh(gSph,mt);b.scale.set(.15,.12,.15);k.add(b);const sp=new THREE.Mesh(gCyl,mt);sp.scale.set(.025,.14,.025);sp.position.set(.14,.03,0);sp.rotation.z=-1;k.add(sp);const hd=new THREE.Mesh(new THREE.TorusGeometry(.1,.01,5,12,Math.PI),mt);hd.position.y=.09;k.add(hd)}HI.kettle.position.set(sx0-.05,1.13,sz0+.2);HI.kettle.rotation.y=Math.PI/2;g.add(HI.kettle);
+      M(gCyl,'#8a6a48',sx0+.15,.2,sz0+.95,.25,.4,.25);for(let i=0;i<4;i++)M(gCyl,['#a87a4e','#9a6c44','#b3845a','#a87a4e'][i],sx0+.1+(i%2)*.12,.45,sz0+.88+(i>>1)*.12,.05,.5,.05,Math.PI/2,i*.4,0)}
+    // thảm sọc đỏ trắng, bàn ăn gỗ, khăn trải giữa bàn, nến, chén trà; 6 ghế song quanh bàn (6 chỗ ngồi)
+    {const [tx,tz]=HI.tb;M(box,'#f2ece2',tx,.006,tz,3.0,.01,2.2);for(let i=0;i<7;i++)M(box,'#b8322c',tx,.012,tz-.9+i*.3,3.0,.004,.08);
+      M(box,WOOD,tx,.74,tz,1.9,.06,.9);for(const a of [-1,1])for(const b of [-1,1])M(box,'#9a7048',tx+a*.85,.37,tz+b*.37,.07,.72,.07);M(box,'#f2ece2',tx,.775,tz,1.5,.006,.34);
+      for(const a of [-.35,.35]){M(gCyl,'#f4efe4',tx+a,.86,tz,.035,.16,.035);M(gCone,'#ffd27a',tx+a,.97,tz,.02,.06,.02,0,0,0,1)}M(gSph,'#7a9a5a',tx,.82,tz,.1,.06,.1);
+      for(const [a,b,c] of [[-.62,.25,'#c46a4a'],[0,.25,'#efe6d6'],[.62,.25,'#6f8fb0'],[-.62,-.25,'#efe6d6'],[0,-.25,'#d6b878'],[.62,-.25,'#c46a4a']])M(gCyl,c,tx+a,.81,tz+b,.045,.09,.045);
+      HI.seats=[];[-1,1].forEach(sd=>[-.62,0,.62].forEach((k,ki)=>{const x=tx+k,z=tz+sd*.78,col=(ki+(sd>0?1:0))%2?'#c9a56e':'#7d9aa8',bz=z+sd*.2;
+        M(box,col,x,.45,z,.44,.05,.42);for(const a of [-1,1])for(const b of [-1,1])M(box,col,x+a*.18,.22,z+b*.17,.04,.44,.04);for(const a of [-1,1])M(box,col,x+a*.18,.72,bz,.045,.55,.045);M(box,col,x,.97,bz,.44,.07,.05);for(const a of [-.08,0,.08])M(box,col,x+a,.74,bz,.025,.45,.025);
+        M(box,'#efe6d6',x,.485,z,.36,.03,.34);const hit=M(box,'#000',x,.6,z,.62,1.2,.62);hit.material.visible=false;hit.userData.seat=1;HI.seats.push({px:x,pz:z,a:sd>0?Math.PI:0,ax:x,az:tz+sd*1.32,hit})}));
+      // đèn thả trên bàn
+      M(gCyl,'#222326',tx,2.65,tz,.01,1.5,.01);M(gCone,'#f2efe8',tx,1.86,tz,.3,.22,.3);M(gSph,'#ffe2a8',tx,1.74,tz,.08,.08,.08,0,0,0,1);{const l=new THREE.PointLight('#ffd9a8',7,9,1.4);l.position.set(tx,1.6,tz);g.add(l)}}
+    // góc bếp nhỏ ở vách phải: tủ trắng, mặt gỗ, hũ và chén, kệ đĩa
+    {const kx=W/2-.31,kz=-1.33;M(box,WH,kx,.43,kz,.6,.86,2.0);M(box,WOOD,kx-.02,.89,kz,.66,.05,2.06);for(const i of [-1,0,1]){M(box,'#e6dfd2',kx-.305,.45,kz+i*.64,.01,.7,.58);M(gSph,'#9a7a56',kx-.32,.62,kz+i*.64+.2,.025,.025,.025)}
+      for(let i=0;i<4;i++)M(gCyl,['#3d6fb0','#efe6d6','#c46a4a','#d6b878'][i],kx,.98+i%2*.02,kz+.45+i*.15,.06,.14+i%2*.04,.06);M(box,'#9a7048',kx-.05,.93,kz-.6,.35,.03,.45);
+      M(box,WOOD,W/2-.13,1.85,-.25,.24,.04,.6);for(let i=0;i<3;i++)M(gCyl,i%2?'#3d6fb0':'#efe6d6',W/2-.1,2.0,-.45+i*.2,.09,.01,.09,0,0,Math.PI/2)}
+    // ghế băng dưới cửa sổ nhìn ra hồ: đệm đỏ trắng, gối
+    {const bz=D/2-.27;M(box,WOOD,0,.42,bz,3.9,.06,.5);M(box,'#9a7048',0,.2,bz,3.8,.4,.42);for(const [x,c] of [[-1.3,'#b8322c'],[0,'#efe6d6'],[1.3,'#b8322c']])M(box,c,x,.5,bz,1.25,.1,.46);for(const [x,c] of [[-1.7,'#efe6d6'],[1.6,'#7d9aa8']])M(box,c,x,.66,bz+.12,.42,.3,.12,-.2,0,0)}
+    // ghế bành đọc sách ở góc, chăn len, bàn nhỏ có sách và ly
+    {const ax=-2.55,az=1.75;M(box,'#8a5e3a',ax,.25,az,.8,.4,.75);M(box,'#5f7a6a',ax,.5,az,.72,.14,.68);M(box,'#5f7a6a',ax-.05,.85,az+.32,.72,.65,.14,-.15,0,0);for(const s2 of [-1,1])M(box,'#5f7a6a',ax+s2*.38,.65,az,.12,.35,.7);M(box,'#b8322c',ax+.1,.62,az-.1,.5,.04,.5,0,.3,0);
+      M(gCyl,WOOD,ax+.75,.3,az-.1,.2,.6,.2);M(box,'#3d5f8a',ax+.75,.63,az-.1,.22,.05,.16,0,.4,0);M(gCyl,'#efe6d6',ax+.82,.66,az-.2,.04,.08,.04)}
+    HI.light=new THREE.PointLight('#ff9a50',HI.li,7,1.5);HI.light.position.set(HI.st[0]+.7,.7,HI.st[1]);g.add(HI.light);{const l2=new THREE.PointLight('#ffd9a8',3,9,1.6);l2.position.set(0,3.4,0);g.add(l2)}
+    sc.add(g);HI.g=g}
   const PROX=[],proxM=new THREE.MeshBasicMaterial({visible:false});
 
-  for(const [id,x,z,r,h,y0] of [['tree',TREE.x,TREE.z,6.5,27,1],['snowman',SNOWMAN.x,SNOWMAN.z,4.6,8,0],['wheel',WHEEL.x,WHEEL.z+3,WR,WY+WR,0],['carousel',CAR.x,CAR.z,6.4,8,0],['fire',25,77,1.6,2.4,0],['bell',...tw(10.5,1.5),2.6,6,1],['cocoa',RH.x,RH.z,8.6,9,0],['kota',KOTA.x,KOTA.z,KOTA.R+.6,6,0]]){const m=new THREE.Mesh(gCyl,proxM);m.scale.set(r,h,r);m.position.set(x,H(x,z)+y0+h/2,z);m.userData.st=id;sc.add(m);PROX.push(m)}
+  for(const [id,x,z,r,h,y0] of [['tree',TREE.x,TREE.z,6.5,27,1],['snowman',SNOWMAN.x,SNOWMAN.z,4.6,8,0],['wheel',WHEEL.x,WHEEL.z+3,WR,WY+WR,0],['carousel',CAR.x,CAR.z,6.4,8,0],['fire',25,77,1.6,2.4,0],['bell',...tw(10.5,1.5),2.6,6,1],['cocoa',RH.x,RH.z,8.6,9,0],['kota',KOTA.x,KOTA.z,KOTA.R+.6,6,0],['home',HOME.x,HOME.z,4.8,7,0]]){const m=new THREE.Mesh(gCyl,proxM);m.scale.set(r,h,r);m.position.set(x,H(x,z)+y0+h/2,z);m.userData.st=id;sc.add(m);PROX.push(m)}
   function act(){const s=near;if(!s)return;P.dest=null;
     if(s.id==='aurora'){P.mode='aurora';P.ride=0;caption('✨ Nằm yên trong lều kính, nhìn bầu trời và mặt hồ. Thở theo vòng sáng: hít vào khi nó lớn, thở ra khi nó nhỏ.',9000);breathEl.hidden=false;U.boost.value=1.5;me.visible=false;labels.forEach(l=>l.visible=false)}
     else if(s.id==='gift'){santaStart()}
@@ -1125,6 +1192,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(s.id==='deer'){P.a=Math.atan2(FARM.x-P.x,FARM.z-P.z);P.yaw=P.a+Math.PI-.5;first=true;const now=performance.now();if(now-deerFed.t>600000)deerFed.n=0;deerFed.t=now;deerFed.n++;if(deerFed.n>3){caption('🦌 Tuần lộc no rồi, chúng nằm xuống nhai lại thong thả. Để chúng nghỉ, lát nữa ghé lại nhé.',7000);return}moss.visible=true;moss.position.set(P.x+Math.sin(P.a)*.45,groundY(P.x,P.z)+1,P.z+Math.cos(P.a)*.45);setTimeout(()=>{moss.visible=false},6000);caption(deerFed.n===3?'🦌 Tuần lộc ăn nắm rêu cuối cùng rồi thở ra một làn hơi ấm. Chúng gần no rồi.':'🦌 Chìa nắm rêu địa y, tuần lộc cúi xuống ăn chậm rãi. Chúng sống chậm theo mùa, không vội vàng.',7000);return}
     else if(s.id==='carousel'){P.mode='carousel';P.ride=0;caption('🎠 Vòng ngựa gỗ quay thật chậm, nhìn đèn lướt qua.',6000)}
     else if(s.id==='kota'){kotaEnter()}
+    else if(s.id==='home'){roomEnter(HI)}
     else if(s.id==='snowman'){const m=snowmanBuild();P.mode='build';P.x=m.me[0];P.z=m.me[1];P.a=Math.atan2(m.sp.x-P.x,m.sp.z-P.z);P.yaw=m.yaw;P.camAim=null;first=true;near=null}
     else if(s.id==='tree'){wishOpen();P.a=Math.atan2(TREE.x-P.x,TREE.z-P.z);P.yaw=P.a+Math.PI;first=true;return}
     else if(s.id==='skate'){P.mode='skate';SK.vx=SK.vz=0;const GA=Math.atan2(s.z-RINK.z,s.x-RINK.x);P.x=RINK.x+Math.cos(GA)*(RINK.rx-2);P.z=RINK.z+Math.sin(GA)*(RINK.rz-2);P.yaw=Math.atan2(Math.cos(GA),Math.sin(GA));P.a=P.yaw+Math.PI;first=true;caption('⛸ Chạm vào mặt băng để lướt tới. Lướt dài, thở dài, để cơ thể tự cân bằng.',7000)}
@@ -1156,7 +1224,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     const close=()=>{sheet.hidden=true;cur=null;rail.querySelectorAll('button').forEach(b=>b.classList.remove('on'))};
     const head=t=>'<div class="sn-sh"><b>'+t+'</b><button type="button" data-rl="x">✕</button></div>';
     // Hoạt động: chia theo "Hôm nay, bạn cần gì?"; hoạt động đã có thì tới nơi và bắt đầu luôn, hoạt động đang dựng thì đưa tới nơi và báo sắp mở
-    const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn','cocoa'],['stars','🌌','Nằm tuyết ngắm sao','stars']]],
+    const ACTS=[['🕊 Tìm bình an',[['incense','🪷','Lên núi dâng hương Phật','sit'],['aurora','✨','Ngắm cực quang, thở theo nhịp sáng','aurora'],['fire','🔥','Ngồi bên đống lửa','fire'],['glass','🛖','Nghỉ trong lều kính','aurora'],['cocoa','☕','Ly ấm ở Nhà Ấm tròn','cocoa'],['stars','🌌','Nằm tuyết ngắm sao','stars'],['home','🏡','Về Nhà Mái Cỏ Riêng','home']]],
       ['🎿 Dạo chơi',[['husky','🐕','Dạo xe chó husky','husky'],['sled','🛷','Xe trượt trên Hồ Băng Lớn','sled'],['skate','⛸','Trượt băng','skate'],['wheel','🎡','Vòng quay ngắm làng','wheel'],['carousel','🎠','Vòng ngựa gỗ','carousel']]],
       ['💝 Kết nối',[['gift','🎁','Chuyến xe trao Yên cùng ông già Noel','gift'],['tree','🎄','Trang trí cây thông, treo lời chúc','tree'],['snowman','⛄','Đắp người tuyết','snowman'],['deer','🦌','Cho tuần lộc ăn','deer']]]];
     const goAct=(st,pos,label)=>{close();if(P.mode!=='walk')stand();let x,z;if(st){const s=STATIONS.find(o=>o.id===st);x=s.x;z=s.z}else[x,z]=pos;
@@ -1235,7 +1303,7 @@ body.snow-open .shell,body.snow-open .scene{visibility:hidden}
     else if(P.mode==='sit'){const s=P.sitAt;if(s.cup){cup.position.set(s.x+Math.sin(s.a)*.32,s.y+.62,s.z+Math.cos(s.a)*.32);cup.rotation.y=s.a}follow(s.a,dt);me.position.set(s.x,s.y,s.z);me.rotation.set(0,s.a,0);tgt.set(s.x,me.position.y+1.2,s.z)}
     // camera
     U.fadeR.value=0;if(camFix){cam.position.set(...camFix[0]);cam.lookAt(...camFix[1])}
-    else if(P.mode==='kota'){camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const d=Math.min(3.4,3.0*camZoomS);let cx=tgt.x+Math.sin(P.yaw)*d,cz=tgt.z+Math.cos(P.yaw)*d;const rx=cx-KI.x,rz=cz-KI.z,rr=Math.hypot(rx,rz),mx=KA-.35;if(rr>mx){cx=KI.x+rx/rr*mx;cz=KI.z+rz/rr*mx}cpos.set(cx,KI.y+2.75,cz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*8));cam.lookAt(KI.x*.35+tgt.x*.65,KI.y+1.05,KI.z*.35+tgt.z*.65);U.fadeR.value=0}
+    else if(P.mode==='kota'){const R=RM;camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const d=Math.min(3.4,3.0*camZoomS);const [cx,cz]=R.camClamp(tgt.x+Math.sin(P.yaw)*d-R.x,tgt.z+Math.cos(P.yaw)*d-R.z);cpos.set(R.x+cx,R.y+R.camY,R.z+cz);if(first){cam.position.copy(cpos);first=false}else cam.position.lerp(cpos,1-Math.exp(-dt*8));cam.lookAt(R.x*.35+tgt.x*.65,R.y+1.05,R.z*.35+tgt.z*.65);U.fadeR.value=0}
     else if(P.mode==='stars'){const s2=STATIONS.find(o=>o.id==='stars'),y=groundY(s2.x,s2.z)+.6;cam.position.set(s2.x,y,s2.z-.2);cam.lookAt(s2.x+Math.sin(P.ride*.04)*6,y+12,s2.z-9+Math.cos(P.ride*.05)*2)}
     else if(P.mode==='aurora'){P.ride+=dt;const x=70,z=6.2,y=H(70,6)+.45+1.1;cam.position.set(x,y,z);cam.lookAt(x+Math.sin(P.ride*.05)*8,y+9+Math.sin(P.ride*.07)*.8,z+11)}
     else{camZoomS+=(camZoom-camZoomS)*Math.min(1,dt*7);const cz=camZoomS,ride=!['walk','skate','build'].includes(P.mode),gy=ride?tgt.y-1.05:groundY(P.x,P.z),behind=(ride?(P.mode==='sit'?.55:.7):1)*14*cz,cx=tgt.x+Math.sin(P.yaw)*behind,ccz=tgt.z+Math.cos(P.yaw)*behind;
